@@ -1,0 +1,4 @@
+{
+  "files": { "main.ts": "assertion-error.ts" },
+  "diagnostics": [{ "phase": "semantic", "code": 2344, "file": "main.ts", "at": "Equal<any, string>", "message": "does not satisfy the constraint 'true'" }]
+}

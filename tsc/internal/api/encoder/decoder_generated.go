@@ -1143,6 +1143,31 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		typeExpression := d.nodeAt(it.nextIf(mask, 2))
 		comment := d.nodeListAt(it.nextIf(mask, 3))
 		return d.factory.NewJSDocParameterOrPropertyTag(kind, tagName, name, isBracketed, typeExpression, isNameFirst, comment), nil
+	case ast.KindTypeFunctionDeclaration:
+		it := newChildIter(childIndices)
+		modifiers := d.modifierListAt(it.nextIf(mask, 0))
+		name := d.nodeAt(it.nextIf(mask, 1))
+		typeParameters := d.nodeListAt(it.nextIf(mask, 2))
+		body := d.nodeAt(it.nextIf(mask, 3))
+		return d.factory.NewTypeFunctionDeclaration(modifiers, name, typeParameters, body), nil
+	case ast.KindTypeFunctionBlock:
+		return d.factory.NewTypeFunctionBlock(d.singleNodeListChild(childIndices)), nil
+	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionAssignment, ast.KindTypeFunctionReturn, ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn, ast.KindTypeFunctionBreak, ast.KindTypeFunctionContinue, ast.KindTypeFunctionExpressionStatement:
+		it := newChildIter(childIndices)
+		name := d.nodeAt(it.nextIf(mask, 0))
+		expression := d.nodeAt(it.nextIf(mask, 1))
+		body := d.nodeAt(it.nextIf(mask, 2))
+		elseBody := d.nodeAt(it.nextIf(mask, 3))
+		return d.factory.NewTypeFunctionStatement(kind, name, expression, body, elseBody), nil
+	case ast.KindTypeFunctionName, ast.KindTypeFunctionLiteral, ast.KindTypeFunctionCall, ast.KindTypeFunctionUnary, ast.KindTypeFunctionBinary, ast.KindTypeFunctionTuple, ast.KindTypeFunctionObject, ast.KindTypeFunctionField, ast.KindTypeFunctionIndex, ast.KindTypeFunctionNativeType, ast.KindTypeFunctionSpread:
+		readonly := commonData&1 != 0
+		optional := commonData&2 != 0
+		it := newChildIter(childIndices)
+		name := d.nodeAt(it.nextIf(mask, 0))
+		operands := d.nodeListAt(it.nextIf(mask, 1))
+		operatorToken := d.nodeAt(it.nextIf(mask, 2))
+		nativeType := d.nodeAt(it.nextIf(mask, 3))
+		return d.factory.NewTypeFunctionExpression(kind, name, operands, operatorToken, nativeType, readonly, optional), nil
 	default:
 		return nil, fmt.Errorf("unhandled node kind %v with %d children", kind, len(childIndices))
 	}

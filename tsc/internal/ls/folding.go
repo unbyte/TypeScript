@@ -398,6 +398,9 @@ func parseRegionDelimiter(lineText string) *regionDelimiterResult {
 }
 
 func getOutliningSpanForNode(ctx context.Context, n *ast.Node, sourceFile *ast.SourceFile, l *LanguageService) *lsproto.FoldingRange {
+	if n.Kind == ast.KindTypeFunctionBlock {
+		return spanForNode(ctx, n, ast.KindOpenBraceToken, true, sourceFile, l)
+	}
 	switch n.Kind {
 	case ast.KindBlock:
 		if ast.IsFunctionLike(n.Parent) {

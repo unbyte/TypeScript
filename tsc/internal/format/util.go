@@ -120,6 +120,8 @@ func findOutermostNodeWithinListLevel(node *ast.Node) *ast.Node {
 // i.e. parent is class declaration with the list of members and node is one of members.
 func isListElement(parent *ast.Node, node *ast.Node) bool {
 	switch parent.Kind {
+	case ast.KindTypeFunctionBlock:
+		return node.Loc.ContainedBy(parent.AsTypeFunctionBlock().Statements.Loc)
 	case ast.KindClassDeclaration, ast.KindInterfaceDeclaration:
 		return node.Loc.ContainedBy(parent.MemberList().Loc)
 	case ast.KindModuleDeclaration:

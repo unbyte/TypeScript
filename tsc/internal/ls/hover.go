@@ -65,6 +65,20 @@ func (l *LanguageService) ProvideHover(ctx context.Context, params *lsproto.Hove
 
 		vsCapability := caps.VSSupportsVisualStudioExtensions
 		quickInfo, documentation, vsDocumentation, quickInfoRuns := l.getQuickInfoAndDocumentationForSymbol(c, symbol, rangeNode, contentFormat, vc, vsCapability)
+		if rangeNode.Parent != nil {
+			application := rangeNode.Parent
+			for ast.IsQualifiedName(application) {
+				application = application.Parent
+			}
+			if result := c.GetTypeFunctionApplicationResult(ctx, application); result != nil {
+				resultText := "\n" + scanner.GetTextOfNode(application) + " = " + c.TypeToStringEx(result, application, typeFormatFlags, vc)
+				quickInfo += resultText
+				if vsCapability {
+					quickInfoRuns = append(quickInfoRuns, &lsproto.VSClassifiedTextRun{ClassificationTypeName: string(lsproto.ClassificationTypeNameText), Text: resultText})
+				}
+			}
+		}
+
 		if quickInfo == "" {
 			done()
 			continue
@@ -424,6 +438,9 @@ type symbolDisplayInfo struct {
 // getQuickInfoAndDeclarationAtLocation builds classified display parts using displayPartsWriter when vsCapability is true.
 // When vsCapability is false, it still builds the plain text string but skips classification runs.
 func getQuickInfoAndDeclarationAtLocation(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, vc *checker.VerbosityContext, vsCapability bool, meaning ast.SemanticMeaning) symbolDisplayInfo {
+	if info, ok := typefnSymbolInfo(c, symbol, node, vsCapability); ok {
+		return info
+	}
 	container := getContainerNode(node)
 	if vc == nil {
 		vc = &checker.VerbosityContext{}

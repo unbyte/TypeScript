@@ -96,6 +96,7 @@ type NodeBuilderContext struct {
 }
 
 type NodeBuilderImpl struct {
+	typefnDisplayDepth int
 	// host members
 	f  *ast.NodeFactory
 	ch *Checker
@@ -990,7 +991,7 @@ func (b *NodeBuilderImpl) getNameOfSymbolAsWritten(symbol *ast.Symbol) string {
 		if name != nil {
 			// !!! TODO: JS Object.defineProperty declarations
 			// if ast.IsCallExpression(declaration) && ast.IsBindableObjectDefinePropertyCall(declaration) {
-			// 	return symbol.Name
+			// 	return symbol.Name()
 			// }
 			if ast.IsComputedPropertyName(name) && symbol.CheckFlags()&ast.CheckFlagsLate == 0 {
 				if b.ch.valueSymbolLinks.Has(symbol) && b.ch.valueSymbolLinks.Get(symbol).getNameType() != nil && b.ch.valueSymbolLinks.Get(symbol).getNameType().flags&TypeFlagsStringOrNumberLiteral != 0 {
@@ -2966,7 +2967,7 @@ func (b *NodeBuilderImpl) createAnonymousTypeNodeEx(t *Type, forceClassExpansion
 		}
 
 		// !!! JS support
-		// if c.isJSConstructor(symbol.ValueDeclaration) {
+		// if c.isJSConstructor(symbol.ValueDeclaration()) {
 		// 	// Instance and static types share the same symbol; only add 'typeof' for the static side.
 		// 	return b.symbolToTypeNode(symbol, isInstanceType, nil)
 		// } else
@@ -3396,6 +3397,9 @@ func (b *NodeBuilderImpl) typeToTypeNode(t *Type) *ast.TypeNode {
 		t = b.ch.getReducedType(t)
 	}
 
+	if t.flags&TypeFlagsTypefn != 0 {
+		return b.typefnTypeToTypeNode(t)
+	}
 	if t.flags&TypeFlagsAny != 0 {
 		if t.alias != nil {
 			return t.alias.ToTypeReferenceNode(b)

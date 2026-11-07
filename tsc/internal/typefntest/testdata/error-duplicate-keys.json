@@ -1,0 +1,1 @@
+{"files":{"main.ts":"error-duplicate-keys.ts"},"options":{"typefn":{"version":1}},"diagnostics":[{"phase":"semantic","code":-1,"file":"main.ts","message":"duplicate object field 16"}]}

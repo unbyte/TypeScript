@@ -63,8 +63,13 @@ const (
 )
 
 type Parser struct {
-	scanner *scanner.Scanner
-	factory ast.NodeFactory
+	typefnAborted bool
+	typefnDepth   int
+	typefnWork    int
+	typefnLimit   int
+	typefnCalls   map[int]typefnCallParse
+	scanner       *scanner.Scanner
+	factory       ast.NodeFactory
 
 	opts       ast.SourceFileParseOptions
 	sourceText string
@@ -1120,6 +1125,9 @@ func (p *Parser) parseOptionalTokenJSDoc(kind ast.Kind) *ast.Node {
 }
 
 func (p *Parser) parseStatement() *ast.Statement {
+	if p.isTypefnStart() {
+		return p.parseDeclaration()
+	}
 	switch p.token {
 	case ast.KindSemicolonToken:
 		return p.parseEmptyStatement()
@@ -1208,6 +1216,9 @@ func (p *Parser) parseDeclaration() *ast.Statement {
 }
 
 func (p *Parser) parseDeclarationWorker(pos int, jsdoc jsdocScannerInfo, modifiers *ast.ModifierList) *ast.Statement {
+	if p.isTypefnStart() {
+		return p.parseTypefnDeclaration(pos, jsdoc, modifiers)
+	}
 	switch p.token {
 	case ast.KindVarKeyword, ast.KindLetKeyword, ast.KindConstKeyword, ast.KindUsingKeyword:
 		return p.parseVariableStatement(pos, jsdoc, modifiers)
@@ -6246,6 +6257,9 @@ func (p *Parser) isStartOfDeclaration() bool {
 
 func (p *Parser) scanStartOfDeclaration() bool {
 	for {
+		if p.isTypefnStart() {
+			return true
+		}
 		switch p.token {
 		case ast.KindVarKeyword, ast.KindLetKeyword, ast.KindConstKeyword, ast.KindFunctionKeyword, ast.KindClassKeyword,
 			ast.KindEnumKeyword:

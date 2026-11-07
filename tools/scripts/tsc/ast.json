@@ -446,7 +446,33 @@
             "NotEmittedStatement",
             "PartiallyEmittedExpression",
             "SyntheticReferenceExpression",
-            "NotEmittedTypeElement"
+            "NotEmittedTypeElement",
+            {
+                "comment": "Imperative typefn DSL (opt-in)"
+            },
+            "TypeFunctionDeclaration",
+            "TypeFunctionBlock",
+            "TypeFunctionBinding",
+            "TypeFunctionAssignment",
+            "TypeFunctionReturn",
+            "TypeFunctionIf",
+            "TypeFunctionWhile",
+            "TypeFunctionForOf",
+            "TypeFunctionForIn",
+            "TypeFunctionBreak",
+            "TypeFunctionContinue",
+            "TypeFunctionExpressionStatement",
+            "TypeFunctionName",
+            "TypeFunctionLiteral",
+            "TypeFunctionCall",
+            "TypeFunctionUnary",
+            "TypeFunctionBinary",
+            "TypeFunctionTuple",
+            "TypeFunctionObject",
+            "TypeFunctionField",
+            "TypeFunctionIndex",
+            "TypeFunctionNativeType",
+            "TypeFunctionSpread"
         ],
         "markers": [
             {
@@ -796,6 +822,31 @@
                 "AmpersandAmpersandEqualsToken",
                 "BarBarEqualsToken",
                 "QuestionQuestionEqualsToken"
+            ],
+            "TypeFunctionStatementKind": [
+                "TypeFunctionBinding",
+                "TypeFunctionAssignment",
+                "TypeFunctionReturn",
+                "TypeFunctionIf",
+                "TypeFunctionWhile",
+                "TypeFunctionForOf",
+                "TypeFunctionForIn",
+                "TypeFunctionBreak",
+                "TypeFunctionContinue",
+                "TypeFunctionExpressionStatement"
+            ],
+            "TypeFunctionExpressionKind": [
+                "TypeFunctionName",
+                "TypeFunctionLiteral",
+                "TypeFunctionCall",
+                "TypeFunctionUnary",
+                "TypeFunctionBinary",
+                "TypeFunctionTuple",
+                "TypeFunctionObject",
+                "TypeFunctionField",
+                "TypeFunctionIndex",
+                "TypeFunctionNativeType",
+                "TypeFunctionSpread"
             ]
         }
     },
@@ -5165,6 +5216,147 @@
                     {
                         "name": "Comment",
                         "inherited": true
+                    }
+                ]
+            },
+            "TypeFunctionDeclaration": {
+                "extends": [
+                    "StatementBase",
+                    "DeclarationBase",
+                    "ExportableBase",
+                    "ModifiersBase",
+                    "LocalsContainerBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "modifiers",
+                        "inherited": true
+                    },
+                    {
+                        "name": "name",
+                        "type": "Identifier",
+                        "private": true
+                    },
+                    {
+                        "name": "TypeParameters",
+                        "type": "TypeParameterDeclaration",
+                        "list": "NodeList"
+                    },
+                    {
+                        "name": "Body",
+                        "type": "TypeFunctionBlock"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionBlock": {
+                "extends": [
+                    "NodeBase",
+                    "LocalsContainerBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Statements",
+                        "type": "Node",
+                        "list": "NodeList"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionStatement": {
+                "extends": [
+                    "NodeBase",
+                    "DeclarationBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Kind",
+                        "type": "TKind",
+                        "inherited": true
+                    },
+                    {
+                        "name": "name",
+                        "type": "Identifier",
+                        "private": true,
+                        "optional": true
+                    },
+                    {
+                        "name": "Expression",
+                        "type": "Node",
+                        "optional": true
+                    },
+                    {
+                        "name": "Body",
+                        "type": "Node",
+                        "optional": true
+                    },
+                    {
+                        "name": "ElseBody",
+                        "type": "Node",
+                        "optional": true
+                    }
+                ],
+                "arena": true,
+                "typeParameters": [
+                    {
+                        "name": "TKind",
+                        "constraint": "TypeFunctionStatementKind",
+                        "default": "TypeFunctionStatementKind"
+                    }
+                ]
+            },
+            "TypeFunctionExpression": {
+                "handWrittenVisitor": true,
+                "extends": [
+                    "NodeBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Kind",
+                        "type": "TKind",
+                        "inherited": true
+                    },
+                    {
+                        "name": "name",
+                        "type": "Node",
+                        "private": true,
+                        "optional": true
+                    },
+                    {
+                        "name": "Operands",
+                        "type": "Node",
+                        "list": "NodeList",
+                        "optional": true
+                    },
+                    {
+                        "name": "OperatorToken",
+                        "type": "Token",
+                        "optional": true
+                    },
+                    {
+                        "name": "NativeType",
+                        "type": "TypeNode",
+                        "optional": true
+                    },
+                    {
+                        "name": "Readonly",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "Optional",
+                        "type": "bool"
+                    }
+                ],
+                "arena": true,
+                "typeParameters": [
+                    {
+                        "name": "TKind",
+                        "constraint": "TypeFunctionExpressionKind",
+                        "default": "TypeFunctionExpressionKind"
                     }
                 ]
             }

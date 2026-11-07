@@ -268,13 +268,16 @@ function visitorEntries(): VisitorEntry[] {
     for (const node of visitorNodes()) {
         const members = visitorMembers(node);
         if (members.length === 0) continue;
-        entries.push({
-            tsName: node.name,
-            syntaxKind: node.syntaxKindName,
-            updateName: `update${node.name}`,
-            members,
-            handWrittenVisitor: node.handWrittenVisitor,
-        });
+        const kinds = kindTypeParameter(node) ? node.kindTypes().map(kind => kind.name) : [node.syntaxKindName];
+        for (const syntaxKind of kinds) {
+            entries.push({
+                tsName: node.name,
+                syntaxKind,
+                updateName: `update${node.name}`,
+                members,
+                handWrittenVisitor: node.handWrittenVisitor,
+            });
+        }
     }
 
     for (const variant of tsVariants) {
@@ -682,9 +685,15 @@ function generateFactory(): string {
         if (node.handWrittenVisitor && !node.handWritten) {
             const members = tsMembers(node);
             if (members.filter(m => m.isChild()).length > 0) {
-                for (const kind of node.kindTypes()) {
-                    handWrittenForEachChildImports.push(`forEachChildOf${kind.name}`);
-                    handWrittenForEachChildImports.push(`yieldEachChildOf${kind.name}`);
+                if (isVariantNode(node)) {
+                    for (const kind of node.kindTypes()) {
+                        handWrittenForEachChildImports.push(`forEachChildOf${kind.name}`);
+                        handWrittenForEachChildImports.push(`yieldEachChildOf${kind.name}`);
+                    }
+                }
+                else {
+                    handWrittenForEachChildImports.push(`forEachChildOf${node.name}`);
+                    handWrittenForEachChildImports.push(`yieldEachChildOf${node.name}`);
                 }
             }
         }
@@ -1189,7 +1198,10 @@ function generateFactory(): string {
         if (updateChildMembers.length === 0) continue;
 
         const funcName = `update${iface}`;
-        const paramParts = [`node: ${iface}`];
+        const kindParam = kindTypeParameter(node);
+        const generics = kindParam ? `<${kindParam.name} extends ${kindParam.constraint}>` : "";
+        const resultType = kindParam ? `${iface}<${kindParam.name}>` : iface;
+        const paramParts = [`node: ${resultType}`];
 
         // Determine which update child members are required
         const updateIsRequired = updateChildMembers.map(m => !m.optional);
@@ -1235,7 +1247,8 @@ function generateFactory(): string {
             return `node.${propName}`;
         });
 
-        out.push(`export function ${funcName}(${paramParts.join(", ")}): ${iface} {`);
+        if (kindParam) createArgs.unshift("node.kind");
+        out.push(`export function ${funcName}${generics}(${paramParts.join(", ")}): ${resultType} {`);
         out.push(`    return ${comparisons.join(" || ")} ? create${iface}(${createArgs.join(", ")}) : node;`);
         out.push(`}`);
         out.push(``);

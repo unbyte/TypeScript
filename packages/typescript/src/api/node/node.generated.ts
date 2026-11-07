@@ -11,6 +11,7 @@ import {
     type SourceFile,
     SyntaxKind,
 } from "../../ast/index.ts";
+import { yieldEachChildOfTypeFunctionExpression } from "../../ast/visitor.ts";
 import {
     modifierToFlag,
     NODE_CHILD_MASK,
@@ -245,6 +246,13 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     }
 
     forEachChild<T>(visitNode: (node: Node) => T, visitList?: (list: NodeArray<Node>) => T): T | undefined {
+        // The DSL wire representation groups operands; source traversal interleaves the operator.
+        if (this.kind === SyntaxKind.TypeFunctionBinary && this.operands && this.operatorToken) {
+            return visitNode(this.operands.at(0)!) || visitNode(this.operatorToken) || visitNode(this.operands.at(1)!);
+        }
+        if (this.kind === SyntaxKind.TypeFunctionUnary && this.operands && this.operatorToken) {
+            return visitNode(this.operatorToken) || this.operands.forEachNode(visitNode);
+        }
         if (this.hasChildren()) {
             let next = this.index + 1;
             do {
@@ -276,6 +284,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     }
 
     *childrenIter<TNext = void>(): Generator<Node, TNext | undefined, TNext> {
+        if ((this.kind === SyntaxKind.TypeFunctionBinary || this.kind === SyntaxKind.TypeFunctionUnary) && this.operands && this.operatorToken) {
+            return yield* yieldEachChildOfTypeFunctionExpression<TNext>(this);
+        }
         if (this.hasChildren()) {
             let next = this.index + 1;
             do {
@@ -547,6 +558,14 @@ export class RemoteNode extends RemoteNodeBase implements Node {
         return (this.data & (1 << 24)) !== 0;
     }
 
+    get optional(): boolean {
+        return (this.data & (1 << 25)) !== 0;
+    }
+
+    get readonly(): boolean {
+        return (this.data & (1 << 24)) !== 0;
+    }
+
     // ═══ Generated SyntaxKind union property getters ═══
 
     get keyword(): SyntaxKind | undefined {
@@ -710,6 +729,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get elementType(): RemoteNode | undefined {
         return this.getNamedChild("elementType") as RemoteNode;
     }
+    get elseBody(): RemoteNode | undefined {
+        return this.getNamedChild("elseBody") as RemoteNode;
+    }
     get elseStatement(): RemoteNode | undefined {
         return this.getNamedChild("elseStatement") as RemoteNode;
     }
@@ -800,6 +822,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get nameType(): RemoteNode | undefined {
         return this.getNamedChild("nameType") as RemoteNode;
     }
+    get nativeType(): RemoteNode | undefined {
+        return this.getNamedChild("nativeType") as RemoteNode;
+    }
     get objectAssignmentInitializer(): RemoteNode | undefined {
         return this.getNamedChild("objectAssignmentInitializer") as RemoteNode;
     }
@@ -814,6 +839,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     }
     get operand(): RemoteNode | undefined {
         return this.getNamedChild("operand") as RemoteNode;
+    }
+    get operands(): RemoteNodeList | undefined {
+        return this.getNamedChild("operands") as RemoteNodeList;
     }
     get operatorToken(): RemoteNode | undefined {
         return this.getNamedChild("operatorToken") as RemoteNode;

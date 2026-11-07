@@ -447,7 +447,7 @@ func (b *Binder) declareSymbolAndAddToSymbolTable(node *ast.Node, symbolFlags as
 	case ast.KindFunctionType, ast.KindConstructorType, ast.KindCallSignature, ast.KindConstructSignature,
 		ast.KindIndexSignature, ast.KindMethodDeclaration, ast.KindMethodSignature, ast.KindConstructor, ast.KindGetAccessor,
 		ast.KindSetAccessor, ast.KindFunctionDeclaration, ast.KindFunctionExpression, ast.KindArrowFunction,
-		ast.KindClassStaticBlockDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindMappedType:
+		ast.KindClassStaticBlockDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBlock, ast.KindMappedType:
 		return b.declareSymbol(ast.GetLocals(b.container), nil /*parent*/, node, symbolFlags, symbolExcludes)
 	}
 	panic("Unhandled case in declareSymbolAndAddToSymbolTable")
@@ -601,6 +601,9 @@ func (b *Binder) bind(node *ast.Node) bool {
 	// However, not all symbols will end up in any of these tables. 'Anonymous' symbols
 	// (like TypeLiterals for example) will not be put in any table.
 	switch node.Kind {
+	case ast.KindTypeFunctionBinding:
+		b.declareSymbolAndAddToSymbolTable(node, ast.SymbolFlagsTypeAlias, ast.SymbolFlagsTypeAliasExcludes)
+
 	case ast.KindIdentifier:
 		node.AsIdentifier().FlowNode = b.currentFlow
 		b.checkContextualIdentifier(node)
@@ -696,7 +699,7 @@ func (b *Binder) bind(node *ast.Node) bool {
 		if ast.IsInJSFile(node) {
 			b.bindCallExpression(node)
 		}
-	case ast.KindTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		b.bindBlockScopedDeclaration(node, ast.SymbolFlagsTypeAlias, ast.SymbolFlagsTypeAliasExcludes)
 	case ast.KindJSTypeAliasDeclaration:
 		// Top-level JSTypeAliasDeclaration nodes are processed in bindContainer
@@ -1660,6 +1663,14 @@ func (b *Binder) declareCommonJSVariable(name string) {
 }
 
 func (b *Binder) bindChildren(node *ast.Node) {
+	// Type computation has lexical scopes, but no JavaScript control-flow graph.
+	if ast.IsTypeFunctionNode(node) {
+		if node.Kind == ast.KindTypeFunctionBlock && ast.IsTypeFunctionIteration(node.Parent) {
+			b.declareSymbolAndAddToSymbolTable(node.Parent, ast.SymbolFlagsTypeAlias, ast.SymbolFlagsTypeAliasExcludes)
+		}
+		b.bindEachChild(node)
+		return
+	}
 	saveInAssignmentPattern := b.inAssignmentPattern
 	// Most nodes aren't valid in an assignment pattern, so we clear the value here
 	// and set it before we descend into nodes that could actually be part of an assignment pattern.
@@ -2595,12 +2606,18 @@ func SetValueDeclaration(symbol *ast.Symbol, node *ast.Node) {
 
 func GetContainerFlags(node *ast.Node) ContainerFlags {
 	switch node.Kind {
+	case ast.KindTypeFunctionBlock:
+		if ast.IsTypeFunctionDeclaration(node.Parent) {
+			return ContainerFlagsNone
+		}
+		return ContainerFlagsIsContainer | ContainerFlagsHasLocals
+
 	case ast.KindClassExpression, ast.KindClassDeclaration, ast.KindEnumDeclaration, ast.KindObjectLiteralExpression, ast.KindTypeLiteral,
 		ast.KindJsxAttributes:
 		return ContainerFlagsIsContainer
 	case ast.KindInterfaceDeclaration:
 		return ContainerFlagsIsContainer | ContainerFlagsIsInterface
-	case ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindMappedType, ast.KindIndexSignature:
+	case ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindMappedType, ast.KindIndexSignature:
 		return ContainerFlagsIsContainer | ContainerFlagsHasLocals
 	case ast.KindSourceFile:
 		return ContainerFlagsIsContainer | ContainerFlagsIsControlFlowContainer | ContainerFlagsHasLocals

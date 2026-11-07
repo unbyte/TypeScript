@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "error-exhaustion.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "vmInstructions": 100
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "file": "main.ts",
+      "code": -1,
+      "message": "VM instruction limit exceeded"
+    }
+  ]
+}

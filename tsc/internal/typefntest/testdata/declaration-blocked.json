@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "calculations.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true
+  },
+  "outputs": {},
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "main.ts",
+      "message": "declaration emit is not implemented yet"
+    }
+  ]
+}

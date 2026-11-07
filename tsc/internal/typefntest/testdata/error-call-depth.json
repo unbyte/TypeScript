@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "error-call-depth.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "callDepth": 8
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "call depth limit exceeded"
+    }
+  ]
+}

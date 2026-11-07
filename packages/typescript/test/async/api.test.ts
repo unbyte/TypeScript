@@ -822,6 +822,25 @@ describe("API", { concurrency }, () => {
         await assert.rejects(program.getSourceFileNames(), /snapshot .* not found/); // @sync: assert.throws(() => program.getSourceFileNames(), /snapshot .* not found/);
     });
 
+    test("typefn profile crosses the native API and produces computed native types", async () => {
+        await using api = spawnAPI({
+            "/src/index.ts": `typefn Twice<N> { return N * 2; } type Answer = Twice<21>; const valid: Answer = 42; const invalid: Answer = 43;`,
+        });
+        const options: CompilerOptions = { noLib: true, strict: true, typefn: { version: 1, limits: { callDepth: 16 } } };
+        await using program = await api.createProgram(["/src/index.ts"], options);
+        assert.deepEqual(program.getCompilerOptions(), options);
+        assert.deepEqual(await program.getSyntacticDiagnostics("/src/index.ts"), []);
+        const file = (await program.getSourceFile("/src/index.ts"))!;
+        assert.equal(file.statements[0].kind, SyntaxKind.TypeFunctionDeclaration);
+        const diagnostics = await program.getSemanticDiagnostics("/src/index.ts");
+        assert.equal(diagnostics.length, 1);
+        assert.equal(diagnostics[0].code, 2322);
+        assert.match(diagnostics[0].text, /43.*42/);
+
+        await using disabled = await api.createProgram(["/src/index.ts"], { noLib: true });
+        assert.ok((await disabled.getSyntacticDiagnostics("/src/index.ts")).length > 0);
+    });
+
     test("createSnapshot creates independent synthetic programs", async () => {
         await using api = spawnAPI({
             "/src/a.ts": `export const a = 1;`,

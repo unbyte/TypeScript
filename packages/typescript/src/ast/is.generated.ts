@@ -309,6 +309,12 @@ import type {
     TupleTypeNode,
     TypeAliasDeclaration,
     TypeAssertion,
+    TypeFunctionBlock,
+    TypeFunctionDeclaration,
+    TypeFunctionExpression,
+    TypeFunctionExpressionKind,
+    TypeFunctionStatement,
+    TypeFunctionStatementKind,
     TypeLiteralNode,
     TypeOfExpression,
     TypeOperatorNode,
@@ -2054,6 +2060,42 @@ export declare namespace isJSDocTypeLiteral {
 }
 isJSDocTypeLiteral.Handle = isJSDocTypeLiteral as any;
 
+export function isTypeFunctionDeclaration(node: Node): node is TypeFunctionDeclaration {
+    return node.kind === SyntaxKind.TypeFunctionDeclaration;
+}
+
+export declare namespace isTypeFunctionDeclaration {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionDeclaration>;
+}
+isTypeFunctionDeclaration.Handle = isTypeFunctionDeclaration as any;
+
+export function isTypeFunctionBlock(node: Node): node is TypeFunctionBlock {
+    return node.kind === SyntaxKind.TypeFunctionBlock;
+}
+
+export declare namespace isTypeFunctionBlock {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionBlock>;
+}
+isTypeFunctionBlock.Handle = isTypeFunctionBlock as any;
+
+export function isTypeFunctionStatement(node: Node): node is TypeFunctionStatement {
+    return isTypeFunctionStatementKind(node.kind);
+}
+
+export declare namespace isTypeFunctionStatement {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionStatement>;
+}
+isTypeFunctionStatement.Handle = isTypeFunctionStatement as any;
+
+export function isTypeFunctionExpression(node: Node): node is TypeFunctionExpression {
+    return isTypeFunctionExpressionKind(node.kind);
+}
+
+export declare namespace isTypeFunctionExpression {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionExpression>;
+}
+isTypeFunctionExpression.Handle = isTypeFunctionExpression as any;
+
 export function isForInStatement(node: Node): node is ForInStatement {
     return node.kind === SyntaxKind.ForInStatement;
 }
@@ -2923,6 +2965,33 @@ export function isLogicalOrCoalescingAssignmentOperator(kind: SyntaxKind): kind 
     return kind === SyntaxKind.AmpersandAmpersandEqualsToken
         || kind === SyntaxKind.BarBarEqualsToken
         || kind === SyntaxKind.QuestionQuestionEqualsToken;
+}
+
+export function isTypeFunctionStatementKind(kind: SyntaxKind): kind is TypeFunctionStatementKind {
+    return kind === SyntaxKind.TypeFunctionBinding
+        || kind === SyntaxKind.TypeFunctionAssignment
+        || kind === SyntaxKind.TypeFunctionReturn
+        || kind === SyntaxKind.TypeFunctionIf
+        || kind === SyntaxKind.TypeFunctionWhile
+        || kind === SyntaxKind.TypeFunctionForOf
+        || kind === SyntaxKind.TypeFunctionForIn
+        || kind === SyntaxKind.TypeFunctionBreak
+        || kind === SyntaxKind.TypeFunctionContinue
+        || kind === SyntaxKind.TypeFunctionExpressionStatement;
+}
+
+export function isTypeFunctionExpressionKind(kind: SyntaxKind): kind is TypeFunctionExpressionKind {
+    return kind === SyntaxKind.TypeFunctionName
+        || kind === SyntaxKind.TypeFunctionLiteral
+        || kind === SyntaxKind.TypeFunctionCall
+        || kind === SyntaxKind.TypeFunctionUnary
+        || kind === SyntaxKind.TypeFunctionBinary
+        || kind === SyntaxKind.TypeFunctionTuple
+        || kind === SyntaxKind.TypeFunctionObject
+        || kind === SyntaxKind.TypeFunctionField
+        || kind === SyntaxKind.TypeFunctionIndex
+        || kind === SyntaxKind.TypeFunctionNativeType
+        || kind === SyntaxKind.TypeFunctionSpread;
 }
 
 export function isLiteralKind(kind: SyntaxKind): boolean {

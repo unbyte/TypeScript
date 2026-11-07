@@ -1,0 +1,1 @@
+{"files":{"main.ts":"error-deferred-signature.ts"},"options":{"typefn":{"version":1}},"diagnostics":[{"phase":"semantic","file":"main.ts","code":2322,"message":"not assignable"}]}

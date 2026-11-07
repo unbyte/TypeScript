@@ -145,6 +145,12 @@ func isNotForContext(context *FormattingContext) bool {
 
 func isBinaryOpContext(context *FormattingContext) bool {
 	switch context.contextNode.Kind {
+	case ast.KindTypeFunctionBinary:
+		return true
+	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionAssignment:
+		return context.currentTokenSpan.Kind == ast.KindEqualsToken || context.nextTokenSpan.Kind == ast.KindEqualsToken
+	case ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
+		return context.currentTokenSpan.Kind == ast.KindOfKeyword || context.nextTokenSpan.Kind == ast.KindOfKeyword || context.currentTokenSpan.Kind == ast.KindInKeyword || context.nextTokenSpan.Kind == ast.KindInKeyword
 	case ast.KindBinaryExpression:
 		return context.contextNode.AsBinaryExpression().OperatorToken.Kind != ast.KindCommaToken
 	case ast.KindConditionalExpression,
@@ -262,6 +268,8 @@ func nodeIsBlockContext(node *ast.Node) bool {
 
 	switch node.Kind {
 	case ast.KindBlock,
+		ast.KindTypeFunctionBlock,
+		ast.KindTypeFunctionObject,
 		ast.KindCaseBlock,
 		ast.KindObjectLiteralExpression,
 		ast.KindModuleBlock:
@@ -273,7 +281,7 @@ func nodeIsBlockContext(node *ast.Node) bool {
 
 func isFunctionDeclContext(context *FormattingContext) bool {
 	switch context.contextNode.Kind {
-	case ast.KindFunctionDeclaration,
+	case ast.KindTypeFunctionDeclaration, ast.KindFunctionDeclaration,
 		ast.KindMethodDeclaration,
 		ast.KindMethodSignature:
 		// case ast.KindMemberFunctionDeclaration:
@@ -336,7 +344,7 @@ func isAfterCodeBlockContext(context *FormattingContext) bool {
 		ast.KindModuleBlock,
 		ast.KindSwitchStatement:
 		return true
-	case ast.KindBlock:
+	case ast.KindBlock, ast.KindTypeFunctionBlock:
 		blockParent := context.currentTokenParent.Parent
 		// In a codefix scenario, we can't rely on parents being set. So just always return true.
 		if blockParent == nil || blockParent.Kind != ast.KindArrowFunction && blockParent.Kind != ast.KindFunctionExpression {
@@ -348,7 +356,8 @@ func isAfterCodeBlockContext(context *FormattingContext) bool {
 
 func isControlDeclContext(context *FormattingContext) bool {
 	switch context.contextNode.Kind {
-	case ast.KindIfStatement,
+	case ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn,
+		ast.KindIfStatement,
 		ast.KindSwitchStatement,
 		ast.KindForStatement,
 		ast.KindForInStatement,
@@ -484,7 +493,7 @@ func isTypeArgumentOrParameterOrAssertion(token TextRangeWithKind, parent *ast.N
 		return false
 	}
 	switch parent.Kind {
-	case ast.KindTypeReference,
+	case ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionCall, ast.KindTypeReference,
 		ast.KindTypeAssertionExpression,
 		ast.KindTypeAliasDeclaration,
 		ast.KindClassDeclaration,
@@ -537,7 +546,8 @@ func isNotStatementConditionContext(context *FormattingContext) bool {
 
 func isStatementConditionContext(context *FormattingContext) bool {
 	switch context.contextNode.Kind {
-	case ast.KindIfStatement,
+	case ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn,
+		ast.KindIfStatement,
 		ast.KindForStatement,
 		ast.KindForInStatement,
 		ast.KindForOfStatement,
@@ -551,6 +561,10 @@ func isStatementConditionContext(context *FormattingContext) bool {
 }
 
 func isSemicolonDeletionContext(context *FormattingContext) bool {
+	// DSL terminators are mandatory, regardless of JavaScript style preferences.
+	if ast.FindAncestor(context.currentTokenParent, ast.IsTypeFunctionDeclaration) != nil {
+		return false
+	}
 	nextTokenKind := context.nextTokenSpan.Kind
 	nextTokenStart := context.nextTokenSpan.Loc.Pos()
 	if ast.IsTrivia(nextTokenKind) {

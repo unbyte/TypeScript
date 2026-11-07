@@ -54,6 +54,9 @@ func (l *LanguageService) ProvideCompletion(
 	}
 	file = positions[0].Script
 	position := int(positions[0].Position)
+	if list := l.typefnCompletions(ctx, file, position); list != nil {
+		return lsproto.CompletionItemsOrListOrNull{List: list}, nil
+	}
 	completionListInternal, err := l.getCompletionsAtPosition(
 		ctx,
 		file,

@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-loop-control.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "file": "main.ts",
+      "code": -1,
+      "message": "loop control outside a loop"
+    }
+  ]
+}

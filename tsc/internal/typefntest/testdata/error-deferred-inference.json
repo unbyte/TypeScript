@@ -1,0 +1,8 @@
+{
+  "files": {"main.ts": "error-deferred-inference.ts"},
+  "options": {"typefn": {"version": 1}},
+  "diagnostics": [
+    {"phase": "semantic", "file": "main.ts", "code": -1, "message": "scalar operator requires single unbranded literals"},
+    {"phase": "semantic", "file": "main.ts", "code": -1, "message": "scalar operator requires single unbranded literals"}
+  ]
+}
