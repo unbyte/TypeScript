@@ -3,6 +3,7 @@ import {
     type Declaration,
     type GoValue,
     optionKind,
+    typefnLimits,
 } from "./options-model.ts";
 import { options } from "./options.ts";
 
@@ -26,6 +27,8 @@ export interface JSONSchema {
     pattern?: string;
     default?: string | boolean | number;
     minimum?: number;
+    maximum?: number;
+    const?: number;
     minLength?: number;
     deprecated?: boolean;
     deprecationMessage?: string;
@@ -92,6 +95,21 @@ function valueSchema(declaration: Declaration): JSONSchema {
             return declaration.kind === "List" ? array : { anyOf: [items, array] };
         }
         case "Object":
+            if (declaration.name === "typefn") {
+                return {
+                    type: "object",
+                    properties: {
+                        version: { const: 1 },
+                        limits: {
+                            type: "object",
+                            properties: Object.fromEntries(typefnLimits.map(name => [name, { type: "integer", minimum: 1, maximum: 9007199254740991 }])),
+                            additionalProperties: false,
+                        },
+                    },
+                    required: ["version"],
+                    additionalProperties: false,
+                };
+            }
             if (declaration.name === "paths") {
                 return { type: "object", additionalProperties: { type: "array", items: { type: "string" } } };
             }

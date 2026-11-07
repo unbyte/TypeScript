@@ -15,6 +15,8 @@ func parseCompilerOptions(key string, value any, allOptions *core.CompilerOption
 		key = option.Name
 	}
 	switch key {
+	case "typefn":
+		allOptions.Typefn, _ = parseTypefnOptions(value)
 	case "allowJs":
 		allOptions.AllowJs = ParseTristate(value)
 	case "allowArbitraryExtensions":
@@ -376,6 +378,9 @@ func CompilerOptionsAffectSemanticDiagnostics(oldOptions *core.CompilerOptions, 
 	if oldOptions == nil || newOptions == nil {
 		return true
 	}
+	if oldOptions.Typefn != newOptions.Typefn && (oldOptions.Typefn == nil || newOptions.Typefn == nil || *oldOptions.Typefn != *newOptions.Typefn) {
+		return true
+	}
 	if oldOptions.AllowArbitraryExtensions != newOptions.AllowArbitraryExtensions {
 		return true
 	}
@@ -584,6 +589,9 @@ func CompilerOptionsAffectEmit(oldOptions *core.CompilerOptions, newOptions *cor
 	if oldOptions == nil || newOptions == nil {
 		return true
 	}
+	if oldOptions.Typefn != newOptions.Typefn && (oldOptions.Typefn == nil || newOptions.Typefn == nil || *oldOptions.Typefn != *newOptions.Typefn) {
+		return true
+	}
 	if oldOptions.AllowArbitraryExtensions != newOptions.AllowArbitraryExtensions {
 		return true
 	}
@@ -765,6 +773,9 @@ func CompilerOptionsAffectEmit(oldOptions *core.CompilerOptions, newOptions *cor
 
 // ForEachCompilerOptionAffectingBuildInfo visits nonzero options in CompilerOptions field order.
 func ForEachCompilerOptionAffectingBuildInfo(options *core.CompilerOptions, fn func(option *CommandLineOption, value any)) {
+	if options.Typefn != nil {
+		fn(CommandLineCompilerOptionsMap.Get("typefn"), options.Typefn)
+	}
 	if options.AllowJs != core.TSUnknown {
 		fn(CommandLineCompilerOptionsMap.Get("allowJs"), options.AllowJs)
 	}
@@ -1017,6 +1028,11 @@ func ForEachCompilerOptionAffectingBuildInfo(options *core.CompilerOptions, fn f
 }
 
 func mergeCompilerOptionFields(targetOptions, sourceOptions *core.CompilerOptions, explicitNullFields collections.Set[string]) {
+	if explicitNullFields.Has("typefn") {
+		targetOptions.Typefn = nil
+	} else if sourceOptions.Typefn != nil {
+		targetOptions.Typefn = sourceOptions.Typefn
+	}
 	if explicitNullFields.Has("allowJs") {
 		targetOptions.AllowJs = core.TSUnknown
 	} else if sourceOptions.AllowJs != core.TSUnknown {
@@ -1716,6 +1732,9 @@ func handleOptionConfigDirTemplateSubstitution(compilerOptions *parsedCompilerOp
 
 func serializeCompilerOptions(options *core.CompilerOptions, configFilePath tspath.RootedFilePath, caseSensitivity tspath.CaseSensitivity) *collections.OrderedMap[string, any] {
 	result := collections.NewOrderedMapWithSizeHint[string, any](32)
+	if options.Typefn != nil {
+		result.Set("typefn", options.Typefn)
+	}
 	if options.AllowJs == core.TSTrue || options.AllowJs == core.TSFalse {
 		result.Set("allowJs", options.AllowJs == core.TSTrue)
 	}

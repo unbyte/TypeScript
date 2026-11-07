@@ -11,13 +11,34 @@ import (
 
 //go:generate npx hereby generate:compileroptions
 
+// TypefnOptions selects the opt-in language profile. Treat published options as immutable.
+type TypefnOptions struct {
+	Version int          `json:"version"`
+	Limits  TypefnLimits `json:"limits,omitzero"`
+}
+
+type TypefnLimits struct {
+	VMInstructions int `json:"vmInstructions,omitzero"`
+	CallDepth      int `json:"callDepth,omitzero"`
+	SyntaxDepth    int `json:"syntaxDepth,omitzero"`
+	ParserWork     int `json:"parserWork,omitzero"`
+	LiveBytes      int `json:"liveBytes,omitzero"`
+	BigintBits     int `json:"bigintBits,omitzero"`
+	StringUnits    int `json:"stringUnits,omitzero"`
+	NativeWork     int `json:"nativeWork,omitzero"`
+	NativeNodes    int `json:"nativeNodes,omitzero"`
+	CacheBytes     int `json:"cacheBytes,omitzero"`
+}
+
 type PluginImport struct {
 	Name string `json:"name"`
 }
 
 // CompilerOptions contains the compiler options exposed by the API.
 type CompilerOptions struct {
-	_                                         noCopy
+	_ noCopy
+	// Opt-in type function language profile. Limits are positive safe integers; omitted limits use defaults.
+	Typefn                                    *TypefnOptions                            `json:"typefn,omitzero"`
 	AllowJs                                   Tristate                                  `json:"allowJs,omitzero"`
 	AllowArbitraryExtensions                  Tristate                                  `json:"allowArbitraryExtensions,omitzero"`
 	AllowImportingTsExtensions                Tristate                                  `json:"allowImportingTsExtensions,omitzero"`
@@ -166,13 +187,14 @@ type CompilerOptions struct {
 // Clone creates a shallow copy of the CompilerOptions.
 func (options *CompilerOptions) Clone() *CompilerOptions {
 	return &CompilerOptions{
-		AllowJs:                                   options.AllowJs,
-		AllowArbitraryExtensions:                  options.AllowArbitraryExtensions,
-		AllowImportingTsExtensions:                options.AllowImportingTsExtensions,
-		AllowNonTsExtensions:                      options.AllowNonTsExtensions,
-		AllowUmdGlobalAccess:                      options.AllowUmdGlobalAccess,
-		AllowUnreachableCode:                      options.AllowUnreachableCode,
-		AllowUnusedLabels:                         options.AllowUnusedLabels,
+		Typefn:                     options.Typefn,
+		AllowJs:                    options.AllowJs,
+		AllowArbitraryExtensions:   options.AllowArbitraryExtensions,
+		AllowImportingTsExtensions: options.AllowImportingTsExtensions,
+		AllowNonTsExtensions:       options.AllowNonTsExtensions,
+		AllowUmdGlobalAccess:       options.AllowUmdGlobalAccess,
+		AllowUnreachableCode:       options.AllowUnreachableCode,
+		AllowUnusedLabels:          options.AllowUnusedLabels,
 		AssumeChangesOnlyAffectDirectDependencies: options.AssumeChangesOnlyAffectDirectDependencies,
 		CheckJs:                                 options.CheckJs,
 		CustomConditions:                        options.CustomConditions,
@@ -309,6 +331,9 @@ func (options *CompilerOptions) Equals(other *CompilerOptions) bool {
 		return true
 	}
 	if options == nil || other == nil {
+		return false
+	}
+	if options.Typefn != other.Typefn && (options.Typefn == nil || other.Typefn == nil || *options.Typefn != *other.Typefn) {
 		return false
 	}
 	if options.AllowJs != other.AllowJs {

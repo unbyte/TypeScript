@@ -110,6 +110,11 @@ func (o *RawCompilerOptions) Finalize(basePath tspath.RootedDirectoryPath) (*cor
 				}
 			}
 		}
+		if option != nil && option.extraValidation == extraValidationTypefn {
+			validated, errors := validateJsonOptionValue(option, value, nil, nil)
+			diagnostics = append(diagnostics, errors...)
+			value = validated
+		}
 		ParseCompilerOptions(key, value, options)
 	}
 	return options, diagnostics

@@ -172,6 +172,83 @@
                 "null"
             ],
             "properties": {
+                "typefn": {
+                    "anyOf": [
+                        {
+                            "type": "object",
+                            "properties": {
+                                "version": {
+                                    "const": 1
+                                },
+                                "limits": {
+                                    "type": "object",
+                                    "properties": {
+                                        "vmInstructions": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "callDepth": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "syntaxDepth": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "parserWork": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "liveBytes": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "bigintBits": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "stringUnits": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "nativeWork": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "nativeNodes": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        },
+                                        "cacheBytes": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 9007199254740991
+                                        }
+                                    },
+                                    "additionalProperties": false
+                                }
+                            },
+                            "required": [
+                                "version"
+                            ],
+                            "additionalProperties": false
+                        },
+                        {
+                            "type": "null"
+                        }
+                    ],
+                    "description": "Enable the type function language profile.",
+                    "markdownDescription": "Enable the type function language profile."
+                },
                 "allowJs": {
                     "anyOf": [
                         {

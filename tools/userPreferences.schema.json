@@ -207,6 +207,10 @@
         },
         "InlayHintsPreferences": {
             "properties": {
+                "includeInlayTypefnResultHints": {
+                    "type": "boolean",
+                    "x-config": "inlayHints.typefnResults.enabled"
+                },
                 "includeInlayEnumMemberValueHints": {
                     "type": "boolean",
                     "x-config": "inlayHints.enumMemberValues.enabled"

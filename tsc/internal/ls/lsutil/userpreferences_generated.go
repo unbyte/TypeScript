@@ -81,6 +81,7 @@ type InlayHintsPreferences struct {
 	IncludeInlayParameterNameHints                        IncludeInlayParameterNameHints `json:"includeInlayParameterNameHints,omitempty"`
 	IncludeInlayParameterNameHintsWhenArgumentMatchesName core.Tristate                  `json:"includeInlayParameterNameHintsWhenArgumentMatchesName,omitempty"`
 	IncludeInlayPropertyDeclarationTypeHints              core.Tristate                  `json:"includeInlayPropertyDeclarationTypeHints,omitempty"`
+	IncludeInlayTypefnResultHints                         core.Tristate                  `json:"includeInlayTypefnResultHints,omitempty"`
 	IncludeInlayVariableTypeHints                         core.Tristate                  `json:"includeInlayVariableTypeHints,omitempty"`
 	IncludeInlayVariableTypeHintsWhenTypeMatchesName      core.Tristate                  `json:"includeInlayVariableTypeHintsWhenTypeMatchesName,omitempty"`
 }
@@ -513,6 +514,8 @@ func (p *UserPreferences) applyRawPreferences(settings map[string]any) {
 			p.InlayHintsPreferences.IncludeInlayParameterNameHintsWhenArgumentMatchesName = parsePreferenceTristate(value)
 		case "includeInlayPropertyDeclarationTypeHints":
 			p.InlayHintsPreferences.IncludeInlayPropertyDeclarationTypeHints = parsePreferenceTristate(value)
+		case "includeInlayTypefnResultHints":
+			p.InlayHintsPreferences.IncludeInlayTypefnResultHints = parsePreferenceTristate(value)
 		case "includeInlayVariableTypeHints":
 			p.InlayHintsPreferences.IncludeInlayVariableTypeHints = parsePreferenceTristate(value)
 		case "includeInlayVariableTypeHintsWhenTypeMatchesName":
@@ -851,6 +854,11 @@ func (p UserPreferences) withConfig(config map[string]any) UserPreferences {
 			p.InlayHintsPreferences.IncludeInlayPropertyDeclarationTypeHints = parsePreferenceTristate(value)
 		}
 	}
+	if value, ok := getPreferenceConfigValue(config, "inlayHints.typefnResults.enabled"); ok {
+		if value != nil {
+			p.InlayHintsPreferences.IncludeInlayTypefnResultHints = parsePreferenceTristate(value)
+		}
+	}
 	if value, ok := getPreferenceConfigValue(config, "inlayHints.variableTypes.enabled"); ok {
 		if value != nil {
 			p.InlayHintsPreferences.IncludeInlayVariableTypeHints = parsePreferenceTristate(value)
@@ -1168,6 +1176,9 @@ func (p *UserPreferences) MarshalJSONTo(enc *json.Encoder) error {
 	}
 	if p.InlayHintsPreferences.IncludeInlayPropertyDeclarationTypeHints.IsTrue() || p.InlayHintsPreferences.IncludeInlayPropertyDeclarationTypeHints.IsFalse() {
 		setNestedValue(config, "inlayHints.propertyDeclarationTypes.enabled", p.InlayHintsPreferences.IncludeInlayPropertyDeclarationTypeHints.IsTrue())
+	}
+	if p.InlayHintsPreferences.IncludeInlayTypefnResultHints.IsTrue() || p.InlayHintsPreferences.IncludeInlayTypefnResultHints.IsFalse() {
+		setNestedValue(config, "inlayHints.typefnResults.enabled", p.InlayHintsPreferences.IncludeInlayTypefnResultHints.IsTrue())
 	}
 	if p.InlayHintsPreferences.IncludeInlayVariableTypeHints.IsTrue() || p.InlayHintsPreferences.IncludeInlayVariableTypeHints.IsFalse() {
 		setNestedValue(config, "inlayHints.variableTypes.enabled", p.InlayHintsPreferences.IncludeInlayVariableTypeHints.IsTrue())
