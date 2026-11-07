@@ -1,0 +1,112 @@
+// R1 design example. The compiler does not yet execute typefn syntax.
+// String iteration, grammar and expected outcomes: ../string-iteration.md
+
+typefn Characters<S> {
+  type result = [];
+  for (type character of S) {
+    result = [...result, character];
+  }
+  return result;
+}
+
+// Exact integer evaluation. Helpers pass the cursor explicitly: captures are
+// snapshots, so they must not mutate a cursor in an enclosing scope.
+typefn CalcBig<S> {
+  function error(message: string, position: int): never {
+    fail(message + " at UTF-16 offset " + position.toString());
+  }
+
+  function skipSpace(text: string, position: int): int {
+    while (position < text.length &&
+           " \t\r\n".includes(text.slice(position, position + 1))) {
+      position += 1;
+    }
+    return position;
+  }
+
+  // Precedence climbing: +,- bind at 10; *,/ at 20; unary signs at 30.
+  // A recursive right operand uses power + 1 to make binary operators left-associative.
+  function expression(text: string, start: int, minimum: int): { value: int; next: int } {
+    let position = skipSpace(text, start);
+    if (position == text.length) { error("Expected an expression", position); }
+
+    const first = text.slice(position, position + 1);
+    let value = 0;
+
+    if (first == "+" || first == "-") {
+      const operand = expression(text, position + 1, 30);
+      value = operand.value;
+      if (first == "-") { value = -value; }
+      position = operand.next;
+    } else {
+      if (first == "(") {
+        const inner = expression(text, position + 1, 0);
+        position = skipSpace(text, inner.next);
+        if (text.slice(position, position + 1) != ")") {
+          error("Expected ')'", position);
+        }
+        value = inner.value;
+        position += 1;
+      } else {
+        const begin = position;
+        while (position < text.length) {
+          const character = text.slice(position, position + 1);
+          const digit = "0123456789".indexOf(character);
+          if (digit < 0) { break; }
+          value = value * 10 + digit;
+          position += 1;
+        }
+        if (position == begin) { error("Expected an integer or '('", position); }
+      }
+    }
+
+    while (true) {
+      position = skipSpace(text, position);
+      const operator = text.slice(position, position + 1);
+      let power = -1;
+      if (operator == "+" || operator == "-") { power = 10; }
+      if (operator == "*" || operator == "/") { power = 20; }
+      if (power < minimum) { break; }
+
+      const right = expression(text, position + 1, power + 1);
+      if (operator == "+") { value = value + right.value; }
+      if (operator == "-") { value = value - right.value; }
+      if (operator == "*") { value = value * right.value; }
+      if (operator == "/") {
+        if (right.value == 0) { error("Division by zero", position); }
+        if (value % right.value != 0) { error("Non-integral division", position); }
+        value = value / right.value;
+      }
+      position = right.next;
+    }
+
+    return { value: value, next: position };
+  }
+
+  const text = literal.text(S);
+  const result = expression(text, 0, 0);
+  const end = skipSpace(text, result.next);
+  if (end != text.length) { error("Unexpected token", end); }
+  return literal.bigint(result.value);
+}
+
+// Explicit conversion to a native number literal: exact representation required.
+typefn Calc<S> {
+  const value = literal.integer(CalcBig<S>);
+  return literal(value);
+}
+
+type Letters = Characters<"12+3">; // ["1", "2", "+", "3"]
+type Empty = Characters<"">; // []
+type Astral = Characters<"💡">; // ["\uD83D", "\uDCA1"]: two UTF-16 units
+
+type A = Calc<"2 + 3 * 4">; // 14
+type B = Calc<"(2 + 3) * 4">; // 20
+type C = Calc<"-(10 - 4) / 3">; // -2
+type D = Calc<"8 - 3 - 2">; // 3, not 7
+type Large = CalcBig<"9007199254740992 + 1">; // 9007199254740993n
+
+// Calc<"7 / 2">: Non-integral division at UTF-16 offset 2.
+// Calc<"1 + (2 * 3">: Expected ')' at UTF-16 offset 10.
+// Calc<"2 + 3 garbage">: Unexpected token at UTF-16 offset 6.
+// Calc<"9007199254740992 + 1">: native number representation is not exact.

@@ -1,0 +1,67 @@
+// R2 specification examples; no runtime declarations or values are generated.
+
+typefn Field<Name, Value> {
+  return types.object<[
+    { key: Name; value: Value; optional: false; readonly: false }
+  ]>;
+}
+
+// Explicit public structural projection, not a clone of nominal class identity.
+// Preserve optionality, declared undefined, indexers and all signatures.
+typefn ReadonlyPublic<T> {
+  type fields = [];
+  for (type property of reflect.properties<T>) {
+    fields = [...fields, {
+      key: property["key"]; value: property["value"];
+      optional: property["optional"]; readonly: true
+    }];
+  }
+  type indexers = [];
+  for (type indexer of reflect.indexers<T>) {
+    indexers = [...indexers, {
+      key: indexer["key"]; value: indexer["value"]; readonly: true
+    }];
+  }
+  return types.object<fields, indexers, reflect.calls<T>, reflect.constructs<T>>;
+}
+
+typefn EventHandlers<Events> {
+  type fields = [];
+  for (type event in Events) {
+    fields = [...fields, {
+      key: event["kind"];
+      value: type((event: event) => void);
+      optional: false; readonly: false
+    }];
+  }
+  return types.object<fields>;
+}
+
+typefn ListNode<Item> {
+  type Build = typefn<Self> {
+    return { value: Item; next: Self | null };
+  };
+  return types.recursive<Build>;
+}
+
+typefn MapTypes<Items, F<_>> {
+  type result = [];
+  for (type item of Items) { result = [...result, F<item>]; }
+  return result;
+}
+typefn Compose<F<_>, G<_>> {
+  return typefn<T> { return F<G<T>>; };
+}
+
+type Id = Field<"id", number>; // { id: number }
+type View = ReadonlyPublic<{ name?: string; count: number }>;
+// { readonly name?: string; readonly count: number }
+type Handlers = EventHandlers<
+  { kind: "opened"; id: string } | { kind: "closed"; code: number }
+>;
+// { opened: (event: {kind:"opened";id:string}) => void;
+//   closed: (event: {kind:"closed";code:number}) => void }
+type StringList = ListNode<string>; // { value: string; next: StringList | null }
+type Promises = MapTypes<[string, number], Promise>; // [Promise<string>, Promise<number>]
+type AsyncArray = Compose<Promise, Array>;
+type Names = AsyncArray<string>; // Promise<string[]>

@@ -1,0 +1,57 @@
+// R1 design examples; not executable by the current compiler.
+// Ordering semantics and limits: ../numeric-comparisons.md
+
+typefn Less<A, B> {
+  if (A < B) { return true; }
+  return false;
+}
+
+typefn Min<A, B> {
+  if (A < B) { return A; }
+  return B;
+}
+
+typefn Clamp<Value, Low, High> {
+  if (Low > High) { fail("Lower bound exceeds upper bound"); }
+  if (Value < Low) { return Low; }
+  if (Value > High) { return High; }
+  return Value;
+}
+
+typefn Below<Values, Limit> {
+  type result = never;
+  for (type value in Values) {
+    if (value < Limit) { result = result | value; }
+  }
+  return result;
+}
+
+// Exact arithmetic on interpreter data; explicitly construct the result Type.
+typefn AddIntegers<A, B> {
+  const a = literal.integer(A);
+  const b = literal.integer(B);
+  return literal(a + b);
+}
+
+// Half-open range of native number literal Types. Start >= Stop gives never.
+typefn RangeNumbers<Start, Stop> {
+  const start = literal.integer(Start);
+  const stop = literal.integer(Stop);
+  type result = never;
+  for (let value = start; value < stop; value += 1) {
+    result = result | literal(value);
+  }
+  return result;
+}
+
+type A = Less<-3, 2>; // true
+type B = Min<3.5, 2.25>; // 2.25
+type C = Clamp<120, 0, 100>; // 100
+type D = Below<2 | 8 | 15, 10>; // 2 | 8
+type E = AddIntegers<17, 25>; // 42
+type F = RangeNumbers<0, 4>; // 0 | 1 | 2 | 3
+type G = Less<9007199254740992n, 9007199254740993n>; // true
+
+// Less<1 | 2, 3>: scalar operand diagnostic, not an implicit all/any comparison.
+// Less<number, 3>: no concrete scalar value to compare.
+// Less<1, 2n>: mixed numeric families require explicit conversion.
