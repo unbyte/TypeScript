@@ -9,13 +9,13 @@ for execution gaps and [the specification](spec/integration.md) for the target.
 Build the compiler and extension from this checkout:
 
 ```sh
-go build -o built/local/tsgo ./cmd/tsgo
-npm run --prefix _extension build
+go build -o built/local/tsc ./tsc/cmd/tsc
+npm run extension:build
 ```
 
-Run the extension in a VS Code Extension Development Host with `_extension` as
+Run the extension in a VS Code Extension Development Host with `packages/vscode-typescript` as
 its extension development directory. In development mode it discovers
-`built/local/tsgo`. The repository's `.vscode/launch.template.json` includes an
+`built/local/tsc`. The repository's `.vscode/launch.template.json` includes an
 extension-host launch template.
 A separately installed native TypeScript extension can select `built/local` with
 `js/ts.tsdk.path`; check that the selected executable is this fork.
@@ -125,20 +125,20 @@ project lifetime, and language-service request infrastructure:
 
 Key implementation files:
 
-- `internal/ast/typefn.go`, `internal/binder/binder.go`: syntax traversal and scopes.
-- `internal/checker/typefn.go`, `internal/checker/typefn_services.go`: lowering,
+- `tsc/internal/ast/typefn.go`, `tsc/internal/binder/binder.go`: syntax traversal and scopes.
+- `tsc/internal/checker/typefn.go`, `tsc/internal/checker/typefn_services.go`: lowering,
   evaluation, signature descriptions, and cancelable result queries.
-- `internal/checker/typefn_deferred.go`, `internal/checker/typefn_display.go`:
+- `tsc/internal/checker/typefn_deferred.go`, `tsc/internal/checker/typefn_display.go`:
   immutable deferred terms, substitution/replay, guards, and pending Type display.
-- `internal/ls/typefn.go` and the native LS providers: completion, signature help,
+- `tsc/internal/ls/typefn.go` and the native LS providers: completion, signature help,
   scanner coloring, hover, result hints, navigation, outline, and folding.
-- `internal/format`: native formatting context and indentation rules.
-- `internal/project/checkerpool.go`: existing checker ownership and cancellation
+- `tsc/internal/format`: native formatting context and indentation rules.
+- `tsc/internal/project/checkerpool.go`: existing checker ownership and cancellation
   disposal, used by the new queries.
 
 ## Validation and limits
 
-`internal/ls/typefn_test.go` exercises language-service APIs before semantic checking,
+`tsc/internal/ls/typefn_test.go` exercises language-service APIs before semantic checking,
 shadowing, iteration scopes, namespace completion, unfinished calls, hover/results,
 UTF-16 positions, and token modifiers. `typefn_format_test.go` reparses formatted
 source and checks idempotence across arithmetic, control flow, tuple/object
@@ -150,11 +150,11 @@ and inlay results even when the failing intermediate calculation is discarded.
 `typefn_deferred_test.go` checks pending display, suppression of pending overlays,
 native alias specialization, and stable Type counts across unchanged queries.
 
-`internal/project/typefn_test.go` uses a real editor session and pool. It checks
+`tsc/internal/project/typefn_test.go` uses a real editor session and pool. It checks
 cross-file navigation/references/rename, changed and restored imported results,
 malformed imported bodies, profile-cache isolation, and deterministic cancellation
 followed by a successful request, including cancellation during deferred replay.
-`internal/lsp/server_typefn_test.go` also sends
+`tsc/internal/lsp/server_typefn_test.go` also sends
 serialized LSP requests to verify hover, definition, and result-hint preference
 routing. Encoder tests exercise DSL wire round-trips.
 
@@ -171,7 +171,7 @@ it does not establish cold evaluation cost, large-project performance, or latenc
 bounds. Run it with:
 
 ```sh
-go test ./internal/ls -run '^$' -bench BenchmarkTypefnHover -benchmem
+go test ./tsc/internal/ls -run '^$' -bench BenchmarkTypefnHover -benchmem
 ```
 
 This milestone does not add string algorithms, HKT execution, native-island

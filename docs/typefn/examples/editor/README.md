@@ -17,7 +17,7 @@ an arithmetic diagnostic. Restore `21` afterward.
 Validate from the repository root:
 
 ```sh
-built/local/tsgo --project docs/typefn/examples/editor
+built/local/tsc --project docs/typefn/examples/editor
 ```
 
 These examples use the implemented execution subset; they are checked by the fork.

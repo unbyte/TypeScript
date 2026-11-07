@@ -11,7 +11,7 @@ import subprocess
 import sys
 import tempfile
 
-compiler = Path(sys.argv[1] if len(sys.argv) > 1 else "built/local/tsgo").resolve()
+compiler = Path(sys.argv[1] if len(sys.argv) > 1 else "built/local/tsc").resolve()
 baseline = Path(__file__).with_name("where-baseline.ts").resolve()
 cases = [
     ("dependent-bound-and-result", """

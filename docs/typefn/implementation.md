@@ -16,8 +16,8 @@ fixtures to see what the compiler currently executes.
 
 ## Try the implemented slice
 
-Build the fork with `go build -o /tmp/tsgo-typefn ./cmd/tsgo`, then run
-`/tmp/tsgo-typefn --project path/to/tsconfig.json`. Enable the DSL in `tsconfig.json`:
+Build the fork with `go build -o /tmp/tsc-typefn ./tsc/cmd/tsc`, then run
+`/tmp/tsc-typefn --project path/to/tsconfig.json`. Enable the DSL in `tsconfig.json`:
 
 ```json
 {
@@ -146,7 +146,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation and audit
 
-`internal/typefntest` currently has 62 isolated virtual compiler-project fixtures,
+`tsc/internal/typefntest` currently has 62 isolated virtual compiler-project fixtures,
 using bundled libraries,
 real config parsing, native Type equality assertions, exact diagnostic sets and exact
 emit text. Fixtures run concurrently. The harness itself is calibrated with failures
@@ -178,17 +178,18 @@ limit recovery, suppression of failed results, and comparison-argument signature
 Run from the repository root:
 
 ```sh
-go test ./internal/typefntest ./internal/parser ./internal/printer ./internal/ast ./internal/api/encoder ./internal/tsoptions ./internal/checker ./internal/compiler
-go test -race ./internal/typefntest ./internal/parser ./internal/project -run 'TestIntegration|TestTypefn'
-go test ./internal/parser -run '^$' -fuzz FuzzTypefnParser -fuzztime 10s -parallel 2
-go test ./internal/ls ./internal/format ./internal/ls/lsutil ./internal/project ./internal/lsp
-go test ./internal/astnav -run TestTypefn
-go test -race ./internal/ls ./internal/project ./internal/lsp -run TestTypefn
-node_modules/.bin/tsc -p _packages/native-preview/tsconfig.json --noEmit
-node_modules/.bin/tsc -b _packages/native-preview/test
-node --experimental-strip-types --no-warnings --conditions @typescript/source _packages/native-preview/test/typefn_ast.test.ts
-node --experimental-strip-types --no-warnings --conditions @typescript/source _packages/native-preview/test/typefn_flags.test.ts
-go test ./internal/typefntest -run '^$' -bench BenchmarkTypefnProject -benchmem
+go test ./tsc/internal/typefntest ./tsc/internal/parser ./tsc/internal/printer ./tsc/internal/ast ./tsc/internal/api/encoder ./tsc/internal/tsoptions ./tsc/internal/checker ./tsc/internal/compiler
+go test -race ./tsc/internal/typefntest ./tsc/internal/parser ./tsc/internal/project -run 'TestIntegration|TestTypefn'
+go test ./tsc/internal/parser -run '^$' -fuzz FuzzTypefnParser -fuzztime 10s -parallel 2
+go test ./tsc/internal/ls ./tsc/internal/format ./tsc/internal/ls/lsutil ./tsc/internal/project ./tsc/internal/lsp
+go test ./tsc/internal/astnav -run TestTypefn
+go test -race ./tsc/internal/ls ./tsc/internal/project ./tsc/internal/lsp -run TestTypefn
+node_modules/.bin/tsc -p packages/typescript/tsconfig.json --noEmit
+node_modules/.bin/tsc -b packages/typescript-wasip1-wasm
+node_modules/.bin/tsc -b packages/typescript/test --force
+node --experimental-strip-types --no-warnings --conditions @typescript/source packages/typescript/test/typefn_ast.test.ts
+node --experimental-strip-types --no-warnings --conditions @typescript/source packages/typescript/test/typefn_flags.test.ts
+go test ./tsc/internal/typefntest -run '^$' -bench BenchmarkTypefnProject -benchmem
 ```
 
 The benchmark measures complete cold compiler projects, including libraries and

@@ -1,6 +1,6 @@
 # Typefn integration harness
 
-Run `go test ./internal/typefntest`. Each JSON manifest creates an isolated virtual
+From the repository root, run `go test ./tsc/internal/typefntest`. Each JSON manifest creates an isolated virtual
 TypeScript project with the real compiler, bundled native libraries and tsconfig
 parser. Files and options are explicit. Native Type assertions establish results;
 negative fixtures calibrate that assertions reject wrong Types, including any.
