@@ -12,7 +12,8 @@ against the language specification; these checks establish the boundaries below.
   creation-check readiness, computed bounds, mixed constructor arguments, native
   constructor identity, dependent bounds, lexical capture substitution, constructor
   aliases, forward chains, imports, creation cycles, native island constructors and
-  recursive builders and groups, guard rejection and scratch-cache isolation,
+  recursive builders and groups, guarded validation, property/indexer/tuple/signature
+  descriptors, overload forwarding, native predicate narrowing and scratch-cache isolation,
   native lexical replay with query-order isolation, ambient island alias defaults,
   `typeof` queries, mapped generic constraints and Type/value namespace separation.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
@@ -21,14 +22,15 @@ against the language specification; these checks establish the boundaries below.
   in both exact-optional modes, and the added generic-body dependency assertion passes.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
-  baselines, rerun after native constructor aliases.
+  baselines, rerun at recursive integration checkpoint `1a884501c`.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
-* Passed: async and generated sync RPC profile tests against the rebuilt compiler.
+* Passed: async and generated sync RPC profile tests against the compiler rebuilt
+  at `1a884501c`.
   Both read parameter, bound, lambda and result-kind nodes from the Go-encoded AST,
   preserve computed native results and reject the disabled profile.
-* Passed: rebuilt CLI against the editor example project and the constraint probe
+* Passed: CLI rebuilt at `1a884501c` against the editor example project and the constraint probe
   script (13 fork cases and the native baseline). Unused bounds no longer execute,
   and later-parameter references diagnose. This does not add `where` syntax.
 * Passed: changed Go source formatting and `git diff --check`.
