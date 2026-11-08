@@ -388,6 +388,30 @@ const (
 	KindPartiallyEmittedExpression
 	KindSyntheticReferenceExpression
 	KindNotEmittedTypeElement
+	// Imperative typefn DSL (opt-in)
+	KindTypeFunctionDeclaration
+	KindTypeFunctionBlock
+	KindTypeFunctionBinding
+	KindTypeFunctionAssignment
+	KindTypeFunctionReturn
+	KindTypeFunctionIf
+	KindTypeFunctionWhile
+	KindTypeFunctionForOf
+	KindTypeFunctionForIn
+	KindTypeFunctionBreak
+	KindTypeFunctionContinue
+	KindTypeFunctionExpressionStatement
+	KindTypeFunctionName
+	KindTypeFunctionLiteral
+	KindTypeFunctionCall
+	KindTypeFunctionUnary
+	KindTypeFunctionBinary
+	KindTypeFunctionTuple
+	KindTypeFunctionObject
+	KindTypeFunctionField
+	KindTypeFunctionIndex
+	KindTypeFunctionNativeType
+	KindTypeFunctionSpread
 	KindCount
 	KindFirstAssignment         = KindEqualsToken
 	KindLastAssignment          = KindCaretEqualsToken
@@ -460,4 +484,6 @@ type (
 	CompoundAssignmentOperator            = Kind // KindPlusEqualsToken | KindMinusEqualsToken | KindAsteriskAsteriskEqualsToken | KindAsteriskEqualsToken | KindSlashEqualsToken | KindPercentEqualsToken | KindAmpersandEqualsToken | KindBarEqualsToken | KindCaretEqualsToken | KindLessThanLessThanEqualsToken | KindGreaterThanGreaterThanGreaterThanEqualsToken | KindGreaterThanGreaterThanEqualsToken | KindBarBarEqualsToken | KindAmpersandAmpersandEqualsToken | KindQuestionQuestionEqualsToken
 	AssignmentOperatorOrHigher            = Kind // KindQuestionQuestionToken | KindAsteriskAsteriskToken | KindAsteriskToken | KindSlashToken | KindPercentToken | KindPlusToken | KindMinusToken | KindLessThanLessThanToken | KindGreaterThanGreaterThanToken | KindGreaterThanGreaterThanGreaterThanToken | KindLessThanToken | KindLessThanEqualsToken | KindGreaterThanToken | KindGreaterThanEqualsToken | KindInstanceOfKeyword | KindInKeyword | KindEqualsEqualsToken | KindEqualsEqualsEqualsToken | KindExclamationEqualsEqualsToken | KindExclamationEqualsToken | KindAmpersandToken | KindBarToken | KindCaretToken | KindAmpersandAmpersandToken | KindBarBarToken | KindEqualsToken | KindPlusEqualsToken | KindMinusEqualsToken | KindAsteriskAsteriskEqualsToken | KindAsteriskEqualsToken | KindSlashEqualsToken | KindPercentEqualsToken | KindAmpersandEqualsToken | KindBarEqualsToken | KindCaretEqualsToken | KindLessThanLessThanEqualsToken | KindGreaterThanGreaterThanGreaterThanEqualsToken | KindGreaterThanGreaterThanEqualsToken | KindBarBarEqualsToken | KindAmpersandAmpersandEqualsToken | KindQuestionQuestionEqualsToken
 	LogicalOrCoalescingAssignmentOperator = Kind // KindAmpersandAmpersandEqualsToken | KindBarBarEqualsToken | KindQuestionQuestionEqualsToken
+	TypeFunctionStatementKind             = Kind // KindTypeFunctionBinding | KindTypeFunctionAssignment | KindTypeFunctionReturn | KindTypeFunctionIf | KindTypeFunctionWhile | KindTypeFunctionForOf | KindTypeFunctionForIn | KindTypeFunctionBreak | KindTypeFunctionContinue | KindTypeFunctionExpressionStatement
+	TypeFunctionExpressionKind            = Kind // KindTypeFunctionName | KindTypeFunctionLiteral | KindTypeFunctionCall | KindTypeFunctionUnary | KindTypeFunctionBinary | KindTypeFunctionTuple | KindTypeFunctionObject | KindTypeFunctionField | KindTypeFunctionIndex | KindTypeFunctionNativeType | KindTypeFunctionSpread
 )

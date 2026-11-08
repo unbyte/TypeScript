@@ -1491,6 +1491,7 @@ function emitNodeGeneratedImports(w: CodeWriter) {
     w.write(`    type SourceFile,`);
     w.write(`    SyntaxKind,`);
     w.write(`} from "../../ast/index.ts";`);
+    w.write(`import { yieldEachChildOfTypeFunctionExpression } from "../../ast/visitor.ts";`);
     w.write(`import {`);
     w.write(`    childProperties,`);
     w.write(`    KIND_NODE_LIST,`);
@@ -1689,6 +1690,13 @@ function emitRemoteNodeClassOpen(w: CodeWriter) {
     w.write(`    }`);
     w.write(``);
     w.write(`    forEachChild<T>(visitNode: (node: Node) => T, visitList?: (list: NodeArray<Node>) => T): T | undefined {`);
+    w.write(`        // The DSL wire representation groups operands; source traversal interleaves the operator.`);
+    w.write(`        if (this.kind === SyntaxKind.TypeFunctionBinary && this.operands && this.operatorToken) {`);
+    w.write(`            return visitNode(this.operands.at(0)!) || visitNode(this.operatorToken) || visitNode(this.operands.at(1)!);`);
+    w.write(`        }`);
+    w.write(`        if (this.kind === SyntaxKind.TypeFunctionUnary && this.operands && this.operatorToken) {`);
+    w.write(`            return visitNode(this.operatorToken) || this.operands.forEachNode(visitNode);`);
+    w.write(`        }`);
     w.write(`        if (this.hasChildren()) {`);
     w.write(`            let next = this.index + 1;`);
     w.write(`            do {`);
@@ -1720,6 +1728,9 @@ function emitRemoteNodeClassOpen(w: CodeWriter) {
     w.write(`    }`);
     w.write(``);
     w.write(`    *childrenIter<TNext = void>(): Generator<Node, TNext | undefined, TNext> {`);
+    w.write(`        if ((this.kind === SyntaxKind.TypeFunctionBinary || this.kind === SyntaxKind.TypeFunctionUnary) && this.operands && this.operatorToken) {`);
+    w.write(`            return yield* yieldEachChildOfTypeFunctionExpression<TNext>(this);`);
+    w.write(`        }`);
     w.write(`        if (this.hasChildren()) {`);
     w.write(`            let next = this.index + 1;`);
     w.write(`            do {`);

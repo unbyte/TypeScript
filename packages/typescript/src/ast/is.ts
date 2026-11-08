@@ -122,7 +122,7 @@ export function isStatement(node: Node): node is Statement {
         || kind === SyntaxKind.WithStatement || kind === SyntaxKind.SwitchStatement
         || kind === SyntaxKind.LabeledStatement || kind === SyntaxKind.ThrowStatement
         || kind === SyntaxKind.TryStatement || kind === SyntaxKind.DebuggerStatement
-        || kind === SyntaxKind.InterfaceDeclaration || kind === SyntaxKind.TypeAliasDeclaration
+        || kind === SyntaxKind.TypeFunctionDeclaration || kind === SyntaxKind.InterfaceDeclaration || kind === SyntaxKind.TypeAliasDeclaration
         || kind === SyntaxKind.EnumDeclaration || kind === SyntaxKind.ModuleDeclaration
         || kind === SyntaxKind.ImportDeclaration || kind === SyntaxKind.ImportEqualsDeclaration
         || kind === SyntaxKind.ExportDeclaration || kind === SyntaxKind.ExportAssignment

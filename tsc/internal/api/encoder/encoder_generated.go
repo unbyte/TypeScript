@@ -536,6 +536,18 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindJSDocParameterTag, ast.KindJSDocPropertyTag:
 		n := node.AsJSDocParameterOrPropertyTag()
 		return (boolToByte(n.TagName != nil) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeExpression != nil) << 2) | (boolToByte(n.Comment != nil) << 3)
+	case ast.KindTypeFunctionDeclaration:
+		n := node.AsTypeFunctionDeclaration()
+		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.Body != nil) << 3)
+	case ast.KindTypeFunctionBlock:
+		n := node.AsTypeFunctionBlock()
+		return (boolToByte(n.Statements != nil) << 0)
+	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionAssignment, ast.KindTypeFunctionReturn, ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn, ast.KindTypeFunctionBreak, ast.KindTypeFunctionContinue, ast.KindTypeFunctionExpressionStatement:
+		n := node.AsTypeFunctionStatement()
+		return (boolToByte(n.Name() != nil) << 0) | (boolToByte(n.Expression != nil) << 1) | (boolToByte(n.Body != nil) << 2) | (boolToByte(n.ElseBody != nil) << 3)
+	case ast.KindTypeFunctionName, ast.KindTypeFunctionLiteral, ast.KindTypeFunctionCall, ast.KindTypeFunctionUnary, ast.KindTypeFunctionBinary, ast.KindTypeFunctionTuple, ast.KindTypeFunctionObject, ast.KindTypeFunctionField, ast.KindTypeFunctionIndex, ast.KindTypeFunctionNativeType, ast.KindTypeFunctionSpread:
+		n := node.AsTypeFunctionExpression()
+		return (boolToByte(n.Name() != nil) << 0) | (boolToByte(n.Operands != nil) << 1) | (boolToByte(n.OperatorToken != nil) << 2) | (boolToByte(n.NativeType != nil) << 3)
 	default:
 		return 0
 	}
@@ -659,6 +671,9 @@ func getNodeCommonData(node *ast.Node) uint32 {
 	case ast.KindJSDocParameterTag, ast.KindJSDocPropertyTag:
 		n := node.AsJSDocParameterOrPropertyTag()
 		return uint32(boolToByte(n.IsBracketed))<<24 | uint32(boolToByte(n.IsNameFirst))<<25
+	case ast.KindTypeFunctionName, ast.KindTypeFunctionLiteral, ast.KindTypeFunctionCall, ast.KindTypeFunctionUnary, ast.KindTypeFunctionBinary, ast.KindTypeFunctionTuple, ast.KindTypeFunctionObject, ast.KindTypeFunctionField, ast.KindTypeFunctionIndex, ast.KindTypeFunctionNativeType, ast.KindTypeFunctionSpread:
+		n := node.AsTypeFunctionExpression()
+		return uint32(boolToByte(n.Readonly))<<24 | uint32(boolToByte(n.Optional))<<25
 	}
 	return 0
 }

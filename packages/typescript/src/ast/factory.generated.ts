@@ -242,6 +242,12 @@ import type {
     TypeAliasDeclaration,
     TypeAssertion,
     TypeElement,
+    TypeFunctionBlock,
+    TypeFunctionDeclaration,
+    TypeFunctionExpression,
+    TypeFunctionExpressionKind,
+    TypeFunctionStatement,
+    TypeFunctionStatementKind,
     TypeLiteralNode,
     TypeNode,
     TypeOfExpression,
@@ -271,8 +277,10 @@ import { cloneSourceFileData } from "./utils.ts";
 import {
     forEachChildOfJSDocParameterTag,
     forEachChildOfJSDocPropertyTag,
+    forEachChildOfTypeFunctionExpression,
     yieldEachChildOfJSDocParameterTag,
     yieldEachChildOfJSDocPropertyTag,
+    yieldEachChildOfTypeFunctionExpression,
 } from "./visitor.ts";
 
 /** @internal */
@@ -384,6 +392,9 @@ export class NodeObject {
     }
     get elements(): any {
         return this._data?.elements;
+    }
+    get elseBody(): any {
+        return this._data?.elseBody;
     }
     get elseStatement(): any {
         return this._data?.elseStatement;
@@ -526,6 +537,9 @@ export class NodeObject {
     get namespace(): any {
         return this._data?.namespace;
     }
+    get nativeType(): any {
+        return this._data?.nativeType;
+    }
     get objectAssignmentInitializer(): any {
         return this._data?.objectAssignmentInitializer;
     }
@@ -541,11 +555,17 @@ export class NodeObject {
     get operand(): any {
         return this._data?.operand;
     }
+    get operands(): any {
+        return this._data?.operands;
+    }
     get operator(): any {
         return this._data?.operator;
     }
     get operatorToken(): any {
         return this._data?.operatorToken;
+    }
+    get optional(): any {
+        return this._data?.optional;
     }
     get originalText(): any {
         return this._data?.originalText;
@@ -582,6 +602,9 @@ export class NodeObject {
     }
     get rawText(): any {
         return this._data?.rawText;
+    }
+    get readonly(): any {
+        return this._data?.readonly;
     }
     get readonlyToken(): any {
         return this._data?.readonlyToken;
@@ -1149,6 +1172,33 @@ function cloneNodeData(node: Node): any {
             return { expression: n.expression, thisArg: n.thisArg };
         case SyntaxKind.JSDocTypeLiteral:
             return { jsdocPropertyTags: n.jsdocPropertyTags, isArrayType: n.isArrayType };
+        case SyntaxKind.TypeFunctionDeclaration:
+            return { modifiers: n.modifiers, name: n.name, typeParameters: n.typeParameters, body: n.body };
+        case SyntaxKind.TypeFunctionBlock:
+            return { statements: n.statements };
+        case SyntaxKind.TypeFunctionBinding:
+        case SyntaxKind.TypeFunctionAssignment:
+        case SyntaxKind.TypeFunctionReturn:
+        case SyntaxKind.TypeFunctionIf:
+        case SyntaxKind.TypeFunctionWhile:
+        case SyntaxKind.TypeFunctionForOf:
+        case SyntaxKind.TypeFunctionForIn:
+        case SyntaxKind.TypeFunctionBreak:
+        case SyntaxKind.TypeFunctionContinue:
+        case SyntaxKind.TypeFunctionExpressionStatement:
+            return { name: n.name, expression: n.expression, body: n.body, elseBody: n.elseBody };
+        case SyntaxKind.TypeFunctionName:
+        case SyntaxKind.TypeFunctionLiteral:
+        case SyntaxKind.TypeFunctionCall:
+        case SyntaxKind.TypeFunctionUnary:
+        case SyntaxKind.TypeFunctionBinary:
+        case SyntaxKind.TypeFunctionTuple:
+        case SyntaxKind.TypeFunctionObject:
+        case SyntaxKind.TypeFunctionField:
+        case SyntaxKind.TypeFunctionIndex:
+        case SyntaxKind.TypeFunctionNativeType:
+        case SyntaxKind.TypeFunctionSpread:
+            return { name: n.name, operands: n.operands, operatorToken: n.operatorToken, nativeType: n.nativeType, readonly: n.readonly, optional: n.optional };
         case SyntaxKind.ForInStatement:
             return { awaitModifier: n.awaitModifier, initializer: n.initializer, expression: n.expression, statement: n.statement };
         case SyntaxKind.ForOfStatement:
@@ -1689,6 +1739,73 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
         visitNode(cbNode, data.expression) ||
         visitNode(cbNode, data.thisArg),
     [SyntaxKind.JSDocTypeLiteral]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.jsdocPropertyTags),
+    [SyntaxKind.TypeFunctionDeclaration]: (data, cbNode, cbNodes) =>
+        visitNodes(cbNode, cbNodes, data.modifiers) ||
+        visitNode(cbNode, data.name) ||
+        visitNodes(cbNode, cbNodes, data.typeParameters) ||
+        visitNode(cbNode, data.body),
+    [SyntaxKind.TypeFunctionBlock]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.statements),
+    [SyntaxKind.TypeFunctionBinding]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionAssignment]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionReturn]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionIf]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionWhile]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionForOf]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionForIn]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionBreak]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionContinue]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionExpressionStatement]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.body) ||
+        visitNode(cbNode, data.elseBody),
+    [SyntaxKind.TypeFunctionName]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionLiteral]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionCall]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionUnary]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionBinary]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionTuple]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionObject]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionField]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionIndex]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionNativeType]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionSpread]: forEachChildOfTypeFunctionExpression,
     [SyntaxKind.ForInStatement]: (data, cbNode, cbNodes) =>
         visitNode(cbNode, data.awaitModifier) ||
         visitNode(cbNode, data.initializer) ||
@@ -3869,6 +3986,223 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
             }
         }
     },
+    [SyntaxKind.TypeFunctionDeclaration]: function* (data) {
+        if (data.modifiers) {
+            for (const n of data.modifiers) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        for (const n of data.typeParameters) {
+            const res = yield n;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionBlock]: function* (data) {
+        for (const n of data.statements) {
+            const res = yield n;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionBinding]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionAssignment]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionReturn]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionIf]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionWhile]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionForOf]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionForIn]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionBreak]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionContinue]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionExpressionStatement]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+        if (data.elseBody) {
+            const res = yield data.elseBody;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionName]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionLiteral]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionCall]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionUnary]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionBinary]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionTuple]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionObject]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionField]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionIndex]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionNativeType]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionSpread]: yieldEachChildOfTypeFunctionExpression,
     [SyntaxKind.ForInStatement]: function* (data) {
         if (data.awaitModifier) {
             const res = yield data.awaitModifier;
@@ -5339,6 +5673,41 @@ export function createJSDocTypeLiteral(jsdocPropertyTags?: readonly JSDocTag[], 
     }) as unknown as JSDocTypeLiteral;
 }
 
+export function createTypeFunctionDeclaration(modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], body: TypeFunctionBlock): TypeFunctionDeclaration {
+    return new NodeObject(SyntaxKind.TypeFunctionDeclaration, {
+        modifiers: modifiers ? createNodeArray(modifiers) : undefined,
+        name,
+        typeParameters: createNodeArray(typeParameters),
+        body,
+    }) as unknown as TypeFunctionDeclaration;
+}
+
+export function createTypeFunctionBlock(statements: readonly Node[]): TypeFunctionBlock {
+    return new NodeObject(SyntaxKind.TypeFunctionBlock, {
+        statements: createNodeArray(statements),
+    }) as unknown as TypeFunctionBlock;
+}
+
+export function createTypeFunctionStatement<TKind extends TypeFunctionStatementKind>(kind: TKind, name?: Identifier, expression?: Node, body?: Node, elseBody?: Node): TypeFunctionStatement<TKind> {
+    return new NodeObject(kind, {
+        name,
+        expression,
+        body,
+        elseBody,
+    }) as unknown as TypeFunctionStatement<TKind>;
+}
+
+export function createTypeFunctionExpression<TKind extends TypeFunctionExpressionKind>(kind: TKind, name?: Node, operands?: readonly Node[], operatorToken?: Token, nativeType?: TypeNode, readonly: boolean = false, optional: boolean = false): TypeFunctionExpression<TKind> {
+    return new NodeObject(kind, {
+        name,
+        operands: operands ? createNodeArray(operands) : undefined,
+        operatorToken,
+        nativeType,
+        readonly,
+        optional,
+    }) as unknown as TypeFunctionExpression<TKind>;
+}
+
 export function createForInStatement(awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {
     return new NodeObject(SyntaxKind.ForInStatement, {
         awaitModifier,
@@ -6045,6 +6414,22 @@ export function updateSyntheticReferenceExpression(node: SyntheticReferenceExpre
 
 export function updateJSDocTypeLiteral(node: JSDocTypeLiteral, jsdocPropertyTags?: readonly JSDocTag[]): JSDocTypeLiteral {
     return node.jsdocPropertyTags !== jsdocPropertyTags ? createJSDocTypeLiteral(jsdocPropertyTags, node.isArrayType) : node;
+}
+
+export function updateTypeFunctionDeclaration(node: TypeFunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], body: TypeFunctionBlock): TypeFunctionDeclaration {
+    return node.modifiers !== modifiers || node.name !== name || node.typeParameters !== typeParameters || node.body !== body ? createTypeFunctionDeclaration(modifiers, name, typeParameters, body) : node;
+}
+
+export function updateTypeFunctionBlock(node: TypeFunctionBlock, statements: readonly Node[]): TypeFunctionBlock {
+    return node.statements !== statements ? createTypeFunctionBlock(statements) : node;
+}
+
+export function updateTypeFunctionStatement<TKind extends TypeFunctionStatementKind>(node: TypeFunctionStatement<TKind>, name?: Identifier, expression?: Node, body?: Node, elseBody?: Node): TypeFunctionStatement<TKind> {
+    return node.name !== name || node.expression !== expression || node.body !== body || node.elseBody !== elseBody ? createTypeFunctionStatement(node.kind, name, expression, body, elseBody) : node;
+}
+
+export function updateTypeFunctionExpression<TKind extends TypeFunctionExpressionKind>(node: TypeFunctionExpression<TKind>, name?: Node, operands?: readonly Node[], operatorToken?: Token, nativeType?: TypeNode): TypeFunctionExpression<TKind> {
+    return node.name !== name || node.operands !== operands || node.operatorToken !== operatorToken || node.nativeType !== nativeType ? createTypeFunctionExpression(node.kind, name, operands, operatorToken, nativeType, node.readonly, node.optional) : node;
 }
 
 export function updateForInStatement(node: ForInStatement, awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {
