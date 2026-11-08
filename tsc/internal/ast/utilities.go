@@ -676,6 +676,8 @@ func IsJsxAttributeLike(node *Node) bool {
 
 func isDeclarationStatementKind(kind Kind) bool {
 	switch kind {
+	case KindTypeFunctionDeclaration:
+		return true
 	case KindFunctionDeclaration,
 		KindMissingDeclaration,
 		KindClassDeclaration,
@@ -1349,6 +1351,9 @@ func IsInJSFile(node *Node) bool {
 }
 
 func IsDeclaration(node *Node) bool {
+	if IsTypeFunctionNode(node) {
+		return IsTypeFunctionDeclaration(node) || IsTypeFunctionLocalDeclaration(node)
+	}
 	if node.Kind == KindTypeParameter {
 		return node.Parent != nil
 	}
@@ -2329,6 +2334,9 @@ const (
 
 func GetMeaningFromDeclaration(node *Node) SemanticMeaning {
 	switch node.Kind {
+	case KindTypeFunctionDeclaration, KindTypeFunctionBinding, KindTypeFunctionForOf, KindTypeFunctionForIn:
+		return SemanticMeaningType
+
 	case KindVariableDeclaration:
 		return SemanticMeaningValue
 	case KindParameter,
@@ -3706,7 +3714,7 @@ func GetNonAugmentationDeclaration(symbol *Symbol) *Node {
 
 func IsTypeDeclaration(node *Node) bool {
 	switch node.Kind {
-	case KindTypeParameter, KindClassDeclaration, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindEnumDeclaration:
+	case KindTypeParameter, KindClassDeclaration, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration, KindTypeFunctionBinding, KindTypeFunctionForOf, KindTypeFunctionForIn, KindEnumDeclaration:
 		return true
 	case KindImportClause:
 		return node.IsTypeOnly() && node.AsImportClause().Name() != nil

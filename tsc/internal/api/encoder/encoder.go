@@ -363,6 +363,21 @@ func (t *NodeIndexTable) GetIndex(node *ast.Node) uint32 {
 	return 0
 }
 
+// The wire format follows schema field order. A DSL operator's operands are
+// stored in one list on the wire, while native AST visitors interleave the
+// operator in source order. Keep this representation detail out of AST traversal.
+func visitEncodedChildren(visitor *ast.NodeVisitor, node *ast.Node) {
+	if node.Kind == ast.KindTypeFunctionBinary || node.Kind == ast.KindTypeFunctionUnary {
+		expression := node.AsTypeFunctionExpression()
+		visitor.VisitNode(expression.Name())
+		visitor.Hooks.VisitNodes(expression.Operands, visitor)
+		visitor.VisitNode(expression.OperatorToken)
+		visitor.VisitNode(expression.NativeType)
+		return
+	}
+	visitor.VisitEachChild(node)
+}
+
 // BuildNodeIndexTable walks the AST in the same order as encodeTree and builds
 // a NodeIndexTable without performing the full binary encoding. This is used to
 // eagerly create index tables for files that need node handles before getSourceFile
@@ -393,7 +408,7 @@ func BuildNodeIndexTable(sourceFile *ast.SourceFile) *NodeIndexTable {
 	visitor.Visit = func(node *ast.Node) *ast.Node {
 		nodeCount++
 		nodeTable = append(nodeTable, node)
-		visitor.VisitEachChild(node)
+		visitEncodedChildren(visitor, node)
 		for _, jsdoc := range node.JSDoc(sourceFile) {
 			visitor.Visit(jsdoc)
 		}
@@ -405,7 +420,7 @@ func BuildNodeIndexTable(sourceFile *ast.SourceFile) *NodeIndexTable {
 	nodeCount++
 	nodeTable = append(nodeTable, rootNode)
 
-	visitor.VisitEachChild(rootNode)
+	visitEncodedChildren(visitor, rootNode)
 	for _, jsdoc := range rootNode.JSDoc(sourceFile) {
 		visitor.Visit(jsdoc)
 	}
@@ -567,7 +582,7 @@ func encodeTree(rootNode *ast.Node, sourceFile *ast.SourceFile) ([]byte, *NodeIn
 		currentIndex := nodeCount
 		prevIndex = 0
 		parentIndex = currentIndex
-		visitor.VisitEachChild(node)
+		visitEncodedChildren(visitor, node)
 		if sourceFile != nil {
 			for _, jsdoc := range node.JSDoc(sourceFile) {
 				visitor.Visit(jsdoc)
@@ -587,7 +602,7 @@ func encodeTree(rootNode *ast.Node, sourceFile *ast.SourceFile) ([]byte, *NodeIn
 	sfExtendedDataOffset = len(extendedData)
 	nodes = appendUint32s(nodes, uint32(rootNode.Kind), utf16(rootNode.Pos()), utf16(rootNode.End()), 0, 0, getNodeData(rootNode, strs, positionMap, &extendedData, &structuredData), uint32(rootNode.Flags))
 
-	visitor.VisitEachChild(rootNode)
+	visitEncodedChildren(visitor, rootNode)
 	if sourceFile != nil {
 		for _, jsdoc := range rootNode.JSDoc(sourceFile) {
 			visitor.Visit(jsdoc)

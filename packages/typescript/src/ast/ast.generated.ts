@@ -394,6 +394,8 @@ export type LogicalOperatorOrHigher = BitwiseOperatorOrHigher | LogicalOperator;
 export type CompoundAssignmentOperator = SyntaxKind.PlusEqualsToken | SyntaxKind.MinusEqualsToken | SyntaxKind.AsteriskAsteriskEqualsToken | SyntaxKind.AsteriskEqualsToken | SyntaxKind.SlashEqualsToken | SyntaxKind.PercentEqualsToken | SyntaxKind.AmpersandEqualsToken | SyntaxKind.BarEqualsToken | SyntaxKind.CaretEqualsToken | SyntaxKind.LessThanLessThanEqualsToken | SyntaxKind.GreaterThanGreaterThanGreaterThanEqualsToken | SyntaxKind.GreaterThanGreaterThanEqualsToken | SyntaxKind.BarBarEqualsToken | SyntaxKind.AmpersandAmpersandEqualsToken | SyntaxKind.QuestionQuestionEqualsToken;
 export type AssignmentOperatorOrHigher = SyntaxKind.QuestionQuestionToken | LogicalOperatorOrHigher | AssignmentOperator;
 export type LogicalOrCoalescingAssignmentOperator = SyntaxKind.AmpersandAmpersandEqualsToken | SyntaxKind.BarBarEqualsToken | SyntaxKind.QuestionQuestionEqualsToken;
+export type TypeFunctionStatementKind = SyntaxKind.TypeFunctionBinding | SyntaxKind.TypeFunctionAssignment | SyntaxKind.TypeFunctionReturn | SyntaxKind.TypeFunctionIf | SyntaxKind.TypeFunctionWhile | SyntaxKind.TypeFunctionForOf | SyntaxKind.TypeFunctionForIn | SyntaxKind.TypeFunctionBreak | SyntaxKind.TypeFunctionContinue | SyntaxKind.TypeFunctionExpressionStatement;
+export type TypeFunctionExpressionKind = SyntaxKind.TypeFunctionName | SyntaxKind.TypeFunctionLiteral | SyntaxKind.TypeFunctionCall | SyntaxKind.TypeFunctionUnary | SyntaxKind.TypeFunctionBinary | SyntaxKind.TypeFunctionTuple | SyntaxKind.TypeFunctionObject | SyntaxKind.TypeFunctionField | SyntaxKind.TypeFunctionIndex | SyntaxKind.TypeFunctionNativeType | SyntaxKind.TypeFunctionSpread;
 
 export interface NodeBase extends Node {
     readonly flags: NodeFlags;
@@ -1347,6 +1349,32 @@ export interface JSDocTypeLiteral extends JSDocTypeBase, DeclarationBase {
     readonly kind: SyntaxKind.JSDocTypeLiteral;
     readonly jsdocPropertyTags?: readonly JSDocTag[];
     readonly isArrayType: boolean;
+}
+export interface TypeFunctionDeclaration extends StatementBase, DeclarationBase, ModifiersBase {
+    readonly kind: SyntaxKind.TypeFunctionDeclaration;
+    readonly name: Identifier;
+    readonly typeParameters: NodeArray<TypeParameterDeclaration>;
+    readonly body: TypeFunctionBlock;
+}
+export interface TypeFunctionBlock extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionBlock;
+    readonly statements: NodeArray<Node>;
+}
+export interface TypeFunctionStatement<TKind extends TypeFunctionStatementKind = TypeFunctionStatementKind> extends NodeBase, DeclarationBase {
+    readonly kind: TKind;
+    readonly name?: Identifier;
+    readonly expression?: Node;
+    readonly body?: Node;
+    readonly elseBody?: Node;
+}
+export interface TypeFunctionExpression<TKind extends TypeFunctionExpressionKind = TypeFunctionExpressionKind> extends NodeBase {
+    readonly kind: TKind;
+    readonly name?: Node;
+    readonly operands?: NodeArray<Node>;
+    readonly operatorToken?: Token;
+    readonly nativeType?: TypeNode;
+    readonly readonly: boolean;
+    readonly optional: boolean;
 }
 
 export type Expression = ExpressionBase;

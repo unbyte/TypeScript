@@ -12,14 +12,18 @@ import type {
     JSDocPropertyTag,
     Node,
     NodeArray,
+    TypeFunctionExpression,
 } from "./ast.ts";
 import {
+    createNodeArray,
     updateJSDocParameterTag,
     updateJSDocPropertyTag,
+    updateTypeFunctionExpression,
 } from "./factory.generated.ts";
 import {
     isEntityName,
     isIdentifier,
+    isToken,
     isTypeNode,
 } from "./is.ts";
 import type { Visitor } from "./visitor.generated.ts";
@@ -109,3 +113,61 @@ function visitEachChildOfJSDocParameterOrPropertyTag(node: JSDocParameterOrPrope
 }
 
 export { visitEachChildOfJSDocParameterOrPropertyTag as visitEachChildOfJSDocParameterTag, visitEachChildOfJSDocParameterOrPropertyTag as visitEachChildOfJSDocPropertyTag };
+
+// The serialized shape stores operands together; visit the operator between
+// them for binary expressions and before them for unary expressions.
+export function forEachChildOfTypeFunctionExpression<T>(data: any, cbNode: (node: Node) => T, cbNodes: ((nodes: NodeArray<Node>) => T) | undefined): T | undefined {
+    if (data.operatorToken && data.operands?.length === 2) {
+        return cbNode(data.operands[0]) || cbNode(data.operatorToken) || cbNode(data.operands[1]);
+    }
+    return visitNodeForEachChild(cbNode, data.name) || visitNodeForEachChild(cbNode, data.operatorToken) ||
+        visitNodesForEachChild(cbNode, cbNodes, data.operands) || visitNodeForEachChild(cbNode, data.nativeType);
+}
+
+export function* yieldEachChildOfTypeFunctionExpression<T>(data: any): Generator<Node, T | undefined, T> {
+    if (data.operatorToken && data.operands?.length === 2) {
+        for (const child of [data.operands.at(0), data.operatorToken, data.operands.at(1)]) {
+            const result = yield child;
+            if (result) return result;
+        }
+        return undefined;
+    }
+    if (data.name) {
+        const result = yield data.name;
+        if (result) return result;
+    }
+    if (data.operatorToken) {
+        const result = yield data.operatorToken;
+        if (result) return result;
+    }
+    if (data.operands) {
+        for (const child of data.operands) {
+            const result = yield child;
+            if (result) return result;
+        }
+    }
+    if (data.nativeType) {
+        const result = yield data.nativeType;
+        if (result) return result;
+    }
+    return undefined;
+}
+
+export function visitEachChildOfTypeFunctionExpression(node: TypeFunctionExpression, visitor: Visitor): TypeFunctionExpression {
+    const name = visitNode(node.name, visitor);
+    let operands = node.operands;
+    let operator;
+    if (node.operatorToken && operands?.length === 2) {
+        const left = visitNode(operands[0], visitor)!;
+        operator = visitNode(node.operatorToken, visitor, isToken);
+        const right = visitNode(operands[1], visitor)!;
+        if (left !== operands[0] || right !== operands[1]) {
+            operands = createNodeArray([left, right], operands.pos, operands.end);
+        }
+    }
+    else {
+        operator = visitNode(node.operatorToken, visitor, isToken);
+        operands = visitNodes(operands, visitor);
+    }
+    return updateTypeFunctionExpression(node, name, operands, operator, visitNode(node.nativeType, visitor, isTypeNode));
+}
