@@ -567,3 +567,10 @@ the ordinary retained constructor cache. Their live charge is released together
 with the arena on sealing, failure or deferral. A regression performs 100 separate
 recursive constructions under a 4 KiB live budget; the same case previously
 exhausted the budget by retaining charges for discarded private closures.
+
+An iterative component planner now groups mutually dependent graph nodes in
+source-to-sink order, including structural edges. This supplies the dependency
+order for narrowing native alias environments in the next adapter change; it does
+not yet alter emitted aliases. Tests compare component membership against an
+independent transitive-closure oracle, verify dependency order, and exercise a
+100,000-node chain and cancellation without partial output.
