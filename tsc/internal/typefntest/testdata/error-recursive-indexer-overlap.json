@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-recursive-indexer-overlap.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "indexer value Type is incompatible with an overlapping index domain"
+    }
+  ]
+}

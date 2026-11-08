@@ -2,7 +2,14 @@ package checker
 
 import "github.com/microsoft/TypeScript/tsc/internal/ast"
 
-func (v *typefnVM) indexDescriptors(node *ast.Node, value *Type) ([]*IndexInfo, bool) {
+// Descriptor payloads may still belong to a recursive arena. Keep them outside
+// native IndexInfo objects until sealing has replaced every private handle.
+type typefnIndexDescriptor struct {
+	key, value *Type
+	readonly   bool
+}
+
+func (v *typefnVM) indexDescriptors(node *ast.Node, value *Type) ([]typefnIndexDescriptor, bool) {
 	entries, ok := v.requiredTuple(node, value)
 	if !ok {
 		return nil, false
@@ -10,13 +17,16 @@ func (v *typefnVM) indexDescriptors(node *ast.Node, value *Type) ([]*IndexInfo, 
 	if !v.allocate(node, len(entries)) {
 		return nil, false
 	}
-	infos := make([]*IndexInfo, 0, len(entries))
+	infos := make([]typefnIndexDescriptor, 0, len(entries))
 	for _, entry := range entries {
 		fields, ok := v.descriptor(node, entry, []string{"key", "value", "readonly"}, nil)
 		if !ok {
 			return nil, false
 		}
 		key := fields[0]
+		if v.rejectConstruction(node, key) {
+			return nil, false
+		}
 		if typefnUnresolved(key) {
 			v.blocked = true
 			return nil, false
@@ -33,12 +43,12 @@ func (v *typefnVM) indexDescriptors(node *ast.Node, value *Type) ([]*IndexInfo, 
 			if !v.step(node) {
 				return nil, false
 			}
-			if v.c.isTypeIdenticalTo(previous.keyType, key) {
+			if v.c.isTypeIdenticalTo(previous.key, key) {
 				v.error(node, "duplicate index domain")
 				return nil, false
 			}
 		}
-		infos = append(infos, v.c.newIndexInfo(key, fields[1], readonly, nil, nil))
+		infos = append(infos, typefnIndexDescriptor{key, fields[1], readonly})
 	}
 	return infos, true
 }

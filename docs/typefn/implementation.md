@@ -531,7 +531,7 @@ environment, preserving native generic substitution through lazy recursive membe
 Self-free definitions retain their ordinary native result. Tests assert native
 indexing, bidirectional assignability, distinct substitutions, group iteration,
 invalid cycles, forbidden observations, finite kinds and allocation failures.
-Object indexer/signature descriptors and broader native constructor adapters remain
+Object signature descriptors and broader native constructor adapters remain
 follow-up work; unsupported observations diagnose.
 
 Recursive construction also supports `types.function`/`types.constructor`, including
@@ -588,3 +588,12 @@ including unique-symbol keys. Synthetic key bindings retain the original native
 symbol identity; string/number effective-key duplicates still diagnose. Both
 exact-optional modes verify declared values separately from read values, distinct
 symbol keys, generic replay and the ignored derived `read` descriptor field.
+
+Recursive object indexers now carry private value payloads through sealing while
+validating key domains and metadata immediately. Native string, number, symbol and
+template-pattern index domains retain identity. Property/indexer and overlapping
+domain checks execute on sealed native Types, including reached intermediate
+objects whose results are discarded. Symbolic failed proofs defer and replay;
+independent check components do not add dependencies to the returned shape. Tests
+cover native indexing/reflection, overlap compatibility, generic substitution,
+duplicate/invalid domains and discarded failures, including an ordinary result.

@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-recursive-indexer-discarded.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "property Type is incompatible with an applicable indexer"
+    }
+  ]
+}

@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 345 isolated compiler-project fixtures (full harness). The harness checks complete
+* Passed: 353 isolated compiler-project fixtures (full harness). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -17,7 +17,7 @@ against the language specification; these checks establish the boundaries below.
   `typeof` queries, mapped generic constraints and Type/value namespace separation.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
-  after recursive property descriptors and unique-symbol keys; optional-provenance assertions pass
+  after recursive indexer descriptors and reached compatibility checks; optional-provenance assertions pass
   in both exact-optional modes, and the added generic-body dependency assertion passes.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol

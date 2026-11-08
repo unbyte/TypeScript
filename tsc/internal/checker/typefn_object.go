@@ -59,18 +59,19 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 		names[name] = true
 		private = private || constructionOf(value) != nil
 	}
-	// Indexer/signature construction needs its own sealed member adapter. Do
-	// not let a private payload reach the existing native builder meanwhile.
-	if v.rejectConstruction(node, args[1:]...) {
+	// Signature lists still require their separate native member adapter.
+	if len(args) > 2 && v.rejectConstruction(node, args[2:]...) {
 		return v.c.errorType
 	}
-
-	var indexInfos []*IndexInfo
+	var indexers []typefnIndexDescriptor
 	if len(args) > 1 {
 		var ok bool
-		indexInfos, ok = v.indexDescriptors(node, args[1])
+		indexers, ok = v.indexDescriptors(node, args[1])
 		if !ok {
 			return v.c.errorType
+		}
+		for _, info := range indexers {
+			private = private || constructionOf(info.value) != nil
 		}
 	}
 	var calls, constructs []*Signature
@@ -89,13 +90,22 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 		}
 	}
 	if private {
-		if len(indexInfos)+len(calls)+len(constructs) != 0 {
-			return v.error(node, "recursive object indexer and signature adapters are not implemented yet")
+		if len(calls)+len(constructs) != 0 {
+			return v.error(node, "recursive object signature adapters are not implemented yet")
 		}
-		return v.construct(node, &typefnConstruction{kind: ast.KindTypeLiteral, inputs: values, properties: fieldsPlan})
+		plan := make([]typefnConstructionIndexer, len(indexers))
+		for i, info := range indexers {
+			plan[i] = typefnConstructionIndexer{info.key, info.readonly}
+			values = append(values, info.value)
+		}
+		return v.construct(node, &typefnConstruction{kind: ast.KindTypeLiteral, inputs: values, properties: fieldsPlan, indexers: plan})
 	}
 	if !v.allocate(node, len(fieldsPlan)+1) {
 		return v.c.errorType
+	}
+	indexInfos := make([]*IndexInfo, len(indexers))
+	for i, info := range indexers {
+		indexInfos[i] = v.c.newIndexInfo(info.key, info.value, info.readonly, nil, nil)
 	}
 	result := v.c.newTypefnObjectEx(v.c.typefnPropertyMembers(fieldsPlan, values), calls, constructs, indexInfos)
 	v.validateObjectIndexers(node, result, indexInfos)

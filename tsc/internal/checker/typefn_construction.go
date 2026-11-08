@@ -17,6 +17,7 @@ type typefnConstruction struct {
 	kind       ast.Kind
 	inputs     []*Type
 	properties []typefnConstructionProperty
+	indexers   []typefnConstructionIndexer
 	elements   []TupleElementInfo
 	readonly   bool
 	abstract   bool
@@ -27,10 +28,15 @@ type typefnConstructionProperty struct {
 	key                *Type
 	optional, readonly bool
 }
+type typefnConstructionIndexer struct {
+	key      *Type
+	readonly bool
+}
 type typefnConstructionArena struct {
 	nodes           []*Type
 	definitions     []*Type
 	validationRoots []*Type
+	checks          []*Type
 	blocked         bool
 	bytes           int
 }
@@ -80,7 +86,7 @@ func (v *typefnVM) construct(node *ast.Node, data *typefnConstruction) *Type {
 			data.inputs, data.elements = inputs, elements
 		}
 	}
-	size := int(unsafe.Sizeof(typefnConstruction{})) + int(unsafe.Sizeof(typefnTerm{})) + len(data.inputs)*int(unsafe.Sizeof((*Type)(nil))) + len(data.properties)*int(unsafe.Sizeof(typefnConstructionProperty{})) + len(data.elements)*int(unsafe.Sizeof(TupleElementInfo{}))
+	size := int(unsafe.Sizeof(typefnConstruction{})) + int(unsafe.Sizeof(typefnTerm{})) + len(data.inputs)*int(unsafe.Sizeof((*Type)(nil))) + len(data.properties)*int(unsafe.Sizeof(typefnConstructionProperty{})) + len(data.elements)*int(unsafe.Sizeof(TupleElementInfo{})) + len(data.indexers)*int(unsafe.Sizeof(typefnConstructionIndexer{}))
 	if !v.allocate(node, len(data.inputs)+1) || !v.reserveValues(node, size) {
 		return v.c.errorType
 	}
@@ -94,6 +100,9 @@ func (v *typefnVM) construct(node *ast.Node, data *typefnConstruction) *Type {
 	term := &typefnTerm{kind: typefnConstructionTerm, node: node, construction: data}
 	t := v.c.newType(TypeFlagsTypefn, ObjectFlagsNone, term.AsType(), typeKindTypefn)
 	arena.nodes = append(arena.nodes, t)
+	if len(data.indexers) != 0 {
+		arena.checks = append(arena.checks, t)
+	}
 	return t
 }
 func (v *typefnVM) constructionObject(node *ast.Node, properties []typefnConstructionProperty, values []*Type) *Type {

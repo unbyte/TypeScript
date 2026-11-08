@@ -41,13 +41,13 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		}
 	}
 	indices := []int{}
-	for _, root := range roots {
+	for _, root := range append(slices.Clone(roots), arena.checks...) {
 		if graph := constructionOf(root); graph != nil {
 			indices = append(indices, graph.index)
 		}
 	}
 	validation := []int{}
-	for _, root := range arena.validationRoots {
+	for _, root := range append(slices.Clone(arena.validationRoots), arena.checks...) {
 		if graph := constructionOf(root); graph != nil {
 			validation = append(validation, graph.index)
 		}
@@ -67,8 +67,9 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		return roots[0]
 	}
 	// Discarded valid graphs must not add phantom leaf parameters to the
-	// returned native Types. Only reachable output shapes are materialized.
-	if len(arena.validationRoots) != len(roots) {
+	// returned native Types. Materialize output shapes and reached checks; each
+	// dependency component keeps its own leaf environment.
+	if len(arena.validationRoots) != len(roots) || len(arena.checks) != 0 {
 		status, reachable = reachableTypefnGraph(edges, indices, func() bool { return v.step(node) })
 		if status != typefnGraphValid {
 			return v.c.errorType
@@ -136,6 +137,20 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		return leafReference(index, plan.leafIndex[t])
 	}
 	statements := []*ast.Node{}
+	domainBindings := map[*Type]*ast.Node{}
+	domainReference := func(key *Type) *ast.Node {
+		binding := domainBindings[key]
+		if binding == nil {
+			if !v.allocate(node, 4) {
+				return f.NewKeywordTypeNode(ast.KindUnknownKeyword)
+			}
+			name := fmt.Sprintf("__TypefnDomain%d", len(domainBindings))
+			binding = f.NewTypeAliasDeclaration(nil, f.NewIdentifier(name), nil, f.NewKeywordTypeNode(ast.KindUnknownKeyword))
+			domainBindings[key] = binding
+			statements = append(statements, binding)
+		}
+		return f.NewTypeReferenceNode(f.NewIdentifier(binding.Name().Text()), nil)
+	}
 	keyBindings := map[*Type]*ast.Node{}
 	keyName := func(key *Type) *ast.Node {
 		if binding := keyBindings[key]; binding != nil {
@@ -226,6 +241,17 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 				}
 				members[i] = f.NewPropertySignatureDeclaration(modifiers, name, optional, inputs[i], nil)
 			}
+			for i, info := range graph.indexers {
+				var modifiers *ast.ModifierList
+				if info.readonly {
+					modifiers = f.NewModifierList([]*ast.Node{f.NewToken(ast.KindReadonlyKeyword)})
+				}
+				parameter := f.NewParameterDeclaration(nil, nil, f.NewIdentifier("key"), nil, domainReference(info.key), nil)
+				members = append(members, f.NewIndexSignatureDeclaration(modifiers, f.NewNodeList([]*ast.Node{parameter}), inputs[len(graph.properties)+i]))
+			}
+			if v.failed {
+				return v.c.errorType
+			}
 			body = f.NewTypeLiteralNode(f.NewNodeList(members))
 		default:
 			panic("unknown recursive construction shape")
@@ -245,6 +271,9 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 	ast.SetParentInChildren(file.AsNode())
 	binder.BindSourceFile(file)
 	scope.Parent = source.AsNode()
+	for key, binding := range domainBindings {
+		v.c.typeAliasLinks.Get(binding.Symbol()).declaredType = key
+	}
 	for key, binding := range keyBindings {
 		v.c.valueSymbolLinks.Get(binding.Symbol()).resolvedType = key
 	}
@@ -255,8 +284,8 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 	v.nativeIslandSite = node
 	defer func() { v.nativeIslandSite = savedSite }()
 	environments := map[int]*Type{}
-	result := make([]*Type, len(roots))
-	for i, root := range roots {
+	resolve := func(root *Type) *Type {
+		var result *Type
 		if !v.step(node) {
 			return v.c.errorType
 		}
@@ -267,7 +296,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 				return v.c.errorType
 			}
 			if len(plan.parameters[graph.index]) == 0 {
-				result[i] = declared
+				result = declared
 			} else {
 				owner := plan.owners[graph.index]
 				environment := environments[owner]
@@ -283,13 +312,34 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 					environment = v.c.createTupleType(values)
 					environments[owner] = environment
 				}
-				result[i] = v.c.getTypeAliasInstantiation(aliases[graph.index].Symbol(), []*Type{environment}, nil)
+				result = v.c.getTypeAliasInstantiation(aliases[graph.index].Symbol(), []*Type{environment}, nil)
 			}
 		} else {
-			result[i] = root
+			result = root
 		}
-		if v.c.isErrorType(result[i]) {
+		if v.c.isErrorType(result) {
 			v.failed = true
+			return v.c.errorType
+		}
+		return result
+	}
+	result := make([]*Type, len(roots))
+	for i, root := range roots {
+		result[i] = resolve(root)
+		if v.failed {
+			return v.c.errorType
+		}
+	}
+	// Reached construction checks survive even when their result was discarded.
+	// Each component has its own environment, so these checks cannot introduce
+	// phantom type parameters into the published result.
+	for _, checked := range arena.checks {
+		value := resolve(checked)
+		if v.failed {
+			return v.c.errorType
+		}
+		v.validateObjectIndexers(node, value, v.c.getIndexInfosOfType(value))
+		if v.failed || v.blocked {
 			return v.c.errorType
 		}
 	}
