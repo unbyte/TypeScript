@@ -164,7 +164,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 329 fixtures covering native calibration, execution,
+The compiler-project harness has 335 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -541,3 +541,15 @@ native. The original global Array and ReadonlyArray constructors have structural
 adapters (including constructor arguments and direct DSL calls). Identity checks
 reject a user alias that merely shares a built-in name. Tests cover native call/
 construct observations, lexical substitution and invalid parameter/flag metadata.
+
+Tuple descriptors can now carry recursive references as required/optional elements,
+rest-array elements and variadic tuple payloads. Metadata remains separately
+validated: inspecting Self as a label, mode, bound or flag diagnoses. Known private
+tuple spreads normalize before native sealing, avoiding native alias cycles caused
+by otherwise transparent spread aliases. Required construction tuples support
+length/slice and group iteration without inspecting the references they contain.
+Tests cover labels, readonly/rest/optional metadata, generic replay, invalid modes
+and slice bounds, with both exact-optional modes. The declared optional value is
+asserted separately from its read Type. Native sealing checks alias resolution
+before accessing instantiation caches and attributes generated diagnostics to the
+builder application.

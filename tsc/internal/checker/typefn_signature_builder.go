@@ -7,6 +7,9 @@ import (
 )
 
 func (v *typefnVM) descriptorString(node *ast.Node, value *Type) (string, bool) {
+	if v.rejectConstruction(node, value) {
+		return "", false
+	}
 	value = v.observe(value)
 	if typefnUnresolved(value) {
 		v.blocked = true

@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.ts": "recursive-tuples.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true
+  },
+  "diagnostics": []
+}

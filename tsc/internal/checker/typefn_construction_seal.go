@@ -23,7 +23,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 			inputs = []*Type{arena.definitions[graph.reference]}
 		}
 		guarded := graph.kind == ast.KindTypeLiteral || graph.kind == ast.KindTupleType || graph.kind == ast.KindArrayType || graph.kind == ast.KindFunctionType || graph.kind == ast.KindConstructorType
-		for _, input := range inputs {
+		for i, input := range inputs {
 			if input == nil {
 				return v.error(node, "unsealed recursive definition")
 			}
@@ -31,7 +31,11 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 				if next.arena != arena {
 					return v.error(node, "recursive reference belongs to another construction")
 				}
-				edges[index] = append(edges[index], typefnGraphEdge{next.index, guarded})
+				edgeGuarded := guarded
+				if graph.kind == ast.KindTupleType && graph.elements[i].flags == ElementFlagsVariadic {
+					edgeGuarded = false
+				}
+				edges[index] = append(edges[index], typefnGraphEdge{next.index, edgeGuarded})
 			}
 		}
 	}
@@ -85,7 +89,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 	if edgeCount > remaining/width || !v.allocate(node, edgeCount*width) {
 		return v.error(node, "native construction limit exceeded")
 	}
-	f := ast.NewNodeFactory(ast.NodeFactoryHooks{})
+	f := ast.NewNodeFactory(ast.NodeFactoryHooks{OnCreate: func(created *ast.Node) { created.Loc = node.Loc }})
 	aliasName := func(index int) string { return fmt.Sprintf("__TypefnRecursive%d", index) }
 	leafName := func(index int) string { return fmt.Sprintf("__TypefnLeaf%d", index) }
 	parameters := func() *ast.NodeList {
@@ -206,14 +210,22 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 	// All edges are now native syntax and all leaf arguments are ordinary Types.
 	// Release the private construction context before native evaluation/replay.
 	v.construction = nil
+	savedSite := v.nativeIslandSite
+	v.nativeIslandSite = node
+	defer func() { v.nativeIslandSite = savedSite }()
 	result := make([]*Type, len(roots))
 	for i, root := range roots {
 		if !v.step(node) {
 			return v.c.errorType
 		}
 		if graph := constructionOf(root); graph != nil {
+			declared := v.c.getDeclaredTypeOfSymbol(aliases[graph.index].Symbol())
+			if v.c.isErrorType(declared) {
+				v.failed = true
+				return v.c.errorType
+			}
 			if len(leaves) == 0 {
-				result[i] = v.c.getDeclaredTypeOfSymbol(aliases[graph.index].Symbol())
+				result[i] = declared
 			} else {
 				result[i] = v.c.getTypeAliasInstantiation(aliases[graph.index].Symbol(), leaves, nil)
 			}

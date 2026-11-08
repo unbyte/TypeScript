@@ -54,6 +54,31 @@ func (v *typefnVM) construct(node *ast.Node, data *typefnConstruction) *Type {
 	if arena == nil {
 		panic("recursive construction outside arena")
 	}
+	// A known private tuple spread is transparent syntax. Flatten it before
+	// sealing, because the native alias resolver cannot tie a knot through a
+	// variadic alias expansion even when the resulting elements are guarded.
+	if data.kind == ast.KindTupleType {
+		var inputs []*Type
+		var elements []TupleElementInfo
+		changed := false
+		for i, input := range data.inputs {
+			inner := constructionOf(input)
+			if data.elements[i].flags == ElementFlagsVariadic && inner != nil && inner.kind == ast.KindTupleType {
+				if !v.allocate(node, len(inner.inputs)) {
+					return v.c.errorType
+				}
+				inputs = append(inputs, inner.inputs...)
+				elements = append(elements, inner.elements...)
+				changed = true
+			} else {
+				inputs = append(inputs, input)
+				elements = append(elements, data.elements[i])
+			}
+		}
+		if changed {
+			data.inputs, data.elements = inputs, elements
+		}
+	}
 	size := int(unsafe.Sizeof(typefnConstruction{})) + int(unsafe.Sizeof(typefnTerm{})) + len(data.inputs)*int(unsafe.Sizeof((*Type)(nil))) + len(data.properties)*int(unsafe.Sizeof(typefnConstructionProperty{})) + len(data.elements)*int(unsafe.Sizeof(TupleElementInfo{}))
 	if !v.allocate(node, len(data.inputs)+1) || !v.reserveValues(node, size) {
 		return v.c.errorType
@@ -220,4 +245,49 @@ func (v *typefnVM) recursiveConstruction(e *typefnExpression, slots []typefnValu
 		return result
 	}
 	return v.sealConstruction(e.node, arena, roots, group)
+}
+
+func (v *typefnVM) constructionTupleIntrinsic(node *ast.Node, name string, args []*Type) *Type {
+	graph := constructionOf(args[0])
+	if !requiredConstructionTuple(graph) {
+		return v.error(node, "tuple operation requires a required finite tuple")
+	}
+	if name == "tuple.length" {
+		return v.c.getNumberLiteralType(jsnum.Number(len(graph.inputs)))
+	}
+	if v.rejectConstruction(node, args[1:]...) {
+		return v.c.errorType
+	}
+	for _, arg := range args[1:] {
+		if typefnUnresolved(arg) {
+			v.construction.blocked = true
+			v.blocked = true
+			return v.c.errorType
+		}
+	}
+	start, ok := v.intrinsicOffset(node, args[1])
+	if !ok {
+		return v.c.errorType
+	}
+	end := int64(len(graph.inputs))
+	if len(args) == 3 {
+		end, ok = v.intrinsicOffset(node, args[2])
+		if !ok {
+			return v.c.errorType
+		}
+	}
+	if start > end || end > int64(len(graph.inputs)) {
+		return v.error(node, "tuple slice requires start <= end <= length")
+	}
+	values := graph.inputs[start:end]
+	infos := graph.elements[start:end]
+	for _, value := range values {
+		if constructionOf(value) != nil {
+			return v.construct(node, &typefnConstruction{kind: ast.KindTupleType, inputs: slices.Clone(values), elements: slices.Clone(infos), readonly: graph.readonly})
+		}
+	}
+	if !v.allocate(node, len(values)+1) {
+		return v.c.errorType
+	}
+	return v.c.createTupleTypeEx(values, infos, graph.readonly)
 }

@@ -87,26 +87,44 @@ func (v *typefnVM) tupleType(node *ast.Node, descriptor *Type) *Type {
 			seenOptional = true
 			flags = ElementFlagsOptional
 		case "rest", "variadic":
-			if typefnUnresolved(value) || v.c.isGenericTupleType(value) || v.c.isGenericObjectType(value) {
-				v.blocked = true
-				return v.c.errorType
-			}
 			hasRest := false
-			if mode == "rest" {
-				if isTupleType(value) || !v.c.isArrayLikeType(value) {
-					return v.error(node, "rest tuple descriptor requires an array Type")
+			if graph := constructionOf(value); graph != nil {
+				if mode == "rest" {
+					if graph.kind != ast.KindArrayType {
+						return v.error(node, "rest tuple descriptor requires an array Type")
+					}
+					value = graph.inputs[0]
+					flags, hasRest = ElementFlagsRest, true
+				} else {
+					if graph.kind != ast.KindTupleType {
+						return v.error(node, "variadic tuple descriptor requires a tuple Type")
+					}
+					flags = ElementFlagsVariadic
+					for _, info := range graph.elements {
+						hasRest = hasRest || info.flags&ElementFlagsVariable != 0
+					}
 				}
-				value = v.c.getIndexTypeOfType(value, v.c.numberType)
-				if value == nil {
-					return v.error(node, "rest array has no numeric element Type")
-				}
-				flags, hasRest = ElementFlagsRest, true
 			} else {
-				if !isTupleType(value) {
-					return v.error(node, "variadic tuple descriptor requires a tuple Type")
+				if typefnUnresolved(value) || v.c.isGenericTupleType(value) || v.c.isGenericObjectType(value) {
+					v.blocked = true
+					return v.c.errorType
 				}
-				flags = ElementFlagsVariadic
-				hasRest = value.TargetTupleType().combinedFlags&ElementFlagsRest != 0
+				if mode == "rest" {
+					if isTupleType(value) || !v.c.isArrayLikeType(value) {
+						return v.error(node, "rest tuple descriptor requires an array Type")
+					}
+					value = v.c.getIndexTypeOfType(value, v.c.numberType)
+					if value == nil {
+						return v.error(node, "rest array has no numeric element Type")
+					}
+					flags, hasRest = ElementFlagsRest, true
+				} else {
+					if !isTupleType(value) {
+						return v.error(node, "variadic tuple descriptor requires a tuple Type")
+					}
+					flags = ElementFlagsVariadic
+					hasRest = value.TargetTupleType().combinedFlags&ElementFlagsRest != 0
+				}
 			}
 			if hasRest {
 				if seenRest {
@@ -134,6 +152,11 @@ func (v *typefnVM) tupleType(node *ast.Node, descriptor *Type) *Type {
 		}
 		values = append(values, value)
 		infos = append(infos, TupleElementInfo{flags: flags, labeledDeclaration: label})
+	}
+	for _, value := range values {
+		if constructionOf(value) != nil {
+			return v.construct(node, &typefnConstruction{kind: ast.KindTupleType, inputs: values, elements: infos, readonly: readonly})
+		}
 	}
 	target := v.c.getTupleTargetType(infos, readonly)
 	if len(values) == 0 {
