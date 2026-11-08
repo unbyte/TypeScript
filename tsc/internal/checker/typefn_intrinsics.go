@@ -18,6 +18,8 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"types.function":        {2, 2, false, "Parameters, Result"},
+	"types.constructor":     {2, 3, false, "Parameters, Result, Abstract = false"},
 	"reflect.calls":         {1, 1, false, "Object"},
 	"reflect.constructs":    {1, 1, false, "Object"},
 	"reflect.isGeneric":     {1, 1, false, "Signature"},
@@ -102,6 +104,10 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 	// Constructors can publish structure containing symbolic Type leaves. Only
 	// their control/metadata operands need concrete observations.
 	switch e.intrinsic {
+	case "types.function":
+		return v.functionType(e.node, args, SignatureKindCall)
+	case "types.constructor":
+		return v.functionType(e.node, args, SignatureKindConstruct)
 	case "types.overload":
 		return v.overloadType(e.node, args)
 	case "types.array":

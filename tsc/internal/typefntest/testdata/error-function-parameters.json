@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-function-parameters.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "function parameters require one tuple Type"
+    }
+  ]
+}

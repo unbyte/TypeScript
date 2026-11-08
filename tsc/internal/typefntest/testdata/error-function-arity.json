@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-function-arity.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2554,
+      "file": "main.ts",
+      "message": "Expected 2 arguments, but got 1."
+    }
+  ]
+}

@@ -131,7 +131,7 @@ remain part of the outstanding island bridge.
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
 * Property/tuple/signature reflection, general tuple metadata/spreads,
-  fresh signature builders, and recursive structural sealing
+  full signature descriptors, and recursive structural sealing
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
 * Declaration source recipes, advanced refactorings/auto-import completion, complete
@@ -161,7 +161,7 @@ remain part of the outstanding island bridge.
 
 ## Validation
 
-The compiler-project harness has 154 fixtures covering native calibration, execution,
+The compiler-project harness has 160 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -244,3 +244,12 @@ Tests exercise actual overload calls, generic inference, outer-Type specializati
 generic default constructors, method/function variance, abstract/private
 constructors and category errors. Fresh signature construction and descriptor
 reflection remain separate unfinished contracts.
+
+`types.function` and `types.constructor` now build ordinary native signatures
+from parameter tuples, preserving native labels, optional/rest/variadic tails and
+readonly input tuples. Native tuple-rest expansion controls call inference and
+arity; fresh signatures have ordinary function variance. Generic parameter/result
+leaves and the abstract flag replay independently. Tests include actual calls/new,
+Parameters/ConstructorParameters, outer-Type specialization, native primitive
+constructor results, and negative arity/variance/abstract cases. General
+`types.signature`/`reflect.signature` descriptors are still pending.
