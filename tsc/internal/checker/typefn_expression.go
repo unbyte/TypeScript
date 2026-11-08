@@ -185,6 +185,9 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 		if node.Kind == ast.KindTypeFunctionIndex {
 			return v.c.getIndexedAccessTypeEx(args[0], args[1], AccessFlagsNone, node, nil)
 		}
+		if e.intrinsic != "" {
+			return v.intrinsic(e, args, slots)
+		}
 		return v.apply(node, e.symbol, args)
 	}
 	return v.error(node, "expression is not implemented yet")

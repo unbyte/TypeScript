@@ -14,7 +14,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Core bindings/control/scalars | partial | Complete definition-time kind/return-path validation and scalar edge cases |
 | Strings and string iteration | pending | Every text intrinsic; UTF-16 including lone surrogates; bounds, symbolic replay and budgets |
 | Numeric and tuple library | pending | Every intrinsic; exact conversion, invalid domains and metadata preservation |
-| Explicit failure | pending | fail/failAt, statement-only use, deferred operands and consumer provenance |
+| Explicit failure | partial | fail/failAt, statement-only use and deferred operands tested; related producer/consumer diagnostic spans remain |
 | Templates and match | pending | Every pattern, captures/pins/guards, pending earlier arms, structural template subjects |
 | Local helpers and closures | pending | Lexical capture snapshots, constructor identity, recursive captures and scope diagnostics |
 | Restricted constructors/HKT | pending | Fixed-arity slots, passing/returning constructors and kind errors |

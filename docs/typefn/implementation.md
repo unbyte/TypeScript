@@ -90,6 +90,7 @@ iteration; conservative closed-scalar union iteration; tuple construction and fi
 tuple spreads; object construction with string/number keys and optional/readonly
 properties; native indexing and `keyof`; native union/intersection construction;
 number/bigint arithmetic and comparisons; literal boolean short-circuit operators;
+statement-only `fail`/`failAt` with deferred messages and validated UTF-16 offsets;
 native scalar identity/assignability predicates; calls to other named typefns and
 ordinary native aliases/interfaces/classes, including native defaults and bounds.
 
@@ -147,7 +148,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 65 fixtures covering native calibration, execution,
+The compiler-project harness has 69 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad

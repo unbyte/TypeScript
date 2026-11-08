@@ -31,11 +31,12 @@ type typefnInstruction struct {
 	iterator     int
 }
 type typefnExpression struct {
-	node   *ast.Node
-	slot   int
-	symbol *ast.Symbol
-	args   []*typefnExpression
-	keys   []*typefnExpression
+	node      *ast.Node
+	slot      int
+	symbol    *ast.Symbol
+	intrinsic string
+	args      []*typefnExpression
+	keys      []*typefnExpression
 }
 type typefnProgram struct {
 	declaration *ast.Node
@@ -228,6 +229,9 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 				e.symbol = binding.symbol
 				return e
 			}
+		}
+		if b.intrinsic(e) {
+			break
 		}
 		e.symbol = b.c.resolveEntityName(name, ast.SymbolFlagsType, false, false, nil)
 		if e.symbol == nil || e.symbol == b.c.unknownSymbol {

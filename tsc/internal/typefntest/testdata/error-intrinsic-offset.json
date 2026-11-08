@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-intrinsic-offset.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "offset requires a nonnegative safe-integer number literal"
+    }
+  ]
+}
