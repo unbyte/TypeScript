@@ -57,8 +57,12 @@ func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnVa
 	}
 	declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration)
 	if declaration == nil {
-		v.error(node, "native generic constructor arguments are not implemented yet")
-		return typefnValue{}
+		native := v.c.typefnNativeConstructor(symbol)
+		if node.TypeArgumentList() != nil || native == nil || len(native.parameters) != arity {
+			v.error(node, "constructor argument kind or arity does not match the parameter")
+			return typefnValue{}
+		}
+		return typefnValue{closure: v.c.internTypefnConstructor(nil, native, typefnTypeValues(native.outer))}
 	}
 	p := v.c.compileTypefn(declaration)
 	if !p.valid {
@@ -86,7 +90,7 @@ func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnVa
 			v.error(node, "constructor identity and creation checks must be ready at a native boundary")
 		}
 	}
-	if !v.failed && (value.closure == nil || len(value.closure.program.parameterKinds) != arity) {
+	if !v.failed && !value.closure.acceptsArity(arity) {
 		v.error(node, "constructor argument kind or arity does not match the parameter")
 	}
 	return value

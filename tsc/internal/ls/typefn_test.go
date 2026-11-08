@@ -679,3 +679,30 @@ func TestTypefnConstructorArgumentsInEditor(t *testing.T) {
 		t.Fatalf("editor queries introduced errors: %v", diagnostics)
 	}
 }
+
+func TestTypefnNativeConstructorArgumentsInEditor(t *testing.T) {
+	source := `typefn Apply<F<_>, T> {return F<T>;}
+ type Ready=/*call*/Apply</*constructor*/Array, 1>;
+ typefn Choose<F<_>,T> {if(T==0) {return F<T>;} return F<T+1>;}
+ type Pending<T>=Choose<Array,T>;`
+	l, ctx, pos := typefnService(t, source)
+	for _, marker := range []string{"/*call*/", "/*constructor*/"} {
+		hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(marker)})
+		if err != nil || hover.Hover == nil {
+			t.Fatalf("hover %s: %#v %v", marker, hover, err)
+		}
+		if marker == "/*call*/" && !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "1[]") {
+			t.Fatal(hover.Hover.Contents.MarkupContent.Value)
+		}
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatal(ds)
+	}
+	c, done := l.program.GetTypeChecker(ctx)
+	defer done()
+	file := l.program.GetSourceFile("/main.ts")
+	pending := c.GetTypeAtLocation(file.Statements.Nodes[3].Name())
+	if display := c.TypeToString(pending); !strings.Contains(display, "Choose<Array, T>") {
+		t.Fatalf("mixed deferred display: %s", display)
+	}
+}

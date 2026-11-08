@@ -122,8 +122,8 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   documentation sources. They are milestones, not full conformance coverage.
 * Local named helpers and anonymous Type-returning closures now execute with frozen captures.
   Factories can return constructors inside DSL computations. Mixed Type/helper-constructor
-  arguments execute in DSL and native calls. Native generic constructor values and
-  the native alias bridge remain pending.
+  arguments execute in DSL and native calls, including native generic constructors.
+  The native alias/island bridges remain pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
   relation proofs, scoped generic-body assumptions, latent member/signature
@@ -158,13 +158,13 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   bindings. A blocked proof suspends the call before checking later bounds.
   Native generic declarations retain native constraint semantics. Constructor
   parameters carry separate VM values through direct calls, closures and replay.
-  Native constructor values and the alias/island
-  bridges also remain incomplete. There is no claim of optimized append or
+  The native alias/island
+  bridges remain incomplete. There is no claim of optimized append or
   memoized VM calls.
 
 ## Validation
 
-The compiler-project harness has 278 fixtures covering native calibration, execution,
+The compiler-project harness has 286 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -436,3 +436,17 @@ unresolved ordinary Types. Deferred calls retain mixed arguments and replay thei
 captured environments. Constraints still run at each actual application, rather
 than being compared universally when passing a constructor. Editor queries omit
 Type results for factories and retain ordinary symbol navigation.
+
+Native aliases, interfaces and classes can now supply constructor identities in
+explicit constructor slots, constructor-binding reassignment and annotated
+constructor returns. Native names retain their original binders and lexical Type
+captures. Application checks all declared slots (including defaulted slots), maps
+dependent bounds using the full argument/capture environment, and constructs native
+references or instantiates native alias bodies. Original private class identity,
+mapped aliases and native intrinsics are retained. Ordinary bare defaulted aliases
+still produce their default Type; bare nondefaulted generics still diagnose outside
+constructor context. Tests include composition, tuple mapping, Pick bounds,
+constructor-bound replay, captured native generic bounds, default arity, private
+classes, intrinsics and editor queries/display. Nongeneric aliases that name
+constructor *values*, such as `type AsyncArray = Compose<Promise, Array>`, still
+require the separate alias bridge.

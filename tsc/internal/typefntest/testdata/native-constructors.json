@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "native-constructors.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

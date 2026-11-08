@@ -35,16 +35,17 @@ type typefnInstruction struct {
 	helper       *typefnProgram
 }
 type typefnExpression struct {
-	node      *ast.Node
-	slot      int
-	symbol    *ast.Symbol
-	intrinsic string
-	island    *typefnIsland
-	helper    *typefnProgram // Code for a constructor-valued expression.
-	kind      *typefnKind
-	callee    *typefnProgram
-	args      []*typefnExpression
-	keys      []*typefnExpression
+	node              *ast.Node
+	slot              int
+	symbol            *ast.Symbol
+	intrinsic         string
+	island            *typefnIsland
+	helper            *typefnProgram // Code for a constructor-valued expression.
+	kind              *typefnKind
+	callee            *typefnProgram
+	nativeConstructor *typefnNativeConstructor
+	args              []*typefnExpression
+	keys              []*typefnExpression
 }
 type typefnCapture struct{ source, target int }
 
@@ -221,7 +222,7 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		if !ok || !value.mutable || value.slot < 0 {
 			b.error(node.Name(), "assignment requires a mutable local binding")
 		}
-		expr := b.expression(s.Expression)
+		expr := b.expressionInKind(s.Expression, value.kind)
 		if ok && value.mutable && value.slot >= 0 {
 			message := "assignment cannot change a binding's value kind"
 			if value.kind.resolved() > 0 && expr.kind.resolved() > 0 {
@@ -231,7 +232,11 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		}
 		b.emit(typefnInstruction{op: tfStore, node: node, expr: expr, slot: value.slot})
 	case ast.KindTypeFunctionReturn:
-		expr := b.expression(s.Expression)
+		var context *typefnKind
+		if ast.TypeFunctionResultKind(b.p.declaration) != nil {
+			context = b.p.resultKind
+		}
+		expr := b.expressionInKind(s.Expression, context)
 		b.sameKind(node, b.p.resultKind, expr.kind, "return kinds must agree with the function result kind")
 		b.emit(typefnInstruction{op: tfReturn, node: node, expr: expr})
 	case ast.KindTypeFunctionExpressionStatement:

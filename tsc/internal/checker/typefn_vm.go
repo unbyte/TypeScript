@@ -254,7 +254,7 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, cl
 	registers := make([]typefnValue, p.slots)
 	for i, arg := range args {
 		kind := p.parameterKinds[i].resolved()
-		if kind == 0 && arg.native == nil || kind > 0 && (arg.closure == nil || len(arg.closure.program.parameterKinds) != kind-1 || typefnHasConstructorParameters(arg.closure.program) || arg.closure.program.resultKind.resolved() != 0) {
+		if kind == 0 && arg.native == nil || kind > 0 && !arg.closure.acceptsArity(kind-1) {
 			return typefnValue{native: v.error(node, "argument kind or constructor arity does not match the parameter")}
 		}
 		registers[i] = arg

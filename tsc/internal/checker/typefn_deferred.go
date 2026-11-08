@@ -154,6 +154,9 @@ func (c *Checker) instantiateTypefn(t *Type, m *TypeMapper) *Type {
 		case typefnCallTerm:
 			return v.callWithClosure(d.node, d.declaration, values, closure)
 		case typefnNativeCallTerm:
+			if closure != nil {
+				return v.applyNativeConstructor(d.node, closure, args)
+			}
 			return v.apply(d.node, d.symbol, args)
 		case typefnExpressionTerm:
 			return v.replayExpression(d.expression, values)

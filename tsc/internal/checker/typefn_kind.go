@@ -149,7 +149,7 @@ func (b *typefnCompiler) callArgument(node *ast.Node, p *typefnProgram, index in
 	if p == nil || index >= len(p.parameterKinds) || p.parameterKinds[index].resolved() == 0 {
 		return b.typeExpression(node)
 	}
-	value := b.expression(node)
+	value := b.expressionInKind(node, p.parameterKinds[index])
 	b.sameKind(node, value.kind, p.parameterKinds[index], "constructor argument kind or arity does not match the parameter")
 	return value
 }

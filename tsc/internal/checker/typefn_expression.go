@@ -32,6 +32,8 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 			}
 		}
 		value = v.callValue(e.node, e.callee.declaration, args, nil)
+	} else if e.nativeConstructor != nil {
+		value.closure = v.c.internTypefnConstructor(nil, e.nativeConstructor, typefnTypeValues(e.nativeConstructor.outer))
 	} else if e.helper != nil {
 		if e.helper.local {
 			value = typefnValue{closure: v.captureHelper(e.helper, slots)}

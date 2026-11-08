@@ -13,11 +13,13 @@ import (
 type typefnClosure struct {
 	id       uint32
 	program  *typefnProgram
+	native   *typefnNativeConstructor
 	captures []typefnValue
 }
 
 type typefnClosureKey struct {
 	program  *typefnProgram
+	native   *typefnNativeConstructor
 	captures CacheHashKey
 }
 
@@ -40,13 +42,23 @@ func typefnValueHash(values []typefnValue) CacheHashKey {
 }
 
 func (c *Checker) internTypefnClosure(p *typefnProgram, captures []typefnValue) *typefnClosure {
+	return c.internTypefnConstructor(p, nil, captures)
+}
+
+func (c *Checker) internTypefnConstructor(p *typefnProgram, native *typefnNativeConstructor, captures []typefnValue) *typefnClosure {
 	state := c.getTypefnState()
-	key := typefnClosureKey{p, typefnValueHash(captures)}
+	key := typefnClosureKey{p, native, typefnValueHash(captures)}
+	var node *ast.Node
+	if p != nil {
+		node = p.declaration
+	} else {
+		node = native.declaration
+	}
 	if value := state.closures[key]; value != nil {
 		return value
 	}
 	if state.vm != nil {
-		if !state.vm.allocate(p.declaration, len(captures)+1) || !state.vm.reserveValues(p.declaration, len(captures)*int(unsafe.Sizeof(typefnValue{}))+int(unsafe.Sizeof(typefnClosure{}))) {
+		if !state.vm.allocate(node, len(captures)+1) || !state.vm.reserveValues(node, len(captures)*int(unsafe.Sizeof(typefnValue{}))+int(unsafe.Sizeof(typefnClosure{}))) {
 			return nil
 		}
 	}
@@ -54,7 +66,7 @@ func (c *Checker) internTypefnClosure(p *typefnProgram, captures []typefnValue) 
 		state.closures = map[typefnClosureKey]*typefnClosure{}
 	}
 	state.nextClosureID++
-	value := &typefnClosure{id: state.nextClosureID, program: p, captures: slices.Clone(captures)}
+	value := &typefnClosure{id: state.nextClosureID, program: p, native: native, captures: slices.Clone(captures)}
 	state.closures[key] = value
 	return value
 }
@@ -93,7 +105,7 @@ func (c *Checker) instantiateTypefnClosure(root *typefnClosure, mapper *TypeMapp
 		if mapped[f.value] != nil {
 			continue
 		}
-		if c.typefn.vm != nil && !c.typefn.vm.step(f.value.program.declaration) {
+		if c.typefn.vm != nil && !c.typefn.vm.step(f.value.declaration()) {
 			return nil
 		}
 		if !f.exit {
@@ -116,7 +128,7 @@ func (c *Checker) instantiateTypefnClosure(root *typefnClosure, mapper *TypeMapp
 			changed = changed || values[i] != value
 		}
 		if changed {
-			mapped[f.value] = c.internTypefnClosure(f.value.program, values)
+			mapped[f.value] = c.internTypefnConstructor(f.value.program, f.value.native, values)
 		} else {
 			mapped[f.value] = f.value
 		}
@@ -138,6 +150,16 @@ func (v *typefnVM) callHelper(e *typefnExpression, slots []typefnValue) typefnVa
 		if v.failed || v.blocked {
 			return typefnValue{native: v.c.errorType}
 		}
+	}
+	if closure.native != nil {
+		types := make([]*Type, len(args))
+		for i, arg := range args {
+			types[i] = v.nativeValue(e.node, arg)
+		}
+		if v.failed {
+			return typefnValue{native: v.c.errorType}
+		}
+		return typefnValue{native: v.applyNativeConstructor(e.node, closure, types)}
 	}
 	return v.callValue(e.node, closure.program.declaration, args, closure)
 }

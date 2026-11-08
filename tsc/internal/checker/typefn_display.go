@@ -91,6 +91,9 @@ func (b *NodeBuilderImpl) typefnValueToNode(value typefnValue) *ast.Node {
 		return b.typeToTypeNode(value.native)
 	}
 	if value.closure != nil {
+		if value.closure.native != nil {
+			return b.symbolToTypeNode(value.closure.native.symbol, ast.SymbolFlagsType, nil)
+		}
 		node := value.closure.program.declaration
 		if node.Name() != nil {
 			return b.symbolToTypeNode(node.Symbol(), ast.SymbolFlagsType, nil)

@@ -1,19 +1,19 @@
 # Testing and validation
 
-Latest verification recorded on 2026-11-08, including DSL parameter nodes and
-application-time bounds. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
+Latest verification recorded on 2026-11-08, including mixed constructor arguments and native
+constructor application. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 278 isolated compiler-project fixtures across the full harness run and
-  the subsequent imported-bound diagnostic fixture. The harness checks complete
+* Passed: 286 isolated compiler-project fixtures in the full harness run. The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
-  creation-check readiness, computed bounds and preceding-parameter scope.
+  creation-check readiness, computed bounds, mixed constructor arguments, native
+  constructor identity, dependent bounds and lexical capture substitution.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
-  language-service suites. Subsequent parameter hover/coloring changes passed the
-  Typefn language-service suite.
+  language-service suites. Checker, harness and language-service suites were rerun
+  after native constructor support.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
   baselines, rerun after the parameter AST change.

@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-native-constructor-bare.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "application requires 1..1 Type arguments"
+    }
+  ]
+}
