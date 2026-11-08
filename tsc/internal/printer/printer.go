@@ -4154,6 +4154,10 @@ func (p *Printer) emitEmbeddedStatement(parentNode *ast.Node, node *ast.Statemen
 }
 
 func (p *Printer) emitStatement(node *ast.Statement) {
+	if ast.IsTypeFunctionDeclaration(node) {
+		p.emitTypefn(node)
+		return
+	}
 	if snippetElement := p.emitContext.SnippetElement(node); snippetElement != nil {
 		p.emitSnippetNode(node, snippetElement)
 		return
@@ -5259,6 +5263,8 @@ func (p *Printer) Write(node *ast.Node, sourceFile *ast.SourceFile, writer EmitT
 
 	default:
 		switch {
+		case node.Kind >= ast.KindTypeFunctionDeclaration && node.Kind <= ast.KindTypeFunctionSpread:
+			p.emitTypefn(node)
 		case ast.IsTypeNode(node):
 			p.emitTypeNodeOutsideExtends(node)
 		case ast.IsStatement(node):

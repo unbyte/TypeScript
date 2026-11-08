@@ -1562,7 +1562,31 @@ func (p *Program) GetGlobalDiagnostics(ctx context.Context) []*ast.Diagnostic {
 }
 
 func (p *Program) GetDeclarationDiagnostics(ctx context.Context, sourceFile *ast.SourceFile) []*ast.Diagnostic {
+	if ds := p.typefnDeclarationDiagnostics(sourceFile); len(ds) != 0 {
+		return ds
+	}
 	return p.collectDiagnostics(ctx, sourceFile, true /*concurrent*/, p.getDeclarationDiagnosticsForFile)
+}
+
+// Source-recipe declaration serialization is a separate implementation milestone.
+// Never publish an ordinary alias that loses executable DSL behavior.
+func (p *Program) typefnDeclarationDiagnostics(sourceFile *ast.SourceFile) []*ast.Diagnostic {
+	var result []*ast.Diagnostic
+	for _, file := range p.GetSourceFiles() {
+		if sourceFile != nil && file != sourceFile {
+			continue
+		}
+		var visit func(*ast.Node) bool
+		visit = func(node *ast.Node) bool {
+			if ast.IsTypeFunctionDeclaration(node) {
+				result = append(result, ast.NewDiagnostic(file, node.Loc, diagnostics.NewAdHocMessage("typefn: declaration emit is not implemented yet")))
+				return false
+			}
+			return node.ForEachChild(visit)
+		}
+		visit(file.AsNode())
+	}
+	return result
 }
 
 func FilterNoEmitSemanticDiagnostics(diagnostics []*ast.Diagnostic, options *core.CompilerOptions) []*ast.Diagnostic {
@@ -1961,6 +1985,11 @@ type SourceMapEmitResult struct {
 }
 
 func (p *Program) Emit(ctx context.Context, options EmitOptions) *EmitResult {
+	if options.EmitOnly != EmitOnlyJs && (p.Options().GetEmitDeclarations() || options.EmitOnly != EmitAll) {
+		if ds := p.typefnDeclarationDiagnostics(nil); len(ds) != 0 {
+			return &EmitResult{EmitSkipped: true, Diagnostics: ds}
+		}
+	}
 	if tr := p.hosts.Tracing; tr != nil {
 		defer tr.Push(tracing.PhaseEmit, "emit", nil, true)()
 	}
