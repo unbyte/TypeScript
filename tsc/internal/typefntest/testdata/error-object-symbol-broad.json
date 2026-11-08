@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-object-symbol-broad.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "computed key requires one string/number literal or unique symbol"
+    }
+  ]
+}

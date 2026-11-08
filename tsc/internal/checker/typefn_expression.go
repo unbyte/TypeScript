@@ -123,6 +123,7 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 		for index, field := range data.Operands.Nodes {
 			fieldData := field.AsTypeFunctionExpression()
 			name := ""
+			var nameType *Type
 			if e.keys[index] == nil {
 				// Text is the scanner's decoded/canonical value, not source spelling.
 				name = field.Name().Text()
@@ -150,11 +151,16 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 						return v.error(field, "number property key must be finite")
 					}
 					name = number.String()
+				} else if key.flags == TypeFlagsUniqueESSymbol {
+					name, nameType = getPropertyNameFromType(key), key
 				} else {
-					return v.error(field, "computed key requires one string or number literal; unique symbols are not implemented yet")
+					return v.error(field, "computed key requires one string/number literal or unique symbol")
 				}
 			}
 			if members.Get(name) != nil {
+				if nameType != nil {
+					return v.error(field, "duplicate object field for the same unique symbol")
+				}
 				return v.error(field, "duplicate object field "+name)
 			}
 			value := v.expression(e.args[index], slots)
@@ -174,6 +180,7 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 			}
 			symbol := v.c.newSymbolEx(flags, name, checkFlags)
 			v.c.valueSymbolLinks.Get(symbol).resolvedType = v.c.addOptionalityEx(value, true, fieldData.Optional)
+			v.c.valueSymbolLinks.Get(symbol).setNameType(v.c, nameType)
 			members.Set(name, symbol)
 		}
 		if !v.allocate(node, 1) {

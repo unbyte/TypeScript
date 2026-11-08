@@ -251,6 +251,7 @@ func (c *Checker) instantiateTypefnObject(t *Type, m *TypeMapper) *Type {
 		changed = changed || value != old
 		p := c.newSymbolEx(property.Flags(), name, property.CheckFlags())
 		c.valueSymbolLinks.Get(p).resolvedType = value
+		c.valueSymbolLinks.Get(p).setNameType(c, c.valueSymbolLinks.Get(property).getNameType())
 		members.Set(name, p)
 	}
 	if !changed {

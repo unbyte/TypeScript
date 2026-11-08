@@ -87,7 +87,7 @@ implemented before executable definitions can be published safely in `.d.ts` fil
 Module-level named functions with ordinary Type parameters; mutable `type` locals;
 lexical block scopes; return, if/else, while, break/continue; required finite tuple and UTF-16 string
 iteration; dependency-aware union iteration; tuple construction and finite
-tuple spreads; object construction with string/number keys and optional/readonly
+tuple spreads; object construction with string/number/unique-symbol keys and optional/readonly
 properties; native indexing and `keyof`; native union/intersection construction;
 number/bigint arithmetic and comparisons; literal boolean short-circuit operators;
 statement-only `fail`/`failAt` with deferred messages and validated UTF-16 offsets;
@@ -154,7 +154,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 127 fixtures covering native calibration, execution,
+The compiler-project harness has 130 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -207,3 +207,7 @@ inspect native mutable/readonly arrays. Their descriptor is an ordinary native
 record; symbolic element Types are preserved without blocking known array shape.
 Tests prove generic length/element facts before specialization, round-trip readonly
 arrays, replay symbolic flags, and reject tuples and numeric-indexer impostors.
+
+Computed object keys accept unique-symbol Types and preserve the native key handle
+through generic object instantiation. Tests use imported symbols, `keyof`, indexing,
+optional/readonly fields, snapshot assignment and duplicate/broad-symbol rejection.

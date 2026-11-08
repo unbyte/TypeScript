@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "object-symbol-keys.ts",
+    "keys.ts": "object-symbol-keys-lib.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}
