@@ -52,3 +52,33 @@ func TestTypefnPatternRecoveryPrint(t *testing.T) {
 	p := printer.NewPrinter(printer.PrinterOptions{}, printer.PrintHandlers{}, nil)
 	p.EmitSourceFile(file)
 }
+
+func TestTypefnDeclarationABIPrinting(t *testing.T) {
+	for _, removeComments := range []bool{false, true} {
+		for _, newline := range []core.NewLineKind{core.NewLineKindLF, core.NewLineKindCRLF} {
+			file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}, `// ordinary comment
+export typefn Identity<T> { return T; }`, core.ScriptKindTS)
+			file.IsDeclarationFile = true
+			context := printer.NewEmitContext()
+			context.SetTypefnDeclarationABI(file)
+			p := printer.NewPrinter(printer.PrinterOptions{NewLine: newline, RemoveComments: removeComments, OnlyPrintJSDocStyle: true}, printer.PrintHandlers{}, context)
+			printed := p.EmitSourceFile(file)
+			if !strings.HasPrefix(printed, "// @typefn-abi: 1") || strings.Count(printed, "@typefn-abi:") != 1 {
+				t.Fatalf("missing ABI: %q", printed)
+			}
+			again := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.d.ts", PathKey: "/test.d.ts", TypefnVersion: 1}, printed, core.ScriptKindTS)
+			if ds := again.Diagnostics(); len(ds) != 0 {
+				t.Fatalf("invalid emitted declaration: %v\n%s", ds, printed)
+			}
+			// Reusing an emit context/printer must not leak a file's ABI to other outputs.
+			native := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/native.d.ts", PathKey: "/native.d.ts"}, "export type Native = string;", core.ScriptKindTS)
+			if output := p.EmitSourceFile(native); strings.Contains(output, "@typefn-abi:") {
+				t.Fatalf("ABI leaked to native file: %s", output)
+			}
+			file.IsDeclarationFile = false
+			if output := p.EmitSourceFile(file); strings.Contains(output, "@typefn-abi:") {
+				t.Fatalf("ABI leaked to source output: %s", output)
+			}
+		}
+	}
+}

@@ -502,6 +502,7 @@ type emitNodeFlags uint32
 const (
 	hasCommentRange emitNodeFlags = 1 << iota
 	hasSourceMapRange
+	hasTypefnABI
 )
 
 type SnippetKind int
@@ -550,6 +551,17 @@ func (e *emitNode) copyFrom(source *emitNode) {
 		snippetElement := *source.snippetElement
 		e.snippetElement = &snippetElement
 	}
+}
+
+// SetTypefnDeclarationABI marks an emitted declaration file containing executable
+// recipes. This is semantic output, independent of comment-removal preferences.
+func (c *EmitContext) SetTypefnDeclarationABI(file *ast.SourceFile) {
+	c.emitNodes.Get(file.AsNode()).flags |= hasTypefnABI
+}
+
+func (c *EmitContext) hasTypefnDeclarationABI(file *ast.SourceFile) bool {
+	info := c.emitNodes.TryGet(file.AsNode())
+	return info != nil && info.flags&hasTypefnABI != 0
 }
 
 func (c *EmitContext) EmitFlags(node *ast.Node) EmitFlags {

@@ -4680,6 +4680,10 @@ func (p *Printer) emitSourceFile(node *ast.SourceFile) {
 	var state *commentState
 	if node.ScriptKind != core.ScriptKindJSON {
 		p.emitShebangIfNeeded(node)
+		if node.IsDeclarationFile && p.emitContext.hasTypefnDeclarationABI(node) {
+			p.writeComment("// @typefn-abi: 1")
+			p.writeLine()
+		}
 		index = p.emitPrologueDirectives(node.Statements)
 		if !p.writer.IsAtStartOfLine() {
 			p.writeLine()
