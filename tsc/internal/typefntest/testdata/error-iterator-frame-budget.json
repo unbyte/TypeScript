@@ -1,0 +1,22 @@
+{
+  "files": {
+    "main.ts": "error-iterator-frame-budget.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "liveBytes": 256
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Many<>;",
+      "message": "live VM allocation limit exceeded"
+    }
+  ]
+}

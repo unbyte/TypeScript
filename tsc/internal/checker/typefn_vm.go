@@ -4,6 +4,7 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"slices"
+	"unsafe"
 )
 
 // A root owns the budget; nested DSL/native calls cannot reset it. Failed roots
@@ -11,6 +12,13 @@ import (
 type typefnActiveCall struct {
 	declaration *ast.Node
 	args        []*Type
+}
+
+// Iterator slots belong to the lowered program, while snapshots belong to each
+// invocation. A nested/re-entered loop replaces only its own frame-local slot.
+type typefnIterator struct {
+	values []*Type
+	index  int
 }
 
 type typefnVM struct {
@@ -172,7 +180,10 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 	if !v.constraints(node, parameters, args) {
 		return v.c.errorType
 	}
-	frameBytes := p.slots*8 + 128
+	// Charge register/argument backing storage and iterator slots, in addition to
+	// the existing fixed bookkeeping allowance. No iterator storage is allocated
+	// for programs that do not iterate.
+	frameBytes := (p.slots+len(args))*int(unsafe.Sizeof((*Type)(nil))) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
 	if frameBytes > v.limits.LiveBytes-v.liveBytes {
 		return v.error(node, "live VM allocation limit exceeded")
 	}
@@ -180,11 +191,7 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 	defer func() { v.liveBytes -= frameBytes }()
 	registers := make([]*Type, p.slots)
 	copy(registers, args)
-	type iterator struct {
-		values []*Type
-		index  int
-	}
-	iterators := make(map[int]*iterator)
+	iterators := make([]typefnIterator, p.iterators)
 	for pc := 0; pc < len(p.code); {
 		i := &p.code[pc]
 		pc++
@@ -218,11 +225,11 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 			if v.failed || v.blocked {
 				return v.c.errorType
 			}
-			iterators[i.slot] = &iterator{values: values}
+			iterators[i.iterator] = typefnIterator{values: values}
 		case tfIterNext:
-			iter := iterators[i.slot]
+			iter := &iterators[i.iterator]
 			if iter.index == len(iter.values) {
-				delete(iterators, i.slot)
+				*iter = typefnIterator{}
 				pc = i.target
 			} else {
 				registers[i.slot] = iter.values[iter.index]
