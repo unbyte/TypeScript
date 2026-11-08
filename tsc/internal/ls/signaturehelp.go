@@ -58,6 +58,9 @@ func (l *LanguageService) ProvideSignatureHelp(
 		if !projection.Fidelity.IsSingleSegment() {
 			continue
 		}
+		if help := l.typefnSignatureHelp(ctx, projection.Script, int(projection.Position)); help != nil {
+			return lsproto.SignatureHelpOrNull{SignatureHelp: help}, nil
+		}
 		items := l.GetSignatureHelpItems(
 			ctx,
 			int(projection.Position),
