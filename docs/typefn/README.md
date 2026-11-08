@@ -29,9 +29,12 @@ The manual and specification also describe features that are not implemented yet
 * [Testing](testing.md): reproducible checks and the scope of validation.
 
 The [editor project](examples/editor/README.md) runs with the implemented compiler.
-The [HTTP routes](examples/http-routes.typefn), [calculator](examples/calculator.typefn),
-[numbers](examples/numbers.typefn) and [construction](examples/construction.typefn)
-files illustrate the target design; they are not executable conformance fixtures.
+The [calculator](examples/calculator.typefn) and [numbers](examples/numbers.typefn)
+are executable modules: the integration harness reads these exact files as TypeScript
+and checks their native results, including generic specialization and invalid inputs.
+Copy them to `.ts` files to use them in an enabled project. The
+[HTTP routes](examples/http-routes.typefn) and [construction](examples/construction.typefn)
+remain target-design examples, not executable conformance fixtures.
 
 Superseded drafts, full research reports and historical validation journals remain
 in the [preserved snapshot](https://github.com/unbyte/TypeScript/tree/7fe54fd975b95531092485468ac5677ed3a453fc/docs/typefn) on

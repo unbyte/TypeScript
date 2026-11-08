@@ -39,3 +39,12 @@ Deliberately excluded: enum-specific APIs, new generic declaration synthesis,
 unrestricted HKT, runtime/I/O/regex and inspecting an active inference session.
 `where` is unresolved research, not adopted syntax; native extends is the current
 constraint contract. See [design decisions](design-notes.md).
+
+## Executable milestones
+
+* Calculator and numeric example modules are read directly by the integration
+  harness (`example-calculator`, `example-numbers`). Assertions cover exact Types,
+  precedence, associativity, unary signs, whitespace, bigint precision and generic
+  specialization. Separate calculator fixtures check empty input, missing operands
+  and parentheses, division by zero, nonintegral division and trailing input at the
+  importing application. This completes these examples, not the language matrix.

@@ -1,0 +1,20 @@
+{
+  "files": {
+    "calculator.ts": "../../../../docs/typefn/examples/calculator.typefn",
+    "assertions.ts": "error-calculator-trailing.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "assertions.ts",
+      "message": "Unexpected token (UTF-16 offset 1)",
+      "at": "Calc<\"1x\">"
+    }
+  ]
+}

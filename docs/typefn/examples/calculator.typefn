@@ -1,8 +1,8 @@
-// R2 specification example; the current compiler does not execute this DSL.
+// Executable example; checked directly by the compiler integration harness.
 // Integer arithmetic parser: + - * /, unary signs, parentheses, ASCII whitespace.
-// ABI/library contracts: ../spec/README.md. Results below are design oracles.
+// ABI/library contracts: ../spec/README.md. Assertions live in typefntest.
 
-typefn SkipSpace<Text, Start> {
+export typefn SkipSpace<Text, Start> {
   type cursor = Start;
   type end = text.length<Text>;
   while (cursor < end) {
@@ -16,7 +16,7 @@ typefn SkipSpace<Text, Start> {
   return cursor;
 }
 
-typefn ReadInteger<Text, Start> {
+export typefn ReadInteger<Text, Start> {
   type cursor = Start;
   type value = 0n;
   type end = text.length<Text>;
@@ -34,7 +34,7 @@ typefn ReadInteger<Text, Start> {
 }
 
 // Result is [bigint literal Type, next-offset number literal Type].
-typefn Expression<Text, Start, Minimum>: type {
+export typefn Expression<Text, Start, Minimum>: type {
   type cursor = SkipSpace<Text, Start>;
   type end = text.length<Text>;
   if (cursor == end) { failAt<"Expected an expression", cursor>; }
@@ -85,18 +85,18 @@ typefn Expression<Text, Start, Minimum>: type {
   return [value, cursor];
 }
 
-typefn CalcBig<Text> {
+export typefn CalcBig<Text> {
   type parsed = Expression<Text, 0, 0>;
   type end = SkipSpace<Text, parsed[1]>;
   if (end != text.length<Text>) { failAt<"Unexpected token", end>; }
   return parsed[0];
 }
 
-typefn Calc<Text> {
+export typefn Calc<Text> {
   return numeric.toNumber<CalcBig<Text>>;
 }
 
-type Parsed = ReadInteger<"123x", 0>; // [123n, 3]
-type A = Calc<"2 + 3 * 4">; // 14
-type B = Calc<"(2 + 3) * 4">; // 20
-type C = CalcBig<"9007199254740992 + 1">; // 9007199254740993n
+export type Parsed = ReadInteger<"123x", 0>; // [123n, 3]
+export type A = Calc<"2 + 3 * 4">; // 14
+export type B = Calc<"(2 + 3) * 4">; // 20
+export type C = CalcBig<"9007199254740992 + 1">; // 9007199254740993n

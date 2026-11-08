@@ -1,0 +1,20 @@
+{
+  "files": {
+    "calculator.ts": "../../../../docs/typefn/examples/calculator.typefn",
+    "assertions.ts": "error-calculator-operand.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "assertions.ts",
+      "message": "Expected an expression (UTF-16 offset 2)",
+      "at": "Calc<\"1+\">"
+    }
+  ]
+}

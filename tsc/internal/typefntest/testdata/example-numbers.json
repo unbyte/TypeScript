@@ -1,0 +1,12 @@
+{
+  "files": {
+    "numbers.ts": "../../../../docs/typefn/examples/numbers.typefn",
+    "assertions.ts": "example-numbers.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

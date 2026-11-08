@@ -1,0 +1,20 @@
+{
+  "files": {
+    "calculator.ts": "../../../../docs/typefn/examples/calculator.typefn",
+    "assertions.ts": "error-calculator-fraction.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "assertions.ts",
+      "message": "Non-integral division (UTF-16 offset 1)",
+      "at": "Calc<\"3/2\">"
+    }
+  ]
+}

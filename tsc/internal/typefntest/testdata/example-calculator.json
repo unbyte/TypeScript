@@ -1,0 +1,12 @@
+{
+  "files": {
+    "calculator.ts": "../../../../docs/typefn/examples/calculator.typefn",
+    "assertions.ts": "example-calculator.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

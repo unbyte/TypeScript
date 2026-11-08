@@ -1,27 +1,27 @@
-// R2 specification examples; expected outcomes, not executed compiler tests.
+// Executable examples; checked directly by the compiler integration harness.
 
-typefn Less<A, B> { return A < B; }
-typefn Min<A, B> {
+export typefn Less<A, B> { return A < B; }
+export typefn Min<A, B> {
   if (A < B) { return A; }
   return B;
 }
-typefn Clamp<Value, Low, High> {
+export typefn Clamp<Value, Low, High> {
   if (Low > High) { fail<"Lower bound exceeds upper bound">; }
   if (Value < Low) { return Low; }
   if (Value > High) { return High; }
   return Value;
 }
-typefn Below<Values, Limit> {
+export typefn Below<Values, Limit> {
   type result = never;
   for (type value in Values) {
     if (value < Limit) { result = result | value; }
   }
   return result;
 }
-typefn Add<A, B> { return A + B; }
+export typefn Add<A, B> { return A + B; }
 
 // Half-open safe-integer number range; descending/empty ranges yield never.
-typefn Range<Start, Stop> {
+export typefn Range<Start, Stop> {
   if (!numeric.isSafeInteger<Start> || !numeric.isSafeInteger<Stop>) {
     fail<"Range endpoints must be safe integers">;
   }
@@ -34,11 +34,11 @@ typefn Range<Start, Stop> {
   return result;
 }
 
-type A = Less<-3, 2>; // true
-type B = Min<3.5, 2.25>; // 2.25
-type C = Clamp<120, 0, 100>; // 100
-type D = Below<2 | 8 | 15, 10>; // 2 | 8
-type E = Add<17, 25>; // 42
-type F = Range<0, 4>; // 0 | 1 | 2 | 3
-type G = Less<9007199254740992n, 9007199254740993n>; // true
+export type A = Less<-3, 2>; // true
+export type B = Min<3.5, 2.25>; // 2.25
+export type C = Clamp<120, 0, 100>; // 100
+export type D = Below<2 | 8 | 15, 10>; // 2 | 8
+export type E = Add<17, 25>; // 42
+export type F = Range<0, 4>; // 0 | 1 | 2 | 3
+export type G = Less<9007199254740992n, 9007199254740993n>; // true
 // Less<1 | 2, 3>, Less<number, 3>, Less<1, 2n>: scalar-domain diagnostics.

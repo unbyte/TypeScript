@@ -146,9 +146,10 @@ See [testing](testing.md) for commands and validation scope.
   strings, retained caches, and cancellation inside every native operation still
   need instrumentation. Shared replay budgets alone do not establish a hardened
   service boundary or large-project performance.
-* String algorithms, patterns, restricted HKT/closures, executable native islands,
+* Patterns, restricted HKT/closures, executable native islands,
   dynamic signature builders, and declaration recipes remain outside this slice.
-  The manual's route and calculator programs are still target-language examples.
+  The route program remains a target-language example. The calculator now has
+  executable concrete, symbolic and imported-error fixtures.
 
 See [implementation status](implementation.md) for the wider language status and
 [editor integration](editor-integration.md) for running the fork.

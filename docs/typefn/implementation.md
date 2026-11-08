@@ -114,7 +114,8 @@ is bounded by call depth. Runtime fallthrough diagnoses.
   string-work budget. The numeric library executes explicit exact conversions, rounding, integer
   parsing/checks and formatting. Other text/tuple intrinsics, interpolation and
   structural pattern matching are not implemented.
-  The manual's HTTP-route and calculator examples are not executable yet.
+  The calculator and numeric examples are executable and tested from their actual
+  documentation sources. The HTTP-route example still requires templates/matching.
 * Constructor slots, closures/local typefns and restricted HKT support are pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
@@ -151,7 +152,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 81 fixtures covering native calibration, execution,
+The compiler-project harness has 91 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
