@@ -1,0 +1,44 @@
+{
+  "files": {
+    "main.ts": "error-failure-applications.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Reject<\"bad\"> /*one*/",
+      "message": "typefn: bad",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "main.ts",
+          "at": "fail<T>",
+          "message": "operation failed here"
+        }
+      ]
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Reject<\"bad\"> /*two*/",
+      "message": "typefn: bad",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "main.ts",
+          "at": "fail<T>",
+          "message": "operation failed here"
+        }
+      ]
+    }
+  ]
+}

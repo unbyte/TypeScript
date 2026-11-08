@@ -93,9 +93,10 @@ func (v *typefnVM) error(node *ast.Node, message string) *Type {
 		if v.replaySite != nil {
 			site = v.replaySite
 		}
-		if site != nil && v.replaySite == nil && v.rootSite != nil && ast.GetSourceFileOfNode(site) != ast.GetSourceFileOfNode(v.rootSite) {
-			// Per-file diagnostics discard errors added to a producer while checking a
-			// consumer. Report the failed application in the consumer, retaining origin.
+		if v.replaySite == nil && v.rootSite != nil {
+			// Attribute each evaluation to its application, even when two calls in the
+			// same file fail at the same operation. Per-file checking also requires
+			// consumer attribution for failures inside imported helpers.
 			site = v.rootSite
 		}
 		if site == nil {

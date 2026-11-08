@@ -152,7 +152,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 97 fixtures covering native calibration, execution,
+The compiler-project harness has 98 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
