@@ -47,6 +47,12 @@
                             "experimental"
                         ]
                     },
+                    "js/ts.inlayHints.typefnResults.enabled": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Show computed results of typefn applications as inline type hints.",
+                        "scope": "resource"
+                    },
                     "js/ts.trace.server": {
                         "type": "string",
                         "enum": [

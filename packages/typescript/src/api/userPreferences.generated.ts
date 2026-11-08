@@ -81,6 +81,7 @@ export interface InlayHintsPreferences {
     includeInlayParameterNameHints?: "none" | "literals" | "all" | undefined;
     includeInlayParameterNameHintsWhenArgumentMatchesName?: boolean | undefined;
     includeInlayPropertyDeclarationTypeHints?: boolean | undefined;
+    includeInlayTypefnResultHints?: boolean | undefined;
     includeInlayVariableTypeHints?: boolean | undefined;
     includeInlayVariableTypeHintsWhenTypeMatchesName?: boolean | undefined;
 }

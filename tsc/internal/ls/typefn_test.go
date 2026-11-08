@@ -363,3 +363,55 @@ func TestTypefnSemanticTokenUTF16Ranges(t *testing.T) {
 		t.Fatal("parameter token not at UTF-16 position after emoji")
 	}
 }
+
+func TestTypefnResultHints(t *testing.T) {
+	source := strings.Replace(typefnEditorSource, "Twice<21>", "Twice</*arg*/21>", 1)
+	l, ctx, _ := typefnService(t, source)
+	l.activeConfig.InlayHintsPreferences.IncludeInlayTypefnResultHints = core.TSTrue
+	hints, err := l.ProvideInlayHint(ctx, &lsproto.InlayHintParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Range: lsproto.Range{End: lsproto.Position{Line: 20}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hints.InlayHints == nil || len(*hints.InlayHints) != 1 || (*hints.InlayHints)[0].Label.String == nil || *(*hints.InlayHints)[0].Label.String != " = 42" {
+		t.Fatalf("result hints: %#v", hints)
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatalf("queries corrupted diagnostics: %v", ds)
+	}
+}
+
+func TestTypefnIncompleteBufferQueries(t *testing.T) {
+	for _, source := range []string{
+		`typefn F<T> { type local = T; return /*at*/`,
+		`typefn F<T> { return T; } type R = F</*at*/`,
+		`typefn F<T> { return [T]; } typefn G<> { return F</*at*/`,
+		`typefn F<T> { type local = ; return /*at*/local; } type R = F<1>;`,
+		"typefn F<T> { return " + strings.Repeat("[", 300) + "/*at*/T",
+	} {
+		t.Run(source, func(t *testing.T) {
+			l, ctx, pos := typefnService(t, source)
+			if _, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*at*/")}); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := l.ProvideCompletion(ctx, "file:///main.ts", pos("/*at*/"), nil); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := l.ProvideSignatureHelp(ctx, "file:///main.ts", pos("/*at*/"), nil); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := l.ProvideSemanticTokens(ctx, "file:///main.ts"); err != nil {
+				t.Fatal(err)
+			}
+			l.activeConfig.InlayHintsPreferences.IncludeInlayTypefnResultHints = core.TSTrue
+			hints, err := l.ProvideInlayHint(ctx, &lsproto.InlayHintParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Range: lsproto.Range{End: lsproto.Position{Line: 20}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if hints.InlayHints != nil && len(*hints.InlayHints) != 0 {
+				t.Fatal("evaluated recovered syntax")
+			}
+			// Editors also request semantic diagnostics on incomplete snapshots.
+			l.program.GetSemanticDiagnostics(ctx, nil)
+		})
+	}
+}
