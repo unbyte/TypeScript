@@ -21,6 +21,7 @@ type typefnConstruction struct {
 	elements          []TupleElementInfo
 	readonly          bool
 	abstract          bool
+	signature         *typefnSignaturePlan
 	calls, constructs int
 	reference         int
 }
@@ -88,6 +89,12 @@ func (v *typefnVM) construct(node *ast.Node, data *typefnConstruction) *Type {
 		}
 	}
 	size := int(unsafe.Sizeof(typefnConstruction{})) + int(unsafe.Sizeof(typefnTerm{})) + len(data.inputs)*int(unsafe.Sizeof((*Type)(nil))) + len(data.properties)*int(unsafe.Sizeof(typefnConstructionProperty{})) + len(data.elements)*int(unsafe.Sizeof(TupleElementInfo{})) + len(data.indexers)*int(unsafe.Sizeof(typefnConstructionIndexer{}))
+	if plan := data.signature; plan != nil {
+		size += int(unsafe.Sizeof(typefnSignaturePlan{})) + len(plan.parameters)*int(unsafe.Sizeof(typefnSignatureParameter{}))
+		if plan.predicate != nil {
+			size += int(unsafe.Sizeof(typefnSignaturePredicate{}))
+		}
+	}
 	if !v.allocate(node, len(data.inputs)+1) || !v.reserveValues(node, size) {
 		return v.c.errorType
 	}
@@ -101,7 +108,7 @@ func (v *typefnVM) construct(node *ast.Node, data *typefnConstruction) *Type {
 	term := &typefnTerm{kind: typefnConstructionTerm, node: node, construction: data}
 	t := v.c.newType(TypeFlagsTypefn, ObjectFlagsNone, term.AsType(), typeKindTypefn)
 	arena.nodes = append(arena.nodes, t)
-	if len(data.indexers) != 0 {
+	if len(data.indexers) != 0 || (data.signature != nil && (data.signature.flags&SignatureFlagsHasRestParameter != 0 || data.signature.predicate != nil)) {
 		arena.checks = append(arena.checks, t)
 	}
 	return t

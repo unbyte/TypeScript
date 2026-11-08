@@ -214,6 +214,10 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 			}
 			body = f.NewTupleTypeNode(f.NewNodeList(inputs))
 		case ast.KindFunctionType, ast.KindConstructorType:
+			if graph.signature != nil {
+				body = typefnSignatureNode(f, graph.signature, inputs)
+				break
+			}
 			parameters := f.NewNodeList([]*ast.Node{f.NewParameterDeclaration(nil, f.NewToken(ast.KindDotDotDotToken), f.NewIdentifier("args"), nil, inputs[0], nil)})
 			if graph.kind == ast.KindFunctionType {
 				body = f.NewFunctionTypeNode(nil, parameters, inputs[1])
@@ -361,7 +365,19 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		if v.failed {
 			return v.c.errorType
 		}
-		v.validateObjectIndexers(node, value, v.c.getIndexInfosOfType(value))
+		graph := constructionOf(checked)
+		if graph.signature != nil {
+			inputs := make([]*Type, len(graph.inputs))
+			for i, input := range graph.inputs {
+				inputs[i] = resolve(input)
+				if v.failed {
+					return v.c.errorType
+				}
+			}
+			v.validateSignaturePlan(node, graph.signature, inputs)
+		} else {
+			v.validateObjectIndexers(node, value, v.c.getIndexInfosOfType(value))
+		}
 		if v.failed || v.blocked {
 			return v.c.errorType
 		}

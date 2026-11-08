@@ -69,6 +69,15 @@ func (v *typefnVM) signatureType(node *ast.Node, value *Type) *Type {
 	if plan == nil {
 		return v.c.errorType
 	}
+	for _, input := range inputs {
+		if constructionOf(input) != nil {
+			kind := ast.KindFunctionType
+			if plan.kind == SignatureKindConstruct {
+				kind = ast.KindConstructorType
+			}
+			return v.construct(node, &typefnConstruction{kind: kind, inputs: inputs, signature: plan})
+		}
+	}
 	v.validateSignaturePlan(node, plan, inputs)
 	if v.failed {
 		return v.c.errorType

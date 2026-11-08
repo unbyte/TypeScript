@@ -531,8 +531,8 @@ environment, preserving native generic substitution through lazy recursive membe
 Self-free definitions retain their ordinary native result. Tests assert native
 indexing, bidirectional assignability, distinct substitutions, group iteration,
 invalid cycles, forbidden observations, finite kinds and allocation failures.
-Full signature descriptors and broader native constructor adapters remain
-follow-up work; unsupported observations diagnose.
+Broader native constructor adapters, declaration recipes and cancellation publication
+coverage remain follow-up work; unsupported observations diagnose.
 
 Recursive construction also supports `types.function`/`types.constructor`, including
 recursive parameter/result Types, abstract constructors and mixed recursive groups.
@@ -614,3 +614,12 @@ creating native parameters or checking predicate compatibility; parameter names,
 modes, receiver and predicate metadata stay independent of Type payloads. This
 refactor retains all existing descriptor diagnostics and control-flow behavior,
 and provides a shared validation path for recursive payloads.
+
+Recursive signature descriptors now use that plan for parameters, explicit receivers,
+returns and predicate narrowing Types. Metadata checks happen before sealing;
+rest/predicate Type checks run after sealing and survive discarded results. Native
+signature syntax supplies optional/rest behavior, ordinary function variance,
+abstract construction and control-flow predicates. Both exact-optional modes test
+reflection, `this`/parameter predicates, truthiness assertions, native narrowing,
+generic replay and recursive results. Negative cases cover private metadata,
+illegal rest/result/narrowing Types and discarded/symbolic failed checks.

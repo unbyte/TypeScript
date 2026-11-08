@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-recursive-signature-symbolic.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "predicate narrowed Type is not assignable to the parameter Type"
+    }
+  ]
+}
