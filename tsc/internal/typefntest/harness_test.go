@@ -33,11 +33,12 @@ type fixture struct {
 }
 
 type wantDiagnostic struct {
-	Phase   string `json:"phase"`
-	Code    int32  `json:"code"`
-	File    string `json:"file"`
-	At      string `json:"at"` // unique source substring beginning at the diagnostic
-	Message string `json:"message"`
+	Phase   string           `json:"phase"`
+	Code    int32            `json:"code"`
+	File    string           `json:"file"`
+	At      string           `json:"at"` // unique source substring beginning at the diagnostic
+	Message string           `json:"message"`
+	Related []wantDiagnostic `json:"related,omitempty"`
 }
 
 type diagnostic struct {
@@ -192,6 +193,15 @@ func compareDiagnostics(got []diagnostic, want []wantDiagnostic, files map[strin
 			}
 			if !used[i] && g.phase == w.Phase && g.value.Code() == w.Code && file == w.File &&
 				(pos < 0 || g.value.Pos() == pos) && strings.Contains(g.value.String(), w.Message) {
+				if w.Related != nil {
+					var related []diagnostic
+					for _, d := range g.value.RelatedInformation() {
+						related = append(related, diagnostic{g.phase, d})
+					}
+					if err := compareDiagnostics(related, w.Related, files); err != nil {
+						return fmt.Errorf("related information: %w", err)
+					}
+				}
 				used[i], found = true, true
 				break
 			}

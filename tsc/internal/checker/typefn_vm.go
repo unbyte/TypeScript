@@ -6,6 +6,7 @@ import (
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
+	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
 )
 
 // A root owns the budget; nested DSL/native calls cannot reset it. Failed roots
@@ -34,6 +35,7 @@ type typefnVM struct {
 	checkSet            map[*Type]bool
 	stringUnits         int
 	textUnits           map[string][]uint16
+	rootSite            *ast.Node
 	replaySite          *ast.Node
 }
 
@@ -71,7 +73,7 @@ func (c *Checker) runTypefn(node *ast.Node, run func(*typefnVM) *Type) *Type {
 				limits.NativeNodes = configured.NativeNodes
 			}
 		}
-		state.vm = &typefnVM{c: c, limits: limits}
+		state.vm = &typefnVM{c: c, limits: limits, rootSite: node}
 		defer func() { state.vm = nil }()
 	}
 	v := state.vm
@@ -91,10 +93,18 @@ func (v *typefnVM) error(node *ast.Node, message string) *Type {
 		if v.replaySite != nil {
 			site = v.replaySite
 		}
+		if site != nil && v.replaySite == nil && v.rootSite != nil && ast.GetSourceFileOfNode(site) != ast.GetSourceFileOfNode(v.rootSite) {
+			// Per-file diagnostics discard errors added to a producer while checking a
+			// consumer. Report the failed application in the consumer, retaining origin.
+			site = v.rootSite
+		}
 		if site == nil {
 			site = v.c.currentNode
 		}
-		v.c.typefnError(site, message)
+		diagnostic := v.c.error(site, diagnostics.NewAdHocMessage("typefn: "+message))
+		if node != nil && node != site {
+			diagnostic.AddRelatedInfo(NewDiagnosticForNode(node, diagnostics.NewAdHocMessage("typefn operation failed here")))
+		}
 	}
 	v.failed = true
 	return v.c.errorType

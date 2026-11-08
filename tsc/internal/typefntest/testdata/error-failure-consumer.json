@@ -1,0 +1,29 @@
+{
+  "files": {
+    "producer.ts": "failure-producer.ts",
+    "main.ts": "error-failure-consumer.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Reject<1>",
+      "message": "bad input (UTF-16 offset 2)",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "producer.ts",
+          "at": "failAt<\"bad input\", 2>",
+          "message": "typefn operation failed here"
+        }
+      ]
+    }
+  ]
+}
