@@ -91,6 +91,13 @@ func (b *typefnCompiler) expressionInKind(node *ast.Node, expected *typefnKind) 
 
 func (v *typefnVM) applyNativeConstructor(node *ast.Node, closure *typefnClosure, original []*Type) *Type {
 	code := closure.native
+	// Only the native array identities have a proven structural edge here. A
+	// user alias named Array is not sufficient, and arbitrary generic aliases
+	// may observe their input (conditional/mapped Types), so cannot be guessed.
+	if len(original) == 1 && constructionOf(original[0]) != nil &&
+		(code.symbol == v.c.globalArrayType.symbol || code.symbol == v.c.globalReadonlyArrayType.symbol) {
+		return v.construct(node, &typefnConstruction{kind: ast.KindArrayType, inputs: original, readonly: code.symbol != v.c.globalArrayType.symbol})
+	}
 	if v.rejectConstruction(node, original...) {
 		return v.c.errorType
 	}

@@ -22,7 +22,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		if graph.kind == ast.KindTypeReference {
 			inputs = []*Type{arena.definitions[graph.reference]}
 		}
-		guarded := graph.kind == ast.KindTypeLiteral || graph.kind == ast.KindTupleType || graph.kind == ast.KindArrayType
+		guarded := graph.kind == ast.KindTypeLiteral || graph.kind == ast.KindTupleType || graph.kind == ast.KindArrayType || graph.kind == ast.KindFunctionType || graph.kind == ast.KindConstructorType
 		for _, input := range inputs {
 			if input == nil {
 				return v.error(node, "unsealed recursive definition")
@@ -155,6 +155,17 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 				}
 			}
 			body = f.NewTupleTypeNode(f.NewNodeList(inputs))
+		case ast.KindFunctionType, ast.KindConstructorType:
+			parameters := f.NewNodeList([]*ast.Node{f.NewParameterDeclaration(nil, f.NewToken(ast.KindDotDotDotToken), f.NewIdentifier("args"), nil, inputs[0], nil)})
+			if graph.kind == ast.KindFunctionType {
+				body = f.NewFunctionTypeNode(nil, parameters, inputs[1])
+			} else {
+				var modifiers *ast.ModifierList
+				if graph.abstract {
+					modifiers = f.NewModifierList([]*ast.Node{f.NewToken(ast.KindAbstractKeyword)})
+				}
+				body = f.NewConstructorTypeNode(modifiers, nil, parameters, inputs[1])
+			}
 		case ast.KindArrayType:
 			body = f.NewArrayTypeNode(inputs[0])
 		case ast.KindTypeLiteral:

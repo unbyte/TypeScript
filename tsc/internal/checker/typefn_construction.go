@@ -19,6 +19,7 @@ type typefnConstruction struct {
 	properties []typefnConstructionProperty
 	elements   []TupleElementInfo
 	readonly   bool
+	abstract   bool
 	reference  int
 }
 type typefnConstructionProperty struct {

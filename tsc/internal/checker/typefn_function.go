@@ -7,11 +7,15 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 // No synthetic method declaration is attached: ordinary function variance applies.
 func (v *typefnVM) functionType(node *ast.Node, args []*Type, kind SignatureKind) *Type {
 	parameters := v.observe(args[0])
-	if typefnUnresolved(parameters) {
+	graph := constructionOf(parameters)
+	if graph != nil && graph.kind != ast.KindTupleType {
+		return v.error(node, "function parameters require one tuple Type")
+	}
+	if graph == nil && typefnUnresolved(parameters) {
 		v.blocked = true
 		return v.c.errorType
 	}
-	if !isTupleType(parameters) {
+	if graph == nil && !isTupleType(parameters) {
 		return v.error(node, "function parameters require one tuple Type")
 	}
 	flags := SignatureFlagsHasRestParameter
@@ -26,6 +30,13 @@ func (v *typefnVM) functionType(node *ast.Node, args []*Type, kind SignatureKind
 		if abstract {
 			flags |= SignatureFlagsAbstract
 		}
+	}
+	if graph != nil || constructionOf(args[1]) != nil {
+		shape := ast.KindFunctionType
+		if kind == SignatureKindConstruct {
+			shape = ast.KindConstructorType
+		}
+		return v.construct(node, &typefnConstruction{kind: shape, inputs: []*Type{parameters, args[1]}, abstract: flags&SignatureFlagsAbstract != 0})
 	}
 	if !v.allocate(node, 3) {
 		return v.c.errorType

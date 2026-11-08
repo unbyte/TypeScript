@@ -108,8 +108,12 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args []*Type, slots []typefnVa
 			result = v.deferExpression(e, slots)
 		}
 	}()
-	if e.intrinsic != "types.array" && v.rejectConstruction(e.node, args...) {
-		return v.c.errorType
+	switch e.intrinsic {
+	case "types.array", "types.function", "types.constructor":
+	default:
+		if v.rejectConstruction(e.node, args...) {
+			return v.c.errorType
+		}
 	}
 	// Constructors can publish structure containing symbolic Type leaves. Only
 	// their control/metadata operands need concrete observations.

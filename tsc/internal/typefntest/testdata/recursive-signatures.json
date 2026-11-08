@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "recursive-signatures.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

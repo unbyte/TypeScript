@@ -164,7 +164,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 325 fixtures covering native calibration, execution,
+The compiler-project harness has 329 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -531,5 +531,13 @@ parameters, preserving native generic substitution through lazy recursive member
 Self-free definitions retain their ordinary native result. Tests assert native
 indexing, bidirectional assignability, distinct substitutions, group iteration,
 invalid cycles, forbidden observations, finite kinds and allocation failures.
-Full builder descriptors, signatures, unique-symbol keys and native constructor
+Full builder descriptors, signature descriptors, unique-symbol keys and broader native constructor
 adapters remain follow-up work; unsupported observations diagnose.
+
+Recursive construction also supports `types.function`/`types.constructor`, including
+recursive parameter/result Types, abstract constructors and mixed recursive groups.
+Sealing emits ordinary native signatures; variance and signature inference remain
+native. The original global Array and ReadonlyArray constructors have structural
+adapters (including constructor arguments and direct DSL calls). Identity checks
+reject a user alias that merely shares a built-in name. Tests cover native call/
+construct observations, lexical substitution and invalid parameter/flag metadata.
