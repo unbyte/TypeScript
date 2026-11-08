@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-reflect-tuple-array.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "reflect.tuple requires one native tuple Type"
+    }
+  ]
+}

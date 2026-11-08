@@ -18,6 +18,8 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"types.tuple":           {1, 1, false, "Descriptor"},
+	"reflect.tuple":         {1, 1, false, "Tuple"},
 	"reflect.properties":    {1, 1, false, "Object"},
 	"types.signature":       {1, 1, false, "Descriptor"},
 	"reflect.signature":     {1, 1, false, "Signature"},
@@ -107,6 +109,8 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 	// Constructors can publish structure containing symbolic Type leaves. Only
 	// their control/metadata operands need concrete observations.
 	switch e.intrinsic {
+	case "types.tuple":
+		return v.tupleType(e.node, args[0])
 	case "types.function":
 		return v.functionType(e.node, args, SignatureKindCall)
 	case "types.constructor":
@@ -140,6 +144,8 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 	}
 	if strings.HasPrefix(e.intrinsic, "reflect.") {
 		switch e.intrinsic {
+		case "reflect.tuple":
+			return v.reflectTuple(e.node, args[0])
 		case "reflect.properties":
 			return v.reflectProperties(e.node, args[0])
 		case "reflect.signature":

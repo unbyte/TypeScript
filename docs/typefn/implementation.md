@@ -129,7 +129,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   and union traversal use native dependency summaries; exhaustive native forms
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
-* Tuple reflection, general tuple metadata,
+* Exhaustive tuple/property provenance,
   recursive structural sealing
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 196 fixtures covering native calibration, execution,
+The compiler-project harness has 206 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -288,8 +288,8 @@ Tuple expression spreads use native variadic normalization. They preserve source
 labels/optional/rest modes, support arrays and native union expansion, and recheck
 unknown spread shapes after substitution. Tests compare results with ordinary
 native tuple aliases and check multiple-rest/domain errors, including a deferred
-failure whose value is absorbed by unknown. General tuple descriptor reflection
-and construction remain pending.
+failure whose value is absorbed by unknown. Tuple descriptor APIs are implemented below; exhaustive native-producer provenance
+remains pending.
 
 `reflect.properties` now returns ordered public-property descriptors, including
 inherited fields, normalized numeric keys and unique-symbol keys. Declared optional
@@ -312,3 +312,13 @@ Unit tests cover distinct declared values with equal read Types, snapshot isolat
 reuse, spreads and optional-to-required normalization. Untracked native producers
 retain an explicit unavailable-provenance marker; tuple descriptor APIs and coverage
 of those producers are the next steps.
+
+`reflect.tuple` and `types.tuple` now implement the descriptor schema for known
+native tuple shapes. They preserve declared required/optional values, labels,
+readonly, rest tails and variadic tuple expansion. Builders validate native ordering
+and array/tuple domains; unknown shape/metadata retains the operation for replay.
+Generated label declarations are reused per source operation/name/mode. Tests run
+in both exact-optional modes and cover native round trips, metadata after spreads,
+symbolic value/shape replay, optional never/undefined and invalid descriptors.
+Optional native mapped/inferred tuple producers still need provenance adapters;
+`error-tuple-provenance` records the current explicit diagnostic for Partial.

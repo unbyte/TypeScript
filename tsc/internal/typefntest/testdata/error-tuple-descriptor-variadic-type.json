@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-tuple-descriptor-variadic-type.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "variadic tuple descriptor requires a tuple Type"
+    }
+  ]
+}

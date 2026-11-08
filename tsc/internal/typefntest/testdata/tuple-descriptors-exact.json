@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "tuple-descriptors.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": true
+  },
+  "diagnostics": []
+}
