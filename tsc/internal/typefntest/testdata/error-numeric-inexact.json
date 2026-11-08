@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-numeric-inexact.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "bigint is not exactly representable as a finite number"
+    }
+  ]
+}

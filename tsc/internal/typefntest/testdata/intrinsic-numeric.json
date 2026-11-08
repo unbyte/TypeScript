@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "intrinsic-numeric.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

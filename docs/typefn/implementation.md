@@ -111,7 +111,8 @@ is bounded by call depth. Runtime fallthrough diagnoses.
   dynamic function/mapped/signature construction.
 * String iteration and `text.length`, `peek`, `slice`, `digit`, `codeUnit`, and
   `fromCodeUnit` execute with UTF-16/lone-surrogate preservation and a shared
-  string-work budget. Other text/numeric/tuple intrinsics, interpolation and
+  string-work budget. The numeric library executes explicit exact conversions, rounding, integer
+  parsing/checks and formatting. Other text/tuple intrinsics, interpolation and
   structural pattern matching are not implemented.
   The manual's HTTP-route and calculator examples are not executable yet.
 * Constructor slots, closures/local typefns and restricted HKT support are pending.
@@ -150,7 +151,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 75 fixtures covering native calibration, execution,
+The compiler-project harness has 81 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad

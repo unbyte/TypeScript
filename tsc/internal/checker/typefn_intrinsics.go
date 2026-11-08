@@ -17,14 +17,24 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
-	"text.length":       {1, 1, false},
-	"text.peek":         {2, 2, false},
-	"text.slice":        {2, 3, false},
-	"text.digit":        {1, 1, false},
-	"text.codeUnit":     {2, 2, false},
-	"text.fromCodeUnit": {1, 1, false},
-	"fail":              {1, 1, true},
-	"failAt":            {2, 2, true},
+	"text.length":           {1, 1, false},
+	"text.peek":             {2, 2, false},
+	"text.slice":            {2, 3, false},
+	"text.digit":            {1, 1, false},
+	"text.codeUnit":         {2, 2, false},
+	"text.fromCodeUnit":     {1, 1, false},
+	"numeric.toNumber":      {1, 1, false},
+	"numeric.toBigint":      {1, 1, false},
+	"numeric.isInteger":     {1, 1, false},
+	"numeric.isSafeInteger": {1, 1, false},
+	"numeric.floor":         {1, 1, false},
+	"numeric.ceil":          {1, 1, false},
+	"numeric.trunc":         {1, 1, false},
+	"numeric.abs":           {1, 1, false},
+	"numeric.format":        {1, 1, false},
+	"numeric.parseInteger":  {1, 1, false},
+	"fail":                  {1, 1, true},
+	"failAt":                {2, 2, true},
 }
 
 func typefnEntityName(node *ast.Node) string {
@@ -71,6 +81,9 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) *Type {
 	}
 	if strings.HasPrefix(e.intrinsic, "text.") {
 		return v.textIntrinsic(e.node, e.intrinsic, args)
+	}
+	if strings.HasPrefix(e.intrinsic, "numeric.") {
+		return v.numericIntrinsic(e.node, e.intrinsic, args[0])
 	}
 	switch e.intrinsic {
 	case "fail", "failAt":

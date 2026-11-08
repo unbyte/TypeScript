@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-numeric-separator.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "parseInteger requires [+-]?[0-9]+"
+    }
+  ]
+}
