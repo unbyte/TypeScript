@@ -1,7 +1,6 @@
 package checker
 
 import (
-	"fmt"
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/binder"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
@@ -9,116 +8,24 @@ import (
 )
 
 type typefnIsland struct {
-	names []string
-	nodes int
-}
-
-// Resolve captures against the original native lexical scopes. Native mapped,
-// infer and signature binders shadow DSL bindings using their actual symbols.
-func (b *typefnCompiler) island(e *typefnExpression) {
-	plan := &typefnIsland{}
-	e.island = plan
-	captured := map[*ast.Symbol]bool{}
-	var visit func(*ast.Node) bool
-	visit = func(node *ast.Node) bool {
-		plan.nodes++
-		if ast.IsTypeQueryNode(node) {
-			name := node.AsTypeQueryNode().ExprName
-			if !ast.IsThisIdentifier(name) {
-				symbol := b.c.resolveEntityName(name, ast.SymbolFlagsValue, false, false, nil)
-				if symbol == nil || symbol == b.c.unknownSymbol {
-					b.p.valid = false
-				}
-			}
-		}
-		if ast.IsTypeReferenceNode(node) {
-			name := node.AsTypeReferenceNode().TypeName
-			symbol := b.c.resolveEntityName(name, ast.SymbolFlagsType, false, false, nil)
-			if symbol == nil || symbol == b.c.unknownSymbol {
-				b.p.valid = false
-				return false
-			}
-			parameters := b.c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
-			count, minimum := len(parameters), b.c.getMinTypeArgumentCount(parameters)
-			if alias := b.c.typefnConstructorAlias(symbol); alias != nil {
-				count = alias.kind.resolved() - 1
-				minimum = count
-				if node.TypeArgumentList() == nil {
-					b.error(node, "constructor value cannot be used as a Type")
-				}
-			}
-			if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration); declaration != nil {
-				// Local helpers require the lexical bridge below. Module calls
-				// in native syntax must produce a native Type even in dead code.
-				if ast.FindAncestor(declaration.Parent, ast.IsTypeFunctionLike) == nil {
-					callee := b.compileFunction(declaration, nil)
-					if !callee.valid {
-						b.p.valid = false
-					}
-					b.sameKind(node, callee.resultKind, nil, "constructor value cannot be used as a Type")
-				}
-				count, minimum = len(declaration.TypeParameters()), len(declaration.TypeParameters())
-				if node.TypeArgumentList() == nil {
-					b.error(node, "typefn requires an explicit application in a native island")
-				}
-			}
-			actual := len(node.TypeArguments())
-			if actual < minimum || actual > count {
-				b.error(node, fmt.Sprintf("native application requires %d..%d Type arguments", minimum, count))
-			}
-			if ast.IsIdentifier(name) {
-				if binding, ok := b.lookup(name.Text()); ok && binding.symbol == symbol {
-					if binding.slot < 0 {
-						if binding.unavailableBound {
-							b.error(name, "input bound may reference only preceding Type parameters")
-						} else {
-							b.error(name, "binding read before initialization")
-						}
-						return false
-					}
-					if b.boundParameter >= 0 {
-						for i, parameter := range b.p.declaration.TypeParameters() {
-							if parameter.Symbol() == symbol && i >= b.boundParameter {
-								b.error(name, "input bound may reference only preceding Type parameters")
-								return false
-							}
-						}
-					}
-					if binding.kind.resolved() != 0 {
-						b.error(node, "constructor captures in native islands are not implemented yet")
-						return false
-					}
-					if node.TypeArgumentList() != nil {
-						b.error(node, "a captured Type is not a constructor")
-						return false
-					}
-					if !captured[symbol] {
-						captured[symbol] = true
-						plan.names = append(plan.names, name.Text())
-						e.args = append(e.args, &typefnExpression{node: name, slot: binding.slot})
-					}
-				}
-			}
-		}
-		node.ForEachChild(visit)
-		return false
-	}
-	visit(e.node.AsTypeFunctionExpression().NativeType)
+	names   []string
+	helpers []*typefnProgram
+	nodes   int
 }
 
 // Each native AST is bound in an immutable lexical snapshot. Captured values are
 // real native alias symbols, not text substitutions or fake deferred type
 // parameters. No source AST cache is mutated or reused across environments.
 func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type {
-	values := make([]*Type, len(e.args))
+	values := make([]typefnValue, len(e.args))
 	for i, argument := range e.args {
-		values[i] = v.expression(argument, slots)
+		values[i] = v.resultExpression(argument, slots)
 		if v.failed {
 			return v.c.errorType
 		}
 		// Until native cache contexts can retain symbolic capture dependencies,
 		// conservatively keep the original island and frozen locals for replay.
-		if v.unresolvedGraph(e.node, values[i]) {
+		if v.unresolvedValue(e.node, values[i]) {
 			if v.failed {
 				return v.c.errorType
 			}
@@ -154,7 +61,16 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 	// the original source scope and source spans after its local binders are installed.
 	scope.Parent = e.node
 	for i, value := range values {
-		v.c.typeAliasLinks.Get(statements[i].Symbol()).declaredType = value
+		symbol := statements[i].Symbol()
+		if value.native != nil {
+			v.c.typeAliasLinks.Get(symbol).declaredType = value.native
+		} else {
+			state := v.c.getTypefnState()
+			if state.aliases == nil {
+				state.aliases = map[*ast.Symbol]*typefnAlias{}
+			}
+			state.aliases[symbol] = &typefnAlias{declaration: statements[i], kind: e.args[i].kind, value: value.closure, helper: plan.helpers[i]}
+		}
 	}
 	saved := v.nativeIslandSite
 	v.nativeIslandSite = e.node

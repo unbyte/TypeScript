@@ -123,8 +123,8 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 * Local named helpers and anonymous Type-returning closures now execute with frozen captures.
   Factories can return constructors inside DSL computations. Mixed Type/helper-constructor
   arguments execute in DSL and native calls, including native generic constructors.
-  Nongeneric native constructor aliases execute; constructor captures in native
-  islands remain pending.
+  Nongeneric native constructor aliases and constructor captures in native
+  islands execute. Full outer-native lexical dependencies still require work.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
   relation proofs, scoped generic-body assumptions, latent member/signature
@@ -159,13 +159,13 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   bindings. A blocked proof suspends the call before checking later bounds.
   Native generic declarations retain native constraint semantics. Constructor
   parameters carry separate VM values through direct calls, closures and replay.
-  Constructor captures in native islands
-  remain incomplete. There is no claim of optimized append or
+  Full outer-native lexical dependency capture
+  remains incomplete. There is no claim of optimized append or
   memoized VM calls.
 
 ## Validation
 
-The compiler-project harness has 294 fixtures covering native calibration, execution,
+The compiler-project harness has 299 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -370,8 +370,7 @@ Type parameters and frozen outer Types; they use immutable native-island evaluat
 and conservatively wait for symbolic captures. Module functions now use the same bound-expression and scope rules.
 
 Editor tests cover native helper/capture definitions and rename, readonly capture
-hover, and declaration-ordered helper completion with self-reference. Constructor
-captures in native islands still require integration.
+hover, and declaration-ordered helper completion with self-reference. Native islands now preserve constructor captures and direct named helper signatures.
 
 Eligible named helpers can now be bound as constructor values (`type F = Box;`)
 and applied through aliases. Constructor bindings may be reassigned only to the
@@ -466,3 +465,16 @@ Editor hover, completion, signature help and result hints preserve alias kind an
 identity without creating a recovery Type. Tests cover the documented AsyncArray
 composition, lexical captures, forward chains, imports, replay, bounds, native
 island applications, invalid Type operands and creation readiness.
+
+Native islands capture constructor values in immutable synthetic alias scopes,
+separately from captured native Type aliases. A named local combinator retains
+its full mixed-parameter signature for direct calls; it does not become an
+eligible first-class constructor. Static island checking follows constructor
+argument contexts, validates arity/kinds in dead code, and honors native mapped,
+infer and signature binder shadowing. Captures of constructors with symbolic
+Type environments conservatively defer the whole island and replay its frozen
+snapshot. Native alias/module/factory applications work inside islands, including
+parenthesized constructor arguments. Tests cover local factories/combinators,
+constraints, self calls, snapshot reassignment, generic replay, dead-code errors
+and native editor navigation before/after execution. Shadowed native binders do
+not create phantom transitive DSL captures.

@@ -121,6 +121,22 @@ func (b *typefnCompiler) bind(node *ast.Node, mutable bool) int {
 	return slot
 }
 
+// Inspect native shadowing before lookup creates any transitive capture slots.
+func (b *typefnCompiler) lexicalSymbol(name string) *ast.Symbol {
+	for i := len(b.scopes) - 1; i >= 0; i-- {
+		if binding, ok := b.scopes[i][name]; ok {
+			return binding.symbol
+		}
+	}
+	if binding, ok := b.captures[name]; ok {
+		return binding.symbol
+	}
+	if b.parent != nil {
+		return b.parent.lexicalSymbol(name)
+	}
+	return nil
+}
+
 func (b *typefnCompiler) lookup(name string) (typefnBinding, bool) {
 	for i := len(b.scopes) - 1; i >= 0; i-- {
 		if v, ok := b.scopes[i][name]; ok {

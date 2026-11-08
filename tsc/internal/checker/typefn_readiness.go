@@ -113,3 +113,32 @@ func (v *typefnVM) unresolvedGraph(node *ast.Node, root *Type) bool {
 	}
 	return visit(root)
 }
+
+// Islands currently defer on symbolic captures. Constructor environments use the
+// same policy, with an iterative walk over immutable capture DAGs.
+func (v *typefnVM) unresolvedValue(node *ast.Node, root typefnValue) bool {
+	if root.native != nil {
+		return v.unresolvedGraph(node, root.native)
+	}
+	if root.closure != nil && len(root.closure.captures) == 0 {
+		return false
+	}
+	work := []typefnValue{root}
+	seen := map[*typefnClosure]bool{}
+	for len(work) != 0 {
+		value := work[len(work)-1]
+		work = work[:len(work)-1]
+		if !v.step(node) {
+			return true
+		}
+		if value.native != nil {
+			if v.unresolvedGraph(node, value.native) {
+				return true
+			}
+		} else if value.closure != nil && !seen[value.closure] {
+			seen[value.closure] = true
+			work = append(work, value.closure.captures...)
+		}
+	}
+	return false
+}

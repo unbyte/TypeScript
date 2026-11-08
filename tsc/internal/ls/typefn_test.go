@@ -757,3 +757,22 @@ func TestTypefnConstructorAliasesInEditor(t *testing.T) {
 		t.Fatal(ds)
 	}
 }
+
+func TestTypefnIslandConstructorBindingsStayNative(t *testing.T) {
+	source := `typefn Use</*decl*/F<_>,T> {return type(/*use*/F<T>);}
+ type Result=Use<Array,1>;`
+	l, ctx, pos := typefnService(t, source)
+	for pass := 0; pass < 2; pass++ {
+		definition, err := l.ProvideDefinition(ctx, "file:///main.ts", pos("/*use*/"))
+		if err != nil || definition.Locations == nil || len(*definition.Locations) != 1 || (*definition.Locations)[0].Range.Start != pos("/*decl*/") {
+			t.Fatalf("constructor capture navigation: %#v %v", definition, err)
+		}
+		hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*use*/")})
+		if err != nil || hover.Hover == nil || !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "type F: typefn<_> (parameter, readonly)") {
+			t.Fatalf("constructor capture hover: %#v %v", hover, err)
+		}
+		if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+			t.Fatal(ds)
+		}
+	}
+}

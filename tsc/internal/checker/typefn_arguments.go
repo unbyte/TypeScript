@@ -43,6 +43,7 @@ func (v *typefnVM) nativeArguments(node *ast.Node, p *typefnProgram) []typefnVal
 }
 
 func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnValue {
+	node = ast.SkipTypeParentheses(node)
 	if !v.step(node) {
 		return typefnValue{}
 	}
@@ -56,11 +57,18 @@ func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnVa
 		return typefnValue{}
 	}
 	if alias := v.c.typefnConstructorAlias(symbol); alias != nil {
-		if node.TypeArgumentList() != nil || alias.kind.resolved() != arity+1 {
+		closure := v.constructorAlias(alias)
+		if v.failed {
+			return typefnValue{}
+		}
+		if node.TypeArgumentList() != nil && alias.helper != nil {
+			return v.nativeFactoryArgument(node, alias.helper, closure, arity)
+		}
+		if node.TypeArgumentList() != nil || !closure.acceptsArity(arity) {
 			v.error(node, "constructor argument kind or arity does not match the parameter")
 			return typefnValue{}
 		}
-		return typefnValue{closure: v.constructorAlias(alias)}
+		return typefnValue{closure: closure}
 	}
 	declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration)
 	if declaration == nil {
@@ -84,21 +92,26 @@ func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnVa
 		}
 		value.closure = v.c.internTypefnClosure(p, nil)
 	} else {
-		if p.resultKind.resolved() != arity+1 {
-			v.error(node, "constructor argument kind or arity does not match the parameter")
-			return typefnValue{}
-		}
-		args := v.nativeArguments(node, p)
-		if v.failed {
-			return typefnValue{}
-		}
-		value = v.callValue(node, declaration, args, nil)
-		if v.blocked && !v.failed {
-			v.error(node, "constructor identity and creation checks must be ready at a native boundary")
-		}
+		value = v.nativeFactoryArgument(node, p, nil, arity)
 	}
 	if !v.failed && !value.closure.acceptsArity(arity) {
 		v.error(node, "constructor argument kind or arity does not match the parameter")
+	}
+	return value
+}
+
+func (v *typefnVM) nativeFactoryArgument(node *ast.Node, p *typefnProgram, closure *typefnClosure, arity int) typefnValue {
+	if p.resultKind.resolved() != arity+1 {
+		v.error(node, "constructor argument kind or arity does not match the parameter")
+		return typefnValue{}
+	}
+	args := v.nativeArguments(node, p)
+	if v.failed {
+		return typefnValue{}
+	}
+	value := v.callValue(node, p.declaration, args, closure)
+	if v.blocked && !v.failed {
+		v.error(node, "constructor identity and creation checks must be ready at a native boundary")
 	}
 	return value
 }

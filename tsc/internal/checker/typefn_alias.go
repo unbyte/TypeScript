@@ -12,6 +12,7 @@ type typefnAlias struct {
 	declaration *ast.Node
 	kind        *typefnKind
 	value       *typefnClosure
+	helper      *typefnProgram // Only synthetic island bindings carry a named combinator signature.
 	evaluating  bool
 }
 
@@ -117,6 +118,13 @@ func (c *Checker) applyTypefnConstructorAlias(node *ast.Node, alias *typefnAlias
 		closure := v.constructorAlias(alias)
 		if v.failed {
 			return c.errorType
+		}
+		if alias.helper != nil {
+			args := v.nativeArguments(node, alias.helper)
+			if v.failed {
+				return c.errorType
+			}
+			return v.callWithClosure(node, alias.helper.declaration, args, closure)
 		}
 		if !closure.acceptsArity(len(node.TypeArguments())) {
 			return v.error(node, "wrong number of constructor Type arguments")

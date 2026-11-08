@@ -3077,7 +3077,12 @@ func (c *Checker) checkTypeReferenceNode(node *ast.Node) {
 		symbol := c.resolveEntityName(node.AsTypeReferenceNode().TypeName, ast.SymbolFlagsType, true, false, nil)
 		if symbol != nil {
 			typefnDeclaration = core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration)
-			constructorAliasApplication = c.typefnConstructorAlias(symbol) != nil
+			if alias := c.typefnConstructorAlias(symbol); alias != nil {
+				constructorAliasApplication = true
+				if alias.helper != nil {
+					typefnDeclaration = alias.helper.declaration
+				}
+			}
 		}
 		typefnApplication = typefnDeclaration != nil
 	}

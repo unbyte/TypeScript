@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-helper-native-island.ts"
+    "main.ts": "error-island-constructor-slot-kind.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "constructor captures in native islands are not implemented yet"
+      "message": "constructor argument requires"
     }
   ]
 }
