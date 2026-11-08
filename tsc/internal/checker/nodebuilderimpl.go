@@ -96,6 +96,7 @@ type NodeBuilderContext struct {
 }
 
 type NodeBuilderImpl struct {
+	typefnDisplayDepth int
 	// host members
 	f  *ast.NodeFactory
 	ch *Checker
@@ -3396,6 +3397,9 @@ func (b *NodeBuilderImpl) typeToTypeNode(t *Type) *ast.TypeNode {
 		t = b.ch.getReducedType(t)
 	}
 
+	if t.flags&TypeFlagsTypefn != 0 {
+		return b.typefnTypeToTypeNode(t)
+	}
 	if t.flags&TypeFlagsAny != 0 {
 		if t.alias != nil {
 			return t.alias.ToTypeReferenceNode(b)
