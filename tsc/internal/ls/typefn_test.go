@@ -288,3 +288,78 @@ func TestTypefnNamespaceCompletion(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnSemanticTokens(t *testing.T) {
+	source := strings.Replace(typefnEditorSource, "Twice<21>", "Twice</*arg*/21>", 1)
+	l, ctx, pos := typefnService(t, source)
+	tokens, err := l.ProvideSemanticTokens(ctx, "file:///main.ts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tokens.SemanticTokens == nil {
+		t.Fatal("no semantic tokens")
+	}
+	type classified struct {
+		kind tokenType
+		mod  uint32
+	}
+	got := map[lsproto.Position]classified{}
+	line, char := uint32(0), uint32(0)
+	for i := 0; i < len(tokens.SemanticTokens.Data); i += 5 {
+		data := tokens.SemanticTokens.Data[i : i+5]
+		line += data[0]
+		if data[0] != 0 {
+			char = 0
+		}
+		char += data[1]
+		got[lsproto.Position{Line: line, Character: char}] = classified{tokenType(data[3]), data[4]}
+	}
+	if item := got[lsproto.Position{Line: 0, Character: 7}]; item.kind != tokenTypeKeyword {
+		t.Errorf("typefn keyword token: %#v", item)
+	}
+	if item := got[pos("/*decl*/")]; item.kind != tokenTypeType || item.mod&uint32(tokenModifierDeclaration) == 0 {
+		t.Errorf("binding declaration token: %#v", item)
+	}
+	if item := got[pos("/*write*/")]; item.mod&uint32(tokenModifierModification) == 0 {
+		t.Errorf("assignment token: %#v", item)
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatalf("queries corrupted diagnostics: %v", ds)
+	}
+}
+
+func TestTypefnSemanticTokenUTF16Ranges(t *testing.T) {
+	source := "// 😀\r\nexport typefn F<N> { type text = \"😀\"; return /*at*/N; }\r\n"
+	l, ctx, pos := typefnService(t, source)
+	response, err := l.ProvideSemanticTokens(ctx, "file:///main.ts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.SemanticTokens == nil {
+		t.Fatal("missing tokens")
+	}
+	line, column, previousEnd := uint32(0), uint32(0), uint32(0)
+	found := false
+	for i := 0; i < len(response.SemanticTokens.Data); i += 5 {
+		token := response.SemanticTokens.Data[i : i+5]
+		line += token[0]
+		if token[0] != 0 {
+			column = 0
+			previousEnd = 0
+		}
+		column += token[1]
+		if column < previousEnd {
+			t.Fatal("overlapping tokens")
+		}
+		previousEnd = column + token[2]
+		if (lsproto.Position{Line: line, Character: column}) == pos("/*at*/") {
+			found = true
+			if token[2] != 1 || tokenType(token[3]) != tokenTypeTypeParameter {
+				t.Fatalf("wrong parameter token: %v", token)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("parameter token not at UTF-16 position after emoji")
+	}
+}
