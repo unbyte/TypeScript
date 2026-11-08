@@ -30,6 +30,7 @@ type fixture struct {
 	Diagnostics []wantDiagnostic  `json:"diagnostics"`
 	Outputs     map[string]string `json:"outputs"` // exact output text, including newlines
 	EmitSkipped bool              `json:"emitSkipped"`
+	Consumer    *fixture          `json:"consumer"` // fresh checker with emitted declarations and consumer files only
 }
 
 type wantDiagnostic struct {
@@ -71,6 +72,12 @@ func TestIntegration(t *testing.T) {
 
 func runFixture(t testing.TB, f fixture) {
 	t.Helper()
+	files, roots := loadFixtureFiles(t, f)
+	runFixtureSources(t, f, files, roots)
+}
+
+func loadFixtureFiles(t testing.TB, f fixture) (map[string]string, []string) {
+	t.Helper()
 	files := make(map[string]string, len(f.Files)+1)
 	var roots []string
 	for name, source := range f.Files {
@@ -84,6 +91,12 @@ func runFixture(t testing.TB, f fixture) {
 		files["/project/"+name] = string(data)
 		roots = append(roots, name)
 	}
+	return files, roots
+}
+
+func runFixtureSources(t testing.TB, f fixture, files map[string]string, roots []string) {
+	t.Helper()
+	var emitted map[string]string
 	slices.Sort(roots)
 	options := map[string]any{"strict": true, "target": "es2022", "module": "esnext", "outDir": "out", "ignoreDeprecations": "6.0"}
 	for key, value := range f.Options {
@@ -138,7 +151,7 @@ func runFixture(t testing.TB, f fixture) {
 			}
 			done()
 		}
-		if len(got) == 0 && f.Outputs != nil {
+		if f.Outputs != nil || f.Consumer != nil {
 			outputs := map[string]string{}
 			var outputMu sync.Mutex
 			result := p.Emit(t.Context(), compiler.EmitOptions{WriteFile: func(name tspath.RootedFilePath, text string, _ *compiler.WriteFileData) error {
@@ -151,13 +164,39 @@ func runFixture(t testing.TB, f fixture) {
 			if result.EmitSkipped != f.EmitSkipped {
 				t.Errorf("emit skipped: got %v, want %v", result.EmitSkipped, f.EmitSkipped)
 			}
-			if !reflect.DeepEqual(outputs, f.Outputs) {
+			emitted = outputs
+			if f.Outputs != nil && !reflect.DeepEqual(outputs, f.Outputs) {
 				t.Errorf("outputs:\n got: %#v\nwant: %#v", outputs, f.Outputs)
 			}
 		}
 	}
 	if err := compareDiagnostics(got, f.Diagnostics, files); err != nil {
 		t.Fatal(err)
+	}
+	if f.Consumer != nil {
+		if len(emitted) == 0 {
+			t.Fatal("declaration consumer requires emitted producer output")
+		}
+		consumerFiles, consumerRoots := loadFixtureFiles(t, *f.Consumer)
+		declarations := 0
+		for name, text := range emitted {
+			if !strings.HasSuffix(name, ".d.ts") && !strings.HasSuffix(name, ".d.mts") && !strings.HasSuffix(name, ".d.cts") {
+				continue
+			}
+			path := "/project/" + name
+			if _, exists := consumerFiles[path]; exists {
+				t.Fatalf("consumer overwrites emitted declaration %s", name)
+			}
+			consumerFiles[path] = text
+			declarations++
+		}
+		if declarations == 0 {
+			t.Fatal("producer emitted no declaration files")
+		}
+		// The consumer reuses no producer file map, host, Program, checker, or
+		// source redirect.
+		// Imports must resolve against the actual declaration bytes emitted above.
+		runFixtureSources(t, *f.Consumer, consumerFiles, consumerRoots)
 	}
 }
 

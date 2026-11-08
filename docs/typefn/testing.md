@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 371 isolated compiler-project fixtures (full harness). The harness checks complete
+* Passed: 374 compiler fixtures (full harness, including three producer/consumer pairs). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -105,3 +105,18 @@ Linux/amd64, AMD EPYC 9V74, Go 1.27.0, three iterations per case:
 These cold-project figures include parsing, libraries and checking; they are not
 isolated VM throughput. Both fixtures also pass their explicit 100,000 native-node
 budget. The independent case failed that budget before environment compaction.
+
+## Declaration-only harness
+
+An integration fixture may include a `consumer` fixture. The producer emits actual
+declaration bytes; only `.d.ts`, `.d.mts` and `.d.cts` outputs and the consumer's
+explicit inputs enter a fresh filesystem, host, program and checker. Producer
+sources and source redirects are unavailable. Consumer files cannot overwrite
+emitted declarations. Native Type assertions and complete diagnostics use the
+same checks as ordinary fixtures. Explicit emit expectations also run after
+semantic errors, so emit-on-error and atomic suppression can be tested.
+
+Three harness regressions verify generic/nominal declaration consumption, a failed
+import of the absent producer source, and native declaration consumption following
+an allowed emit-on-error. They establish the harness; they do not yet demonstrate
+DSL declaration recipes.

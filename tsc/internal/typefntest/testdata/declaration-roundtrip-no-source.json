@@ -1,0 +1,29 @@
+{
+  "files": {
+    "library.ts": "declaration-native-producer.ts"
+  },
+  "options": {
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "outputs": {
+    "out/library.d.ts": "export declare class Item {\n    private brand;\n    value: 1;\n}\nexport type Pair<T> = [T, Item];\n"
+  },
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-native-no-source.ts"
+    },
+    "options": {
+      "noEmit": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": 2307,
+        "file": "consumer.ts",
+        "message": "Cannot find module './library'"
+      }
+    ]
+  }
+}

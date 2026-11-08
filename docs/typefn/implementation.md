@@ -633,3 +633,9 @@ Regressions cover generic and derived classes, explicit function receivers, stat
 value queries, generic member instantiation, native-invalid contexts and editor
 hovers. The original positive fixture produced nine spurious namespace/receiver
 diagnostics; the recovery regression previously executed an invalid definition.
+
+The integration harness now supports a declaration-only consumer in a fresh checker
+and filesystem. It transfers emitted declaration bytes, never producer ASTs or
+sources. Native controls test nominal/generic behavior, unavailable producer-source
+imports and emit-on-error. DSL recipe support remains pending until the same path
+passes its source/declaration equivalence cases.

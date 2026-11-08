@@ -1,0 +1,29 @@
+{
+  "files": {
+    "library.ts": "declaration-native-error-producer.ts"
+  },
+  "options": {
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2322,
+      "file": "library.ts",
+      "message": "Type 'string' is not assignable to type 'number'."
+    }
+  ],
+  "outputs": {
+    "out/library.d.ts": "export declare const value: number;\n"
+  },
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-native-error-consumer.ts"
+    },
+    "options": {
+      "noEmit": true
+    },
+    "diagnostics": []
+  }
+}
