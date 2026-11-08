@@ -138,3 +138,62 @@ func TestTypefnIterationUsesBodyScope(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnHover(t *testing.T) {
+	source := strings.Replace(typefnEditorSource, "Twice<21>", "Twice</*arg*/21>", 1)
+	l, ctx, pos := typefnService(t, source)
+	hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*call*/")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hover.Hover == nil || !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "typefn Twice<N>: type") || !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "= 42") {
+		t.Fatalf("call hover: %#v", hover.Hover)
+	}
+	local, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*return*/")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if local.Hover == nil || !strings.Contains(local.Hover.Contents.MarkupContent.Value, "type current: type (mutable binding)") {
+		t.Fatalf("local hover: %#v", local.Hover)
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatalf("queries corrupted diagnostics: %v", ds)
+	}
+}
+
+func TestTypefnOutlineAndFolding(t *testing.T) {
+	source := strings.Replace(typefnEditorSource, "Twice<21>", "Twice</*arg*/21>", 1)
+	l, ctx, _ := typefnService(t, source)
+	symbols, err := l.ProvideDocumentSymbols(ctx, "file:///main.ts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if symbols.DocumentSymbols == nil || len(*symbols.DocumentSymbols) == 0 || (*symbols.DocumentSymbols)[0].Name != "Twice" || (*symbols.DocumentSymbols)[0].Kind != lsproto.SymbolKindFunction {
+		t.Fatalf("outline: %#v", symbols)
+	}
+	folds, err := l.ProvideFoldingRange(ctx, "file:///main.ts")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if folds.FoldingRanges == nil || len(*folds.FoldingRanges) == 0 {
+		t.Fatal("no DSL folding ranges")
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatalf("queries corrupted diagnostics: %v", ds)
+	}
+}
+
+func BenchmarkTypefnHover(b *testing.B) {
+	l, ctx, pos := typefnService(b, typefnEditorSource)
+	params := &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*call*/")}
+	if _, err := l.ProvideHover(ctx, params); err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	for b.Loop() {
+		result, err := l.ProvideHover(ctx, params)
+		if err != nil || result.Hover == nil {
+			b.Fatalf("hover: %v", err)
+		}
+	}
+}

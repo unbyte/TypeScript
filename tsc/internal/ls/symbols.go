@@ -165,6 +165,12 @@ func (l *LanguageService) getDocumentSymbolsForChildren(ctx context.Context, nod
 			return false
 		}
 		switch node.Kind {
+		case ast.KindTypeFunctionDeclaration:
+			addSymbolForNode(node, node.Name(), getSymbolsForChildren(node.AsTypeFunctionDeclaration().Body))
+		case ast.KindTypeFunctionBinding, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
+			addSymbolForNode(node, node.Name(), nil)
+			node.ForEachChild(visit)
+
 		case ast.KindClassDeclaration, ast.KindClassExpression, ast.KindInterfaceDeclaration, ast.KindEnumDeclaration:
 			if ast.IsClassLike(node) && ast.GetDeclarationName(node) != "" {
 				expandoTargets.Add(ast.GetDeclarationName(node))
@@ -672,6 +678,11 @@ func compareDeclarationInfos(d1, d2 DeclarationInfo) int {
 // Combines getNodeKind with VS Code's fromProtocolScriptElementKind.
 func getSymbolKindFromNode(node *ast.Node) lsproto.SymbolKind {
 	switch node.Kind {
+	case ast.KindTypeFunctionDeclaration:
+		return lsproto.SymbolKindFunction
+	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
+		return lsproto.SymbolKindTypeParameter
+
 	case ast.KindSourceFile:
 		if ast.IsExternalModule(node.AsSourceFile()) {
 			return lsproto.SymbolKindModule
