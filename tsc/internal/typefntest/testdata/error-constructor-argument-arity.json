@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-constructor-argument-arity.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "constructor argument kind or arity does not match the parameter"
+    }
+  ]
+}

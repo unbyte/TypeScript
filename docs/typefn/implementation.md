@@ -121,8 +121,9 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 * The calculator, numeric and HTTP-route examples execute directly from their
   documentation sources. They are milestones, not full conformance coverage.
 * Local named helpers and anonymous Type-returning closures now execute with frozen captures.
-  Factories can return constructors inside DSL computations. Constructor slots, native
-  generic constructor values and the native alias bridge remain pending.
+  Factories can return constructors inside DSL computations. Mixed Type/helper-constructor
+  arguments execute in DSL and native calls. Native generic constructor values and
+  the native alias bridge remain pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
   relation proofs, scoped generic-body assumptions, latent member/signature
@@ -156,14 +157,14 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   in parameter order, and may reference preceding parameters and frozen outer
   bindings. A blocked proof suspends the call before checking later bounds.
   Native generic declarations retain native constraint semantics. Constructor
-  parameter syntax is retained but execution still diagnoses explicitly pending
-  the mixed-kind call adapter. Native constructor values and the alias/island
+  parameters carry separate VM values through direct calls, closures and replay.
+  Native constructor values and the alias/island
   bridges also remain incomplete. There is no claim of optimized append or
   memoized VM calls.
 
 ## Validation
 
-The compiler-project harness has 270 fixtures covering native calibration, execution,
+The compiler-project harness has 278 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -368,7 +369,7 @@ and conservatively wait for symbolic captures. Module functions now use the same
 
 Editor tests cover native helper/capture definitions and rename, readonly capture
 hover, and declaration-ordered helper completion with self-reference. Constructor
-slots and constructor captures in native islands still require integration.
+captures in native islands still require integration.
 
 Eligible named helpers can now be bound as constructor values (`type F = Box;`)
 and applied through aliases. Constructor bindings may be reassigned only to the
@@ -387,7 +388,8 @@ snapshots, reassignment, native islands, blocked calls and expression replay.
 The parser/printer, binder, AST serializer/transformer and editor capture scope
 share this representation. An anonymous initializer cannot recursively refer to
 its own still-uninitialized binding; named local helpers supply explicit self
-recursion. Constructor parameters remain pending.
+recursion. Named combinators may accept constructor parameters; anonymous closures
+remain Type-to-Type functions.
 
 Value kinds are now checked separately from helper code identity. A checker-local
 constraint graph infers Type results without execution, verifies all return kinds
@@ -422,5 +424,15 @@ are bound and kind-checked but never executed. Later/self references diagnose ev
 when a same-named outer Type exists. Native constraint diagnostics are attributed
 to the importing application and include the bound's source location. Editor
 services preserve parameter identity, readonly status, constructor slot coloring,
-kind hover and signature help. Constructor parameter execution is the next bridge
-step; parsing its syntax does not claim executable HKT support.
+kind hover and signature help.
+
+Mixed calls now carry Type values and fixed-arity helper constructors without
+encoding a constructor as a native Type. Direct named combinators accept either
+kind and may return constructors; only Type-to-Type functions are first-class.
+The native argument adapter uses declared parameter kinds, so `Apply<Box, T>`
+and `Apply<Compose<Box, Box>, T>` are executable. A native constructor argument
+must have a ready identity and completed creation checks; closures may capture
+unresolved ordinary Types. Deferred calls retain mixed arguments and replay their
+captured environments. Constraints still run at each actual application, rather
+than being compared universally when passing a constructor. Editor queries omit
+Type results for factories and retain ordinary symbol navigation.

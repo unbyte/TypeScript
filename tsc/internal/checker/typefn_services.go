@@ -68,6 +68,9 @@ func (c *Checker) GetTypeFunctionApplicationResult(ctx context.Context, node *as
 	if c.GetTypeFunctionDeclaration(symbol) == nil || node.TypeArgumentList() == nil {
 		return nil
 	}
+	if declaration := c.GetTypeFunctionDeclaration(symbol); c.compileTypefn(declaration).resultKind.resolved() != 0 {
+		return nil
+	}
 	saved := c.ctx
 	c.ctx = ctx
 	defer func() {

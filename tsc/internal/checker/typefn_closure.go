@@ -132,9 +132,9 @@ func (v *typefnVM) callHelper(e *typefnExpression, slots []typefnValue) typefnVa
 	if closure == nil {
 		return typefnValue{native: v.error(e.node, "application requires a constructor value")}
 	}
-	args := make([]*Type, len(e.args))
+	args := make([]typefnValue, len(e.args))
 	for i, argument := range e.args {
-		args[i] = v.typeArgument(argument, slots)
+		args[i] = v.resultExpression(argument, slots)
 		if v.failed || v.blocked {
 			return typefnValue{native: v.c.errorType}
 		}
@@ -164,7 +164,7 @@ func (c *Checker) instantiateTypefnValues(values []typefnValue, mapper *TypeMapp
 	return result
 }
 
-func (v *typefnVM) inputConstraints(node *ast.Node, p *typefnProgram, registers []typefnValue, args []*Type) bool {
+func (v *typefnVM) inputConstraints(node *ast.Node, p *typefnProgram, registers []typefnValue, args []typefnValue) bool {
 	for i, bound := range p.bounds {
 		if bound == nil {
 			continue
@@ -176,10 +176,10 @@ func (v *typefnVM) inputConstraints(node *ast.Node, p *typefnProgram, registers 
 		if !v.step(bound.node) {
 			return false
 		}
-		if v.c.isTypeAssignableTo(args[i], constraint) {
+		if v.c.isTypeAssignableTo(args[i].native, constraint) {
 			continue
 		}
-		if v.unresolvedGraph(bound.node, args[i]) || v.unresolvedGraph(bound.node, constraint) {
+		if v.unresolvedGraph(bound.node, args[i].native) || v.unresolvedGraph(bound.node, constraint) {
 			if !v.failed {
 				v.blocked = true
 			}
@@ -196,7 +196,7 @@ func (v *typefnVM) inputConstraints(node *ast.Node, p *typefnProgram, registers 
 				site = v.replaySite
 			}
 			var reports []*ast.Diagnostic
-			if v.c.checkTypeAssignableToEx(args[i], constraint, site, diagnostics.Type_0_does_not_satisfy_the_constraint_1, &reports) {
+			if v.c.checkTypeAssignableToEx(args[i].native, constraint, site, diagnostics.Type_0_does_not_satisfy_the_constraint_1, &reports) {
 				continue
 			}
 			for _, report := range reports {

@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-constructor-parameter-unimplemented.ts"
+    "main.ts": "error-constructor-application-bound.ts"
   },
   "options": {
     "typefn": {
@@ -10,9 +10,9 @@
   "diagnostics": [
     {
       "phase": "semantic",
-      "code": -1,
+      "code": 2344,
       "file": "main.ts",
-      "message": "constructor parameters are not implemented yet"
+      "message": "does not satisfy"
     }
   ]
 }

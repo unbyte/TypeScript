@@ -58,6 +58,7 @@ type typefnProgram struct {
 	local                  bool
 	captures               []typefnCapture
 	bounds                 []*typefnExpression
+	parameterKinds         []*typefnKind
 	resultKind             *typefnKind
 	hasValueReturn         bool
 	kindIndex, kindLowlink int
@@ -297,7 +298,7 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 	if node.Kind == ast.KindTypeFunctionLambda {
 		e.helper = b.compileFunction(node, b)
 		e.kind = typefnConstructorKind(len(node.TypeParameters()))
-		b.sameKind(node, e.helper.resultKind, nil, "a first-class constructor must return a Type")
+		b.constructorEligible(node, e.helper)
 		if !e.helper.valid {
 			b.p.valid = false
 		}
@@ -333,14 +334,14 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 					} else if binding.slot >= 0 {
 						b.sameKind(node, binding.kind, typefnConstructorKind(len(data.Operands.Nodes)), "wrong number of helper Type arguments")
 					}
-					for _, argument := range data.Operands.Nodes {
-						e.args = append(e.args, b.typeExpression(argument))
+					for i, argument := range data.Operands.Nodes {
+						e.args = append(e.args, b.callArgument(argument, binding.helper, i))
 					}
 				} else {
 					e.kind = binding.kind
 					if binding.helper != nil {
 						b.kindDependency(binding.helper, false)
-						b.sameKind(node, binding.helper.resultKind, nil, "a first-class constructor must return a Type")
+						b.constructorEligible(node, binding.helper)
 					}
 				}
 				e.slot = binding.slot
@@ -375,7 +376,7 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 				if node.Kind == ast.KindTypeFunctionName {
 					e.helper = callee
 					e.kind = typefnConstructorKind(count)
-					b.sameKind(node, callee.resultKind, nil, "a first-class constructor must return a Type")
+					b.constructorEligible(node, callee)
 				} else {
 					e.callee = callee
 					e.kind = callee.resultKind
@@ -401,8 +402,8 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 		return e
 	}
 	if data.Operands != nil {
-		for _, operand := range data.Operands.Nodes {
-			e.args = append(e.args, b.typeExpression(operand))
+		for i, operand := range data.Operands.Nodes {
+			e.args = append(e.args, b.callArgument(operand, e.callee, i))
 		}
 	}
 	return e
@@ -473,14 +474,15 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 	if node.Name() != nil && typefnReserved(node.Name().Text()) {
 		b.error(node.Name(), "reserved function name "+node.Name().Text())
 	}
-	for _, parameter := range node.TypeParameters() {
+	p.parameterKinds = make([]*typefnKind, len(node.TypeParameters()))
+	for i, parameter := range node.TypeParameters() {
 		b.bind(parameter.Name(), false)
 		if slots := parameter.AsTypeFunctionParameter().Slots; slots != nil {
 			binding := b.scopes[len(b.scopes)-1][parameter.Name().Text()]
 			binding.kind = typefnConstructorKind(len(slots.Nodes))
 			b.scopes[len(b.scopes)-1][parameter.Name().Text()] = binding
 			p.bindings[parameter.Symbol()] = binding.kind
-			b.error(parameter, "constructor parameters are not implemented yet")
+			p.parameterKinds[i] = binding.kind
 		}
 	}
 	if parent != nil {

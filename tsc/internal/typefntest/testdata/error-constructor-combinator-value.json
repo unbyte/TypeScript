@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-constructor-combinator-value.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "a first-class constructor must accept only Type parameters"
+    }
+  ]
+}

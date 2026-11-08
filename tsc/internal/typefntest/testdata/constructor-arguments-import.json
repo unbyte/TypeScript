@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "constructor-arguments-import.ts",
+    "library.ts": "helper-values-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

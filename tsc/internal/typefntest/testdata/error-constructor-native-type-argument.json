@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-constructor-native-type-argument.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "constructor argument requires a named constructor or factory application"
+    }
+  ]
+}

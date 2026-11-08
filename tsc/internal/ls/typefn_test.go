@@ -649,3 +649,33 @@ func TestTypefnParameterKindsInEditor(t *testing.T) {
 		t.Fatal(found)
 	}
 }
+
+func TestTypefnConstructorArgumentsInEditor(t *testing.T) {
+	source := `typefn /*decl*/Box<T> {return [T];}
+ typefn Apply<F<_>, T> {return F<T>;}
+ typefn Compose<F<_>, G<_>> {return typefn<T> {return F<G<T>>;};}
+ type Ready=/*application*/Apply</*factory*/Compose</*argument*/Box, Box>, 1>;
+ type Pending<T>=Apply<Box,T>;
+ `
+	l, ctx, pos := typefnService(t, source)
+	for _, marker := range []string{"/*application*/", "/*factory*/", "/*argument*/"} {
+		hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(marker)})
+		if err != nil || hover.Hover == nil {
+			t.Fatalf("hover %s: %#v %v", marker, hover, err)
+		}
+		text := hover.Hover.Contents.MarkupContent.Value
+		if marker == "/*application*/" && !strings.Contains(text, "[[1]]") {
+			t.Fatalf("missing computed Type: %s", text)
+		}
+		if marker == "/*factory*/" && !strings.Contains(text, "typefn<_>") {
+			t.Fatalf("missing constructor kind: %s", text)
+		}
+	}
+	definition, err := l.ProvideDefinition(ctx, "file:///main.ts", pos("/*argument*/"))
+	if err != nil || definition.Locations == nil || len(*definition.Locations) != 1 || (*definition.Locations)[0].Range.Start != pos("/*decl*/") {
+		t.Fatalf("constructor definition: %#v %v", definition, err)
+	}
+	if diagnostics := l.program.GetSemanticDiagnostics(ctx, nil); len(diagnostics) != 0 {
+		t.Fatalf("editor queries introduced errors: %v", diagnostics)
+	}
+}

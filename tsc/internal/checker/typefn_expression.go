@@ -24,9 +24,9 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 			value = slots[e.slot]
 		}
 	} else if e.callee != nil {
-		args := make([]*Type, len(e.args))
+		args := make([]typefnValue, len(e.args))
 		for i, arg := range e.args {
-			args[i] = v.typeArgument(arg, slots)
+			args[i] = v.resultExpression(arg, slots)
 			if v.failed || v.blocked {
 				return typefnValue{native: v.c.errorType}
 			}

@@ -128,3 +128,28 @@ func (b *typefnCompiler) kindDependency(p *typefnProgram, treeEdge bool) {
 	}
 	b.p.kindLowlink = min(b.p.kindLowlink, index)
 }
+
+// Only Type-only functions become first-class constructors. Named combinators
+// may accept or return constructors, but do not introduce higher-order kinds.
+func typefnHasConstructorParameters(p *typefnProgram) bool {
+	for _, kind := range p.parameterKinds {
+		if kind.resolved() != 0 {
+			return true
+		}
+	}
+	return false
+}
+func (b *typefnCompiler) constructorEligible(node *ast.Node, p *typefnProgram) {
+	b.sameKind(node, p.resultKind, nil, "a first-class constructor must return a Type")
+	if typefnHasConstructorParameters(p) {
+		b.error(node, "a first-class constructor must accept only Type parameters")
+	}
+}
+func (b *typefnCompiler) callArgument(node *ast.Node, p *typefnProgram, index int) *typefnExpression {
+	if p == nil || index >= len(p.parameterKinds) || p.parameterKinds[index].resolved() == 0 {
+		return b.typeExpression(node)
+	}
+	value := b.expression(node)
+	b.sameKind(node, value.kind, p.parameterKinds[index], "constructor argument kind or arity does not match the parameter")
+	return value
+}

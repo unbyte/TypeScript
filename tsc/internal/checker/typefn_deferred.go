@@ -152,7 +152,7 @@ func (c *Checker) instantiateTypefn(t *Type, m *TypeMapper) *Type {
 		case typefnUnaryTerm:
 			return v.unary(d.node, d.operator, args[0])
 		case typefnCallTerm:
-			return v.callWithClosure(d.node, d.declaration, args, closure)
+			return v.callWithClosure(d.node, d.declaration, values, closure)
 		case typefnNativeCallTerm:
 			return v.apply(d.node, d.symbol, args)
 		case typefnExpressionTerm:

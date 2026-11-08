@@ -13,7 +13,7 @@ import (
 // are not cached. Programs and all Type handles belong to this checker snapshot.
 type typefnActiveCall struct {
 	declaration *ast.Node
-	args        []*Type
+	args        []typefnValue
 	closure     *typefnClosure
 }
 
@@ -139,12 +139,12 @@ func (v *typefnVM) allocate(node *ast.Node, count int) bool {
 }
 
 func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) *Type {
-	return v.callWithClosure(node, declaration, args, nil)
+	return v.callWithClosure(node, declaration, typefnTypeValues(args), nil)
 }
 
 // Native Type consumers and deferred Type recipes use this boundary. Factories
 // stay in the value evaluator; they never enter a native Type operand vector.
-func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, closure *typefnClosure) *Type {
+func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []typefnValue, closure *typefnClosure) *Type {
 	p := v.c.compileTypefn(declaration)
 	if closure != nil {
 		p = closure.program
@@ -159,7 +159,7 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 	return v.nativeValue(node, value)
 }
 
-func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure *typefnClosure) (result typefnValue) {
+func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, closure *typefnClosure) (result typefnValue) {
 	// Module helpers have no captured environment. Canonicalize direct and
 	// constructor-valued applications to the same call recipe and cycle identity.
 	if closure != nil && !closure.program.local {
@@ -182,7 +182,7 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure 
 		if blockConstructor {
 			result = typefnValue{}
 		} else if v.blocked && !v.failed {
-			result = typefnValue{native: v.c.newTypefnTerm(&typefnTerm{kind: typefnCallTerm, node: node, declaration: declaration, args: originalArgs, closure: closure})}
+			result = typefnValue{native: v.c.newTypefnTerm(&typefnTerm{kind: typefnCallTerm, node: node, declaration: declaration, values: originalArgs, closure: closure})}
 		} else if result.native != nil {
 			result.native = v.c.guardTypefn(result.native, v.checks)
 		}
@@ -193,11 +193,13 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure 
 	}()
 	args = slices.Clone(args)
 	for i, arg := range args {
-		args[i] = v.observe(arg)
+		if arg.native != nil {
+			args[i].native = v.observe(arg.native)
+		}
 	}
 	// Recovery Types are not successful Type values, even when a parameter is unused.
 	for _, arg := range args {
-		if v.c.isErrorType(arg) {
+		if arg.native != nil && v.c.isErrorType(arg.native) {
 			v.failed = true
 			return typefnValue{native: v.c.errorType}
 		}
@@ -243,7 +245,7 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure 
 	// Charge register/argument backing storage and iterator slots, in addition to
 	// the existing fixed bookkeeping allowance. No iterator storage is allocated
 	// for programs that do not iterate.
-	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof((*Type)(nil))) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
+	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof(typefnValue{})) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
 	if frameBytes > v.limits.LiveBytes-v.liveBytes {
 		return typefnValue{native: v.error(node, "live VM allocation limit exceeded")}
 	}
@@ -251,7 +253,11 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure 
 	defer func() { v.liveBytes -= frameBytes }()
 	registers := make([]typefnValue, p.slots)
 	for i, arg := range args {
-		registers[i] = typefnValue{native: arg}
+		kind := p.parameterKinds[i].resolved()
+		if kind == 0 && arg.native == nil || kind > 0 && (arg.closure == nil || len(arg.closure.program.parameterKinds) != kind-1 || typefnHasConstructorParameters(arg.closure.program) || arg.closure.program.resultKind.resolved() != 0) {
+			return typefnValue{native: v.error(node, "argument kind or constructor arity does not match the parameter")}
+		}
+		registers[i] = arg
 	}
 	if closure != nil {
 		if p.selfSlot >= 0 {

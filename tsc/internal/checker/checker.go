@@ -3071,9 +3071,13 @@ func (c *Checker) checkAccessorDeclaration(node *ast.Node) {
 
 func (c *Checker) checkTypeReferenceNode(node *ast.Node) {
 	typefnApplication := false
+	var typefnDeclaration *ast.Node
 	if ast.IsTypeReferenceNode(node) && c.compilerOptions.GetTypefnVersion() == 1 {
 		symbol := c.resolveEntityName(node.AsTypeReferenceNode().TypeName, ast.SymbolFlagsType, true, false, nil)
-		typefnApplication = symbol != nil && core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil
+		if symbol != nil {
+			typefnDeclaration = core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration)
+		}
+		typefnApplication = typefnDeclaration != nil
 	}
 	if !typefnApplication {
 		c.checkGrammarTypeArguments(node, node.TypeArgumentList())
@@ -3088,7 +3092,18 @@ func (c *Checker) checkTypeReferenceNode(node *ast.Node) {
 			}
 		}
 	}
-	c.checkSourceElements(node.TypeArguments())
+	if typefnApplication {
+		parameters := typefnDeclaration.TypeParameters()
+		for i, argument := range node.TypeArguments() {
+			// Constructor expressions have their own kind-aware checking path.
+			if i < len(parameters) && parameters[i].AsTypeFunctionParameter().Slots != nil {
+				continue
+			}
+			c.checkSourceElement(argument)
+		}
+	} else {
+		c.checkSourceElements(node.TypeArguments())
+	}
 	if !(isConstTypeReference(node) && ast.IsAssertionExpression(node.Parent)) {
 		c.checkTypeReferenceOrImport(node)
 	}
@@ -24446,7 +24461,7 @@ func (c *Checker) getTypeFromTypeAliasReference(node *ast.Node, symbol *ast.Symb
 				c.typefnError(node, "constructor values are not implemented yet; use an explicit application")
 				return c.errorType
 			}
-			return c.evaluateTypefn(node, declaration, c.getTypeArgumentsFromNode(node))
+			return c.evaluateTypefnReference(node, declaration)
 		}
 		if pending := c.pendingTypefnNativeApplication(node, symbol); pending != nil {
 			return pending

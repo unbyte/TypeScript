@@ -59,3 +59,11 @@ func (v *typefnVM) typeArgument(e *typefnExpression, slots []typefnValue) *Type 
 	}
 	return v.nativeValue(e.node, value)
 }
+
+func typefnTypeValues(types []*Type) []typefnValue {
+	values := make([]typefnValue, len(types))
+	for i, t := range types {
+		values[i].native = t
+	}
+	return values
+}
