@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "result-kinds.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

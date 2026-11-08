@@ -40,28 +40,36 @@ type typefnExpression struct {
 	symbol    *ast.Symbol
 	intrinsic string
 	island    *typefnIsland
-	helper    *typefnProgram // Constructor-valued result, not the called function.
+	helper    *typefnProgram // Code for a constructor-valued expression.
+	kind      *typefnKind
+	callee    *typefnProgram
 	args      []*typefnExpression
 	keys      []*typefnExpression
 }
 type typefnCapture struct{ source, target int }
 
 type typefnProgram struct {
-	declaration *ast.Node
-	code        []typefnInstruction
-	slots       int
-	iterators   int
-	valid       bool
-	selfSlot    int
-	local       bool
-	captures    []typefnCapture
-	bounds      []*typefnExpression
+	declaration            *ast.Node
+	code                   []typefnInstruction
+	slots                  int
+	iterators              int
+	valid                  bool
+	selfSlot               int
+	local                  bool
+	captures               []typefnCapture
+	bounds                 []*typefnExpression
+	resultKind             *typefnKind
+	hasValueReturn         bool
+	kindIndex, kindLowlink int
+	kindOnStack            bool
+	bindings               map[*ast.Symbol]*typefnKind
 }
 type typefnBinding struct {
 	slot    int
 	mutable bool
 	symbol  *ast.Symbol
-	helper  *typefnProgram
+	helper  *typefnProgram // Named function signature, not a constructor binding.
+	kind    *typefnKind
 }
 type (
 	typefnLoop     struct{ breaks, continues []int }
@@ -175,13 +183,14 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		return
 	}
 	if node.Kind == ast.KindTypeFunctionDeclaration {
-		child := b.c.compileTypefnWithParent(node, b)
+		child := b.compileFunction(node, b)
 		if !child.valid {
 			b.p.valid = false
 		}
 		slot := b.bind(node.Name(), false)
 		binding := b.scopes[len(b.scopes)-1][node.Name().Text()]
 		binding.helper = child
+		binding.kind = typefnConstructorKind(len(node.TypeParameters()))
 		b.scopes[len(b.scopes)-1][node.Name().Text()] = binding
 		b.emit(typefnInstruction{op: tfHelper, node: node, slot: slot, helper: child})
 		return
@@ -192,7 +201,8 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		expr := b.expression(s.Expression)
 		slot := b.bind(node.Name(), true)
 		binding := b.scopes[len(b.scopes)-1][node.Name().Text()]
-		binding.helper = expr.helper
+		binding.kind = expr.kind
+		b.p.bindings[binding.symbol] = expr.kind
 		b.scopes[len(b.scopes)-1][node.Name().Text()] = binding
 		b.emit(typefnInstruction{op: tfStore, node: node, expr: expr, slot: slot})
 	case ast.KindTypeFunctionAssignment:
@@ -202,18 +212,16 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		}
 		expr := b.expression(s.Expression)
 		if ok && value.mutable && value.slot >= 0 {
-			if (value.helper == nil) != (expr.helper == nil) {
-				b.error(node, "assignment cannot change a binding's value kind")
-			} else if value.helper != nil && len(value.helper.declaration.TypeParameters()) != len(expr.helper.declaration.TypeParameters()) {
-				b.error(node, "assignment cannot change constructor arity")
+			message := "assignment cannot change a binding's value kind"
+			if value.kind.resolved() > 0 && expr.kind.resolved() > 0 {
+				message = "assignment cannot change constructor arity"
 			}
+			b.sameKind(node, value.kind, expr.kind, message)
 		}
 		b.emit(typefnInstruction{op: tfStore, node: node, expr: expr, slot: value.slot})
 	case ast.KindTypeFunctionReturn:
 		expr := b.expression(s.Expression)
-		if expr.helper != nil {
-			b.error(node, "constructor results are not implemented yet")
-		}
+		b.sameKind(node, b.p.resultKind, expr.kind, "return kinds must agree with the function result kind")
 		b.emit(typefnInstruction{op: tfReturn, node: node, expr: expr})
 	case ast.KindTypeFunctionExpressionStatement:
 		b.emit(typefnInstruction{op: tfDiscard, node: node, expr: b.expression(s.Expression)})
@@ -277,7 +285,9 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 	e := &typefnExpression{node: node, slot: -1}
 	if node.Kind == ast.KindTypeFunctionLambda {
-		e.helper = b.c.compileTypefnWithParent(node, b)
+		e.helper = b.compileFunction(node, b)
+		e.kind = typefnConstructorKind(len(node.TypeParameters()))
+		b.sameKind(node, e.helper.resultKind, nil, "a first-class constructor must return a Type")
 		if !e.helper.valid {
 			b.p.valid = false
 		}
@@ -299,16 +309,25 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 					b.error(node, "binding read before initialization")
 				}
 				if node.Kind == ast.KindTypeFunctionCall {
-					if binding.slot >= 0 && binding.helper == nil {
+					if binding.helper != nil {
+						b.kindDependency(binding.helper, false)
+						e.kind = binding.helper.resultKind
+						e.callee = binding.helper
+					}
+					if binding.slot >= 0 && binding.kind.resolved() == 0 {
 						b.error(node, "application requires a constructor value")
-					} else if binding.helper != nil && len(data.Operands.Nodes) != len(binding.helper.declaration.TypeParameters()) {
-						b.error(node, "wrong number of helper Type arguments")
+					} else if binding.slot >= 0 {
+						b.sameKind(node, binding.kind, typefnConstructorKind(len(data.Operands.Nodes)), "wrong number of helper Type arguments")
 					}
 					for _, argument := range data.Operands.Nodes {
 						e.args = append(e.args, b.typeExpression(argument))
 					}
 				} else {
-					e.helper = binding.helper
+					e.kind = binding.kind
+					if binding.helper != nil {
+						b.kindDependency(binding.helper, false)
+						b.sameKind(node, binding.helper.resultKind, nil, "a first-class constructor must return a Type")
+					}
 				}
 				e.slot = binding.slot
 				e.symbol = binding.symbol
@@ -334,12 +353,21 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 			if data.Operands != nil {
 				actual = len(data.Operands.Nodes)
 			}
-			if declaration != nil && node.Kind == ast.KindTypeFunctionName {
-				e.helper = b.c.compileTypefn(declaration)
-				if !e.helper.valid {
+			if declaration != nil {
+				callee := b.compileFunction(declaration, nil)
+				if !callee.valid {
 					b.p.valid = false
 				}
-			} else if actual < minimum || actual > count {
+				if node.Kind == ast.KindTypeFunctionName {
+					e.helper = callee
+					e.kind = typefnConstructorKind(count)
+					b.sameKind(node, callee.resultKind, nil, "a first-class constructor must return a Type")
+				} else {
+					e.callee = callee
+					e.kind = callee.resultKind
+				}
+			}
+			if (declaration == nil || node.Kind != ast.KindTypeFunctionName) && (actual < minimum || actual > count) {
 				b.error(node, fmt.Sprintf("application requires %d..%d Type arguments", minimum, count))
 			}
 		}
@@ -390,17 +418,43 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 	if p := state.programs[node]; p != nil {
 		return p
 	}
-	p := &typefnProgram{declaration: node, valid: true, selfSlot: -1, local: parent != nil}
+	p := &typefnProgram{declaration: node, valid: true, selfSlot: -1, local: parent != nil, resultKind: &typefnKind{value: -1}, bindings: map[*ast.Symbol]*typefnKind{}}
 	state.programs[node] = p
+	state.nextKindIndex++
+	p.kindIndex, p.kindLowlink = state.nextKindIndex, state.nextKindIndex
+	p.kindOnStack = true
+	state.kindStack = append(state.kindStack, p)
+	defer func() {
+		if p.kindLowlink != p.kindIndex {
+			return
+		}
+		index := len(state.kindStack) - 1
+		for state.kindStack[index] != p {
+			index--
+		}
+		component := state.kindStack[index:]
+		for _, member := range component {
+			member.kindOnStack = false
+		}
+		c.finishTypefnKinds(component)
+		state.kindStack = state.kindStack[:index]
+	}()
 	// Semantic diagnostics are also requested on incomplete editor snapshots.
 	// Recovery nodes are for syntax services; never lower them to executable code.
 	if len(ast.GetSourceFileOfNode(node).Diagnostics()) != 0 {
 		p.valid = false
 		return p
 	}
+	if ast.IsTypeFunctionLambda(node) {
+		p.resultKind.value = 0
+	}
 	b := typefnCompiler{c: c, p: p, scopes: []map[string]typefnBinding{{}}, parent: parent, boundParameter: -1}
-	if kind := ast.TypeFunctionResultKind(node); kind != nil && kind.AsTypeFunctionKind().KindToken.Kind == ast.KindIdentifier {
-		b.error(kind, "constructor results are not implemented yet")
+	if annotation := ast.TypeFunctionResultKind(node); annotation != nil {
+		kind := annotation.AsTypeFunctionKind()
+		p.resultKind.value = 0
+		if kind.Slots != nil {
+			p.resultKind.value = len(kind.Slots.Nodes) + 1
+		}
 	}
 	if node.Name() != nil && typefnReserved(node.Name().Text()) {
 		b.error(node.Name(), "reserved function name "+node.Name().Text())
@@ -416,7 +470,7 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 			// Parameters/body may shadow the helper's self-name; captures cannot mutate it.
 			p.selfSlot = p.slots
 			p.slots++
-			self := map[string]typefnBinding{node.Name().Text(): {slot: p.selfSlot, symbol: node.Symbol(), helper: p}}
+			self := map[string]typefnBinding{node.Name().Text(): {slot: p.selfSlot, symbol: node.Symbol(), helper: p, kind: typefnConstructorKind(len(node.TypeParameters()))}}
 			b.scopes = append([]map[string]typefnBinding{self}, b.scopes...)
 		}
 		p.bounds = make([]*typefnExpression, len(node.TypeParameters()))
@@ -432,7 +486,9 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 		}
 	}
 	b.block(ast.TypeFunctionBody(node), false)
-	if p.valid && p.canFallThrough() {
+	flow := p.flow()
+	p.hasValueReturn = flow.returns
+	if p.valid && flow.fallsThrough {
 		b.error(node, "a control-flow path reaches the end without returning a value")
 	}
 	return p
@@ -440,8 +496,6 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 
 func (b *typefnCompiler) typeExpression(node *ast.Node) *typefnExpression {
 	expression := b.expression(node)
-	if expression.helper != nil {
-		b.error(node, "constructor value cannot be used as a Type")
-	}
+	b.sameKind(node, expression.kind, nil, "constructor value cannot be used as a Type")
 	return expression
 }

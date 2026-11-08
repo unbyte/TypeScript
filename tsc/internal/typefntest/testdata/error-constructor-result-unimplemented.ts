@@ -1,1 +1,1 @@
-typefn Factory<>: typefn<_> { return string; }
+typefn Factory<>: typefn<_> { return typefn<T> {return T;}; }

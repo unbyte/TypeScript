@@ -1,2 +1,2 @@
-typefn Bad<> { failAt<"bad", -1>; }
+typefn Bad<>: type { failAt<"bad", -1>; }
 type Result = Bad<>;

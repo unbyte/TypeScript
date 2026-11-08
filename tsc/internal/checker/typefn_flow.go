@@ -5,7 +5,10 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 // Definition checking follows lowered control flow without evaluating Types or
 // executing loops. Both branch outcomes and zero-iteration loop exits are possible.
 // Return and explicit failure terminate a path; a wildcard/capture cannot fail.
-func (p *typefnProgram) canFallThrough() bool {
+type typefnFlow struct{ fallsThrough, returns bool }
+
+func (p *typefnProgram) flow() typefnFlow {
+	var result typefnFlow
 	seen := make([]bool, len(p.code)+1)
 	work := []int{0}
 	for len(work) != 0 {
@@ -16,11 +19,13 @@ func (p *typefnProgram) canFallThrough() bool {
 		}
 		seen[pc] = true
 		if pc == len(p.code) {
-			return true
+			result.fallsThrough = true
+			continue
 		}
 		i := &p.code[pc]
 		switch i.op {
 		case tfReturn:
+			result.returns = true
 			continue
 		case tfDiscard:
 			if i.expr.intrinsic == "fail" || i.expr.intrinsic == "failAt" {
@@ -38,5 +43,5 @@ func (p *typefnProgram) canFallThrough() bool {
 		}
 		work = append(work, pc+1)
 	}
-	return false
+	return result
 }

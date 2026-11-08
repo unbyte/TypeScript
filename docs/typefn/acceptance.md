@@ -11,7 +11,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 
 | Contract | Status | Remaining acceptance evidence |
 | --- | --- | --- |
-| Core bindings/control/scalars | partial | Conservative return-path validation implemented; definition-time kinds and scalar edge cases remain |
+| Core bindings/control/scalars | partial | Conservative return-path and finite-kind validation implemented; constructor contexts and scalar edge cases remain |
 | Strings and string iteration | partial | All text intrinsics/iteration implemented; tests cover UTF-16, bounds, symbolic replay and budgets; declaration-only coverage awaits recipes |
 | Numeric and tuple library | partial | Numeric and finite-tuple library implemented with conversion/bounds/symbolic tests; declaration-only coverage awaits recipes |
 | Explicit failure | partial | fail/failAt, statement-only use, deferred operands and producer/consumer spans tested; declaration-only cases await recipes |
@@ -24,7 +24,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Structural builders | partial | Property/indexer descriptors, symbol keys, arrays and native signature forwarding implemented; tuple-based functions/constructors implemented; full signature descriptors and native tuple spreads implemented; tuple descriptors implemented; native optional-producer provenance remains |
 | Recursive structural graphs | pending | Single/group sealing, guarded edges, invalid cycles and cancellation |
 | Generic deferral/inference | partial | Latent member dependencies, generic-body requirements and exhaustive substitution boundaries |
-| Constraints/result kinds | partial | Resolve documented scope/timing discrepancies; retain and check result kinds |
+| Constraints/result kinds | partial | Result-kind inference/annotations and recursive component validation implemented; constructor execution and documented bound scope/timing discrepancies remain |
 | Declaration recipes | pending | Emit/consume standalone declarations, ABI checks, captures, source maps and dependency invalidation |
 | Editor and public API | partial | Services for all syntax, prelude completion, refactorings, auto-imports and API compatibility |
 | Resources/cancellation | partial | All specified work/allocation/cache budgets and cancellation within expensive native work |

@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.ts": "error-result-kind-cycle.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "result kind cannot be inferred"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "result kind cannot be inferred"
+    }
+  ]
+}

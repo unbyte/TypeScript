@@ -81,3 +81,15 @@ func (c *Checker) GetTypeFunctionApplicationResult(ctx context.Context, node *as
 	}
 	return result
 }
+
+func (c *Checker) TypeFunctionBindingKind(declaration *ast.Node) string {
+	if declaration == nil {
+		return "type"
+	}
+	fn := ast.FindAncestor(declaration.Parent, ast.IsTypeFunctionLike)
+	if fn == nil {
+		return "type"
+	}
+	p := c.compileTypefn(fn)
+	return typefnKindDisplay(p.bindings[declaration.Symbol()])
+}

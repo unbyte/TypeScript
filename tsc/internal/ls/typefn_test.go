@@ -573,3 +573,17 @@ func TestTypefnLambdaScopesAndDisplay(t *testing.T) {
 		t.Fatal(ds)
 	}
 }
+
+func TestTypefnConstructorBindingHover(t *testing.T) {
+	source := `typefn Box<T> {return [T];} typefn F<T> {type /*decl*/Constructor=Box; return /*use*/Constructor<T>;}`
+	l, ctx, pos := typefnService(t, source)
+	for _, marker := range []string{"/*decl*/", "/*use*/"} {
+		result, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(marker)})
+		if err != nil || result.Hover == nil || !strings.Contains(result.Hover.Contents.MarkupContent.Value, "type Constructor: typefn<_>") {
+			t.Fatalf("constructor binding hover: %#v %v", result, err)
+		}
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatal(ds)
+	}
+}

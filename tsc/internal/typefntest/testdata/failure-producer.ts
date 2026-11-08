@@ -1,1 +1,1 @@
-export typefn Reject<T> { failAt<"bad input", 2>; }
+export typefn Reject<T>: type { failAt<"bad input", 2>; }

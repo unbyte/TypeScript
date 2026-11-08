@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.ts": "error-result-kind-abort.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "a function without a value-returning path requires a result-kind annotation"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "a function without a value-returning path requires a result-kind annotation"
+    }
+  ]
+}

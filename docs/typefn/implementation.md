@@ -163,7 +163,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 250 fixtures covering native calibration, execution,
+The compiler-project harness has 256 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -391,3 +391,13 @@ The parser/printer, binder, AST serializer/transformer and editor capture scope
 share this representation. An anonymous initializer cannot recursively refer to
 its own still-uninitialized binding; named local helpers supply explicit self
 recursion. Constructor-valued results and constructor parameters remain pending.
+
+Value kinds are now checked separately from helper code identity. A checker-local
+constraint graph infers Type results without execution, verifies all return kinds
+(including unreachable returns), and resolves mutually referring functions before
+checking their callers. Unresolved recursive result kinds and named bodies with
+no value-returning path require annotations. Anonymous closures supply their
+Type-returning constructor context. Declaration-order tests prevent callers from
+silently repairing ambiguous callee signatures. Constructor-result execution is
+still explicitly rejected at this stage. Local-binding hover now distinguishes
+`type` from `typefn<...>` using static kind information, without running a body.

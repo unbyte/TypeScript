@@ -1,1 +1,1 @@
-typefn F<T> { return F<T>; } type R = F<1>;
+typefn F<T>: type { return F<T>; } type R = F<1>;

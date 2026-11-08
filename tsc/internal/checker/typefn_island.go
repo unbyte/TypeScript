@@ -41,6 +41,15 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 			parameters := b.c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
 			count, minimum := len(parameters), b.c.getMinTypeArgumentCount(parameters)
 			if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration); declaration != nil {
+				// Local helpers require the lexical bridge below. Module calls
+				// in native syntax must produce a native Type even in dead code.
+				if ast.FindAncestor(declaration.Parent, ast.IsTypeFunctionLike) == nil {
+					callee := b.compileFunction(declaration, nil)
+					if !callee.valid {
+						b.p.valid = false
+					}
+					b.sameKind(node, callee.resultKind, nil, "constructor value cannot be used as a Type")
+				}
 				count, minimum = len(declaration.TypeParameters()), len(declaration.TypeParameters())
 				if node.TypeArgumentList() == nil {
 					b.error(node, "typefn requires an explicit application in a native island")
@@ -64,7 +73,7 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 							}
 						}
 					}
-					if binding.helper != nil {
+					if binding.kind.resolved() != 0 {
 						b.error(node, "constructor captures in native islands are not implemented yet")
 						return false
 					}

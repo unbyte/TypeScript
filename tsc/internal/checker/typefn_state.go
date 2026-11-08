@@ -7,6 +7,8 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 // terms and syntax-dependency tables live for the owning checker lifetime.
 type typefnState struct {
 	programs       map[*ast.Node]*typefnProgram
+	kindStack      []*typefnProgram
+	nextKindIndex  int
 	closures       map[typefnClosureKey]*typefnClosure
 	nextClosureID  uint32
 	vm             *typefnVM
