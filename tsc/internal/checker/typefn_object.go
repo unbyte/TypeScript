@@ -58,6 +58,9 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 		symbol := v.c.newSymbolEx(flags, name, checkFlags)
 		links := v.c.valueSymbolLinks.Get(symbol)
 		links.resolvedType = v.c.addOptionalityEx(value, true, optional)
+		if optional {
+			v.c.rememberTypefnProperty(symbol, value)
+		}
 		if key.flags == TypeFlagsUniqueESSymbol {
 			links.setNameType(v.c, key)
 		}

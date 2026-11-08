@@ -129,7 +129,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   and union traversal use native dependency summaries; exhaustive native forms
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
-* Property/tuple reflection, general tuple metadata,
+* Tuple reflection, general tuple metadata,
   recursive structural sealing
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 191 fixtures covering native calibration, execution,
+The compiler-project harness has 196 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -290,3 +290,16 @@ unknown spread shapes after substitution. Tests compare results with ordinary
 native tuple aliases and check multiple-rest/domain errors, including a deferred
 failure whose value is absorbed by unknown. General tuple descriptor reflection
 and construction remain pending.
+
+`reflect.properties` now returns ordered public-property descriptors, including
+inherited fields, normalized numeric keys and unique-symbol keys. Declared optional
+values remain distinct from read Types in both exact-optional modes. VM-created
+optional fields retain immutable declared-value metadata across substitution;
+unchanged instantiations reuse their property symbols. Native declarations,
+identity mapped projections/key remapping, intersections and spread provenance
+supply native declared values. Accessors with differing read/write Types diagnose.
+Tests cover actual readonly projections, inherited/private/protected members,
+optional methods/initializers, Pick/Partial/Readonly, explicit undefined, never,
+generic replay and metadata-only changes. Exotic native optional-member provenance
+(e.g. reverse mappings) still needs exhaustive coverage; unavailable provenance
+diagnoses rather than silently stripping undefined.

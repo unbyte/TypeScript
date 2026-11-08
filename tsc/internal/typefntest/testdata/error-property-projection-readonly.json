@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-property-projection-readonly.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2540,
+      "file": "main.ts",
+      "message": "Cannot assign to 'a' because it is a read-only property."
+    }
+  ]
+}

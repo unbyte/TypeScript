@@ -252,9 +252,24 @@ func (c *Checker) instantiateTypefnObject(t *Type, m *TypeMapper) *Type {
 		if c.isErrorType(value) {
 			return c.errorType
 		}
-		changed = changed || value != old
+		declared := c.typefn.propertyValues[property]
+		mapped := declared
+		if declared != nil {
+			mapped = c.instantiateType(declared, m)
+			if c.isErrorType(mapped) {
+				return c.errorType
+			}
+		}
+		if value == old && mapped == declared {
+			members.Set(name, property)
+			continue
+		}
+		changed = true
 		p := c.newSymbolEx(property.Flags(), name, property.CheckFlags())
 		c.valueSymbolLinks.Get(p).resolvedType = value
+		if mapped != nil {
+			c.rememberTypefnProperty(p, mapped)
+		}
 		c.valueSymbolLinks.Get(p).setNameType(c, c.valueSymbolLinks.Get(property).getNameType())
 		members.Set(name, p)
 	}

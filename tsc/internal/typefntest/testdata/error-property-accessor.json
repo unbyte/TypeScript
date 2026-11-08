@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-property-accessor.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "differing accessor read/write Types require forwarding the original Type"
+    }
+  ]
+}

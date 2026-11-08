@@ -18,6 +18,7 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"reflect.properties":    {1, 1, false, "Object"},
 	"types.signature":       {1, 1, false, "Descriptor"},
 	"reflect.signature":     {1, 1, false, "Signature"},
 	"types.function":        {2, 2, false, "Parameters, Result"},
@@ -139,6 +140,8 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 	}
 	if strings.HasPrefix(e.intrinsic, "reflect.") {
 		switch e.intrinsic {
+		case "reflect.properties":
+			return v.reflectProperties(e.node, args[0])
 		case "reflect.signature":
 			return v.reflectSignature(e.node, args[0])
 		case "reflect.calls":

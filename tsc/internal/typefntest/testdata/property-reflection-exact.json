@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "property-reflection.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": true
+  },
+  "diagnostics": []
+}

@@ -38,6 +38,7 @@ All modules below are private to `tsc/internal/checker`:
 | `typefn_pattern_compile.go`, `typefn_pattern.go`, `typefn_pattern_template.go` | Arm lowering, structural matching and bounded UTF-16 decomposition |
 | `typefn_types.go`, `typefn_deferred.go` | Immutable pending terms, retained checks and substitution |
 | `typefn_signatures.go`, `typefn_signature_reflection.go`, `typefn_signature_builder.go`, `typefn_function.go` | Native signature forwarding, metadata, validation and construction |
+| `typefn_properties.go` | Public property projection and declared/optional-read provenance |
 | `typefn_state.go` | Lazy checker-owned tables and active root VM |
 | `typefn_display.go`, `typefn_services.go` | Pending display, signatures and cancelable result queries |
 

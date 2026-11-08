@@ -148,6 +148,9 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 			}
 			symbol := v.c.newSymbolEx(flags, name, checkFlags)
 			v.c.valueSymbolLinks.Get(symbol).resolvedType = v.c.addOptionalityEx(value, true, fieldData.Optional)
+			if fieldData.Optional {
+				v.c.rememberTypefnProperty(symbol, value)
+			}
 			v.c.valueSymbolLinks.Get(symbol).setNameType(v.c, nameType)
 			members.Set(name, symbol)
 		}
