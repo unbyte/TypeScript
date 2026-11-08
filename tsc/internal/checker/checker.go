@@ -32546,6 +32546,14 @@ func (c *Checker) GetSymbolAtLocation(node *ast.Node) *ast.Symbol {
 // purposes, use appropriate function for the context, e.g. `getResolvedSymbol` for an expression identifier,
 // `getSymbolOfDeclaration` for a declaration, etc.
 func (c *Checker) getSymbolAtLocation(node *ast.Node, ignoreErrors bool) *ast.Symbol {
+	if ast.TypeFunctionReference(node) != nil {
+		target := node
+		if ast.IsIdentifier(node) && ast.IsQualifiedName(node.Parent) && node.Parent.AsQualifiedName().Right == node {
+			target = node.Parent
+		}
+		return c.resolveEntityName(target, ast.SymbolFlagsType|ast.SymbolFlagsNamespace, ignoreErrors, false, nil)
+	}
+
 	if ast.IsSourceFile(node) {
 		if ast.IsExternalOrCommonJSModule(node.AsSourceFile()) {
 			return c.getMergedSymbol(node.Symbol())

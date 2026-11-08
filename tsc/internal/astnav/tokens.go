@@ -252,6 +252,12 @@ func getTokenAtPosition(
 						if ast.IsJSDocKind(current.Kind) {
 							return current
 						}
+						// DSL resource recovery may skip the rest of a file without
+						// allocating nodes for its identifiers. Keep navigation on
+						// the recovery node rather than inventing a bound identifier.
+						if ast.IsTypeFunctionNode(current) && len(sourceFile.Diagnostics()) != 0 {
+							return current
+						}
 						panic(fmt.Sprintf("did not expect %s to have %s in its trivia", current.Kind.String(), token.String()))
 					}
 					return sourceFile.GetOrCreateToken(token, tokenFullStart, tokenEnd, current, flags)
