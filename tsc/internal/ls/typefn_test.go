@@ -465,3 +465,17 @@ func TestTypefnPatternCaptureScope(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnArmBodyHasNestedScope(t *testing.T) {
+	source := `typefn F<T> { type /*outer*/label = 1; match (T) { /*capture*/item if (/*guard*/label == 1) => { type /*local*/label = 2; type /*shadow*/item = 3; return [/*body*/label, /*read*/item]; } _ => { return never; } } }`
+	l, ctx, pos := typefnService(t, source)
+	for _, test := range []struct{ use, decl string }{{"/*guard*/", "/*outer*/"}, {"/*body*/", "/*local*/"}, {"/*read*/", "/*shadow*/"}} {
+		response, err := l.ProvideDefinition(ctx, "file:///main.ts", pos(test.use))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response.Locations == nil || len(*response.Locations) != 1 || (*response.Locations)[0].Range.Start != pos(test.decl) {
+			t.Fatalf("arm body scope %s: %#v", test.use, response)
+		}
+	}
+}

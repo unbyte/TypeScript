@@ -2607,7 +2607,7 @@ func SetValueDeclaration(symbol *ast.Symbol, node *ast.Node) {
 func GetContainerFlags(node *ast.Node) ContainerFlags {
 	switch node.Kind {
 	case ast.KindTypeFunctionBlock:
-		if ast.IsTypeFunctionDeclaration(node.Parent) || node.Parent.Kind == ast.KindTypeFunctionMatchArm {
+		if ast.IsTypeFunctionDeclaration(node.Parent) {
 			return ContainerFlagsNone
 		}
 		return ContainerFlagsIsContainer | ContainerFlagsHasLocals
