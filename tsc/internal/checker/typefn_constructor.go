@@ -78,6 +78,9 @@ func (b *typefnCompiler) expressionInKind(node *ast.Node, expected *typefnKind) 
 	if core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil {
 		return b.expression(node)
 	}
+	if b.c.typefnConstructorAlias(symbol) != nil {
+		return b.expression(node)
+	}
 	code := b.c.typefnNativeConstructor(symbol)
 	if code == nil {
 		b.error(node, "constructor context requires a native generic or eligible typefn")

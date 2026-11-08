@@ -55,6 +55,13 @@ func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnVa
 		v.failed = true
 		return typefnValue{}
 	}
+	if alias := v.c.typefnConstructorAlias(symbol); alias != nil {
+		if node.TypeArgumentList() != nil || alias.kind.resolved() != arity+1 {
+			v.error(node, "constructor argument kind or arity does not match the parameter")
+			return typefnValue{}
+		}
+		return typefnValue{closure: v.constructorAlias(alias)}
+	}
 	declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration)
 	if declaration == nil {
 		native := v.c.typefnNativeConstructor(symbol)

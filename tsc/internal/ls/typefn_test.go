@@ -706,3 +706,54 @@ func TestTypefnNativeConstructorArgumentsInEditor(t *testing.T) {
 		t.Fatalf("mixed deferred display: %s", display)
 	}
 }
+
+func TestTypefnConstructorAliasesInEditor(t *testing.T) {
+	source := `typefn Box<T> {return [T];}
+ type /*decl*/Alias=Box;
+ type Ready=/*call*/Alias</*signature*/1>;
+ typefn Apply<F<_>,T> {return F<T>;}
+ type Passed=Apply</*argument*/Alias,2>;
+ typefn Use<> {type F=/*completion*/Alias;return F<3>;}
+ `
+	l, ctx, pos := typefnService(t, source)
+	for _, marker := range []string{"/*decl*/", "/*call*/", "/*argument*/"} {
+		hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(marker)})
+		if err != nil || hover.Hover == nil {
+			t.Fatalf("hover %s: %#v %v", marker, hover, err)
+		}
+		text := hover.Hover.Contents.MarkupContent.Value
+		if !strings.Contains(text, "type Alias: typefn<_>") {
+			t.Fatalf("alias kind lost: %s", text)
+		}
+		if marker == "/*call*/" && !strings.Contains(text, "[1]") {
+			t.Fatalf("alias result lost: %s", text)
+		}
+	}
+	definition, err := l.ProvideDefinition(ctx, "file:///main.ts", pos("/*argument*/"))
+	if err != nil || definition.Locations == nil || len(*definition.Locations) != 1 || (*definition.Locations)[0].Range.Start != pos("/*decl*/") {
+		t.Fatalf("alias definition: %#v %v", definition, err)
+	}
+	completion, err := l.ProvideCompletion(ctx, "file:///main.ts", pos("/*completion*/"), nil)
+	if err != nil || completion.List == nil {
+		t.Fatalf("completion: %#v %v", completion, err)
+	}
+	found := false
+	for _, item := range completion.List.Items {
+		if item.Label == "Alias" {
+			found = true
+			if item.Detail == nil || *item.Detail != "type Alias: typefn<_>" {
+				t.Fatalf("alias completion: %#v", item)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("constructor alias missing from completion")
+	}
+	signature, err := l.ProvideSignatureHelp(ctx, "file:///main.ts", pos("/*signature*/"), nil)
+	if err != nil || signature.SignatureHelp == nil || signature.SignatureHelp.Signatures[0].Label != "type Alias: typefn<_>" {
+		t.Fatalf("alias signature: %#v %v", signature, err)
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatal(ds)
+	}
+}

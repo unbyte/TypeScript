@@ -44,6 +44,7 @@ type typefnExpression struct {
 	kind              *typefnKind
 	callee            *typefnProgram
 	nativeConstructor *typefnNativeConstructor
+	constructorAlias  *typefnAlias
 	args              []*typefnExpression
 	keys              []*typefnExpression
 }
@@ -361,6 +362,20 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 		if e.symbol == nil || e.symbol == b.c.unknownSymbol {
 			b.p.valid = false
 		} else {
+			if alias := b.c.typefnConstructorAlias(e.symbol); alias != nil {
+				e.constructorAlias = alias
+				if node.Kind == ast.KindTypeFunctionName {
+					e.kind = alias.kind
+					return e
+				}
+				if len(data.Operands.Nodes) != alias.kind.resolved()-1 {
+					b.error(node, "wrong number of constructor Type arguments")
+				}
+				for _, argument := range data.Operands.Nodes {
+					e.args = append(e.args, b.typeExpression(argument))
+				}
+				return e
+			}
 			declaration := core.Find(e.symbol.Declarations(), ast.IsTypeFunctionDeclaration)
 			parameters := b.c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(e.symbol)
 			count := len(parameters)

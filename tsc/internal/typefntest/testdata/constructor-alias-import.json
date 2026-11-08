@@ -1,0 +1,12 @@
+{
+  "files": {
+    "library.ts": "constructor-alias-library.ts",
+    "main.ts": "constructor-alias-import.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

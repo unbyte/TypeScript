@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-constructor-alias-bound.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2344,
+      "file": "main.ts",
+      "message": "does not satisfy"
+    }
+  ]
+}

@@ -14,6 +14,9 @@ func typefnSymbolInfo(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, vs
 	text := ""
 	if declaration != nil {
 		text = c.TypeFunctionSignature(symbol)
+	} else if alias, _ := c.GetTypeFunctionConstructorAlias(symbol); alias != nil {
+		declaration = alias
+		text = c.TypeFunctionSignature(symbol)
 	} else {
 		declaration = core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration)
 		if declaration == nil {

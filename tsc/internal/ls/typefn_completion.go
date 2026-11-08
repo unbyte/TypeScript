@@ -107,6 +107,10 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 			kind = lsproto.CompletionItemKindFunction
 			detail = c.TypeFunctionSignature(symbol)
 		}
+		if alias, _ := c.GetTypeFunctionConstructorAlias(symbol); alias != nil {
+			kind = lsproto.CompletionItemKindFunction
+			detail = c.TypeFunctionSignature(symbol)
+		}
 		if decl != nil {
 			kind = lsproto.CompletionItemKindTypeParameter
 			detail = "type " + name + ": " + c.TypeFunctionBindingKind(decl)
@@ -260,13 +264,18 @@ func (l *LanguageService) typefnSignatureHelp(ctx context.Context, file *ast.Sou
 		}
 		symbol := c.GetSymbolAtLocation(name)
 		declaration := c.GetTypeFunctionDeclaration(symbol)
-		if declaration == nil {
-			continue
-		}
 		var parameters []*lsproto.ParameterInformation
-		for _, parameter := range declaration.TypeParameters() {
-			label := scanner.GetTextOfNode(parameter)
-			parameters = append(parameters, &lsproto.ParameterInformation{Label: lsproto.StringOrTuple{String: &label}})
+		if declaration != nil {
+			for _, parameter := range declaration.TypeParameters() {
+				label := scanner.GetTextOfNode(parameter)
+				parameters = append(parameters, &lsproto.ParameterInformation{Label: lsproto.StringOrTuple{String: &label}})
+			}
+		} else if alias, arity := c.GetTypeFunctionConstructorAlias(symbol); alias != nil {
+			for range arity {
+				parameters = append(parameters, &lsproto.ParameterInformation{Label: lsproto.StringOrTuple{String: new("_")}})
+			}
+		} else {
+			continue
 		}
 		return &lsproto.SignatureHelp{Signatures: []*lsproto.SignatureInformation{{Label: c.TypeFunctionSignature(symbol), Parameters: &parameters}}, ActiveSignature: new(uint32(0)), ActiveParameter: &lsproto.UintegerOrNull{Uinteger: &entry.argument}}
 	}

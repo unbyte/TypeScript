@@ -3071,15 +3071,17 @@ func (c *Checker) checkAccessorDeclaration(node *ast.Node) {
 
 func (c *Checker) checkTypeReferenceNode(node *ast.Node) {
 	typefnApplication := false
+	constructorAliasApplication := false
 	var typefnDeclaration *ast.Node
 	if ast.IsTypeReferenceNode(node) && c.compilerOptions.GetTypefnVersion() == 1 {
 		symbol := c.resolveEntityName(node.AsTypeReferenceNode().TypeName, ast.SymbolFlagsType, true, false, nil)
 		if symbol != nil {
 			typefnDeclaration = core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration)
+			constructorAliasApplication = c.typefnConstructorAlias(symbol) != nil
 		}
 		typefnApplication = typefnDeclaration != nil
 	}
-	if !typefnApplication {
+	if !typefnApplication && !constructorAliasApplication {
 		c.checkGrammarTypeArguments(node, node.TypeArgumentList())
 	}
 	if ast.IsTypeReferenceNode(node) && node.Flags&ast.NodeFlagsJSDoc == 0 {
@@ -7140,6 +7142,11 @@ func (c *Checker) checkTypeAliasDeclaration(node *ast.Node) {
 	typeNode := node.Type()
 	typeParameters := node.TypeParameters()
 	c.checkTypeParameters(typeParameters)
+	if alias := c.typefnConstructorAlias(c.getSymbolOfDeclaration(node)); alias != nil {
+		c.checkTypefnConstructorAlias(alias)
+		c.registerForUnusedIdentifiersCheck(node)
+		return
+	}
 	if typeNode != nil && typeNode.Kind == ast.KindIntrinsicKeyword {
 		if !(len(typeParameters) == 0 && node.Name().Text() == "BuiltinIteratorReturn" ||
 			len(typeParameters) == 1 && intrinsicTypeKinds[node.Name().Text()] != IntrinsicTypeKindUnknown) {
@@ -17684,7 +17691,7 @@ func (c *Checker) getTypeParametersForTypeReferenceOrImport(node *ast.Node) []*T
 }
 
 func (c *Checker) getTypeParametersForTypeAndSymbol(t *Type, symbol *ast.Symbol) []*Type {
-	if c.compilerOptions.GetTypefnVersion() == 1 && core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil {
+	if c.compilerOptions.GetTypefnVersion() == 1 && (core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil || c.typefnConstructorAlias(symbol) != nil) {
 		return nil
 	} // The VM checks declared bounds, not parameters of the returned Type.
 	if !c.isErrorType(t) {
@@ -24456,9 +24463,12 @@ func (c *Checker) getTupleElementType(t *Type, index int) *Type {
  */
 func (c *Checker) getTypeFromTypeAliasReference(node *ast.Node, symbol *ast.Symbol) *Type {
 	if c.compilerOptions.GetTypefnVersion() == 1 {
+		if alias := c.typefnConstructorAlias(symbol); alias != nil {
+			return c.applyTypefnConstructorAlias(node, alias)
+		}
 		if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration); declaration != nil {
 			if node.TypeArgumentList() == nil {
-				c.typefnError(node, "constructor values are not implemented yet; use an explicit application")
+				c.typefnError(node, "constructor value cannot be used as a Type")
 				return c.errorType
 			}
 			return c.evaluateTypefnReference(node, declaration)
@@ -24749,6 +24759,9 @@ func (c *Checker) getDeclaredTypeOfTypeParameter(symbol *ast.Symbol) *Type {
 
 func (c *Checker) getDeclaredTypeOfTypeAlias(symbol *ast.Symbol) *Type {
 	if c.compilerOptions.GetTypefnVersion() == 1 {
+		if c.typefnConstructorAlias(symbol) != nil {
+			return c.errorType
+		}
 		if core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration) != nil {
 			return c.errorType
 		}

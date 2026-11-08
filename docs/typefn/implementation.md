@@ -123,7 +123,8 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 * Local named helpers and anonymous Type-returning closures now execute with frozen captures.
   Factories can return constructors inside DSL computations. Mixed Type/helper-constructor
   arguments execute in DSL and native calls, including native generic constructors.
-  The native alias/island bridges remain pending.
+  Nongeneric native constructor aliases execute; constructor captures in native
+  islands remain pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
   relation proofs, scoped generic-body assumptions, latent member/signature
@@ -158,13 +159,13 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   bindings. A blocked proof suspends the call before checking later bounds.
   Native generic declarations retain native constraint semantics. Constructor
   parameters carry separate VM values through direct calls, closures and replay.
-  The native alias/island
-  bridges remain incomplete. There is no claim of optimized append or
+  Constructor captures in native islands
+  remain incomplete. There is no claim of optimized append or
   memoized VM calls.
 
 ## Validation
 
-The compiler-project harness has 286 fixtures covering native calibration, execution,
+The compiler-project harness has 294 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -192,7 +193,8 @@ outer bindings and are validated before literal chunks are attempted. Native
 opaque template holes remain opaque; final captures preserve a remaining symbolic
 suffix. Free binders that must be inspected block and replay at specialization.
 Tests cover header splitting, surrogate pairs, opaque holes, pin scope/errors,
-anchoring and resource exhaustion. Native-island patterns remain pending. Structural predicates and union iteration
+anchoring and resource exhaustion. Native-island patterns use the lexical bridge.
+Structural predicates and union iteration
 now inspect native argument/lexical-dependency summaries, retaining generic replay
 without eagerly expanding recursive native properties. Tests cover recursive
 interfaces, functions with local generic binders, inferred generic results, mapped
@@ -406,7 +408,8 @@ Bindings retain inferred arity, and factories cannot themselves become first-cla
 constructors because their result kind is not Type. A constructor may capture
 symbolic Types, but unresolved selection, bounds or creation checks block its
 publication and defer the enclosing Type-producing call. No constructor enters a
-native Type operand list. Nongeneric native constructor aliases are still pending.
+native Type operand list. Nongeneric native constructor aliases now preserve this
+readiness boundary.
 
 Stored and passed Type results retain their reached checks as well as recording
 them in the caller journal. This matters when a ready native shape with pending
@@ -448,5 +451,18 @@ still produce their default Type; bare nondefaulted generics still diagnose outs
 constructor context. Tests include composition, tuple mapping, Pick bounds,
 constructor-bound replay, captured native generic bounds, default arity, private
 classes, intrinsics and editor queries/display. Nongeneric aliases that name
-constructor *values*, such as `type AsyncArray = Compose<Promise, Array>`, still
-require the separate alias bridge.
+constructor *values*, such as `type AsyncArray = Compose<Promise, Array>`, use
+the separate alias bridge described below.
+
+Nongeneric native aliases may now name known constructor values. Their finite
+kind and ready value are cached separately from native declared Types. Aliases
+can be imported, chained, passed to constructor slots and applied in native or
+DSL syntax. Factory selection and creation checks must finish at this native
+boundary, while known closures may capture symbolic ordinary Types. Generic
+native aliases cannot return constructors. Definition checking publishes known
+alias signatures before compiling recursive helper bodies, and creation cycles
+diagnose. A bare constructor remains invalid inside native Type operands.
+Editor hover, completion, signature help and result hints preserve alias kind and
+identity without creating a recovery Type. Tests cover the documented AsyncArray
+composition, lexical captures, forward chains, imports, replay, bounds, native
+island applications, invalid Type operands and creation readiness.

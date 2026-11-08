@@ -27,6 +27,9 @@ func (c *Checker) GetTypeFunctionDeclaration(symbol *ast.Symbol) *ast.Node {
 func (c *Checker) TypeFunctionSignature(symbol *ast.Symbol) string {
 	declaration := c.GetTypeFunctionDeclaration(symbol)
 	if declaration == nil {
+		if alias, arity := c.GetTypeFunctionConstructorAlias(symbol); alias != nil {
+			return "type " + alias.Name().Text() + ": " + typefnKindDisplay(typefnConstructorKind(arity))
+		}
 		return ""
 	}
 	parameters := make([]string, 0, len(declaration.TypeParameters()))
@@ -65,10 +68,14 @@ func (c *Checker) GetTypeFunctionApplicationResult(ctx context.Context, node *as
 		return nil
 	}
 	symbol := c.resolveEntityName(node.AsTypeReferenceNode().TypeName, ast.SymbolFlagsType, true, false, nil)
-	if c.GetTypeFunctionDeclaration(symbol) == nil || node.TypeArgumentList() == nil {
+	if node.TypeArgumentList() == nil {
 		return nil
 	}
-	if declaration := c.GetTypeFunctionDeclaration(symbol); c.compileTypefn(declaration).resultKind.resolved() != 0 {
+	if declaration := c.GetTypeFunctionDeclaration(symbol); declaration != nil {
+		if c.compileTypefn(declaration).resultKind.resolved() != 0 {
+			return nil
+		}
+	} else if alias, _ := c.GetTypeFunctionConstructorAlias(symbol); alias == nil {
 		return nil
 	}
 	saved := c.ctx
@@ -102,4 +109,15 @@ func (c *Checker) TypeFunctionBindingKind(declaration *ast.Node) string {
 	}
 	p := c.compileTypefn(fn)
 	return typefnKindDisplay(p.bindings[declaration.Symbol()])
+}
+
+// Expose only declaration/kind metadata; constructor values stay checker-private.
+func (c *Checker) GetTypeFunctionConstructorAlias(symbol *ast.Symbol) (*ast.Node, int) {
+	if symbol != nil && symbol.Flags()&ast.SymbolFlagsAlias != 0 {
+		symbol = c.resolveAlias(symbol)
+	}
+	if alias := c.typefnConstructorAlias(symbol); alias != nil {
+		return alias.declaration, alias.kind.resolved() - 1
+	}
+	return nil, 0
 }

@@ -11,6 +11,7 @@ type typefnState struct {
 	nextKindIndex      int
 	closures           map[typefnClosureKey]*typefnClosure
 	nativeConstructors map[*ast.Symbol]*typefnNativeConstructor
+	aliases            map[*ast.Symbol]*typefnAlias
 	nextClosureID      uint32
 	vm                 *typefnVM
 	terms              map[typefnTermKey]*Type

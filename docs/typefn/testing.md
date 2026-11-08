@@ -1,22 +1,23 @@
 # Testing and validation
 
-Latest verification recorded on 2026-11-08, including mixed constructor arguments and native
-constructor application. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
+Latest verification recorded on 2026-11-08, including mixed constructor arguments, native
+constructors and nongeneric constructor aliases. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 286 isolated compiler-project fixtures in the full harness run. The harness checks complete
+* Passed: 294 isolated compiler-project fixtures in the full harness run. The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
   creation-check readiness, computed bounds, mixed constructor arguments, native
-  constructor identity, dependent bounds and lexical capture substitution.
+  constructor identity, dependent bounds, lexical capture substitution, constructor
+  aliases, forward chains, imports and creation cycles.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
-  after native constructor support.
+  after native constructor and alias support.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
-  baselines, rerun after the parameter AST change.
+  baselines, rerun after native constructor aliases.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.

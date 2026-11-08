@@ -40,6 +40,13 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 			}
 			parameters := b.c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
 			count, minimum := len(parameters), b.c.getMinTypeArgumentCount(parameters)
+			if alias := b.c.typefnConstructorAlias(symbol); alias != nil {
+				count = alias.kind.resolved() - 1
+				minimum = count
+				if node.TypeArgumentList() == nil {
+					b.error(node, "constructor value cannot be used as a Type")
+				}
+			}
 			if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration); declaration != nil {
 				// Local helpers require the lexical bridge below. Module calls
 				// in native syntax must produce a native Type even in dead code.

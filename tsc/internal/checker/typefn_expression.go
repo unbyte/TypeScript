@@ -32,6 +32,23 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 			}
 		}
 		value = v.callValue(e.node, e.callee.declaration, args, nil)
+	} else if e.constructorAlias != nil {
+		closure := v.constructorAlias(e.constructorAlias)
+		if v.failed {
+			return typefnValue{native: v.c.errorType}
+		}
+		if e.node.Kind == ast.KindTypeFunctionName {
+			value.closure = closure
+		} else {
+			args := make([]*Type, len(e.args))
+			for i, arg := range e.args {
+				args[i] = v.typeArgument(arg, slots)
+				if v.failed || v.blocked {
+					return typefnValue{native: v.c.errorType}
+				}
+			}
+			value.native = v.applyConstructor(e.node, closure, args)
+		}
 	} else if e.nativeConstructor != nil {
 		value.closure = v.c.internTypefnConstructor(nil, e.nativeConstructor, typefnTypeValues(e.nativeConstructor.outer))
 	} else if e.helper != nil {

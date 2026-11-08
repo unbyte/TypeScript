@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-constructor-alias-generic.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "a native constructor alias must be nongeneric"
+    }
+  ]
+}

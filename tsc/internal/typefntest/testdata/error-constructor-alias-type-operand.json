@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-helper-value-native-bare.ts"
+    "main.ts": "error-constructor-alias-type-operand.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "application requires 1..1 Type arguments"
+      "message": "constructor value cannot be used as a Type"
     }
   ]
 }

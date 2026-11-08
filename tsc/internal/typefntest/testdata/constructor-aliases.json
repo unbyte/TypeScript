@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "constructor-aliases.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}
