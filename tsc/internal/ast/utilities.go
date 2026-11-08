@@ -2334,7 +2334,7 @@ const (
 
 func GetMeaningFromDeclaration(node *Node) SemanticMeaning {
 	switch node.Kind {
-	case KindTypeFunctionDeclaration, KindTypeFunctionBinding, KindTypeFunctionForOf, KindTypeFunctionForIn:
+	case KindTypeFunctionDeclaration, KindTypeFunctionBinding, KindTypeFunctionCapturePattern, KindTypeFunctionForOf, KindTypeFunctionForIn:
 		return SemanticMeaningType
 
 	case KindVariableDeclaration:
@@ -3714,7 +3714,7 @@ func GetNonAugmentationDeclaration(symbol *Symbol) *Node {
 
 func IsTypeDeclaration(node *Node) bool {
 	switch node.Kind {
-	case KindTypeParameter, KindClassDeclaration, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration, KindTypeFunctionBinding, KindTypeFunctionForOf, KindTypeFunctionForIn, KindEnumDeclaration:
+	case KindTypeParameter, KindClassDeclaration, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration, KindTypeFunctionBinding, KindTypeFunctionCapturePattern, KindTypeFunctionForOf, KindTypeFunctionForIn, KindEnumDeclaration:
 		return true
 	case KindImportClause:
 		return node.IsTypeOnly() && node.AsImportClause().Name() != nil

@@ -166,5 +166,6 @@ coverage and the limits of the validation evidence.
 Native AST, parser, printer and public API nodes now preserve match arms, guards,
 all pattern forms, and template capture/pin boundaries. Parser tests cover source
 spans, malformed arms, rest placement and nesting limits; printer and API tests
-check round trips. Evaluation is still explicitly rejected in this intermediate
-commit; syntax acceptance alone is not match support.
+check round trips. Captures now bind in native arm scopes, with pins and pattern Type expressions
+using the outer scope. Definition, rename, completion and hover tests cover that
+boundary. Evaluation is still explicitly rejected in this intermediate commit; syntax acceptance alone is not match support.

@@ -415,3 +415,53 @@ func TestTypefnIncompleteBufferQueries(t *testing.T) {
 		})
 	}
 }
+
+func TestTypefnPatternCaptureScope(t *testing.T) {
+	source := "typefn F<T> { type /*outer*/item = \"/\"; match (/*subject*/item) { `${/*capture*/item}${=/*pin*/item}${tail}` if (/*guard*/item == \"a\") => { return /*body*/item; } _ => { return /*fallback*/item; } } return /*after*/item; }"
+	l, ctx, pos := typefnService(t, source)
+	for _, test := range []struct{ use, decl string }{{"/*subject*/", "/*outer*/"}, {"/*pin*/", "/*outer*/"}, {"/*guard*/", "/*capture*/"}, {"/*body*/", "/*capture*/"}, {"/*fallback*/", "/*outer*/"}, {"/*after*/", "/*outer*/"}} {
+		response, err := l.ProvideDefinition(ctx, "file:///main.ts", pos(test.use))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response.Locations == nil || len(*response.Locations) != 1 || (*response.Locations)[0].Range.Start != pos(test.decl) {
+			t.Fatalf("definition %s: %#v", test.use, response)
+		}
+	}
+	hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*body*/")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hover.Hover == nil || !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "pattern binding") {
+		t.Fatalf("capture hover: %#v", hover.Hover)
+	}
+	edits, err := l.ProvideRename(ctx, &lsproto.RenameParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*body*/"), NewName: "captured"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if edits.WorkspaceEdit == nil || len((*edits.WorkspaceEdit.Changes)["file:///main.ts"]) != 3 {
+		t.Fatalf("capture rename: %#v", edits)
+	}
+	// The capture 'tail' has no outer namesake: completion must exclude it in pins
+	// and expose it in guards/bodies, without needing VM evaluation.
+	for _, test := range []struct {
+		marker  string
+		visible bool
+	}{{"/*pin*/", false}, {"/*guard*/", true}, {"/*body*/", true}, {"/*fallback*/", false}} {
+		response, err := l.ProvideCompletion(ctx, "file:///main.ts", pos(test.marker), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		found := false
+		if response.List != nil {
+			for _, item := range response.List.Items {
+				if item.Label == "tail" {
+					found = true
+				}
+			}
+		}
+		if found != test.visible {
+			t.Fatalf("tail visibility at %s: %v", test.marker, found)
+		}
+	}
+}

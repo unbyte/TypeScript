@@ -180,3 +180,9 @@ fixes, project-reference/source-map coverage, or complete API factory compatibil
 The broader conformance suite and complete native-operation resource accounting
 remain required before describing the language as mature.
 See [implementation status](implementation.md) for the remaining specification gaps.
+
+Pattern captures use native arm-local symbols. They are visible in the guard and
+body, while pins and pattern Type expressions resolve in the outer environment.
+Capture rename does not rename a same-named outer binding or another arm. Hover
+identifies immutable pattern bindings, and semantic tokens color `match` as a
+keyword and captures as readonly Types.

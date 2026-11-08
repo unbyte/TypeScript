@@ -820,9 +820,9 @@ func (c *Checker) someSymbolTableInScope(
 	enclosingDeclaration *ast.Node,
 	callback func(symbolTable ast.SymbolTable, tableId symbolTableID, ignoreQualification bool, isLocalNameLookup bool, scopeNode *ast.Node) bool,
 ) bool {
-	for location := enclosingDeclaration; location != nil; location = location.Parent {
+	for lastLocation, location := (*ast.Node)(nil), enclosingDeclaration; location != nil; lastLocation, location = location, location.Parent {
 		// Locals of a source file are not in scope (because they get merged into the global symbol table)
-		if canHaveLocals(location) && location.Locals() != nil && !ast.IsGlobalSourceFile(location) {
+		if canHaveLocals(location) && location.Locals() != nil && !ast.IsGlobalSourceFile(location) && ast.TypeFunctionScopeVisible(location, lastLocation) {
 			if callback(location.Locals(), symbolTableIDFromLocals(location.AsNode()), false, true, location) {
 				return true
 			}

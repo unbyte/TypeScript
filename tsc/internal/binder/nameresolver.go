@@ -50,7 +50,7 @@ loop:
 			lastLocation == location.AsModuleDeclaration().Attributes
 		locals := location.Locals()
 		// Locals of a source file are not in scope (because they get merged into the global symbol table)
-		if locals != nil && !ast.IsGlobalSourceFile(location) {
+		if locals != nil && !ast.IsGlobalSourceFile(location) && ast.TypeFunctionScopeVisible(location, lastLocation) {
 			result = r.lookup(locals, name, meaning)
 			if result != nil {
 				useResult := true

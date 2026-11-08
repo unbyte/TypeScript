@@ -11,7 +11,7 @@ func IsTypeFunctionIteration(node *Node) bool {
 }
 
 func IsTypeFunctionLocalDeclaration(node *Node) bool {
-	return node != nil && (node.Kind == KindTypeFunctionBinding || IsTypeFunctionIteration(node))
+	return node != nil && (node.Kind == KindTypeFunctionBinding || node.Kind == KindTypeFunctionCapturePattern || IsTypeFunctionIteration(node))
 }
 
 // TypeFunctionReference returns the whole qualified Type name for a DSL read,
@@ -62,4 +62,10 @@ func visitEachChild_TypeFunctionExpression(node *TypeFunctionExpression, v *Node
 		operands = v.visitNodes(operands)
 	}
 	return v.Factory.UpdateTypeFunctionExpression(node, name, operands, operator, v.visitNode(node.NativeType), node.Readonly, node.Optional)
+}
+
+// Captures are in scope in the guard and body, never in the arm's patterns.
+// In particular, pins and Type expressions refer to the enclosing environment.
+func TypeFunctionScopeVisible(scope, child *Node) bool {
+	return scope.Kind != KindTypeFunctionMatchArm || child != scope.AsTypeFunctionMatchArm().Pattern
 }

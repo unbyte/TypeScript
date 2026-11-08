@@ -282,7 +282,7 @@ func (l *LanguageService) collectSemanticTokensInRange(ctx context.Context, c *c
 					if parent != nil && parent.Kind == ast.KindTypeFunctionAssignment && parent.Name() == node {
 						tokenModifier |= tokenModifierModification
 					}
-					if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration); declaration != nil && ast.IsTypeFunctionIteration(declaration) {
+					if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration); declaration != nil && (ast.IsTypeFunctionIteration(declaration) || declaration.Kind == ast.KindTypeFunctionCapturePattern) {
 						tokenModifier |= tokenModifierReadonly
 					}
 					// Type-based reclassification
@@ -411,7 +411,7 @@ func tokenFromDeclarationMapping(kind ast.Kind) tokenType {
 		return tokenTypeProperty
 	case ast.KindInterfaceDeclaration:
 		return tokenTypeInterface
-	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBinding, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBinding, ast.KindTypeFunctionCapturePattern, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
 		return tokenTypeType
 	case ast.KindTypeParameter:
 		return tokenTypeTypeParameter

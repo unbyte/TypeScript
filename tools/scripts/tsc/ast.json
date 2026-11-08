@@ -5444,6 +5444,7 @@
             "TypeFunctionMatchArm": {
                 "extends": [
                     "NodeBase",
+                    "LocalsContainerBase",
                     "TypeSyntaxBase"
                 ],
                 "members": [

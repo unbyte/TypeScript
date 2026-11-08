@@ -9172,6 +9172,7 @@ func IsTypeFunctionMatch(node *Node) bool {
 type TypeFunctionMatchArm struct {
 	TypeSyntaxBase
 	NodeBase
+	LocalsContainerBase
 	Pattern *Node
 	Guard   *Node // Optional
 	Body    *TypeFunctionBlockNode
@@ -13269,6 +13270,7 @@ var nodeLocalsContainerDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindModuleDeclaration:           27,
 	KindTypeFunctionDeclaration:     28,
 	KindTypeFunctionBlock:           29,
+	KindTypeFunctionMatchArm:        30,
 }
 
 func (n *Node) LocalsContainerData() *LocalsContainerBase {
@@ -13360,6 +13362,9 @@ func (n *Node) LocalsContainerData() *LocalsContainerBase {
 	case 29:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionBlock, which embeds its Node header at offset zero.
 		return (*TypeFunctionBlock)(unsafe.Pointer(n)).LocalsContainerData()
+	case 30:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatchArm, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatchArm)(unsafe.Pointer(n)).LocalsContainerData()
 	default:
 		return nil
 	}

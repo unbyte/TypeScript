@@ -447,7 +447,7 @@ func (b *Binder) declareSymbolAndAddToSymbolTable(node *ast.Node, symbolFlags as
 	case ast.KindFunctionType, ast.KindConstructorType, ast.KindCallSignature, ast.KindConstructSignature,
 		ast.KindIndexSignature, ast.KindMethodDeclaration, ast.KindMethodSignature, ast.KindConstructor, ast.KindGetAccessor,
 		ast.KindSetAccessor, ast.KindFunctionDeclaration, ast.KindFunctionExpression, ast.KindArrowFunction,
-		ast.KindClassStaticBlockDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBlock, ast.KindMappedType:
+		ast.KindClassStaticBlockDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBlock, ast.KindTypeFunctionMatchArm, ast.KindMappedType:
 		return b.declareSymbol(ast.GetLocals(b.container), nil /*parent*/, node, symbolFlags, symbolExcludes)
 	}
 	panic("Unhandled case in declareSymbolAndAddToSymbolTable")
@@ -601,7 +601,7 @@ func (b *Binder) bind(node *ast.Node) bool {
 	// However, not all symbols will end up in any of these tables. 'Anonymous' symbols
 	// (like TypeLiterals for example) will not be put in any table.
 	switch node.Kind {
-	case ast.KindTypeFunctionBinding:
+	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionCapturePattern:
 		b.declareSymbolAndAddToSymbolTable(node, ast.SymbolFlagsTypeAlias, ast.SymbolFlagsTypeAliasExcludes)
 
 	case ast.KindIdentifier:
@@ -2607,7 +2607,7 @@ func SetValueDeclaration(symbol *ast.Symbol, node *ast.Node) {
 func GetContainerFlags(node *ast.Node) ContainerFlags {
 	switch node.Kind {
 	case ast.KindTypeFunctionBlock:
-		if ast.IsTypeFunctionDeclaration(node.Parent) {
+		if ast.IsTypeFunctionDeclaration(node.Parent) || node.Parent.Kind == ast.KindTypeFunctionMatchArm {
 			return ContainerFlagsNone
 		}
 		return ContainerFlagsIsContainer | ContainerFlagsHasLocals
@@ -2617,7 +2617,7 @@ func GetContainerFlags(node *ast.Node) ContainerFlags {
 		return ContainerFlagsIsContainer
 	case ast.KindInterfaceDeclaration:
 		return ContainerFlagsIsContainer | ContainerFlagsIsInterface
-	case ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindMappedType, ast.KindIndexSignature:
+	case ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionMatchArm, ast.KindMappedType, ast.KindIndexSignature:
 		return ContainerFlagsIsContainer | ContainerFlagsHasLocals
 	case ast.KindSourceFile:
 		return ContainerFlagsIsContainer | ContainerFlagsIsControlFlowContainer | ContainerFlagsHasLocals
