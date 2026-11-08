@@ -27,6 +27,7 @@ type typefnInstruction struct {
 	node         *ast.Node
 	expr         *typefnExpression
 	slot, target int
+	iterator     int
 }
 type typefnExpression struct {
 	node   *ast.Node
@@ -39,6 +40,7 @@ type typefnProgram struct {
 	declaration *ast.Node
 	code        []typefnInstruction
 	slots       int
+	iterators   int
 	valid       bool
 }
 type typefnBinding struct {
@@ -172,8 +174,10 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		} else {
 			b.scopes = append(b.scopes, map[string]typefnBinding{})
 			slot := b.bind(node.Name(), false)
-			b.emit(typefnInstruction{op: tfIterStart, node: node, expr: expr, slot: slot})
-			next = b.emit(typefnInstruction{op: tfIterNext, node: node, slot: slot})
+			iterator := b.p.iterators
+			b.p.iterators++
+			b.emit(typefnInstruction{op: tfIterStart, node: node, expr: expr, slot: slot, iterator: iterator})
+			next = b.emit(typefnInstruction{op: tfIterNext, node: node, slot: slot, iterator: iterator})
 			exit = next
 			b.block(s.Body, false)
 			b.scopes = b.scopes[:len(b.scopes)-1]
