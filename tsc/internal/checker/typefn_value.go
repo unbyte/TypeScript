@@ -22,6 +22,13 @@ func (v *typefnVM) nativeValue(node *ast.Node, value typefnValue) *Type {
 // Deferred expression terms already own immutable value snapshots. Execution
 // reads them without copying or permitting assignment to their captured registers.
 func (v *typefnVM) replayExpression(e *typefnExpression, slots []typefnValue) *Type {
+	size := typefnNativeEnvironmentSize(e.environment)
+	if !v.reserveValues(e.node, size) {
+		return v.c.errorType
+	}
+	savedMapper := v.nativeMapper
+	v.nativeMapper = typefnNativeEnvironment(e.environment, slots)
+	defer func() { v.nativeMapper = savedMapper; v.liveBytes -= size }()
 	value := v.expression(e, slots)
 	if v.blocked && !v.failed {
 		v.blocked = false

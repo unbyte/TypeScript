@@ -36,6 +36,7 @@ type typefnInstruction struct {
 }
 type typefnExpression struct {
 	node              *ast.Node
+	environment       *typefnProgram
 	slot              int
 	symbol            *ast.Symbol
 	intrinsic         string
@@ -321,7 +322,7 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 }
 
 func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
-	e := &typefnExpression{node: node, slot: -1}
+	e := &typefnExpression{node: node, slot: -1, environment: b.p}
 	if node.Kind == ast.KindTypeFunctionLambda {
 		e.helper = b.compileFunction(node, b)
 		e.kind = typefnConstructorKind(len(node.TypeParameters()))

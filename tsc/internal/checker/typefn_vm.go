@@ -251,7 +251,7 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, cl
 	// Charge register/argument backing storage and iterator slots, in addition to
 	// the existing fixed bookkeeping allowance. No iterator storage is allocated
 	// for programs that do not iterate.
-	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof(typefnValue{})) + len(p.nativeOuter)*int(unsafe.Sizeof((*Type)(nil))) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
+	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof(typefnValue{})) + typefnNativeEnvironmentSize(p) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
 	if frameBytes > v.limits.LiveBytes-v.liveBytes {
 		return typefnValue{native: v.error(node, "live VM allocation limit exceeded")}
 	}
@@ -274,14 +274,7 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, cl
 		}
 	}
 	savedMapper := v.nativeMapper
-	v.nativeMapper = nil
-	if len(p.nativeOuter) != 0 {
-		values := make([]*Type, len(p.nativeOuter))
-		for i, slot := range p.nativeSlots {
-			values[i] = registers[slot].native
-		}
-		v.nativeMapper = newTypeMapper(p.nativeOuter, values)
-	}
+	v.nativeMapper = typefnNativeEnvironment(p, registers)
 	defer func() { v.nativeMapper = savedMapper }()
 	if !v.inputConstraints(node, p, registers, args) {
 		return typefnValue{native: v.c.errorType}

@@ -212,6 +212,13 @@ func (v *typefnVM) observe(t *Type) *Type {
 
 func (v *typefnVM) deferExpression(e *typefnExpression, slots []typefnValue) *Type {
 	frozen := make([]typefnValue, len(slots))
+	// Native names are implicit reads through the lexical mapper, so their
+	// environment slots are dependencies even without an explicit slot operand.
+	if e.environment != nil {
+		for _, slot := range e.environment.nativeSlots {
+			frozen[slot] = slots[slot]
+		}
+	}
 	var capture func(*typefnExpression)
 	capture = func(e *typefnExpression) {
 		if e == nil {

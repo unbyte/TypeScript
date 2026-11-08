@@ -46,3 +46,26 @@ func (v *typefnVM) apply(node *ast.Node, symbol *ast.Symbol, args []*Type) *Type
 	}
 	return v.mapNative(v.c.getDeclaredTypeOfSymbol(symbol))
 }
+
+// Calls and expression recipes rebuild the same native mapper from their frozen
+// register snapshot. No replay depends on an incidental caller environment.
+func typefnNativeEnvironment(p *typefnProgram, slots []typefnValue) *TypeMapper {
+	if p == nil || len(p.nativeOuter) == 0 {
+		return nil
+	}
+	values := make([]*Type, len(p.nativeOuter))
+	for i, slot := range p.nativeSlots {
+		values[i] = slots[slot].native
+	}
+	return newTypeMapper(p.nativeOuter, values)
+}
+func typefnNativeEnvironmentSize(p *typefnProgram) int {
+	if p == nil || len(p.nativeOuter) == 0 {
+		return 0
+	}
+	size := len(p.nativeOuter) * int(unsafe.Sizeof((*Type)(nil)))
+	if len(p.nativeOuter) == 1 {
+		return size + int(unsafe.Sizeof(SimpleTypeMapper{}))
+	}
+	return size + int(unsafe.Sizeof(ArrayTypeMapper{}))
+}

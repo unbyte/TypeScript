@@ -165,7 +165,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 302 fixtures covering native calibration, execution,
+The compiler-project harness has 303 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -496,3 +496,9 @@ verify that two different outer substitutions cannot contaminate each other.
 Tests also cover nested native generic functions, class methods and actual bound
 failures after specialization. Native mapper backing storage is charged with the
 invocation frame, and native constructor snapshots charge their temporary storage.
+
+Deferred expression snapshots also retain implicit native environment slots, not
+just registers named by explicit operands. Expression replay rebuilds its mapper
+from that frozen snapshot using the same layout as call replay. Tests cover text
+and tuple intrinsics, computed object keys, and a local value changed after the
+original expression was captured. Mapper storage is charged before allocation.
