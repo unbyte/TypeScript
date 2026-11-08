@@ -503,6 +503,8 @@ func (n *Node) TypeParameterList() *NodeList {
 	switch n.Kind {
 	case KindTypeFunctionDeclaration:
 		return n.AsTypeFunctionDeclaration().TypeParameters
+	case KindTypeFunctionLambda:
+		return n.AsTypeFunctionLambda().TypeParameters
 	case KindClassDeclaration:
 		return n.AsClassDeclaration().TypeParameters
 	case KindClassExpression:

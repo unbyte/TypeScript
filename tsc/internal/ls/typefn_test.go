@@ -549,3 +549,27 @@ func TestTypefnLocalHelperCompletionOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnLambdaScopesAndDisplay(t *testing.T) {
+	source := `typefn F<T> {type /*decl*/saved=T; type fn=typefn<U> {if(/*capture*/saved == "yes") {return U;} return false;}; return {value:fn<1>};} type /*pending*/Pending<T>=F<T>; type Value=Pending<"yes">;`
+	l, ctx, pos := typefnService(t, source)
+	result, err := l.ProvideDefinition(ctx, "file:///main.ts", pos("/*capture*/"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Locations == nil || len(*result.Locations) != 1 || (*result.Locations)[0].Range.Start != pos("/*decl*/") {
+		t.Fatalf("wrong captured symbol: %#v", result)
+	}
+	for _, marker := range []string{"/*capture*/", "/*pending*/"} {
+		hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(marker)})
+		if err != nil || hover.Hover == nil {
+			t.Fatalf("hover %s: %#v %v", marker, hover, err)
+		}
+		if marker == "/*capture*/" && !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "capture, readonly") {
+			t.Fatal(hover.Hover.Contents.MarkupContent.Value)
+		}
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatal(ds)
+	}
+}

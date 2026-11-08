@@ -120,8 +120,8 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   accounting still require work.
 * The calculator, numeric and HTTP-route examples execute directly from their
   documentation sources. They are milestones, not full conformance coverage.
-* Local named Type-returning helpers now execute with frozen captures. Anonymous
-  closures, constructor slots/results and restricted HKT
+* Local named helpers and anonymous Type-returning closures now execute with frozen captures.
+  Constructor slots/results and restricted HKT
   composition remain pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
@@ -163,7 +163,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 243 fixtures covering native calibration, execution,
+The compiler-project harness has 250 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -370,7 +370,7 @@ and conservatively wait for symbolic captures. Module-level bound timing/scope
 remains separately tracked above.
 
 Editor tests cover native helper/capture definitions and rename, readonly capture
-hover, and declaration-ordered helper completion with self-reference. Anonymous closures, constructor slots/results and constructor
+hover, and declaration-ordered helper completion with self-reference. Constructor slots/results and constructor
 captures in native islands still diagnose explicitly until their integration lands.
 
 Eligible named helpers can now be bound as constructor values (`type F = Box;`)
@@ -381,3 +381,13 @@ freeze the selected constructor, and generic substitution maps captured Types.
 Module helper aliases retain native input constraints and share deferred-call
 identity with direct calls. Native generic names still require explicit constructor
 context; a bare defaulted native alias retains its ordinary Type meaning.
+
+Anonymous `typefn<T> { ... }` expressions now capture the lexical environment at
+expression evaluation and produce fixed-arity Type-returning constructors. Their
+native AST node owns its parameter/body scope without a synthetic declaration
+name. Tests cover nested closures/helpers, shadowing, captured bounds, loop
+snapshots, reassignment, native islands, blocked calls and expression replay.
+The parser/printer, binder, AST serializer/transformer and editor capture scope
+share this representation. An anonymous initializer cannot recursively refer to
+its own still-uninitialized binding; named local helpers supply explicit self
+recursion. Constructor-valued results and constructor parameters remain pending.

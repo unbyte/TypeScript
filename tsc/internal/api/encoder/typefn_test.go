@@ -18,6 +18,7 @@ func TestTypefnEncodeDecode(t *testing.T) {
  if (T is number) { x = T * 2; } else { x = 0; }
  return { readonly data?: [x, ...T]; ["key"]: F<x> };
  }`
+	source += "\ntypefn Lambdas<T> { type F = typefn<U extends T>: type { return U; }; type Z = typefn<> { return 1; }; return F<Z<>>; }"
 	source += "\ntypefn Text<T> { return `a${T + 1}b${T}c`; }"
 	source += "\ntypefn Match<T> { match (T) { [head, ...rest] if (true) => { return head; } `GET ${path}${=\"/\"}` => { return path; } _ => { return never; } } }"
 	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}, source, core.ScriptKindTS)

@@ -24,7 +24,11 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 			value = slots[e.slot]
 		}
 	} else if e.helper != nil {
-		value = typefnValue{closure: v.c.internTypefnClosure(e.helper, nil)}
+		if e.helper.local {
+			value = typefnValue{closure: v.captureHelper(e.helper, slots)}
+		} else {
+			value = typefnValue{closure: v.c.internTypefnClosure(e.helper, nil)}
+		}
 	} else {
 		value = typefnValue{native: v.expressionWorker(e, slots)}
 	}

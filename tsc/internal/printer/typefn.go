@@ -90,14 +90,17 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 				p.emitTypefn(d.Expression)
 			}
 		}
-	case ast.KindTypeFunctionDeclaration:
-		d := node.AsTypeFunctionDeclaration()
-		p.emitModifierList(node, node.Modifiers(), false)
+	case ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionLambda:
+		if ast.IsTypeFunctionDeclaration(node) {
+			p.emitModifierList(node, node.Modifiers(), false)
+		}
 		p.writeKeyword("typefn")
-		p.writeSpace()
-		p.emitBindingIdentifier(node.Name().AsIdentifier())
+		if ast.IsTypeFunctionDeclaration(node) {
+			p.writeSpace()
+			p.emitBindingIdentifier(node.Name().AsIdentifier())
+		}
 		p.writePunctuation("<")
-		for i, parameter := range d.TypeParameters.Nodes {
+		for i, parameter := range node.TypeParameters() {
 			if i > 0 {
 				p.writePunctuation(",")
 				p.writeSpace()
@@ -105,13 +108,13 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 			p.emitTypeParameter(parameter.AsTypeParameterDeclaration())
 		}
 		p.writePunctuation(">")
-		if d.ResultKind != nil {
+		if kind := ast.TypeFunctionResultKind(node); kind != nil {
 			p.writePunctuation(":")
 			p.writeSpace()
-			p.emitTypefn(d.ResultKind)
+			p.emitTypefn(kind)
 		}
 		p.writeSpace()
-		p.emitTypefn(d.Body)
+		p.emitTypefn(ast.TypeFunctionBody(node))
 	case ast.KindTypeFunctionKind:
 		d := node.AsTypeFunctionKind()
 		if d.KindToken.Kind == ast.KindIdentifier {

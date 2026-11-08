@@ -17,6 +17,9 @@ func (b *NodeBuilderImpl) typefnTypeToTypeNode(t *Type) *ast.Node {
 	d := t.asTypefnTerm()
 	switch d.kind {
 	case typefnCallTerm:
+		if ast.IsTypeFunctionLambda(d.declaration) {
+			return b.f.NewTypeReferenceNode(b.f.NewIdentifier("typefn closure"), b.f.NewNodeList(core.Map(d.args, b.typeToTypeNode)))
+		}
 		return b.symbolToTypeNode(d.declaration.Symbol(), ast.SymbolFlagsType, b.f.NewNodeList(core.Map(d.args, b.typeToTypeNode)))
 	case typefnNativeCallTerm:
 		return b.symbolToTypeNode(d.symbol, ast.SymbolFlagsType, b.f.NewNodeList(core.Map(d.args, b.typeToTypeNode)))
@@ -41,10 +44,13 @@ func (b *NodeBuilderImpl) typefnDisplayLiteral(t *Type) *ast.Node {
 }
 
 func (b *NodeBuilderImpl) typefnExpressionToNode(e *typefnExpression, slots []typefnValue) *ast.Node {
+	if ast.IsTypeFunctionLambda(e.node) {
+		return e.node
+	}
 	if e.slot >= 0 {
 		value := slots[e.slot]
 		if value.closure != nil {
-			name := b.f.NewIdentifier(value.closure.program.declaration.Name().Text())
+			name := e.node.Name()
 			if e.node.Kind == ast.KindTypeFunctionCall {
 				args := core.Map(e.args, func(arg *typefnExpression) *ast.Node { return b.typefnExpressionToNode(arg, slots) })
 				return b.f.NewTypeFunctionExpression(ast.KindTypeFunctionCall, name, b.f.NewNodeList(args), nil, nil, false, false)

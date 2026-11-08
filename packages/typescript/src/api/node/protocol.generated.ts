@@ -177,6 +177,7 @@ export const childProperties: Readonly<Partial<Record<SyntaxKind, readonly (stri
     [SyntaxKind.JSDocParameterTag]: ["tagName", "name", "typeExpression", "comment"],
     [SyntaxKind.JSDocPropertyTag]: ["tagName", "name", "typeExpression", "comment"],
     [SyntaxKind.TypeFunctionDeclaration]: ["modifiers", "name", "typeParameters", "resultKind", "body"],
+    [SyntaxKind.TypeFunctionLambda]: ["typeParameters", "resultKind", "body"],
     [SyntaxKind.TypeFunctionBlock]: ["statements"],
     [SyntaxKind.TypeFunctionBinding]: ["name", "expression", "body", "elseBody"],
     [SyntaxKind.TypeFunctionAssignment]: ["name", "expression", "body", "elseBody"],

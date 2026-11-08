@@ -1151,6 +1151,12 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		resultKind := d.nodeAt(it.nextIf(mask, 3))
 		body := d.nodeAt(it.nextIf(mask, 4))
 		return d.factory.NewTypeFunctionDeclaration(modifiers, name, typeParameters, resultKind, body), nil
+	case ast.KindTypeFunctionLambda:
+		it := newChildIter(childIndices)
+		typeParameters := d.nodeListAt(it.nextIf(mask, 0))
+		resultKind := d.nodeAt(it.nextIf(mask, 1))
+		body := d.nodeAt(it.nextIf(mask, 2))
+		return d.factory.NewTypeFunctionLambda(typeParameters, resultKind, body), nil
 	case ast.KindTypeFunctionBlock:
 		return d.factory.NewTypeFunctionBlock(d.singleNodeListChild(childIndices)), nil
 	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionAssignment, ast.KindTypeFunctionReturn, ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn, ast.KindTypeFunctionBreak, ast.KindTypeFunctionContinue, ast.KindTypeFunctionExpressionStatement:

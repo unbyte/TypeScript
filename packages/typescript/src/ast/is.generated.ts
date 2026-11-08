@@ -314,6 +314,7 @@ import type {
     TypeFunctionExpression,
     TypeFunctionExpressionKind,
     TypeFunctionKind,
+    TypeFunctionLambda,
     TypeFunctionMatch,
     TypeFunctionMatchArm,
     TypeFunctionPattern,
@@ -2075,6 +2076,15 @@ export declare namespace isTypeFunctionDeclaration {
     function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionDeclaration>;
 }
 isTypeFunctionDeclaration.Handle = isTypeFunctionDeclaration as any;
+
+export function isTypeFunctionLambda(node: Node): node is TypeFunctionLambda {
+    return node.kind === SyntaxKind.TypeFunctionLambda;
+}
+
+export declare namespace isTypeFunctionLambda {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionLambda>;
+}
+isTypeFunctionLambda.Handle = isTypeFunctionLambda as any;
 
 export function isTypeFunctionBlock(node: Node): node is TypeFunctionBlock {
     return node.kind === SyntaxKind.TypeFunctionBlock;

@@ -53,6 +53,7 @@ type typefnProgram struct {
 	iterators   int
 	valid       bool
 	selfSlot    int
+	local       bool
 	captures    []typefnCapture
 	bounds      []*typefnExpression
 }
@@ -275,6 +276,13 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 
 func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 	e := &typefnExpression{node: node, slot: -1}
+	if node.Kind == ast.KindTypeFunctionLambda {
+		e.helper = b.c.compileTypefnWithParent(node, b)
+		if !e.helper.valid {
+			b.p.valid = false
+		}
+		return e
+	}
 	if node.Kind == ast.KindTypeFunctionTemplate {
 		for _, span := range node.AsTypeFunctionTemplate().Spans.Nodes {
 			e.args = append(e.args, b.typeExpression(span.AsTypeFunctionTemplateSpan().Expression))
@@ -363,7 +371,7 @@ func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
 		return c.typefn.programs[node]
 	}
 	for parent := node.Parent; parent != nil; parent = parent.Parent {
-		if ast.IsTypeFunctionDeclaration(parent) {
+		if ast.IsTypeFunctionLike(parent) {
 			c.compileTypefn(parent)
 			if p := c.getTypefnState().programs[node]; p != nil {
 				return p
@@ -382,7 +390,7 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 	if p := state.programs[node]; p != nil {
 		return p
 	}
-	p := &typefnProgram{declaration: node, valid: true, selfSlot: -1}
+	p := &typefnProgram{declaration: node, valid: true, selfSlot: -1, local: parent != nil}
 	state.programs[node] = p
 	// Semantic diagnostics are also requested on incomplete editor snapshots.
 	// Recovery nodes are for syntax services; never lower them to executable code.
@@ -391,10 +399,10 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 		return p
 	}
 	b := typefnCompiler{c: c, p: p, scopes: []map[string]typefnBinding{{}}, parent: parent, boundParameter: -1}
-	if kind := node.AsTypeFunctionDeclaration().ResultKind; kind != nil && kind.AsTypeFunctionKind().KindToken.Kind == ast.KindIdentifier {
+	if kind := ast.TypeFunctionResultKind(node); kind != nil && kind.AsTypeFunctionKind().KindToken.Kind == ast.KindIdentifier {
 		b.error(kind, "constructor results are not implemented yet")
 	}
-	if typefnReserved(node.Name().Text()) {
+	if node.Name() != nil && typefnReserved(node.Name().Text()) {
 		b.error(node.Name(), "reserved function name "+node.Name().Text())
 	}
 	for _, parameter := range node.TypeParameters() {
@@ -404,11 +412,13 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 		}
 	}
 	if parent != nil {
-		// Parameters/body may shadow the helper's self-name; captures cannot mutate it.
-		p.selfSlot = p.slots
-		p.slots++
-		self := map[string]typefnBinding{node.Name().Text(): {slot: p.selfSlot, symbol: node.Symbol(), helper: p}}
-		b.scopes = append([]map[string]typefnBinding{self}, b.scopes...)
+		if node.Name() != nil {
+			// Parameters/body may shadow the helper's self-name; captures cannot mutate it.
+			p.selfSlot = p.slots
+			p.slots++
+			self := map[string]typefnBinding{node.Name().Text(): {slot: p.selfSlot, symbol: node.Symbol(), helper: p}}
+			b.scopes = append([]map[string]typefnBinding{self}, b.scopes...)
+		}
 		p.bounds = make([]*typefnExpression, len(node.TypeParameters()))
 		for i, parameter := range node.TypeParameters() {
 			if constraint := parameter.AsTypeParameterDeclaration().Constraint; constraint != nil {
@@ -421,9 +431,9 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 			}
 		}
 	}
-	b.block(node.AsTypeFunctionDeclaration().Body, false)
+	b.block(ast.TypeFunctionBody(node), false)
 	if p.valid && p.canFallThrough() {
-		b.error(node.Name(), "a control-flow path reaches the end without returning a value")
+		b.error(node, "a control-flow path reaches the end without returning a value")
 	}
 	return p
 }

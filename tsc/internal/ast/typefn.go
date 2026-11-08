@@ -69,3 +69,23 @@ func visitEachChild_TypeFunctionExpression(node *TypeFunctionExpression, v *Node
 func TypeFunctionScopeVisible(scope, child *Node) bool {
 	return scope.Kind != KindTypeFunctionMatchArm || child != scope.AsTypeFunctionMatchArm().Pattern
 }
+
+// Named and anonymous DSL functions share lexical/capture rules, but lambdas
+// have no declaration name, export symbol or JavaScript function semantics.
+func IsTypeFunctionLike(node *Node) bool {
+	return node != nil && (node.Kind == KindTypeFunctionDeclaration || node.Kind == KindTypeFunctionLambda)
+}
+
+func TypeFunctionBody(node *Node) *Node {
+	if node.Kind == KindTypeFunctionLambda {
+		return node.AsTypeFunctionLambda().Body
+	}
+	return node.AsTypeFunctionDeclaration().Body
+}
+
+func TypeFunctionResultKind(node *Node) *Node {
+	if node.Kind == KindTypeFunctionLambda {
+		return node.AsTypeFunctionLambda().ResultKind
+	}
+	return node.AsTypeFunctionDeclaration().ResultKind
+}

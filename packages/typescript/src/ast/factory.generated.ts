@@ -247,6 +247,7 @@ import type {
     TypeFunctionExpression,
     TypeFunctionExpressionKind,
     TypeFunctionKind,
+    TypeFunctionLambda,
     TypeFunctionMatch,
     TypeFunctionMatchArm,
     TypeFunctionPattern,
@@ -1202,6 +1203,8 @@ function cloneNodeData(node: Node): any {
             return { jsdocPropertyTags: n.jsdocPropertyTags, isArrayType: n.isArrayType };
         case SyntaxKind.TypeFunctionDeclaration:
             return { modifiers: n.modifiers, name: n.name, typeParameters: n.typeParameters, resultKind: n.resultKind, body: n.body };
+        case SyntaxKind.TypeFunctionLambda:
+            return { typeParameters: n.typeParameters, resultKind: n.resultKind, body: n.body };
         case SyntaxKind.TypeFunctionBlock:
             return { statements: n.statements };
         case SyntaxKind.TypeFunctionBinding:
@@ -1792,6 +1795,10 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
     [SyntaxKind.TypeFunctionDeclaration]: (data, cbNode, cbNodes) =>
         visitNodes(cbNode, cbNodes, data.modifiers) ||
         visitNode(cbNode, data.name) ||
+        visitNodes(cbNode, cbNodes, data.typeParameters) ||
+        visitNode(cbNode, data.resultKind) ||
+        visitNode(cbNode, data.body),
+    [SyntaxKind.TypeFunctionLambda]: (data, cbNode, cbNodes) =>
         visitNodes(cbNode, cbNodes, data.typeParameters) ||
         visitNode(cbNode, data.resultKind) ||
         visitNode(cbNode, data.body),
@@ -4121,6 +4128,20 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
             if (res) return res;
         }
     },
+    [SyntaxKind.TypeFunctionLambda]: function* (data) {
+        for (const n of data.typeParameters) {
+            const res = yield n;
+            if (res) return res;
+        }
+        if (data.resultKind) {
+            const res = yield data.resultKind;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+    },
     [SyntaxKind.TypeFunctionBlock]: function* (data) {
         for (const n of data.statements) {
             const res = yield n;
@@ -6030,6 +6051,14 @@ export function createTypeFunctionDeclaration(modifiers: readonly ModifierLike[]
     }) as unknown as TypeFunctionDeclaration;
 }
 
+export function createTypeFunctionLambda(typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionLambda {
+    return new NodeObject(SyntaxKind.TypeFunctionLambda, {
+        typeParameters: createNodeArray(typeParameters),
+        resultKind,
+        body,
+    }) as unknown as TypeFunctionLambda;
+}
+
 export function createTypeFunctionBlock(statements: readonly Node[]): TypeFunctionBlock {
     return new NodeObject(SyntaxKind.TypeFunctionBlock, {
         statements: createNodeArray(statements),
@@ -6810,6 +6839,10 @@ export function updateJSDocTypeLiteral(node: JSDocTypeLiteral, jsdocPropertyTags
 
 export function updateTypeFunctionDeclaration(node: TypeFunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionDeclaration {
     return node.modifiers !== modifiers || node.name !== name || node.typeParameters !== typeParameters || node.resultKind !== resultKind || node.body !== body ? createTypeFunctionDeclaration(modifiers, name, typeParameters, resultKind, body) : node;
+}
+
+export function updateTypeFunctionLambda(node: TypeFunctionLambda, typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionLambda {
+    return node.typeParameters !== typeParameters || node.resultKind !== resultKind || node.body !== body ? createTypeFunctionLambda(typeParameters, resultKind, body) : node;
 }
 
 export function updateTypeFunctionBlock(node: TypeFunctionBlock, statements: readonly Node[]): TypeFunctionBlock {

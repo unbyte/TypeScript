@@ -16,6 +16,7 @@ import {
     createTypeFunctionDeclaration,
     createTypeFunctionExpression,
     createTypeFunctionKind,
+    createTypeFunctionLambda,
     createTypeFunctionMatch,
     createTypeFunctionMatchArm,
     createTypeFunctionPattern,
@@ -205,4 +206,29 @@ test("DSL result kinds retain source order and zero constructor arity over the w
         const updated = visitEachChild(kind, child => child === kind.kindToken ? createToken(SyntaxKind.TypeKeyword) : child);
         assert.equal(updated.kindToken!.kind, SyntaxKind.TypeKeyword);
     }
+});
+
+
+test("anonymous typefn AST retains a separate lexical function through serialization", () => {
+    const kind = createTypeFunctionKind(createToken(SyntaxKind.TypeKeyword));
+    const body = createTypeFunctionBlock([createTypeFunctionStatement(SyntaxKind.TypeFunctionReturn, undefined, binary())]);
+    const lambda = createTypeFunctionLambda([], kind, body);
+    const visited: SyntaxKind[] = [];
+    const changed = visitEachChild(lambda, child => {
+        visited.push(child.kind);
+        return child === kind ? createTypeFunctionKind(createIdentifier("typefn"), []) : child;
+    });
+    assert.deepEqual(visited, [SyntaxKind.TypeFunctionKind, SyntaxKind.TypeFunctionBlock]);
+    assert.equal(changed.kind, SyntaxKind.TypeFunctionLambda);
+    assert.notEqual(changed, lambda);
+    const binding = createTypeFunctionStatement(SyntaxKind.TypeFunctionBinding, createIdentifier("F"), lambda);
+    const outer = createTypeFunctionDeclaration(undefined, createIdentifier("Outer"), [], undefined, createTypeFunctionBlock([binding]));
+    const source = createSourceFile([outer], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
+    const remote = new RemoteSourceFile(encodeSourceFile(source), new TextDecoder());
+    const decoded = remote.statements!.at(0)!.body!.statements!.at(0)!.expression!;
+    assert.equal(decoded.kind, SyntaxKind.TypeFunctionLambda);
+    assert.equal(decoded.resultKind!.kindToken!.kind, SyntaxKind.TypeKeyword);
+    assert.equal(decoded.body!.statements!.at(0)!.kind, SyntaxKind.TypeFunctionReturn);
+    const transformed = visitEachChild(decoded, child => child.kind === SyntaxKind.TypeFunctionBlock ? createTypeFunctionBlock([]) : child);
+    assert.equal(transformed.kind, SyntaxKind.TypeFunctionLambda);
 });

@@ -1358,6 +1358,12 @@ export interface TypeFunctionDeclaration extends StatementBase, DeclarationBase,
     readonly resultKind?: TypeFunctionKind;
     readonly body: TypeFunctionBlock;
 }
+export interface TypeFunctionLambda extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionLambda;
+    readonly typeParameters: NodeArray<TypeParameterDeclaration>;
+    readonly resultKind?: TypeFunctionKind;
+    readonly body: TypeFunctionBlock;
+}
 export interface TypeFunctionBlock extends NodeBase {
     readonly kind: SyntaxKind.TypeFunctionBlock;
     readonly statements: NodeArray<Node>;

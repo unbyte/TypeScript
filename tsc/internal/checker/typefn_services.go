@@ -60,7 +60,7 @@ func (c *Checker) GetTypeFunctionApplicationResult(ctx context.Context, node *as
 	if len(ast.GetSourceFileOfNode(node).Diagnostics()) != 0 {
 		return nil
 	}
-	if ast.FindAncestor(node, ast.IsTypeFunctionDeclaration) != nil {
+	if ast.FindAncestor(node, ast.IsTypeFunctionLike) != nil {
 		return nil
 	}
 	symbol := c.resolveEntityName(node.AsTypeReferenceNode().TypeName, ast.SymbolFlagsType, true, false, nil)

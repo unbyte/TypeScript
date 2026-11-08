@@ -685,6 +685,7 @@ func main() {
 			"SyntheticReferenceExpression":                 toInt32(ast.KindSyntheticReferenceExpression),
 			"NotEmittedTypeElement":                        toInt32(ast.KindNotEmittedTypeElement),
 			"TypeFunctionDeclaration":                      toInt32(ast.KindTypeFunctionDeclaration),
+			"TypeFunctionLambda":                           toInt32(ast.KindTypeFunctionLambda),
 			"TypeFunctionKind":                             toInt32(ast.KindTypeFunctionKind),
 			"TypeFunctionBlock":                            toInt32(ast.KindTypeFunctionBlock),
 			"TypeFunctionBinding":                          toInt32(ast.KindTypeFunctionBinding),

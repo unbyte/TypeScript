@@ -145,7 +145,7 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) *Type {
 func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, closure *typefnClosure) (result *Type) {
 	// Module helpers have no captured environment. Canonicalize direct and
 	// constructor-valued applications to the same call recipe and cycle identity.
-	if closure != nil && closure.program.selfSlot < 0 {
+	if closure != nil && !closure.program.local {
 		closure = nil
 	}
 	originalArgs := args
@@ -210,7 +210,7 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 		return v.error(node, "wrong number of Type arguments")
 	}
 	if closure == nil {
-		if p.selfSlot >= 0 {
+		if p.local {
 			return v.error(node, "local helper requires its captured environment")
 		}
 		parameters := v.c.appendTypeParameters(nil, declaration.TypeParameters())
@@ -232,7 +232,9 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 		registers[i] = typefnValue{native: arg}
 	}
 	if closure != nil {
-		registers[p.selfSlot] = typefnValue{closure: closure}
+		if p.selfSlot >= 0 {
+			registers[p.selfSlot] = typefnValue{closure: closure}
+		}
 		for i, capture := range p.captures {
 			registers[capture.target] = closure.captures[i]
 		}

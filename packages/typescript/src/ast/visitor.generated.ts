@@ -164,6 +164,7 @@ import type {
     TypeFunctionDeclaration,
     TypeFunctionExpression,
     TypeFunctionKind,
+    TypeFunctionLambda,
     TypeFunctionMatch,
     TypeFunctionMatchArm,
     TypeFunctionPattern,
@@ -345,6 +346,7 @@ import {
     updateTypeFunctionBlock,
     updateTypeFunctionDeclaration,
     updateTypeFunctionKind,
+    updateTypeFunctionLambda,
     updateTypeFunctionMatch,
     updateTypeFunctionMatchArm,
     updateTypeFunctionPattern,
@@ -1445,6 +1447,12 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
         const _resultKind = visitNode(node.resultKind, visitor, isTypeFunctionKind);
         const _body = visitNode(node.body, visitor, isTypeFunctionBlock);
         return updateTypeFunctionDeclaration(node, _modifiers, _name, _typeParameters, _resultKind, _body);
+    },
+    [SyntaxKind.TypeFunctionLambda]: (node: TypeFunctionLambda, visitor: Visitor): TypeFunctionLambda => {
+        const _typeParameters = visitNodes(node.typeParameters, visitor);
+        const _resultKind = visitNode(node.resultKind, visitor, isTypeFunctionKind);
+        const _body = visitNode(node.body, visitor, isTypeFunctionBlock);
+        return updateTypeFunctionLambda(node, _typeParameters, _resultKind, _body);
     },
     [SyntaxKind.TypeFunctionBlock]: (node: TypeFunctionBlock, visitor: Visitor): TypeFunctionBlock => {
         const _statements = visitNodes(node.statements, visitor);

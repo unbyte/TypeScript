@@ -61,6 +61,15 @@ func (p *Parser) typefnStep() bool {
 func (p *Parser) parseTypefnDeclaration(pos int, jsdoc jsdocScannerInfo, modifiers *ast.ModifierList) *ast.Node {
 	p.nextToken()
 	name := p.parseIdentifier()
+	parameters, resultKind := p.parseTypefnHeader()
+	body := p.parseTypefnBlock()
+	node := p.finishNode(p.factory.NewTypeFunctionDeclaration(modifiers, name, parameters, resultKind, body), pos)
+	p.withJSDoc(node, jsdoc)
+	p.checkJSSyntax(node)
+	return node
+}
+
+func (p *Parser) parseTypefnHeader() (*ast.NodeList, *ast.Node) {
 	if p.token != ast.KindLessThanToken {
 		p.typefnError("expected an explicit parameter list")
 	}
@@ -81,11 +90,15 @@ func (p *Parser) parseTypefnDeclaration(pos int, jsdoc jsdocScannerInfo, modifie
 		p.nextToken()
 		resultKind = p.parseTypefnResultKind()
 	}
+	return parameters, resultKind
+}
+
+func (p *Parser) parseTypefnLambda() *ast.Node {
+	pos := p.nodePos()
+	p.nextToken()
+	parameters, resultKind := p.parseTypefnHeader()
 	body := p.parseTypefnBlock()
-	node := p.finishNode(p.factory.NewTypeFunctionDeclaration(modifiers, name, parameters, resultKind, body), pos)
-	p.withJSDoc(node, jsdoc)
-	p.checkJSSyntax(node)
-	return node
+	return p.finishNode(p.factory.NewTypeFunctionLambda(parameters, resultKind, body), pos)
 }
 
 func (p *Parser) parseTypefnBlock() *ast.Node {
@@ -282,6 +295,9 @@ func (p *Parser) parseTypefnPrefix() *ast.Node {
 
 func (p *Parser) parseTypefnPrimary() *ast.Node {
 	pos := p.nodePos()
+	if p.token == ast.KindIdentifier && p.scanner.TokenValue() == "typefn" {
+		return p.parseTypefnLambda()
+	}
 	switch p.token {
 	case ast.KindOpenParenToken:
 		p.nextToken()

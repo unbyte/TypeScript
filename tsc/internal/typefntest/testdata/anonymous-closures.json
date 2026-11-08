@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "anonymous-closures.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

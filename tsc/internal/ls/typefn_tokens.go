@@ -92,7 +92,7 @@ func typefnTokenMetadata(file *ast.SourceFile, root *ast.Node) (map[int]bool, ma
 				}
 			}
 		}
-		if node.Kind == ast.KindTypeFunctionMatch {
+		if ast.IsTypeFunctionLike(node) || node.Kind == ast.KindTypeFunctionMatch {
 			intrinsics[scanner.GetTokenPosOfNode(node, file, false)] = tokenTypeKeyword
 		}
 		if node.Kind == ast.KindTemplateMiddle || node.Kind == ast.KindTemplateTail {

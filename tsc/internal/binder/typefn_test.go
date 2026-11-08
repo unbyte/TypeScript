@@ -44,3 +44,21 @@ func TestTypefnLexicalScopes(t *testing.T) {
 		t.Fatal("binding identity does not match scope table")
 	}
 }
+
+func TestTypefnLambdaScope(t *testing.T) {
+	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}, `typefn F<T> {type closure=typefn<T> {type value=T; return value;}; return closure<T>;}`, core.ScriptKindTS)
+	if len(file.Diagnostics()) != 0 {
+		t.Fatal(file.Diagnostics())
+	}
+	binder.BindSourceFile(file)
+	fn := file.Statements.Nodes[0]
+	binding := ast.TypeFunctionBody(fn).AsTypeFunctionBlock().Statements.Nodes[0]
+	lambda := binding.AsTypeFunctionStatement().Expression
+	locals := ast.GetLocals(lambda)
+	if locals.Get("T") == nil || locals.Get("value") == nil || locals.Get("T") == ast.GetLocals(fn).Get("T") {
+		t.Fatal("lambda needs its own parameter/body scope")
+	}
+	if ast.GetLocals(fn).Get("value") != nil {
+		t.Fatal("lambda local escaped into enclosing function")
+	}
+}

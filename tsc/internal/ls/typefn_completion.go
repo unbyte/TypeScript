@@ -41,7 +41,7 @@ func typefnNodeAtPosition(file *ast.SourceFile, position int) *ast.Node {
 
 func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.SourceFile, position int) *lsproto.CompletionList {
 	scope := typefnNodeAtPosition(file, position)
-	if scope == nil || scope.Kind == ast.KindTypeFunctionNativeType || ast.FindAncestor(scope, ast.IsTypeFunctionDeclaration) == nil {
+	if scope == nil || scope.Kind == ast.KindTypeFunctionNativeType || ast.FindAncestor(scope, ast.IsTypeFunctionLike) == nil {
 		return nil
 	}
 	c, done := l.program.GetTypeCheckerForFile(ctx, file)
@@ -101,7 +101,7 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 		kind := lsproto.CompletionItemKindClass
 		detail := ""
 		if fn := c.GetTypeFunctionDeclaration(symbol); fn != nil {
-			if ast.FindAncestor(fn.Parent, ast.IsTypeFunctionDeclaration) != nil && position < fn.Pos() {
+			if ast.FindAncestor(fn.Parent, ast.IsTypeFunctionLike) != nil && position < fn.Pos() {
 				continue
 			}
 			kind = lsproto.CompletionItemKindFunction
@@ -152,8 +152,8 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 func (l *LanguageService) typefnSignatureHelp(ctx context.Context, file *ast.SourceFile, position int) *lsproto.SignatureHelp {
 	start := -1
 	if scope := typefnNodeAtPosition(file, position); scope != nil {
-		if fn := ast.FindAncestor(scope, ast.IsTypeFunctionDeclaration); fn != nil && fn.AsTypeFunctionDeclaration().Body != nil {
-			start = fn.AsTypeFunctionDeclaration().Body.Pos()
+		if fn := ast.FindAncestor(scope, ast.IsTypeFunctionLike); fn != nil && ast.TypeFunctionBody(fn) != nil {
+			start = ast.TypeFunctionBody(fn).Pos()
 		}
 	}
 	if start < 0 {

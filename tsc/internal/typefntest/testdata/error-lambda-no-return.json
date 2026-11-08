@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-lambda-no-return.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "a control-flow path reaches the end without returning a value"
+    }
+  ]
+}

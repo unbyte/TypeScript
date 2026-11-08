@@ -451,6 +451,7 @@
                 "comment": "Imperative typefn DSL (opt-in)"
             },
             "TypeFunctionDeclaration",
+            "TypeFunctionLambda",
             "TypeFunctionKind",
             "TypeFunctionBlock",
             "TypeFunctionBinding",
@@ -5267,6 +5268,30 @@
                         "type": "Identifier",
                         "private": true
                     },
+                    {
+                        "name": "TypeParameters",
+                        "type": "TypeParameterDeclaration",
+                        "list": "NodeList"
+                    },
+                    {
+                        "name": "ResultKind",
+                        "type": "TypeFunctionKind",
+                        "optional": true
+                    },
+                    {
+                        "name": "Body",
+                        "type": "TypeFunctionBlock"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionLambda": {
+                "extends": [
+                    "NodeBase",
+                    "LocalsContainerBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
                     {
                         "name": "TypeParameters",
                         "type": "TypeParameterDeclaration",
