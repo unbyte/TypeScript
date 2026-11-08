@@ -512,3 +512,11 @@ signature-local binders remain local. Source declaration caches stay unspecializ
 query-order tests cover aliases and value annotations first forced during a
 specialized call. Hover preserves source meaning and generic Types. Polymorphic
 `this`, stable symbolic shape publication and complete latent dependencies remain.
+
+Recursive-builder integration starts with a separate arena validator. Guarded
+edges are removed and the remaining reachable graph must be acyclic; merely
+finding a guarded edge in each strongly connected component would accept invalid
+subcycles. Traversal is iterative, checks every root and edge, and shares the
+caller's cancellation/work gate. Tests include a 100,000-node chain, mixed guarded
+and unguarded cycles, unreachable scratch nodes and cancellation in both passes.
+The public recursive intrinsics are not connected by this infrastructure change.
