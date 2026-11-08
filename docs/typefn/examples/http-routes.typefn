@@ -1,0 +1,128 @@
+// R2 specification example, not executable by the current compiler.
+// Binding grammar and limitations are documented in ../manual.md.
+
+type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
+
+typefn SplitBinding<S> {
+  match (S) {
+    `${method} ${route}` => { return { method: method; route: route }; }
+    _ => { return never; }
+  }
+}
+
+typefn Param<Name, Value> {
+  type first = "_$ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+  type following = text.concat<[first, "0123456789"]>;
+  type end = text.length<Name>;
+  if (end == 0) { fail<"Empty route parameter name">; }
+  if (!text.includes<first, text.peek<Name, 0>>) {
+    fail<"Invalid route parameter name">;
+  }
+  type cursor = 1;
+  while (cursor < end) {
+    if (!text.includes<following, text.peek<Name, cursor>>) {
+      failAt<"Invalid route parameter name", cursor>;
+    }
+    cursor = cursor + 1;
+  }
+  return types.object<[
+    { key: Name; value: Value; optional: false; readonly: false }
+  ]>;
+}
+
+typefn RouteField<Segment> {
+  match (Segment) {
+    `:${name}<${kind}>` => {
+      match (kind) {
+        "string" => { return Param<name, string>; }
+        "number" => { return Param<name, number>; }
+        "boolean" => { return Param<name, boolean>; }
+        _ => { fail<"Unknown route parameter type">; }
+      }
+    }
+    `:${name}` => { return Param<name, string>; }
+    `*${_}` => { fail<"Wildcard route segments are not supported">; }
+    _ => { return {}; }
+  }
+}
+
+typefn RouteParams<Route> {
+  if (text.includes<Route, " "> || text.includes<Route, "\t"> ||
+      text.includes<Route, "\r"> || text.includes<Route, "\n">) {
+    fail<"Whitespace is not allowed in a route">;
+  }
+  if (text.includes<Route, "?"> || text.includes<Route, "#">) {
+    fail<"Expected a path without query or fragment">;
+  }
+  if (text.includes<Route, "//">) { fail<"Empty route segment">; }
+  if (text.length<Route> > 1 && text.endsWith<Route, "/">) {
+    fail<"Trailing slash is allowed only for the root route">;
+  }
+
+  type rest = Route;
+  match (Route) {
+    `/${tail}` => { rest = tail; }
+    _ => { fail<"A route must start with /">; }
+  }
+
+  type params = {};
+  while (rest != "") {
+    type segment = rest;
+    match (rest) {
+      `${head}/${tail}` => { segment = head; rest = tail; }
+      _ => { rest = ""; }
+    }
+    type field = RouteField<segment>;
+    type keys = keyof field;
+    if (keys != never) {
+      if (keys is keyof params) { fail<"Duplicate route parameter name">; }
+    }
+    params = params & field;
+  }
+  return type({ [K in keyof params]: params[K] });
+}
+
+typefn HttpBinding<S> {
+  if (text.length<S> == 0) { fail<"Expected METHOD /path">; }
+  type parts = SplitBinding<S>;
+  if (parts == never) { fail<"Expected METHOD /path">; }
+  type method = parts["method"];
+  type route = parts["route"];
+  if (method is HttpMethod) {
+    return { method: method; route: route; params: RouteParams<route> };
+  }
+  fail<"Unknown HTTP method; expected an uppercase method">;
+}
+
+typefn HttpBindings<S> {
+  type result = never;
+  for (type binding in S) { result = result | HttpBinding<binding>; }
+  return result;
+}
+
+typefn Handler<S> {
+  type binding = HttpBinding<S>;
+  return type((params: binding["params"]) => Promise<void>);
+}
+
+typefn SplitOnce<S, Delimiter> {
+  if (text.length<Delimiter> == 0) { fail<"Expected a nonempty delimiter">; }
+  match (S) {
+    `${left}${=Delimiter}${right}` => { return [left, right]; }
+    _ => { return [S]; }
+  }
+}
+
+type Header = SplitBinding<"GET /users/:id">;
+// { method: "GET"; route: "/users/:id" }
+type OpenHeader = SplitBinding<`GET /users/${string}`>;
+// { method: "GET"; route: `/users/${string}` }
+type Endpoint = HttpBinding<"GET /users/:id<number>/posts/:slug">;
+// { method: "GET"; route: "/users/:id<number>/posts/:slug";
+//   params: { id: number; slug: string } }
+type GetHandler = Handler<"GET /users/:id<number>">;
+// (params: { id: number }) => Promise<void>
+type Endpoints = HttpBindings<"GET /users/:id<number>" | "POST /users">;
+type GetRoutes = Extract<Endpoints, { method: "GET" }>["route"];
+// "/users/:id<number>"
+type Pieces = SplitOnce<"a::b::c", "::">; // ["a", "b::c"]

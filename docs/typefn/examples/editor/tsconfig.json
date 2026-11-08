@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "target": "es2022",
+    "ignoreDeprecations": "6.0",
+    "typefn": { "version": 1 }
+  },
+  "files": ["types.ts", "index.ts"]
+}
