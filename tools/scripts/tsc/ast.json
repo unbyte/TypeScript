@@ -474,7 +474,20 @@
             "TypeFunctionNativeType",
             "TypeFunctionSpread",
             "TypeFunctionTemplate",
-            "TypeFunctionTemplateSpan"
+            "TypeFunctionTemplateSpan",
+            "TypeFunctionMatch",
+            "TypeFunctionMatchArm",
+            "TypeFunctionWildcardPattern",
+            "TypeFunctionCapturePattern",
+            "TypeFunctionLiteralPattern",
+            "TypeFunctionIsPattern",
+            "TypeFunctionNativePattern",
+            "TypeFunctionTuplePattern",
+            "TypeFunctionRestPattern",
+            "TypeFunctionObjectPattern",
+            "TypeFunctionFieldPattern",
+            "TypeFunctionTemplatePattern",
+            "TypeFunctionPinPattern"
         ],
         "markers": [
             {
@@ -849,6 +862,19 @@
                 "TypeFunctionIndex",
                 "TypeFunctionNativeType",
                 "TypeFunctionSpread"
+            ],
+            "TypeFunctionPatternKind": [
+                "TypeFunctionWildcardPattern",
+                "TypeFunctionCapturePattern",
+                "TypeFunctionLiteralPattern",
+                "TypeFunctionIsPattern",
+                "TypeFunctionNativePattern",
+                "TypeFunctionTuplePattern",
+                "TypeFunctionRestPattern",
+                "TypeFunctionObjectPattern",
+                "TypeFunctionFieldPattern",
+                "TypeFunctionTemplatePattern",
+                "TypeFunctionPinPattern"
             ]
         }
     },
@@ -5396,6 +5422,85 @@
                     }
                 ],
                 "arena": true
+            },
+            "TypeFunctionMatch": {
+                "extends": [
+                    "NodeBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Expression",
+                        "type": "Node"
+                    },
+                    {
+                        "name": "Arms",
+                        "type": "TypeFunctionMatchArm",
+                        "list": "NodeList"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionMatchArm": {
+                "extends": [
+                    "NodeBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Pattern",
+                        "type": "Node"
+                    },
+                    {
+                        "name": "Guard",
+                        "type": "Node",
+                        "optional": true
+                    },
+                    {
+                        "name": "Body",
+                        "type": "TypeFunctionBlock"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionPattern": {
+                "extends": [
+                    "NodeBase",
+                    "DeclarationBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Kind",
+                        "type": "TKind",
+                        "inherited": true
+                    },
+                    {
+                        "name": "name",
+                        "type": "Node",
+                        "private": true,
+                        "optional": true
+                    },
+                    {
+                        "name": "Expression",
+                        "type": "Node",
+                        "optional": true
+                    },
+                    {
+                        "name": "Elements",
+                        "type": "Node",
+                        "list": "NodeList",
+                        "optional": true
+                    }
+                ],
+                "arena": true,
+                "typeParameters": [
+                    {
+                        "name": "TKind",
+                        "constraint": "TypeFunctionPatternKind",
+                        "default": "TypeFunctionPatternKind"
+                    }
+                ]
             }
         },
         "aliases": {

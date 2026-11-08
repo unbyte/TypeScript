@@ -202,3 +202,25 @@ func TestTypefnTemplateRecovery(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnPatterns(t *testing.T) {
+	for _, pattern := range []string{"_", "value", "-12n", "undefined", "type({a: string})", "is F<T>", "[a, [b], ...rest]", "{a: first, \"b\": [second, ..._], 0: _}", "`GET ${path}/${=text.concat<[\"a\", \"b\"]>}${_}`"} {
+		source := "typefn F<T> { match (T) { " + pattern + " if (true) => { return 1; } _ => { return 0; } } }"
+		file := parseTypefn(t, source, ast.SourceFileParseOptions{TypefnVersion: 1})
+		if ds := file.Diagnostics(); len(ds) != 0 {
+			t.Fatalf("%s: %v", pattern, ds)
+		}
+		checkTypefnTree(t, file.AsNode())
+	}
+	for _, body := range []string{"match (T) {}", "match (T) { [a, ...r, b] => {} }", "match (T) { [a] {} }", "match (T) { `${a + b}` => {} }", "match (T) { `${=}` => {} }", "match (T) { { [T]: a } => {} }"} {
+		file := parseTypefn(t, "typefn F<T> {"+body+"}", ast.SourceFileParseOptions{TypefnVersion: 1})
+		if len(file.Diagnostics()) == 0 {
+			t.Fatalf("accepted malformed pattern: %s", body)
+		}
+	}
+	source := "typefn F<T> { match (T) { " + strings.Repeat("[", 1000) + "a" + strings.Repeat("]", 1000) + " => {} _ => {} } }"
+	file := parseTypefn(t, source, ast.SourceFileParseOptions{TypefnVersion: 1, TypefnSyntaxDepth: 16})
+	if len(file.Diagnostics()) == 0 {
+		t.Fatal("pattern recursion bypassed syntax depth limit")
+	}
+}

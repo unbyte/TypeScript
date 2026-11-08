@@ -3,7 +3,7 @@ package ast
 // Typefn nodes use the native AST, lexical scopes and symbol infrastructure.
 // Keep the boundary explicit: DSL operators are not JavaScript expressions.
 func IsTypeFunctionNode(node *Node) bool {
-	return node != nil && node.Kind >= KindTypeFunctionDeclaration && node.Kind <= KindTypeFunctionTemplateSpan
+	return node != nil && node.Kind >= KindTypeFunctionDeclaration && node.Kind <= KindTypeFunctionPinPattern
 }
 
 func IsTypeFunctionIteration(node *Node) bool {

@@ -396,6 +396,7 @@ export type AssignmentOperatorOrHigher = SyntaxKind.QuestionQuestionToken | Logi
 export type LogicalOrCoalescingAssignmentOperator = SyntaxKind.AmpersandAmpersandEqualsToken | SyntaxKind.BarBarEqualsToken | SyntaxKind.QuestionQuestionEqualsToken;
 export type TypeFunctionStatementKind = SyntaxKind.TypeFunctionBinding | SyntaxKind.TypeFunctionAssignment | SyntaxKind.TypeFunctionReturn | SyntaxKind.TypeFunctionIf | SyntaxKind.TypeFunctionWhile | SyntaxKind.TypeFunctionForOf | SyntaxKind.TypeFunctionForIn | SyntaxKind.TypeFunctionBreak | SyntaxKind.TypeFunctionContinue | SyntaxKind.TypeFunctionExpressionStatement;
 export type TypeFunctionExpressionKind = SyntaxKind.TypeFunctionName | SyntaxKind.TypeFunctionLiteral | SyntaxKind.TypeFunctionCall | SyntaxKind.TypeFunctionUnary | SyntaxKind.TypeFunctionBinary | SyntaxKind.TypeFunctionTuple | SyntaxKind.TypeFunctionObject | SyntaxKind.TypeFunctionField | SyntaxKind.TypeFunctionIndex | SyntaxKind.TypeFunctionNativeType | SyntaxKind.TypeFunctionSpread;
+export type TypeFunctionPatternKind = SyntaxKind.TypeFunctionWildcardPattern | SyntaxKind.TypeFunctionCapturePattern | SyntaxKind.TypeFunctionLiteralPattern | SyntaxKind.TypeFunctionIsPattern | SyntaxKind.TypeFunctionNativePattern | SyntaxKind.TypeFunctionTuplePattern | SyntaxKind.TypeFunctionRestPattern | SyntaxKind.TypeFunctionObjectPattern | SyntaxKind.TypeFunctionFieldPattern | SyntaxKind.TypeFunctionTemplatePattern | SyntaxKind.TypeFunctionPinPattern;
 
 export interface NodeBase extends Node {
     readonly flags: NodeFlags;
@@ -1385,6 +1386,23 @@ export interface TypeFunctionTemplateSpan extends NodeBase {
     readonly kind: SyntaxKind.TypeFunctionTemplateSpan;
     readonly expression: Node;
     readonly literal: TemplateMiddleOrTail;
+}
+export interface TypeFunctionMatch extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionMatch;
+    readonly expression: Node;
+    readonly arms: NodeArray<TypeFunctionMatchArm>;
+}
+export interface TypeFunctionMatchArm extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionMatchArm;
+    readonly pattern: Node;
+    readonly guard?: Node;
+    readonly body: TypeFunctionBlock;
+}
+export interface TypeFunctionPattern<TKind extends TypeFunctionPatternKind = TypeFunctionPatternKind> extends NodeBase, DeclarationBase {
+    readonly kind: TKind;
+    readonly name?: Node;
+    readonly expression?: Node;
+    readonly elements?: NodeArray<Node>;
 }
 
 export type Expression = ExpressionBase;

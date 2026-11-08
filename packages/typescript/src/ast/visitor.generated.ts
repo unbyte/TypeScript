@@ -163,6 +163,9 @@ import type {
     TypeFunctionBlock,
     TypeFunctionDeclaration,
     TypeFunctionExpression,
+    TypeFunctionMatch,
+    TypeFunctionMatchArm,
+    TypeFunctionPattern,
     TypeFunctionStatement,
     TypeFunctionTemplate,
     TypeFunctionTemplateSpan,
@@ -340,6 +343,9 @@ import {
     updateTypeAssertion,
     updateTypeFunctionBlock,
     updateTypeFunctionDeclaration,
+    updateTypeFunctionMatch,
+    updateTypeFunctionMatchArm,
+    updateTypeFunctionPattern,
     updateTypeFunctionStatement,
     updateTypeFunctionTemplate,
     updateTypeFunctionTemplateSpan,
@@ -1530,6 +1536,83 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
         const _expression = visitNode(node.expression, visitor);
         const _literal = visitNode(node.literal, visitor, isTemplateMiddleOrTail);
         return updateTypeFunctionTemplateSpan(node, _expression, _literal);
+    },
+    [SyntaxKind.TypeFunctionMatch]: (node: TypeFunctionMatch, visitor: Visitor): TypeFunctionMatch => {
+        const _expression = visitNode(node.expression, visitor);
+        const _arms = visitNodes(node.arms, visitor);
+        return updateTypeFunctionMatch(node, _expression, _arms);
+    },
+    [SyntaxKind.TypeFunctionMatchArm]: (node: TypeFunctionMatchArm, visitor: Visitor): TypeFunctionMatchArm => {
+        const _pattern = visitNode(node.pattern, visitor);
+        const _guard = visitNode(node.guard, visitor);
+        const _body = visitNode(node.body, visitor, isTypeFunctionBlock);
+        return updateTypeFunctionMatchArm(node, _pattern, _guard, _body);
+    },
+    [SyntaxKind.TypeFunctionWildcardPattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionCapturePattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionLiteralPattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionIsPattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionNativePattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionTuplePattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionRestPattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionObjectPattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionFieldPattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionTemplatePattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionPinPattern]: (node: TypeFunctionPattern, visitor: Visitor): TypeFunctionPattern => {
+        const _name = visitNode(node.name, visitor);
+        const _expression = visitNode(node.expression, visitor);
+        const _elements = visitNodes(node.elements, visitor);
+        return updateTypeFunctionPattern(node, _name, _expression, _elements);
     },
     [SyntaxKind.ForInStatement]: (node: ForInStatement, visitor: Visitor): ForInStatement => {
         const _awaitModifier = visitNode(node.awaitModifier, visitor, isAwaitKeyword);

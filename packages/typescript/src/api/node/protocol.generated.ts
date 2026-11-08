@@ -201,6 +201,19 @@ export const childProperties: Readonly<Partial<Record<SyntaxKind, readonly (stri
     [SyntaxKind.TypeFunctionSpread]: ["name", "operands", "operatorToken", "nativeType"],
     [SyntaxKind.TypeFunctionTemplate]: ["head", "spans"],
     [SyntaxKind.TypeFunctionTemplateSpan]: ["expression", "literal"],
+    [SyntaxKind.TypeFunctionMatch]: ["expression", "arms"],
+    [SyntaxKind.TypeFunctionMatchArm]: ["pattern", "guard", "body"],
+    [SyntaxKind.TypeFunctionWildcardPattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionCapturePattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionLiteralPattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionIsPattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionNativePattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionTuplePattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionRestPattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionObjectPattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionFieldPattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionTemplatePattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionPinPattern]: ["name", "expression", "elements"],
 };
 
 export const singleChildNodePropertyNames: Readonly<Partial<Record<SyntaxKind, string>>> = {

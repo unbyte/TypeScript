@@ -1178,6 +1178,23 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		expression := d.nodeAt(it.nextIf(mask, 0))
 		literal := d.nodeAt(it.nextIf(mask, 1))
 		return d.factory.NewTypeFunctionTemplateSpan(expression, literal), nil
+	case ast.KindTypeFunctionMatch:
+		it := newChildIter(childIndices)
+		expression := d.nodeAt(it.nextIf(mask, 0))
+		arms := d.nodeListAt(it.nextIf(mask, 1))
+		return d.factory.NewTypeFunctionMatch(expression, arms), nil
+	case ast.KindTypeFunctionMatchArm:
+		it := newChildIter(childIndices)
+		pattern := d.nodeAt(it.nextIf(mask, 0))
+		guard := d.nodeAt(it.nextIf(mask, 1))
+		body := d.nodeAt(it.nextIf(mask, 2))
+		return d.factory.NewTypeFunctionMatchArm(pattern, guard, body), nil
+	case ast.KindTypeFunctionWildcardPattern, ast.KindTypeFunctionCapturePattern, ast.KindTypeFunctionLiteralPattern, ast.KindTypeFunctionIsPattern, ast.KindTypeFunctionNativePattern, ast.KindTypeFunctionTuplePattern, ast.KindTypeFunctionRestPattern, ast.KindTypeFunctionObjectPattern, ast.KindTypeFunctionFieldPattern, ast.KindTypeFunctionTemplatePattern, ast.KindTypeFunctionPinPattern:
+		it := newChildIter(childIndices)
+		name := d.nodeAt(it.nextIf(mask, 0))
+		expression := d.nodeAt(it.nextIf(mask, 1))
+		elements := d.nodeListAt(it.nextIf(mask, 2))
+		return d.factory.NewTypeFunctionPattern(kind, name, expression, elements), nil
 	default:
 		return nil, fmt.Errorf("unhandled node kind %v with %d children", kind, len(childIndices))
 	}

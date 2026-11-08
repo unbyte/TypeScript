@@ -122,6 +122,9 @@ func (p *Parser) parseTypefnStatement() *ast.Node {
 	if p.isTypefnStart() {
 		return p.parseTypefnDeclaration(pos, p.jsdocScannerInfo(), nil)
 	}
+	if p.token == ast.KindIdentifier && p.scanner.TokenValue() == "match" {
+		return p.parseTypefnMatch()
+	}
 	switch p.token {
 	case ast.KindOpenBraceToken:
 		return p.parseTypefnBlock()
@@ -384,7 +387,10 @@ func (p *Parser) parseTypefnObject() *ast.Node {
 }
 
 func (p *Parser) tryTypefnCall(name *ast.Node, pos int) *ast.Node {
-	key := p.nodePos()
+	key := p.nodePos() * 2
+	if p.typefnPatternFollow {
+		key++
+	}
 	if cached, ok := p.typefnCalls[key]; ok {
 		if cached.node != nil {
 			p.scanner.Rewind(cached.end)
@@ -407,7 +413,7 @@ func (p *Parser) tryTypefnCall(name *ast.Node, pos int) *ast.Node {
 	}
 	if p.token == ast.KindGreaterThanToken && len(p.diagnostics) == state.diagnosticsLen {
 		p.nextToken()
-		if typefnCallFollower(p.token) {
+		if typefnCallFollower(p.token) || p.typefnPatternFollow && (p.token == ast.KindIfKeyword || p.token == ast.KindEqualsGreaterThanToken) {
 			node := p.typefnExpression(ast.KindTypeFunctionCall, pos, name, arguments, nil, nil)
 			p.typefnCalls[key] = typefnCallParse{node, p.scanner.Mark()}
 			return node

@@ -414,6 +414,19 @@ const (
 	KindTypeFunctionSpread
 	KindTypeFunctionTemplate
 	KindTypeFunctionTemplateSpan
+	KindTypeFunctionMatch
+	KindTypeFunctionMatchArm
+	KindTypeFunctionWildcardPattern
+	KindTypeFunctionCapturePattern
+	KindTypeFunctionLiteralPattern
+	KindTypeFunctionIsPattern
+	KindTypeFunctionNativePattern
+	KindTypeFunctionTuplePattern
+	KindTypeFunctionRestPattern
+	KindTypeFunctionObjectPattern
+	KindTypeFunctionFieldPattern
+	KindTypeFunctionTemplatePattern
+	KindTypeFunctionPinPattern
 	KindCount
 	KindFirstAssignment         = KindEqualsToken
 	KindLastAssignment          = KindCaretEqualsToken
@@ -488,4 +501,5 @@ type (
 	LogicalOrCoalescingAssignmentOperator = Kind // KindAmpersandAmpersandEqualsToken | KindBarBarEqualsToken | KindQuestionQuestionEqualsToken
 	TypeFunctionStatementKind             = Kind // KindTypeFunctionBinding | KindTypeFunctionAssignment | KindTypeFunctionReturn | KindTypeFunctionIf | KindTypeFunctionWhile | KindTypeFunctionForOf | KindTypeFunctionForIn | KindTypeFunctionBreak | KindTypeFunctionContinue | KindTypeFunctionExpressionStatement
 	TypeFunctionExpressionKind            = Kind // KindTypeFunctionName | KindTypeFunctionLiteral | KindTypeFunctionCall | KindTypeFunctionUnary | KindTypeFunctionBinary | KindTypeFunctionTuple | KindTypeFunctionObject | KindTypeFunctionField | KindTypeFunctionIndex | KindTypeFunctionNativeType | KindTypeFunctionSpread
+	TypeFunctionPatternKind               = Kind // KindTypeFunctionWildcardPattern | KindTypeFunctionCapturePattern | KindTypeFunctionLiteralPattern | KindTypeFunctionIsPattern | KindTypeFunctionNativePattern | KindTypeFunctionTuplePattern | KindTypeFunctionRestPattern | KindTypeFunctionObjectPattern | KindTypeFunctionFieldPattern | KindTypeFunctionTemplatePattern | KindTypeFunctionPinPattern
 )

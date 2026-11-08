@@ -134,6 +134,10 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		b.block(node, true)
 		return
 	}
+	if node.Kind == ast.KindTypeFunctionMatch {
+		b.error(node, "match evaluation is not implemented yet")
+		return
+	}
 	if node.Kind == ast.KindTypeFunctionDeclaration {
 		b.error(node, "local typefns are not implemented yet")
 		return

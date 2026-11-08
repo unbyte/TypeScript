@@ -63,6 +63,9 @@ type NodeFactory struct {
 	typeFunctionBlockArena             core.Arena[TypeFunctionBlock]
 	typeFunctionDeclarationArena       core.Arena[TypeFunctionDeclaration]
 	typeFunctionExpressionArena        core.Arena[TypeFunctionExpression]
+	typeFunctionMatchArena             core.Arena[TypeFunctionMatch]
+	typeFunctionMatchArmArena          core.Arena[TypeFunctionMatchArm]
+	typeFunctionPatternArena           core.Arena[TypeFunctionPattern]
 	typeFunctionStatementArena         core.Arena[TypeFunctionStatement]
 	typeFunctionTemplateArena          core.Arena[TypeFunctionTemplate]
 	typeFunctionTemplateSpanArena      core.Arena[TypeFunctionTemplateSpan]
@@ -460,6 +463,9 @@ type (
 	TypeFunctionExpressionNode        = Node
 	TypeFunctionTemplateNode          = Node
 	TypeFunctionTemplateSpanNode      = Node
+	TypeFunctionMatchNode             = Node
+	TypeFunctionMatchArmNode          = Node
+	TypeFunctionPatternNode           = Node
 	EndOfFile                         = Node
 	DotToken                          = Node
 	DotDotDotToken                    = Node
@@ -9119,6 +9125,147 @@ func IsTypeFunctionTemplateSpan(node *Node) bool {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// TypeFunctionMatch
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionMatch struct {
+	TypeSyntaxBase
+	NodeBase
+	Expression *Node
+	Arms       *NodeList
+}
+
+func (f *NodeFactory) NewTypeFunctionMatch(expression *Node, arms *NodeList) *Node {
+	data := f.typeFunctionMatchArena.New()
+	data.Expression = expression
+	data.Arms = arms
+	return f.newNode(KindTypeFunctionMatch, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionMatch(node *TypeFunctionMatch, expression *Node, arms *NodeList) *Node {
+	if expression != node.Expression || arms != node.Arms {
+		return updateNode(f.NewTypeFunctionMatch(expression, arms), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionMatch) ForEachChild(v Visitor) bool {
+	return visit(v, node.Expression) || visitNodeList(v, node.Arms)
+}
+
+func (node *TypeFunctionMatch) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionMatch(node, v.visitNode(node.Expression), v.visitNodes(node.Arms))
+}
+
+func (node *TypeFunctionMatch) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionMatch(node.Expression, node.Arms), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionMatch(node *Node) bool {
+	return node.Kind == KindTypeFunctionMatch
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionMatchArm
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionMatchArm struct {
+	TypeSyntaxBase
+	NodeBase
+	Pattern *Node
+	Guard   *Node // Optional
+	Body    *TypeFunctionBlockNode
+}
+
+func (f *NodeFactory) NewTypeFunctionMatchArm(pattern *Node, guard *Node, body *TypeFunctionBlockNode) *Node {
+	data := f.typeFunctionMatchArmArena.New()
+	data.Pattern = pattern
+	data.Guard = guard
+	data.Body = body
+	return f.newNode(KindTypeFunctionMatchArm, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionMatchArm(node *TypeFunctionMatchArm, pattern *Node, guard *Node, body *TypeFunctionBlockNode) *Node {
+	if pattern != node.Pattern || guard != node.Guard || body != node.Body {
+		return updateNode(f.NewTypeFunctionMatchArm(pattern, guard, body), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionMatchArm) ForEachChild(v Visitor) bool {
+	return visit(v, node.Pattern) || visit(v, node.Guard) || visit(v, node.Body)
+}
+
+func (node *TypeFunctionMatchArm) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionMatchArm(node, v.visitNode(node.Pattern), v.visitNode(node.Guard), v.visitNode(node.Body))
+}
+
+func (node *TypeFunctionMatchArm) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionMatchArm(node.Pattern, node.Guard, node.Body), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionMatchArm(node *Node) bool {
+	return node.Kind == KindTypeFunctionMatchArm
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionPattern
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionPattern struct {
+	TypeSyntaxBase
+	NodeBase
+	DeclarationBase
+	name       *Node     // Optional
+	Expression *Node     // Optional
+	Elements   *NodeList // Optional
+}
+
+func (f *NodeFactory) NewTypeFunctionPattern(kind TypeFunctionPatternKind, name *Node, expression *Node, elements *NodeList) *Node {
+	switch kind {
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+	default:
+		panic("Invalid node kind for TypeFunctionPattern")
+	}
+	data := f.typeFunctionPatternArena.New()
+	data.name = name
+	data.Expression = expression
+	data.Elements = elements
+	return f.newNode(kind, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionPattern(node *TypeFunctionPattern, name *Node, expression *Node, elements *NodeList) *Node {
+	if name != node.name || expression != node.Expression || elements != node.Elements {
+		return updateNode(f.NewTypeFunctionPattern(node.Kind, name, expression, elements), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionPattern) ForEachChild(v Visitor) bool {
+	return visit(v, node.name) || visit(v, node.Expression) || visitNodeList(v, node.Elements)
+}
+
+func (node *TypeFunctionPattern) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionPattern(node, v.visitNode(node.name), v.visitNode(node.Expression), v.visitNodes(node.Elements))
+}
+
+func (node *TypeFunctionPattern) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionPattern(node.Kind, node.name, node.Expression, node.Elements), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func (node *TypeFunctionPattern) Name() *DeclarationName {
+	return node.name
+}
+
+func IsTypeFunctionPattern(node *Node) bool {
+	switch node.Kind {
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+		return true
+	}
+	return false
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // ForEachChild dispatch
 // ──────────────────────────────────────────────────────────────────────
 
@@ -9646,6 +9793,15 @@ func (n *Node) ForEachChild(v Visitor) bool {
 	case KindTypeFunctionTemplateSpan:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
 		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionMatch:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatch, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatch)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionMatchArm:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatchArm, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatchArm)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+		return (*TypeFunctionPattern)(unsafe.Pointer(n)).ForEachChild(v)
 	default:
 		return false
 	}
@@ -10179,6 +10335,15 @@ func (n *Node) VisitEachChild(v *NodeVisitor) *Node {
 	case KindTypeFunctionTemplateSpan:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
 		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionMatch:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatch, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatch)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionMatchArm:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatchArm, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatchArm)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+		return (*TypeFunctionPattern)(unsafe.Pointer(n)).VisitEachChild(v)
 	default:
 		return n
 	}
@@ -10789,6 +10954,15 @@ func (n *Node) Clone(f NodeFactoryCoercible) *Node {
 	case KindTypeFunctionTemplateSpan:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
 		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionMatch:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatch, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatch)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionMatchArm:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatchArm, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatchArm)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+		return (*TypeFunctionPattern)(unsafe.Pointer(n)).Clone(f)
 	default:
 		return nil
 	}
@@ -11272,6 +11446,12 @@ func (n *Node) SubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionTemplate:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionTemplateSpan:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionMatch:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionMatchArm:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
 		return n.computeSubtreeFacts()
 	default:
 		return SubtreeFactsNone
@@ -11877,6 +12057,15 @@ func (n *Node) computeSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionTemplateSpan:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
 		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionMatch:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatch, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatch)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionMatchArm:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatchArm, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatchArm)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+		return (*TypeFunctionPattern)(unsafe.Pointer(n)).computeSubtreeFacts()
 	default:
 		return SubtreeFactsNone
 	}
@@ -12481,6 +12670,15 @@ func (n *Node) propagateSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionTemplateSpan:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
 		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionMatch:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatch, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatch)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionMatchArm:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatchArm, which embeds its Node header at offset zero.
+		return (*TypeFunctionMatchArm)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+		return (*TypeFunctionPattern)(unsafe.Pointer(n)).propagateSubtreeFacts()
 	default:
 		return SubtreeFactsNone
 	}
@@ -12771,6 +12969,17 @@ var nodeDeclarationDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindTypeFunctionBreak:               58,
 	KindTypeFunctionContinue:            58,
 	KindTypeFunctionExpressionStatement: 58,
+	KindTypeFunctionWildcardPattern:     59,
+	KindTypeFunctionCapturePattern:      59,
+	KindTypeFunctionLiteralPattern:      59,
+	KindTypeFunctionIsPattern:           59,
+	KindTypeFunctionNativePattern:       59,
+	KindTypeFunctionTuplePattern:        59,
+	KindTypeFunctionRestPattern:         59,
+	KindTypeFunctionObjectPattern:       59,
+	KindTypeFunctionFieldPattern:        59,
+	KindTypeFunctionTemplatePattern:     59,
+	KindTypeFunctionPinPattern:          59,
 }
 
 func (n *Node) DeclarationData() *DeclarationBase {
@@ -12949,6 +13158,9 @@ func (n *Node) DeclarationData() *DeclarationBase {
 	case 58:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionStatement, which embeds its Node header at offset zero.
 		return (*TypeFunctionStatement)(unsafe.Pointer(n)).DeclarationData()
+	case 59:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+		return (*TypeFunctionPattern)(unsafe.Pointer(n)).DeclarationData()
 	default:
 		return nil
 	}
@@ -13409,6 +13621,17 @@ var nodeNameDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindTypeFunctionIndex:               44,
 	KindTypeFunctionNativeType:          44,
 	KindTypeFunctionSpread:              44,
+	KindTypeFunctionWildcardPattern:     45,
+	KindTypeFunctionCapturePattern:      45,
+	KindTypeFunctionLiteralPattern:      45,
+	KindTypeFunctionIsPattern:           45,
+	KindTypeFunctionNativePattern:       45,
+	KindTypeFunctionTuplePattern:        45,
+	KindTypeFunctionRestPattern:         45,
+	KindTypeFunctionObjectPattern:       45,
+	KindTypeFunctionFieldPattern:        45,
+	KindTypeFunctionTemplatePattern:     45,
+	KindTypeFunctionPinPattern:          45,
 }
 
 func (n *Node) Name() *DeclarationName {
@@ -13545,6 +13768,9 @@ func (n *Node) Name() *DeclarationName {
 	case 44:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 		return (*TypeFunctionExpression)(unsafe.Pointer(n)).Name()
+	case 45:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+		return (*TypeFunctionPattern)(unsafe.Pointer(n)).Name()
 	default:
 		return nil
 	}
@@ -13996,6 +14222,9 @@ var (
 	_ [0 - unsafe.Offsetof(TypeFunctionExpression{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionTemplate{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionTemplateSpan{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionMatch{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionMatchArm{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionPattern{}.Node)]byte
 )
 
 func (n *Node) AsToken() *Token {
@@ -15610,6 +15839,32 @@ func (n *Node) AsTypeFunctionTemplateSpan() *TypeFunctionTemplateSpan {
 	return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n))
 }
 
+func (n *Node) AsTypeFunctionMatch() *TypeFunctionMatch {
+	if n.Kind != KindTypeFunctionMatch {
+		panic("Invalid node cast to TypeFunctionMatch")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionMatch, which embeds its Node header at offset zero.
+	return (*TypeFunctionMatch)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionMatchArm() *TypeFunctionMatchArm {
+	if n.Kind != KindTypeFunctionMatchArm {
+		panic("Invalid node cast to TypeFunctionMatchArm")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionMatchArm, which embeds its Node header at offset zero.
+	return (*TypeFunctionMatchArm)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionPattern() *TypeFunctionPattern {
+	switch n.Kind {
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
+	default:
+		panic("Invalid node cast to TypeFunctionPattern")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
+	return (*TypeFunctionPattern)(unsafe.Pointer(n))
+}
+
 // ──────────────────────────────────────────────────────────────────────
 // Kind alias guards
 // ──────────────────────────────────────────────────────────────────────
@@ -15877,6 +16132,14 @@ func IsTypeFunctionStatementKind(kind Kind) bool {
 func IsTypeFunctionExpressionKind(kind Kind) bool {
 	switch kind {
 	case KindTypeFunctionName, KindTypeFunctionLiteral, KindTypeFunctionCall, KindTypeFunctionUnary, KindTypeFunctionBinary, KindTypeFunctionTuple, KindTypeFunctionObject, KindTypeFunctionField, KindTypeFunctionIndex, KindTypeFunctionNativeType, KindTypeFunctionSpread:
+		return true
+	}
+	return false
+}
+
+func IsTypeFunctionPatternKind(kind Kind) bool {
+	switch kind {
+	case KindTypeFunctionWildcardPattern, KindTypeFunctionCapturePattern, KindTypeFunctionLiteralPattern, KindTypeFunctionIsPattern, KindTypeFunctionNativePattern, KindTypeFunctionTuplePattern, KindTypeFunctionRestPattern, KindTypeFunctionObjectPattern, KindTypeFunctionFieldPattern, KindTypeFunctionTemplatePattern, KindTypeFunctionPinPattern:
 		return true
 	}
 	return false

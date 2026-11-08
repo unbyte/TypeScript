@@ -657,6 +657,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get arguments(): RemoteNodeList | undefined {
         return this.getNamedChild("arguments") as RemoteNodeList;
     }
+    get arms(): RemoteNodeList | undefined {
+        return this.getNamedChild("arms") as RemoteNodeList;
+    }
     get assertsModifier(): RemoteNode | undefined {
         return this.getNamedChild("assertsModifier") as RemoteNode;
     }
@@ -765,6 +768,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get finallyBlock(): RemoteNode | undefined {
         return this.getNamedChild("finallyBlock") as RemoteNode;
     }
+    get guard(): RemoteNode | undefined {
+        return this.getNamedChild("guard") as RemoteNode;
+    }
     get head(): RemoteNode | undefined {
         return this.getNamedChild("head") as RemoteNode;
     }
@@ -851,6 +857,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     }
     get parameters(): RemoteNodeList | undefined {
         return this.getNamedChild("parameters") as RemoteNodeList;
+    }
+    get pattern(): RemoteNode | undefined {
+        return this.getNamedChild("pattern") as RemoteNode;
     }
     get postfixToken(): RemoteNode | undefined {
         return this.getNamedChild("postfixToken") as RemoteNode;

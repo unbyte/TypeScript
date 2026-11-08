@@ -20,6 +20,7 @@ func TestTypefnRoundTrip(t *testing.T) {
  }
  typefn Empty<> { return []; }`
 	source += "\ntypefn Text<T> { return `head${T + 1} middle${`nested${T}`} tail\\`${T}`; }"
+	source += "\ntypefn Patterns<T> { match (T) { [head, {value: item}, ...rest] if (true) => { return head; } is F<T> => { return 1; } -2n => { return 2; } type(string) => { return 3; } `GET ${path}${=text.concat<[\"/\", \":id\"]>}${_}` => { return path; } _ => { return never; } } }"
 	opts := ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}
 	file := parser.ParseSourceFile(opts, source, core.ScriptKindTS)
 	if ds := file.Diagnostics(); len(ds) > 0 {

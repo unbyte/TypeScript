@@ -313,6 +313,10 @@ import type {
     TypeFunctionDeclaration,
     TypeFunctionExpression,
     TypeFunctionExpressionKind,
+    TypeFunctionMatch,
+    TypeFunctionMatchArm,
+    TypeFunctionPattern,
+    TypeFunctionPatternKind,
     TypeFunctionStatement,
     TypeFunctionStatementKind,
     TypeFunctionTemplate,
@@ -2116,6 +2120,33 @@ export declare namespace isTypeFunctionTemplateSpan {
 }
 isTypeFunctionTemplateSpan.Handle = isTypeFunctionTemplateSpan as any;
 
+export function isTypeFunctionMatch(node: Node): node is TypeFunctionMatch {
+    return node.kind === SyntaxKind.TypeFunctionMatch;
+}
+
+export declare namespace isTypeFunctionMatch {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionMatch>;
+}
+isTypeFunctionMatch.Handle = isTypeFunctionMatch as any;
+
+export function isTypeFunctionMatchArm(node: Node): node is TypeFunctionMatchArm {
+    return node.kind === SyntaxKind.TypeFunctionMatchArm;
+}
+
+export declare namespace isTypeFunctionMatchArm {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionMatchArm>;
+}
+isTypeFunctionMatchArm.Handle = isTypeFunctionMatchArm as any;
+
+export function isTypeFunctionPattern(node: Node): node is TypeFunctionPattern {
+    return isTypeFunctionPatternKind(node.kind);
+}
+
+export declare namespace isTypeFunctionPattern {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionPattern>;
+}
+isTypeFunctionPattern.Handle = isTypeFunctionPattern as any;
+
 export function isForInStatement(node: Node): node is ForInStatement {
     return node.kind === SyntaxKind.ForInStatement;
 }
@@ -3012,6 +3043,20 @@ export function isTypeFunctionExpressionKind(kind: SyntaxKind): kind is TypeFunc
         || kind === SyntaxKind.TypeFunctionIndex
         || kind === SyntaxKind.TypeFunctionNativeType
         || kind === SyntaxKind.TypeFunctionSpread;
+}
+
+export function isTypeFunctionPatternKind(kind: SyntaxKind): kind is TypeFunctionPatternKind {
+    return kind === SyntaxKind.TypeFunctionWildcardPattern
+        || kind === SyntaxKind.TypeFunctionCapturePattern
+        || kind === SyntaxKind.TypeFunctionLiteralPattern
+        || kind === SyntaxKind.TypeFunctionIsPattern
+        || kind === SyntaxKind.TypeFunctionNativePattern
+        || kind === SyntaxKind.TypeFunctionTuplePattern
+        || kind === SyntaxKind.TypeFunctionRestPattern
+        || kind === SyntaxKind.TypeFunctionObjectPattern
+        || kind === SyntaxKind.TypeFunctionFieldPattern
+        || kind === SyntaxKind.TypeFunctionTemplatePattern
+        || kind === SyntaxKind.TypeFunctionPinPattern;
 }
 
 export function isLiteralKind(kind: SyntaxKind): boolean {

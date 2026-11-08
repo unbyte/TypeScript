@@ -63,13 +63,14 @@ const (
 )
 
 type Parser struct {
-	typefnAborted bool
-	typefnDepth   int
-	typefnWork    int
-	typefnLimit   int
-	typefnCalls   map[int]typefnCallParse
-	scanner       *scanner.Scanner
-	factory       ast.NodeFactory
+	typefnAborted       bool
+	typefnDepth         int
+	typefnPatternFollow bool
+	typefnWork          int
+	typefnLimit         int
+	typefnCalls         map[int]typefnCallParse
+	scanner             *scanner.Scanner
+	factory             ast.NodeFactory
 
 	opts       ast.SourceFileParseOptions
 	sourceText string

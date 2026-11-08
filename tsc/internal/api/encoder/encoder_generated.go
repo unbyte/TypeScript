@@ -554,6 +554,15 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindTypeFunctionTemplateSpan:
 		n := node.AsTypeFunctionTemplateSpan()
 		return (boolToByte(n.Expression != nil) << 0) | (boolToByte(n.Literal != nil) << 1)
+	case ast.KindTypeFunctionMatch:
+		n := node.AsTypeFunctionMatch()
+		return (boolToByte(n.Expression != nil) << 0) | (boolToByte(n.Arms != nil) << 1)
+	case ast.KindTypeFunctionMatchArm:
+		n := node.AsTypeFunctionMatchArm()
+		return (boolToByte(n.Pattern != nil) << 0) | (boolToByte(n.Guard != nil) << 1) | (boolToByte(n.Body != nil) << 2)
+	case ast.KindTypeFunctionWildcardPattern, ast.KindTypeFunctionCapturePattern, ast.KindTypeFunctionLiteralPattern, ast.KindTypeFunctionIsPattern, ast.KindTypeFunctionNativePattern, ast.KindTypeFunctionTuplePattern, ast.KindTypeFunctionRestPattern, ast.KindTypeFunctionObjectPattern, ast.KindTypeFunctionFieldPattern, ast.KindTypeFunctionTemplatePattern, ast.KindTypeFunctionPinPattern:
+		n := node.AsTypeFunctionPattern()
+		return (boolToByte(n.Name() != nil) << 0) | (boolToByte(n.Expression != nil) << 1) | (boolToByte(n.Elements != nil) << 2)
 	default:
 		return 0
 	}

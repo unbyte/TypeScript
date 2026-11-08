@@ -9,6 +9,85 @@ import (
 // Parenthesized operators deliberately preserve the DSL's angle-list grammar.
 func (p *Printer) emitTypefn(node *ast.Node) {
 	switch node.Kind {
+	case ast.KindTypeFunctionMatch:
+		d := node.AsTypeFunctionMatch()
+		p.writeKeyword("match")
+		p.writeSpace()
+		p.writePunctuation("(")
+		p.emitTypefn(d.Expression)
+		p.writePunctuation(") {")
+		p.writeLine()
+		p.increaseIndent()
+		for _, arm := range d.Arms.Nodes {
+			p.emitTypefn(arm)
+			p.writeLine()
+		}
+		p.decreaseIndent()
+		p.writePunctuation("}")
+	case ast.KindTypeFunctionMatchArm:
+		d := node.AsTypeFunctionMatchArm()
+		p.emitTypefn(d.Pattern)
+		if d.Guard != nil {
+			p.writeSpace()
+			p.writeKeyword("if")
+			p.writeSpace()
+			p.writePunctuation("(")
+			p.emitTypefn(d.Guard)
+			p.writePunctuation(")")
+		}
+		p.writeSpace()
+		p.writePunctuation("=>")
+		p.writeSpace()
+		p.emitTypefn(d.Body)
+	case ast.KindTypeFunctionWildcardPattern, ast.KindTypeFunctionCapturePattern,
+		ast.KindTypeFunctionLiteralPattern, ast.KindTypeFunctionIsPattern,
+		ast.KindTypeFunctionNativePattern, ast.KindTypeFunctionTuplePattern,
+		ast.KindTypeFunctionRestPattern, ast.KindTypeFunctionObjectPattern,
+		ast.KindTypeFunctionFieldPattern, ast.KindTypeFunctionTemplatePattern, ast.KindTypeFunctionPinPattern:
+		d := node.AsTypeFunctionPattern()
+		switch node.Kind {
+		case ast.KindTypeFunctionWildcardPattern, ast.KindTypeFunctionCapturePattern:
+			p.emitBindingIdentifier(node.Name().AsIdentifier())
+		case ast.KindTypeFunctionTuplePattern, ast.KindTypeFunctionObjectPattern:
+			open, close := "[", "]"
+			if node.Kind == ast.KindTypeFunctionObjectPattern {
+				open, close = "{", "}"
+			}
+			p.writePunctuation(open)
+			for i, item := range d.Elements.Nodes {
+				if i > 0 {
+					p.writePunctuation(",")
+					p.writeSpace()
+				}
+				p.emitTypefn(item)
+			}
+			p.writePunctuation(close)
+		default:
+			switch node.Kind {
+			case ast.KindTypeFunctionIsPattern:
+				p.writeKeyword("is")
+				p.writeSpace()
+			case ast.KindTypeFunctionRestPattern:
+				p.writePunctuation("...")
+			case ast.KindTypeFunctionPinPattern:
+				p.writePunctuation("=")
+			case ast.KindTypeFunctionFieldPattern:
+				if ast.IsIdentifier(node.Name()) {
+					p.emitBindingIdentifier(node.Name().AsIdentifier())
+				} else {
+					p.emitExpression(node.Name(), ast.OperatorPrecedenceLowest)
+				}
+				p.writePunctuation(":")
+				p.writeSpace()
+			}
+			// Unary negative literal patterns are not parenthesized DSL expressions.
+			if node.Kind == ast.KindTypeFunctionLiteralPattern && d.Expression.Kind == ast.KindTypeFunctionUnary {
+				p.writeOperator("-")
+				p.emitTypefn(d.Expression.AsTypeFunctionExpression().Operands.Nodes[0])
+			} else {
+				p.emitTypefn(d.Expression)
+			}
+		}
 	case ast.KindTypeFunctionDeclaration:
 		d := node.AsTypeFunctionDeclaration()
 		p.emitModifierList(node, node.Modifiers(), false)

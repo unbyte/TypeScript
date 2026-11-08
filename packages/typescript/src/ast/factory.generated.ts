@@ -246,6 +246,10 @@ import type {
     TypeFunctionDeclaration,
     TypeFunctionExpression,
     TypeFunctionExpressionKind,
+    TypeFunctionMatch,
+    TypeFunctionMatchArm,
+    TypeFunctionPattern,
+    TypeFunctionPatternKind,
     TypeFunctionStatement,
     TypeFunctionStatementKind,
     TypeFunctionTemplate,
@@ -310,6 +314,9 @@ export class NodeObject {
     }
     get arguments(): any {
         return this._data?.arguments;
+    }
+    get arms(): any {
+        return this._data?.arms;
     }
     get assertsModifier(): any {
         return this._data?.assertsModifier;
@@ -436,6 +443,9 @@ export class NodeObject {
     }
     get finallyBlock(): any {
         return this._data?.finallyBlock;
+    }
+    get guard(): any {
+        return this._data?.guard;
     }
     get head(): any {
         return this._data?.head;
@@ -580,6 +590,9 @@ export class NodeObject {
     }
     get path(): any {
         return this._data?.path;
+    }
+    get pattern(): any {
+        return this._data?.pattern;
     }
     get phaseModifier(): any {
         return this._data?.phaseModifier;
@@ -1208,6 +1221,22 @@ function cloneNodeData(node: Node): any {
             return { head: n.head, spans: n.spans };
         case SyntaxKind.TypeFunctionTemplateSpan:
             return { expression: n.expression, literal: n.literal };
+        case SyntaxKind.TypeFunctionMatch:
+            return { expression: n.expression, arms: n.arms };
+        case SyntaxKind.TypeFunctionMatchArm:
+            return { pattern: n.pattern, guard: n.guard, body: n.body };
+        case SyntaxKind.TypeFunctionWildcardPattern:
+        case SyntaxKind.TypeFunctionCapturePattern:
+        case SyntaxKind.TypeFunctionLiteralPattern:
+        case SyntaxKind.TypeFunctionIsPattern:
+        case SyntaxKind.TypeFunctionNativePattern:
+        case SyntaxKind.TypeFunctionTuplePattern:
+        case SyntaxKind.TypeFunctionRestPattern:
+        case SyntaxKind.TypeFunctionObjectPattern:
+        case SyntaxKind.TypeFunctionFieldPattern:
+        case SyntaxKind.TypeFunctionTemplatePattern:
+        case SyntaxKind.TypeFunctionPinPattern:
+            return { name: n.name, expression: n.expression, elements: n.elements };
         case SyntaxKind.ForInStatement:
             return { awaitModifier: n.awaitModifier, initializer: n.initializer, expression: n.expression, statement: n.statement };
         case SyntaxKind.ForOfStatement:
@@ -1821,6 +1850,57 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
     [SyntaxKind.TypeFunctionTemplateSpan]: (data, cbNode, cbNodes) =>
         visitNode(cbNode, data.expression) ||
         visitNode(cbNode, data.literal),
+    [SyntaxKind.TypeFunctionMatch]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.arms),
+    [SyntaxKind.TypeFunctionMatchArm]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.pattern) ||
+        visitNode(cbNode, data.guard) ||
+        visitNode(cbNode, data.body),
+    [SyntaxKind.TypeFunctionWildcardPattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionCapturePattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionLiteralPattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionIsPattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionNativePattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionTuplePattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionRestPattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionObjectPattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionFieldPattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionTemplatePattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionPinPattern]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNode(cbNode, data.expression) ||
+        visitNodes(cbNode, cbNodes, data.elements),
     [SyntaxKind.ForInStatement]: (data, cbNode, cbNodes) =>
         visitNode(cbNode, data.awaitModifier) ||
         visitNode(cbNode, data.initializer) ||
@@ -4238,6 +4318,206 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
             if (res) return res;
         }
     },
+    [SyntaxKind.TypeFunctionMatch]: function* (data) {
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        for (const n of data.arms) {
+            const res = yield n;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionMatchArm]: function* (data) {
+        if (data.pattern) {
+            const res = yield data.pattern;
+            if (res) return res;
+        }
+        if (data.guard) {
+            const res = yield data.guard;
+            if (res) return res;
+        }
+        if (data.body) {
+            const res = yield data.body;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionWildcardPattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionCapturePattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionLiteralPattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionIsPattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionNativePattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionTuplePattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionRestPattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionObjectPattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionFieldPattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionTemplatePattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionPinPattern]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.elements) {
+            for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
     [SyntaxKind.ForInStatement]: function* (data) {
         if (data.awaitModifier) {
             const res = yield data.awaitModifier;
@@ -5757,6 +6037,29 @@ export function createTypeFunctionTemplateSpan(expression: Node, literal: Templa
     }) as unknown as TypeFunctionTemplateSpan;
 }
 
+export function createTypeFunctionMatch(expression: Node, arms: readonly TypeFunctionMatchArm[]): TypeFunctionMatch {
+    return new NodeObject(SyntaxKind.TypeFunctionMatch, {
+        expression,
+        arms: createNodeArray(arms),
+    }) as unknown as TypeFunctionMatch;
+}
+
+export function createTypeFunctionMatchArm(pattern: Node, guard: Node | undefined, body: TypeFunctionBlock): TypeFunctionMatchArm {
+    return new NodeObject(SyntaxKind.TypeFunctionMatchArm, {
+        pattern,
+        guard,
+        body,
+    }) as unknown as TypeFunctionMatchArm;
+}
+
+export function createTypeFunctionPattern<TKind extends TypeFunctionPatternKind>(kind: TKind, name?: Node, expression?: Node, elements?: readonly Node[]): TypeFunctionPattern<TKind> {
+    return new NodeObject(kind, {
+        name,
+        expression,
+        elements: elements ? createNodeArray(elements) : undefined,
+    }) as unknown as TypeFunctionPattern<TKind>;
+}
+
 export function createForInStatement(awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {
     return new NodeObject(SyntaxKind.ForInStatement, {
         awaitModifier,
@@ -6487,6 +6790,18 @@ export function updateTypeFunctionTemplate(node: TypeFunctionTemplate, head: Tem
 
 export function updateTypeFunctionTemplateSpan(node: TypeFunctionTemplateSpan, expression: Node, literal: TemplateMiddleOrTail): TypeFunctionTemplateSpan {
     return node.expression !== expression || node.literal !== literal ? createTypeFunctionTemplateSpan(expression, literal) : node;
+}
+
+export function updateTypeFunctionMatch(node: TypeFunctionMatch, expression: Node, arms: readonly TypeFunctionMatchArm[]): TypeFunctionMatch {
+    return node.expression !== expression || node.arms !== arms ? createTypeFunctionMatch(expression, arms) : node;
+}
+
+export function updateTypeFunctionMatchArm(node: TypeFunctionMatchArm, pattern: Node, guard: Node | undefined, body: TypeFunctionBlock): TypeFunctionMatchArm {
+    return node.pattern !== pattern || node.guard !== guard || node.body !== body ? createTypeFunctionMatchArm(pattern, guard, body) : node;
+}
+
+export function updateTypeFunctionPattern<TKind extends TypeFunctionPatternKind>(node: TypeFunctionPattern<TKind>, name?: Node, expression?: Node, elements?: readonly Node[]): TypeFunctionPattern<TKind> {
+    return node.name !== name || node.expression !== expression || node.elements !== elements ? createTypeFunctionPattern(node.kind, name, expression, elements) : node;
 }
 
 export function updateForInStatement(node: ForInStatement, awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {

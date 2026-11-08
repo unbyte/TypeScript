@@ -1,5 +1,6 @@
 import {
     isTypeFunctionExpression,
+    isIdentifier,
     SyntaxKind,
     TokenFlags,
     visitEachChild,
@@ -12,6 +13,9 @@ import {
     createTemplateTail,
     createToken,
     createTypeFunctionBlock,
+    createTypeFunctionMatch,
+    createTypeFunctionMatchArm,
+    createTypeFunctionPattern,
     createTypeFunctionDeclaration,
     createTypeFunctionExpression,
     createTypeFunctionStatement,
@@ -156,4 +160,22 @@ test("DSL template children preserve interpolation and literal order", () => {
     assert.notEqual(changed, span);
     assert.equal(changed.literal, span.literal);
     assert.equal(changed.expression.kind, SyntaxKind.TypeFunctionBinary);
+});
+
+
+test("match arm and pattern visitors retain native nodes across serialization", () => {
+    const capture = createTypeFunctionPattern(SyntaxKind.TypeFunctionCapturePattern, createIdentifier("item"));
+    const rest = createTypeFunctionPattern(SyntaxKind.TypeFunctionRestPattern, undefined, capture);
+    const tuple = createTypeFunctionPattern(SyntaxKind.TypeFunctionTuplePattern, undefined, undefined, [rest]);
+    const arm = createTypeFunctionMatchArm(tuple, undefined, createTypeFunctionBlock([]));
+    const match = createTypeFunctionMatch(binary(), [arm]);
+    const transformed = visitEachChild(capture, () => createIdentifier("changed"));
+    assert.equal(transformed.kind, SyntaxKind.TypeFunctionCapturePattern);
+    assert.ok(isIdentifier(transformed.name!));
+    assert.equal(transformed.name.text, "changed");
+    const source = createSourceFile([createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], createTypeFunctionBlock([match]))], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
+    const remote = new RemoteSourceFile(encodeSourceFile(source), new TextDecoder());
+    const decoded = remote.statements!.at(0)!.body!.statements!.at(0)!;
+    assert.equal(decoded.kind, SyntaxKind.TypeFunctionMatch);
+    assert.equal(decoded.arms!.at(0)!.pattern!.elements!.at(0)!.expression!.name!.text, "item");
 });
