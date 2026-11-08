@@ -1571,6 +1571,10 @@ func (p *Program) GetDeclarationDiagnostics(ctx context.Context, sourceFile *ast
 // Source-recipe declaration serialization is a separate implementation milestone.
 // Never publish an ordinary alias that loses executable DSL behavior.
 func (p *Program) typefnDeclarationDiagnostics(sourceFile *ast.SourceFile) []*ast.Diagnostic {
+	if p.Options().GetTypefnVersion() != 1 {
+		return nil
+	}
+
 	var result []*ast.Diagnostic
 	for _, file := range p.GetSourceFiles() {
 		if sourceFile != nil && file != sourceFile {
