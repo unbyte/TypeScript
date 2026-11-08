@@ -23365,6 +23365,11 @@ func (c *Checker) instantiateMappedTupleType(tupleType *Type, mappedType *Type, 
 	elementTypes := c.getElementTypes(tupleType)
 	newElementTypes := make([]*Type, len(elementTypes))
 	newElementInfos := slices.Clone(elementInfos)
+	var declared, sourceDeclared []*Type
+	if c.compilerOptions.GetTypefnVersion() == 1 && (tupleType.TargetTupleType().combinedFlags&ElementFlagsOptional != 0 || modifiers&MappedTypeModifiersIncludeOptional != 0) {
+		declared = make([]*Type, len(elementTypes))
+		sourceDeclared = c.typefnTupleDeclared(tupleType)
+	}
 	for i, e := range elementTypes {
 		flags := elementInfos[i].flags
 		var mapped *Type
@@ -23390,10 +23395,22 @@ func (c *Checker) instantiateMappedTupleType(tupleType *Type, mappedType *Type, 
 			}
 		}
 		newElementTypes[i] = mapped
+		if declared != nil {
+			declared[i] = mapped
+			if newElementInfos[i].flags&ElementFlagsOptional != 0 {
+				declared[i] = c.typefnMappedTupleDeclared(tupleType, sourceDeclared[i], mappedType, c.getStringLiteralType(strconv.Itoa(i)), fixedMapper)
+			}
+		}
 	}
 	newReadonly := getModifiedReadonlyState(tupleType.TargetTupleType().readonly, getMappedTypeModifiers(mappedType))
 	if slices.Contains(newElementTypes, c.errorType) {
 		return c.errorType
+	}
+	if declared != nil {
+		target := c.getTupleTargetType(newElementInfos, newReadonly)
+		if target.objectFlags&ObjectFlagsTuple != 0 {
+			return c.createNormalizedTupleTypeWithDeclared(target, newElementTypes, declared, ObjectFlagsNone)
+		}
 	}
 	return c.createTupleTypeEx(newElementTypes, newElementInfos, newReadonly)
 }

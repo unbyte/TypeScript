@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 206 fixtures covering native calibration, execution,
+The compiler-project harness has 207 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -320,5 +320,8 @@ and array/tuple domains; unknown shape/metadata retains the operation for replay
 Generated label declarations are reused per source operation/name/mode. Tests run
 in both exact-optional modes and cover native round trips, metadata after spreads,
 symbolic value/shape replay, optional never/undefined and invalid descriptors.
-Optional native mapped/inferred tuple producers still need provenance adapters;
-`error-tuple-provenance` records the current explicit diagnostic for Partial.
+Native homomorphic tuple mappings now retain declared values through identity
+projections (Partial/Readonly) and compute other templates before optional-read
+wrapping. Tests cover both exact-optional modes, transformed templates, explicit
+undefined, labels and generic replay. Native inferred/copied tuple producers still
+need provenance adapters.

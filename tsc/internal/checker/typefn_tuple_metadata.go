@@ -102,3 +102,25 @@ func (c *Checker) instantiateTypefnTuple(t *Type, mapper *TypeMapper) *Type {
 	}
 	return c.createNormalizedTupleTypeWithDeclared(t.Target(), values, mapped, ObjectFlagsNone)
 }
+
+// Mapped optionality changes read Types, but not the declared template value.
+// Identity projections also retain the source's declared optional value, just as
+// native property mappings do. Other templates use their native computed value.
+func (c *Checker) typefnMappedTupleDeclared(source, sourceValue, mapped, key *Type, mapper *TypeMapper) *Type {
+	base := core.OrElse(mapped.AsMappedType().target, mapped)
+	template := ast.SkipParentheses(base.AsMappedType().declaration.Type)
+	if template == nil {
+		return nil
+	}
+	templateMapper := appendTypeMapping(mapper, c.getTypeParameterFromMappedType(mapped), key)
+	instantiate := func(node *ast.Node) *Type {
+		return c.instantiateType(c.instantiateType(c.getTypeFromTypeNode(node), base.AsMappedType().mapper), templateMapper)
+	}
+	if ast.IsIndexedAccessTypeNode(template) {
+		access := template.AsIndexedAccessTypeNode()
+		if c.isTypeIdenticalTo(instantiate(access.ObjectType), source) && c.isTypeIdenticalTo(instantiate(access.IndexType), key) {
+			return sourceValue
+		}
+	}
+	return c.removeMissingType(instantiate(template), true)
+}

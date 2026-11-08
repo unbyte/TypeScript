@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "tuple-mapped-provenance.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}
