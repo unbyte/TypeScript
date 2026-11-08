@@ -41,6 +41,9 @@ import {
     isTemplateMiddle,
     isTemplateTail,
     isTypeAliasDeclaration,
+    isTypeFunctionDeclaration,
+    isTypeFunctionExpression,
+    isTypeFunctionStatement,
     isTypeNode,
     isVariableDeclarationList,
     isVariableStatement,
@@ -807,6 +810,38 @@ describe("API", { concurrency }, () => {
 
         program.dispose();
         assert.throws(() => program.getSourceFileNames(), /snapshot .* not found/);
+    });
+
+    test("typefn profile crosses the native API and produces computed native types", () => {
+        using api = spawnAPI({
+            "/src/index.ts": `typefn Twice<N> { return N * 2; } type Answer = Twice<21>; const valid: Answer = 42; const invalid: Answer = 43;`,
+        });
+        const options: CompilerOptions = { noLib: true, strict: true, typefn: { version: 1, limits: { callDepth: 16 } } };
+        using program = api.createProgram(["/src/index.ts"], options);
+        assert.deepEqual(program.getCompilerOptions(), options);
+        assert.deepEqual(program.getSyntacticDiagnostics("/src/index.ts"), []);
+        const file = (program.getSourceFile("/src/index.ts"))!;
+        assert.equal(file.statements[0].kind, SyntaxKind.TypeFunctionDeclaration);
+        const declaration = file.statements[0];
+        assert.ok(isTypeFunctionDeclaration(declaration));
+        const returned = declaration.body.statements[0];
+        assert.ok(isTypeFunctionStatement(returned));
+        assert.equal(returned.kind, SyntaxKind.TypeFunctionReturn);
+        assert.ok(returned.expression && isTypeFunctionExpression(returned.expression));
+        assert.equal(returned.expression.kind, SyntaxKind.TypeFunctionBinary);
+        // This tree came from the Go encoder, rather than the JavaScript factory.
+        assert.deepEqual([...returned.expression.childrenIter()].map(child => child.kind), [
+            SyntaxKind.TypeFunctionName,
+            SyntaxKind.AsteriskToken,
+            SyntaxKind.TypeFunctionLiteral,
+        ]);
+        const diagnostics = program.getSemanticDiagnostics("/src/index.ts");
+        assert.equal(diagnostics.length, 1);
+        assert.equal(diagnostics[0].code, 2322);
+        assert.match(diagnostics[0].text, /43.*42/);
+
+        using disabled = api.createProgram(["/src/index.ts"], { noLib: true });
+        assert.ok((disabled.getSyntacticDiagnostics("/src/index.ts")).length > 0);
     });
 
     test("createSnapshot creates independent synthetic programs", () => {
