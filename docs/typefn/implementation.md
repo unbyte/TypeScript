@@ -154,7 +154,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 119 fixtures covering native calibration, execution,
+The compiler-project harness has 123 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -190,3 +190,14 @@ objects and failures reached through latent properties. Object patterns wait for
 unknown mapped keys and exclude implicit Object/Function prototype augmentation.
 Exhaustive native dependency and boundary conformance remains in the acceptance
 tracker; these cases do not complete the full generic-evaluation contract.
+
+### Classification
+
+`reflect.kind`, `reflect.isAny`, `reflect.isNever` and `reflect.isUnknown` are
+implemented. Classification distinguishes whole boolean before its native union,
+and tuples before arrays. Symbolic object fields/array elements can retain a known
+category; potentially collapsing unions and shape-changing mapped/variadic Types
+wait. Tests cover all specified category tags, generic normalization, enum rejection
+and the unsupported closed-category diagnostic (including infinite native templates,
+for which the current category vocabulary has no tag). Prelude editor metadata is
+shared with the intrinsic registry.

@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-reflect-closed-category.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "reflect.kind does not support this closed native category"
+    }
+  ]
+}

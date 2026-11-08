@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "reflect-kind.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

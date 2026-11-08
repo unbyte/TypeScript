@@ -18,6 +18,10 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"reflect.kind":          {1, 1, false, "Value"},
+	"reflect.isAny":         {1, 1, false, "Value"},
+	"reflect.isNever":       {1, 1, false, "Value"},
+	"reflect.isUnknown":     {1, 1, false, "Value"},
 	"text.length":           {1, 1, false, "Text"},
 	"text.peek":             {2, 2, false, "Text, Offset"},
 	"text.slice":            {2, 3, false, "Text, Start, End = text.length<Text>"},
@@ -88,6 +92,14 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) *Type {
 			}
 			return v.deferExpression(e, slots)
 		}
+	}
+	if strings.HasPrefix(e.intrinsic, "reflect.") {
+		result := v.reflectKind(e.node, e.intrinsic, args[0])
+		if v.blocked && !v.failed {
+			v.blocked = false
+			return v.deferExpression(e, slots)
+		}
+		return result
 	}
 	if strings.HasPrefix(e.intrinsic, "text.") {
 		result := v.textIntrinsic(e.node, e.intrinsic, args)

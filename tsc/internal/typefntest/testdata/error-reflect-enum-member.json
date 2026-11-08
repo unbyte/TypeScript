@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-reflect-enum-member.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "reflect.kind does not classify enum Types or members"
+    }
+  ]
+}
