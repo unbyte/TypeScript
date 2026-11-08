@@ -45,7 +45,13 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 			indices = append(indices, graph.index)
 		}
 	}
-	status, reachable := validateTypefnGraph(edges, indices, func() bool { return v.step(node) })
+	validation := []int{}
+	for _, root := range arena.validationRoots {
+		if graph := constructionOf(root); graph != nil {
+			validation = append(validation, graph.index)
+		}
+	}
+	status, reachable := validateTypefnGraph(edges, validation, func() bool { return v.step(node) })
 	if status == typefnGraphCanceled {
 		return v.c.errorType
 	}
@@ -53,11 +59,19 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		return v.error(node, "recursive cycle must cross a structural edge")
 	}
 	// An ordinary result that ignores Self retains its original native identity.
-	if len(reachable) == 0 {
+	if len(indices) == 0 {
 		if group {
 			return v.c.createTupleType(roots)
 		}
 		return roots[0]
+	}
+	// Discarded valid graphs must not add phantom leaf parameters to the
+	// returned native Types. Only reachable output shapes are materialized.
+	if len(arena.validationRoots) != len(roots) {
+		status, reachable = reachableTypefnGraph(edges, indices, func() bool { return v.step(node) })
+		if status != typefnGraphValid {
+			return v.c.errorType
+		}
 	}
 	leaves := []*Type{}
 	leafIndex := map[*Type]int{}

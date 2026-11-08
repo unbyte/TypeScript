@@ -164,7 +164,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 335 fixtures covering native calibration, execution,
+The compiler-project harness has 337 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -553,3 +553,11 @@ and slice bounds, with both exact-optional modes. The declared optional value is
 asserted separately from its read Type. Native sealing checks alias resolution
 before accessing instantiation caches and attributes generated diagnostics to the
 builder application.
+
+Every reached nested recursive builder contributes validation roots, including a
+builder whose result is later discarded. Invalid nested cycles therefore cannot
+be erased by returning a constant or an unrelated structure. After validation,
+only the output-reachable graph is materialized: discarded valid builders do not
+introduce phantom native generic parameters. Regressions cover both discarded
+failures and a generic-body reflection assertion that resolves without depending
+on the unused builder's symbolic leaf.

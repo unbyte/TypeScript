@@ -28,10 +28,11 @@ type typefnConstructionProperty struct {
 	optional, readonly bool
 }
 type typefnConstructionArena struct {
-	nodes       []*Type
-	definitions []*Type
-	blocked     bool
-	bytes       int
+	nodes           []*Type
+	definitions     []*Type
+	validationRoots []*Type
+	blocked         bool
+	bytes           int
 }
 
 func constructionOf(t *Type) *typefnConstruction {
@@ -188,7 +189,7 @@ func (v *typefnVM) recursiveConstruction(e *typefnExpression, slots []typefnValu
 	if parent == nil {
 		defer func() { v.construction = nil; v.liveBytes -= arena.bytes }()
 	}
-	storage := int(count) * (2*int(unsafe.Sizeof((*Type)(nil))) + int(unsafe.Sizeof(TupleElementInfo{})))
+	storage := int(count) * (3*int(unsafe.Sizeof((*Type)(nil))) + int(unsafe.Sizeof(TupleElementInfo{})))
 	if !v.reserveValues(e.node, storage) {
 		return v.c.errorType
 	}
@@ -241,6 +242,8 @@ func (v *typefnVM) recursiveConstruction(e *typefnExpression, slots []typefnValu
 		return v.deferExpression(e, slots)
 	}
 	copy(arena.definitions[base:], roots)
+	// Reached nested builders must validate even if their results are discarded.
+	arena.validationRoots = append(arena.validationRoots, roots...)
 	if parent != nil {
 		return result
 	}

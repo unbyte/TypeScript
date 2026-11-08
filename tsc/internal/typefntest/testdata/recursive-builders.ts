@@ -49,3 +49,19 @@ typefn CopyGroup<N> {return types.recursiveGroup<N,typefn<R> {
 type DynamicGroup<N>=CopyGroup<N>;
 type ReplayedCount=Assert<Equal<DynamicGroup<3>['length'],3>>;
 type GroupCycle=Assert<DynamicGroup<3>[2]['next'] extends DynamicGroup<3>[2]?true:false>;
+// A reached valid nested builder may be discarded, without adding its leaves
+// to the returned graph's native generic environment.
+typefn Discarded<T> {return types.recursive<typefn<Outer> {
+ type unused=types.recursive<typefn<Inner> {return {next:Inner;value:T};}>;
+ return {next:Outer};
+}>;}
+type DiscardedGeneric<T>=Discarded<T>;
+type DiscardedValid=Assert<DiscardedGeneric<1>['next'] extends DiscardedGeneric<2>?true:false>;
+typefn DiscardedLeaf<T> {return types.recursive<typefn<Outer> {
+ type unused=types.recursive<typefn<Inner> {return {next:Inner;value:T};}>;
+ return 42;
+}>;}
+type DiscardedLeafGeneric<T>=DiscardedLeaf<T>;
+type DiscardedLeafResult=Assert<Equal<DiscardedLeafGeneric<1>,42>>;
+typefn ClassifyDiscarded<T> {return reflect.kind<Discarded<T>>;}
+type NoPhantomDependency<T>=Assert<Equal<ClassifyDiscarded<T>,"object">>;

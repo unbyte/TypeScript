@@ -22,7 +22,7 @@ const (
 // All roots/edges use arena-local indices. The caller supplies a work/cancellation
 // gate so long chains never depend on the Go stack or evade the invocation budget.
 // Unreachable scratch nodes are ignored and cannot become published roots.
-func validateTypefnGraph(edges [][]typefnGraphEdge, roots []int, step func() bool) (typefnGraphValidation, []int) {
+func reachableTypefnGraph(edges [][]typefnGraphEdge, roots []int, step func() bool) (typefnGraphValidation, []int) {
 	seen := make([]bool, len(edges))
 	work := append([]int(nil), roots...)
 	var reachable []int
@@ -46,6 +46,14 @@ func validateTypefnGraph(edges [][]typefnGraphEdge, roots []int, step func() boo
 			}
 			work = append(work, edge.target)
 		}
+	}
+	return typefnGraphValid, reachable
+}
+
+func validateTypefnGraph(edges [][]typefnGraphEdge, roots []int, step func() bool) (typefnGraphValidation, []int) {
+	status, reachable := reachableTypefnGraph(edges, roots, step)
+	if status != typefnGraphValid {
+		return status, nil
 	}
 	type frame struct{ node, next int }
 	color := make([]uint8, len(edges))
