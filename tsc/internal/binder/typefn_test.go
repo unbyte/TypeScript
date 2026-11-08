@@ -1,11 +1,12 @@
 package binder_test
 
 import (
+	"testing"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/binder"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/parser"
-	"testing"
 )
 
 func TestTypefnLexicalScopes(t *testing.T) {

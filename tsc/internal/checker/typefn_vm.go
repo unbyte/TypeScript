@@ -1,10 +1,11 @@
 package checker
 
 import (
-	"github.com/microsoft/TypeScript/tsc/internal/ast"
-	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"slices"
 	"unsafe"
+
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/core"
 )
 
 // A root owns the budget; nested DSL/native calls cannot reset it. Failed roots

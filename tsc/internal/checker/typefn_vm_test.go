@@ -1,10 +1,11 @@
 package checker
 
 import (
+	"testing"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
-	"testing"
 )
 
 func TestTypefnScalarEvaluationAndTermOwnership(t *testing.T) {

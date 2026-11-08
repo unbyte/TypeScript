@@ -2,10 +2,11 @@ package checker
 
 import (
 	"context"
+	"testing"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
-	"testing"
 )
 
 func TestTypefnNativeAbsorptionAndSubstitution(t *testing.T) {
