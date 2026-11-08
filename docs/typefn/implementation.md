@@ -1,9 +1,12 @@
 # Implementation status
 
-The `typefn-redesign` branch now has an **experimental implementation** of
+The `feat/typefn` branch has an **experimental implementation** of
 language version 1. The R2 specification remains the design baseline; this is not
 a claim of R2 conformance or production maturity. Native editor integration is
 implemented for this slice; see [editor integration](editor-integration.md).
+The [implementation review series](review-series.md) records the current upstream
+baseline, focused commits, ownership/performance changes and validation. The older
+`typefn-redesign` branch remains available for comparison.
 The [design/implementation audit](design-implementation-audit.md) records verified
 defects, corrections and the remaining specification gaps.
 The subsequent [deferred-evaluation implementation](deferred-evaluation.md)
@@ -72,6 +75,10 @@ implemented before executable definitions can be published safely in `.d.ts` fil
   fabricated deferred type parameters, or global VM caches are used. Native checker
   node caches still apply. Pending terms are interned per checker; completed VM
   calls have no general result memoization layer yet.
+  A lazily allocated `typefnState` owns these tables and the active root VM.
+  Iterator slots are assigned while lowering and stored in each call frame; their
+  storage participates in the live-frame estimate. Native-only operations avoid
+  allocating DSL state, and disabled-profile checking skips DSL declaration scans.
 * Dedicated native deferred Types retain immutable operands and captured locals.
   Native TypeMapper substitution replays calculations when arguments change.
   Per-call journals retain reached checks even when a result is discarded or
@@ -146,7 +153,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation and audit
 
-`tsc/internal/typefntest` currently has 62 isolated virtual compiler-project fixtures,
+`tsc/internal/typefntest` currently has 65 isolated virtual compiler-project fixtures,
 using bundled libraries,
 real config parsing, native Type equality assertions, exact diagnostic sets and exact
 emit text. Fixtures run concurrently. The harness itself is calibrated with failures
@@ -154,6 +161,7 @@ for wrong assignments and accidental `any` results. Successful `Assert<...>` use
 must resolve to the literal Type `true`, so error recovery cannot silently pass
 the assertions. Negative tests cover definition
 errors, scalar errors, constraints, unsupported features, cycles and resource limits.
+The frame-budget cases include iterator storage, in addition to register storage.
 Optional-property assertions run with both exact-optional settings. Iteration tests
 cover snapshots, nested loop control, readonly/empty tuples, special union Types
 and symbolic leaves in a known tuple. A standalone CLI smoke test compiled the
@@ -166,7 +174,7 @@ and `async` are tested as both bindings and reads/assignments.
 The parser has AST parent/span/source-order invariants, grammar/recovery tests, limit tests and a
 fuzz target. An initial ten-second fuzz campaign executed 74,055 inputs without
 failure. That is bounded evidence, not a proof of parser safety or full grammar
-coverage. The printer has a stable parse/print/reparse test. The generated API has a DSL
+coverage; this historical campaign was not repeated for the review series. The printer has a stable parse/print/reparse test. The generated API has a DSL
 encode/decode/print round-trip test. A real editor-session test changes an imported
 function, checks the unchanged consumer and hover, restores the function, then disables
 and reenables the DSL profile to check parse-cache isolation. Native LS tests cover
@@ -193,14 +201,16 @@ go test ./tsc/internal/typefntest -run '^$' -bench BenchmarkTypefnProject -bench
 ```
 
 The benchmark measures complete cold compiler projects, including libraries and
-native checking. It does not isolate VM throughput. An initial three-iteration Linux/amd64 run on an AMD EPYC 9V74 measured
+native checking. It does not isolate VM throughput. A historical three-iteration Linux/amd64 run on an AMD EPYC 9V74 measured
 237.8 ms/project and 75.7 MB/project for the native calibration, and 217.6 ms/project
 and 76.6 MB/project for the execution fixture. These are different workloads and
 a tiny sample; the numbers do not establish DSL overhead or a speed advantage.
+Current-series samples and their limitations are recorded in the
+[review ledger](review-series.md).
 
 The full 141-case specification
 conformance suite and wide community workload ports remain outstanding.
 
 Implementation commits are deliberately separated for review; use
-`git log --oneline typefn-redesign`. The integration manifests are the executable
+`git log --reverse --oneline f7973164a..feat/typefn`. The integration manifests are the executable
 record of this milestone's behavior.

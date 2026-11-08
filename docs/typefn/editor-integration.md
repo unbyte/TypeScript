@@ -1,6 +1,6 @@
 # Native compiler and editor integration
 
-This document describes implemented behavior on `typefn-redesign`. The complete
+This document describes implemented behavior on `feat/typefn`. The complete
 language remains experimental; see [implementation status](implementation.md)
 for execution gaps and [the specification](spec/integration.md) for the target.
 
@@ -126,11 +126,15 @@ project lifetime, and language-service request infrastructure:
 Key implementation files:
 
 - `tsc/internal/ast/typefn.go`, `tsc/internal/binder/binder.go`: syntax traversal and scopes.
-- `tsc/internal/checker/typefn.go`, `tsc/internal/checker/typefn_services.go`: lowering,
-  evaluation, signature descriptions, and cancelable result queries.
+- `tsc/internal/checker/typefn_program.go`, `typefn_vm.go`, `typefn_expression.go`,
+  `typefn_native.go`, `typefn_values.go`, and `typefn_operators.go`: lowering,
+  frame execution, native applications, construction, and scalar operations.
+- `tsc/internal/checker/typefn_state.go`, `typefn_services.go`: checker-local
+  ownership, signature descriptions, and cancelable result queries.
 - `tsc/internal/checker/typefn_deferred.go`, `tsc/internal/checker/typefn_display.go`:
   immutable deferred terms, substitution/replay, guards, and pending Type display.
-- `tsc/internal/ls/typefn.go` and the native LS providers: completion, signature help,
+- `tsc/internal/ls/typefn_symbols.go`, `typefn_completion.go`, `typefn_tokens.go`
+  and the native LS providers: completion, signature help,
   scanner coloring, hover, result hints, navigation, outline, and folding.
 - `tsc/internal/format`: native formatting context and indentation rules.
 - `tsc/internal/project/checkerpool.go`: existing checker ownership and cancellation

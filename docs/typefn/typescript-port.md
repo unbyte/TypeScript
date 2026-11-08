@@ -1,5 +1,8 @@
 # Integration into the current TypeScript repository
 
+This note records the original port. The subsequent [`feat/typefn` review series](review-series.md)
+rebuilds that implementation as focused commits and records the current validation.
+
 ## Baselines and scope
 
 This port starts at `unbyte/TypeScript` main
