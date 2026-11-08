@@ -547,7 +547,7 @@ const (
 	TypeFlagsConditional     TypeFlags = 1 << 26 // T extends U ? X : Y
 	TypeFlagsUnion           TypeFlags = 1 << 27 // Union (T | U)
 	TypeFlagsIntersection    TypeFlags = 1 << 28 // Intersection (T & U)
-	TypeFlagsReserved1       TypeFlags = 1 << 29 // Used by union/intersection type construction
+	TypeFlagsTypefn          TypeFlags = 1 << 29 // Deferred DSL computation or guarded result
 	TypeFlagsReserved2       TypeFlags = 1 << 30 // Used by union/intersection type construction
 	TypeFlagsReserved3       TypeFlags = 1 << 31
 
@@ -574,7 +574,7 @@ const (
 	TypeFlagsUnionOrIntersection           = TypeFlagsUnion | TypeFlagsIntersection
 	TypeFlagsStructuredType                = TypeFlagsObject | TypeFlagsUnion | TypeFlagsIntersection
 	TypeFlagsTypeVariable                  = TypeFlagsTypeParameter | TypeFlagsIndexedAccess
-	TypeFlagsInstantiableNonPrimitive      = TypeFlagsTypeVariable | TypeFlagsConditional | TypeFlagsSubstitution
+	TypeFlagsInstantiableNonPrimitive      = TypeFlagsTypeVariable | TypeFlagsConditional | TypeFlagsSubstitution | TypeFlagsTypefn
 	TypeFlagsInstantiablePrimitive         = TypeFlagsIndex | TypeFlagsTemplateLiteral | TypeFlagsStringMapping
 	TypeFlagsInstantiable                  = TypeFlagsInstantiableNonPrimitive | TypeFlagsInstantiablePrimitive
 	TypeFlagsStructuredOrInstantiable      = TypeFlagsStructuredType | TypeFlagsInstantiable
@@ -592,7 +592,7 @@ const (
 	TypeFlagsIncludesWildcard                = TypeFlagsIndexedAccess
 	TypeFlagsIncludesEmptyObject             = TypeFlagsConditional
 	TypeFlagsIncludesInstantiable            = TypeFlagsSubstitution
-	TypeFlagsIncludesConstrainedTypeVariable = TypeFlagsReserved1
+	TypeFlagsIncludesConstrainedTypeVariable = TypeFlagsTypefn
 	TypeFlagsIncludesError                   = TypeFlagsReserved2
 	TypeFlagsNotPrimitiveUnion               = TypeFlagsAny | TypeFlagsUnknown | TypeFlagsVoid | TypeFlagsNever | TypeFlagsObject | TypeFlagsIntersection | TypeFlagsIncludesInstantiable
 )
@@ -626,6 +626,7 @@ var typeFlagNames = [...]struct {
 	{TypeFlagsTemplateLiteral, "TemplateLiteral"},
 	{TypeFlagsStringMapping, "StringMapping"},
 	{TypeFlagsSubstitution, "Substitution"},
+	{TypeFlagsTypefn, "Typefn"},
 	{TypeFlagsIndexedAccess, "IndexedAccess"},
 	{TypeFlagsConditional, "Conditional"},
 	{TypeFlagsUnion, "Union"},
@@ -778,6 +779,7 @@ const (
 	typeKindStringMapping
 	typeKindSubstitution
 	typeKindConditional
+	typeKindTypefn
 	typeKindObject
 	typeKindTypeReference
 	typeKindInterface
@@ -812,6 +814,7 @@ var (
 	_ [0 - unsafe.Offsetof(StringMappingType{}.Type)]byte
 	_ [0 - unsafe.Offsetof(SubstitutionType{}.Type)]byte
 	_ [0 - unsafe.Offsetof(ConditionalType{}.Type)]byte
+	_ [0 - unsafe.Offsetof(typefnTerm{}.Type)]byte
 	_ [0 - unsafe.Offsetof(ObjectType{}.Type)]byte
 	_ [0 - unsafe.Offsetof(TypeReference{}.Type)]byte
 	_ [0 - unsafe.Offsetof(InterfaceType{}.Type)]byte
@@ -892,6 +895,8 @@ func (t *Type) AsSubstitutionType() *SubstitutionType {
 func (t *Type) AsConditionalType() *ConditionalType {
 	return castType[ConditionalType](t, typeKindConditional)
 }
+
+func (t *Type) asTypefnTerm() *typefnTerm { return castType[typefnTerm](t, typeKindTypefn) }
 
 // Casts for embedded struct types
 

@@ -73,6 +73,7 @@ func TestTypeCasts(t *testing.T) {
 		{typeKindStringMapping, &StringMappingType{}, func(t *Type) any { return t.AsStringMappingType() }},
 		{typeKindSubstitution, &SubstitutionType{}, func(t *Type) any { return t.AsSubstitutionType() }},
 		{typeKindConditional, &ConditionalType{}, func(t *Type) any { return t.AsConditionalType() }},
+		{typeKindTypefn, &typefnTerm{}, func(t *Type) any { return t.asTypefnTerm() }},
 		{typeKindObject, &ObjectType{}, func(t *Type) any { return t.AsObjectType() }},
 		{typeKindTypeReference, &TypeReference{}, func(t *Type) any { return t.AsTypeReference() }},
 		{typeKindInterface, &InterfaceType{}, func(t *Type) any { return t.AsInterfaceType() }},
