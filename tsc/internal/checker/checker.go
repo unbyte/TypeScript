@@ -22920,7 +22920,7 @@ func (c *Checker) clearActiveMapperCaches() {
 // we perform type inference (i.e. a type parameter of a generic function). We cache
 // results for union and intersection types for performance reasons.
 func (c *Checker) couldContainTypeVariablesWorker(t *Type) bool {
-	if c.typefn != nil && c.typefn.objects[t] {
+	if c.typefn != nil && (c.typefn.objects[t] || c.typefn.tupleDeclared[t] != nil) {
 		return true
 	}
 	if t.flags&TypeFlagsStructuredOrInstantiable == 0 {
@@ -22962,8 +22962,13 @@ func (c *Checker) instantiateTypeWorker(t *Type, m *TypeMapper, alias *TypeAlias
 	if t.flags&TypeFlagsTypefn != 0 {
 		return c.instantiateTypefn(t, m)
 	}
-	if c.typefn != nil && c.typefn.objects[t] {
-		return c.instantiateTypefnObject(t, m)
+	if c.typefn != nil {
+		if c.typefn.objects[t] {
+			return c.instantiateTypefnObject(t, m)
+		}
+		if c.typefn.tupleDeclared[t] != nil {
+			return c.instantiateTypefnTuple(t, m)
+		}
 	}
 	flags := t.flags
 	switch {
@@ -24097,6 +24102,10 @@ func (c *Checker) createNormalizedTypeReference(target *Type, typeArguments []*T
 }
 
 func (c *Checker) createNormalizedTupleTypeEx(target *Type, elementTypes []*Type, objectFlags ObjectFlags) *Type {
+	return c.createNormalizedTupleTypeWithDeclared(target, elementTypes, nil, objectFlags)
+}
+
+func (c *Checker) createNormalizedTupleTypeWithDeclared(target *Type, elementTypes, declared []*Type, objectFlags ObjectFlags) *Type {
 	d := target.AsTupleType()
 	if d.combinedFlags&ElementFlagsNonRequired == 0 {
 		// No need to normalize when we only have regular required elements
@@ -24114,7 +24123,7 @@ func (c *Checker) createNormalizedTupleTypeEx(target *Type, elementTypes []*Type
 				})
 				if c.checkCrossProductUnion(checkTypes) {
 					return c.mapType(e, func(t *Type) *Type {
-						return c.createNormalizedTupleTypeEx(target, core.ReplaceElement(elementTypes, i, t), objectFlags)
+						return c.createNormalizedTupleTypeWithDeclared(target, core.ReplaceElement(elementTypes, i, t), declared, objectFlags)
 					})
 				}
 			}
@@ -24127,8 +24136,8 @@ func (c *Checker) createNormalizedTupleTypeEx(target *Type, elementTypes []*Type
 	// In either layout, zero or more generic variadic elements may be present at any location.
 	// Note that the element types may contain an extra 'this' type argument that we want to ignore during normalization
 	// and then just append to the normalized element types.
-	n := &TupleNormalizer{}
-	if !n.normalize(c, elementTypes[:len(d.elementInfos)], d.elementInfos) {
+	n := &TupleNormalizer{trackDeclared: c.compilerOptions != nil && c.compilerOptions.GetTypefnVersion() == 1}
+	if !n.normalize(c, elementTypes[:len(d.elementInfos)], declared, d.elementInfos) {
 		return c.errorType
 	}
 	if len(elementTypes) > len(d.elementInfos) {
@@ -24139,7 +24148,7 @@ func (c *Checker) createNormalizedTupleTypeEx(target *Type, elementTypes []*Type
 	case tupleTarget == c.emptyGenericType:
 		return c.emptyObjectType
 	case len(n.types) != 0:
-		return c.createTypeReferenceEx(tupleTarget, n.types, objectFlags)
+		return c.withTypefnTupleDeclared(c.createTypeReferenceEx(tupleTarget, n.types, objectFlags), n.declared)
 	}
 	return tupleTarget
 }
@@ -24149,6 +24158,8 @@ func (c *Checker) createNormalizedTupleType(target *Type, elementTypes []*Type) 
 }
 
 type TupleNormalizer struct {
+	trackDeclared           bool
+	declared                []*Type
 	c                       *Checker
 	types                   []*Type
 	infos                   []TupleElementInfo
@@ -24157,19 +24168,23 @@ type TupleNormalizer struct {
 	lastOptionalOrRestIndex int
 }
 
-func (n *TupleNormalizer) normalize(c *Checker, elementTypes []*Type, elementInfos []TupleElementInfo) bool {
+func (n *TupleNormalizer) normalize(c *Checker, elementTypes, declared []*Type, elementInfos []TupleElementInfo) bool {
 	n.c = c
 	n.lastRequiredIndex = -1
 	n.firstRestIndex = -1
 	n.lastOptionalOrRestIndex = -1
 	for i, t := range elementTypes {
 		info := elementInfos[i]
+		var raw *Type
+		if i < len(declared) {
+			raw = declared[i]
+		}
 		if info.flags&ElementFlagsVariadic != 0 {
 			if t.flags&TypeFlagsAny != 0 {
-				n.add(t, TupleElementInfo{flags: ElementFlagsRest, labeledDeclaration: info.labeledDeclaration})
+				n.add(t, nil, TupleElementInfo{flags: ElementFlagsRest, labeledDeclaration: info.labeledDeclaration})
 			} else if t.flags&TypeFlagsInstantiableNonPrimitive != 0 || c.isGenericMappedType(t) {
 				// Generic variadic elements stay as they are.
-				n.add(t, info)
+				n.add(t, raw, info)
 			} else if isTupleType(t) {
 				spreadTypes := c.getElementTypes(t)
 				if len(spreadTypes)+len(n.types) >= 10_000 {
@@ -24181,8 +24196,16 @@ func (n *TupleNormalizer) normalize(c *Checker, elementTypes []*Type, elementInf
 				}
 				// Spread variadic elements with tuple types into the resulting tuple.
 				spreadInfos := t.TargetTupleType().elementInfos
+				var spreadDeclared []*Type
+				if n.trackDeclared && t.TargetTupleType().combinedFlags&ElementFlagsOptional != 0 {
+					spreadDeclared = c.typefnTupleDeclared(t)
+				}
 				for j, s := range spreadTypes {
-					n.add(s, spreadInfos[j])
+					var raw *Type
+					if j < len(spreadDeclared) {
+						raw = spreadDeclared[j]
+					}
+					n.add(s, raw, spreadInfos[j])
 				}
 			} else {
 				// Treat everything else as an array type and create a rest element.
@@ -24193,17 +24216,20 @@ func (n *TupleNormalizer) normalize(c *Checker, elementTypes []*Type, elementInf
 				if s == nil {
 					s = c.errorType
 				}
-				n.add(s, TupleElementInfo{flags: ElementFlagsRest, labeledDeclaration: info.labeledDeclaration})
+				n.add(s, nil, TupleElementInfo{flags: ElementFlagsRest, labeledDeclaration: info.labeledDeclaration})
 			}
 		} else {
 			// Copy other element kinds with no change.
-			n.add(t, info)
+			n.add(t, raw, info)
 		}
 	}
 	// Turn optional elements preceding the last required element into required elements
 	for i := range n.lastRequiredIndex {
 		if n.infos[i].flags&ElementFlagsOptional != 0 {
 			n.infos[i].flags = ElementFlagsRequired
+			if n.declared != nil {
+				n.declared[i] = n.types[i]
+			}
 		}
 	}
 	if n.firstRestIndex >= 0 && n.firstRestIndex < n.lastOptionalOrRestIndex {
@@ -24217,13 +24243,26 @@ func (n *TupleNormalizer) normalize(c *Checker, elementTypes []*Type, elementInf
 			types = append(types, t)
 		}
 		n.types[n.firstRestIndex] = c.getUnionType(types)
+		if n.declared != nil {
+			n.declared[n.firstRestIndex] = n.types[n.firstRestIndex]
+			n.declared = slices.Delete(n.declared, n.firstRestIndex+1, n.lastOptionalOrRestIndex+1)
+		}
 		n.types = slices.Delete(n.types, n.firstRestIndex+1, n.lastOptionalOrRestIndex+1)
 		n.infos = slices.Delete(n.infos, n.firstRestIndex+1, n.lastOptionalOrRestIndex+1)
 	}
 	return true
 }
 
-func (n *TupleNormalizer) add(t *Type, info TupleElementInfo) {
+func (n *TupleNormalizer) add(t, declared *Type, info TupleElementInfo) {
+	if n.trackDeclared && (n.declared != nil || info.flags&ElementFlagsOptional != 0) {
+		if n.declared == nil {
+			n.declared = slices.Clone(n.types)
+		}
+		if info.flags&ElementFlagsOptional == 0 {
+			declared = t
+		}
+		n.declared = append(n.declared, declared)
+	}
 	if info.flags&ElementFlagsRequired != 0 {
 		n.lastRequiredIndex = len(n.types)
 	}
@@ -24985,7 +25024,11 @@ func (c *Checker) getTypeFromArrayOrTupleTypeNode(node *ast.Node) (result *Type)
 				elementTypes = core.Map(node.Elements(), c.getTypeFromTypeNode)
 			}
 			if target.objectFlags&ObjectFlagsTuple != 0 {
-				links.resolvedType = c.createNormalizedTupleTypeEx(target, elementTypes, ObjectFlagsFromTypeNode)
+				var declared []*Type
+				if c.compilerOptions.GetTypefnVersion() == 1 {
+					declared = c.typefnTupleNodeDeclared(node)
+				}
+				links.resolvedType = c.createNormalizedTupleTypeWithDeclared(target, elementTypes, declared, ObjectFlagsFromTypeNode)
 			} else {
 				links.resolvedType = c.createTypeReferenceEx(target, elementTypes, ObjectFlagsFromTypeNode)
 			}

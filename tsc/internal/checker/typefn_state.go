@@ -12,6 +12,8 @@ type typefnState struct {
 	syntaxChecks   map[*ast.Node]bool
 	objects        map[*Type]bool
 	propertyValues map[*ast.Symbol]*Type
+	tupleDeclared  map[*Type][]*Type
+	tupleViews     map[typefnTupleKey]*Type
 }
 
 func (c *Checker) getTypefnState() *typefnState {

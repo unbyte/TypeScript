@@ -303,3 +303,12 @@ optional methods/initializers, Pick/Partial/Readonly, explicit undefined, never,
 generic replay and metadata-only changes. Exotic native optional-member provenance
 (e.g. reverse mappings) still needs exhaustive coverage; unavailable provenance
 diagnoses rather than silently stripping undefined.
+
+Native tuple normalization now has an opt-in declared-value metadata channel.
+Source annotations and variadic spreads retain optional declared values separately
+from native read arguments. Immutable metadata views share native tuple targets and
+semantic arguments, are interned per checker and participate in TypeMapper replay.
+Unit tests cover distinct declared values with equal read Types, snapshot isolation,
+reuse, spreads and optional-to-required normalization. Untracked native producers
+retain an explicit unavailable-provenance marker; tuple descriptor APIs and coverage
+of those producers are the next steps.
