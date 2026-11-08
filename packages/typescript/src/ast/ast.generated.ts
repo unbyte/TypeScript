@@ -1355,6 +1355,7 @@ export interface TypeFunctionDeclaration extends StatementBase, DeclarationBase,
     readonly kind: SyntaxKind.TypeFunctionDeclaration;
     readonly name: Identifier;
     readonly typeParameters: NodeArray<TypeParameterDeclaration>;
+    readonly resultKind?: TypeFunctionKind;
     readonly body: TypeFunctionBlock;
 }
 export interface TypeFunctionBlock extends NodeBase {
@@ -1403,6 +1404,11 @@ export interface TypeFunctionPattern<TKind extends TypeFunctionPatternKind = Typ
     readonly name?: Node;
     readonly expression?: Node;
     readonly elements?: NodeArray<Node>;
+}
+export interface TypeFunctionKind extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionKind;
+    readonly kindToken: Token;
+    readonly slots?: NodeArray<Identifier>;
 }
 
 export type Expression = ExpressionBase;

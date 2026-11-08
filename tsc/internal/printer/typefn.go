@@ -105,8 +105,31 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 			p.emitTypeParameter(parameter.AsTypeParameterDeclaration())
 		}
 		p.writePunctuation(">")
+		if d.ResultKind != nil {
+			p.writePunctuation(":")
+			p.writeSpace()
+			p.emitTypefn(d.ResultKind)
+		}
 		p.writeSpace()
 		p.emitTypefn(d.Body)
+	case ast.KindTypeFunctionKind:
+		d := node.AsTypeFunctionKind()
+		if d.KindToken.Kind == ast.KindIdentifier {
+			p.writeKeyword("typefn")
+			p.writePunctuation("<")
+			if d.Slots != nil {
+				for i := range d.Slots.Nodes {
+					if i > 0 {
+						p.writePunctuation(",")
+						p.writeSpace()
+					}
+					p.writePunctuation("_")
+				}
+			}
+			p.writePunctuation(">")
+		} else {
+			p.writeKeyword("type")
+		}
 	case ast.KindTypeFunctionTemplate:
 		d := node.AsTypeFunctionTemplate()
 		p.emitTemplateHead(d.Head.AsTemplateHead())

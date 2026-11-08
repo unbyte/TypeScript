@@ -58,6 +58,34 @@ syntax-dependency tables, and the active root VM. These belong to a checker snap
 No Type handles or mutable frames cross snapshots. Canceled checkers are discarded
 by the native checker pool. There is no general completed-call memoization cache.
 
+## Constructor-value integration plan
+
+The next VM extension must keep `Constructor(n)` separate from native `Type`
+handles. A constructor is not a new TypeFlags case, an invented native generic
+parameter, or an object/tuple field. Registers and immutable capture snapshots need
+an explicit value representation with Type and constructor alternatives; native
+operators and structural builders accept only the Type alternative.
+
+A constructor identity consists of eligible code or a known native generic symbol,
+its fixed arity, and frozen captures. Local self-reference names the same code and
+closure environment without a mutable capture cycle. Captures may contain symbolic
+Types or other known constructors. Native substitution must map those captures;
+capturing them alone does not expand their members or evaluate a function body.
+
+Pending Type results may retain a call recipe containing constructor identities
+and ordinary Type arguments. Their dependency keys, substitution, guard journals,
+diagnostic provenance and display must account for captured values. Constructors
+must never be smuggled through existing `[]*Type` operand lists. Completed-call
+caching must use the same canonical value identities once caching is implemented.
+
+Definition checking will assign parameter/binding/result kinds independently of
+execution, propagate constructor arities through applications, and solve recursive
+result dependencies using explicit annotations. Native Type positions reject
+constructor values. The separate native alias bridge is restricted to nongeneric
+aliases whose constructor identity and creation checks are ready, as required by
+the specification. This section describes the implementation boundary; constructor
+execution and alias integration are still pending.
+
 ## Native checking boundaries
 
 Immutable deferred terms use the native tagged Type representation without enlarging

@@ -224,3 +224,33 @@ func TestTypefnPatterns(t *testing.T) {
 		t.Fatal("pattern recursion bypassed syntax depth limit")
 	}
 }
+
+func TestTypefnResultKinds(t *testing.T) {
+	for _, annotation := range []string{"type", "typefn<>", "typefn<_>", "typefn<_, _>"} {
+		t.Run(annotation, func(t *testing.T) {
+			file := parseTypefn(t, "typefn F<>: "+annotation+" { return 1; }", ast.SourceFileParseOptions{TypefnVersion: 1})
+			if len(file.Diagnostics()) != 0 {
+				t.Fatal(file.Diagnostics())
+			}
+			kind := file.Statements.Nodes[0].AsTypeFunctionDeclaration().ResultKind
+			if kind == nil || kind.Kind != ast.KindTypeFunctionKind {
+				t.Fatal("result kind was discarded")
+			}
+			data := kind.AsTypeFunctionKind()
+			if annotation == "type" {
+				if data.KindToken.Kind != ast.KindTypeKeyword || data.Slots != nil {
+					t.Fatal("wrong Type kind")
+				}
+			} else if data.KindToken.Kind != ast.KindIdentifier || data.Slots == nil {
+				t.Fatal("missing constructor slots")
+			}
+			checkTypefnTree(t, file.AsNode())
+		})
+	}
+	for _, annotation := range []string{"string", "typefn", "typefn<T>", "typefn<_,>", "typefn<,>", "typefn<_ _>"} {
+		file := parseTypefn(t, "typefn F<>: "+annotation+" { return 1; }", ast.SourceFileParseOptions{TypefnVersion: 1})
+		if len(file.Diagnostics()) == 0 {
+			t.Fatalf("accepted malformed result kind %s", annotation)
+		}
+	}
+}

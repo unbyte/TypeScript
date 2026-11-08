@@ -76,12 +76,13 @@ func (p *Parser) parseTypefnDeclaration(pos int, jsdoc jsdocScannerInfo, modifie
 			p.typefnError("parameter defaults are not supported")
 		}
 	}
+	var resultKind *ast.Node
 	if p.token == ast.KindColonToken {
 		p.nextToken()
-		p.parseExpected(ast.KindTypeKeyword) // The initial Type-result profile.
+		resultKind = p.parseTypefnResultKind()
 	}
 	body := p.parseTypefnBlock()
-	node := p.finishNode(p.factory.NewTypeFunctionDeclaration(modifiers, name, parameters, body), pos)
+	node := p.finishNode(p.factory.NewTypeFunctionDeclaration(modifiers, name, parameters, resultKind, body), pos)
 	p.withJSDoc(node, jsdoc)
 	p.checkJSSyntax(node)
 	return node
@@ -459,4 +460,39 @@ func (p *Parser) parseTypefnTemplate() *ast.Node {
 		}
 	}
 	return p.finishNode(p.factory.NewTypeFunctionTemplate(head, p.newNodeList(core.NewTextRange(start, p.nodePos()), spans)), pos)
+}
+
+// Kinds remain syntax, not native Type expressions. A nil slots list denotes
+// Type; an empty constructor list is Constructor(0), not a missing annotation.
+func (p *Parser) parseTypefnResultKind() *ast.Node {
+	pos := p.nodePos()
+	var keyword *ast.Node
+	var slots *ast.NodeList
+	if p.token == ast.KindIdentifier && p.scanner.TokenValue() == "typefn" {
+		keyword = p.parseIdentifier()
+		start := p.nodePos()
+		p.parseExpected(ast.KindLessThanToken)
+		var names []*ast.Node
+		for p.token != ast.KindGreaterThanToken && p.token != ast.KindOpenBraceToken && p.token != ast.KindEndOfFile && p.typefnStep() {
+			before := p.nodePos()
+			name := p.parseIdentifier()
+			if name.Text() != "_" {
+				p.parseErrorAtRange(name.Loc, diagnostics.NewAdHocMessage("typefn: constructor kind slots must be '_'"))
+			}
+			names = append(names, name)
+			if p.nodePos() == before || p.token != ast.KindCommaToken {
+				break
+			}
+			p.nextToken()
+			if p.token == ast.KindGreaterThanToken {
+				p.typefnError("constructor kind slots do not allow a trailing comma")
+			}
+		}
+		p.parseExpected(ast.KindGreaterThanToken)
+		slots = p.factory.NewNodeList(names)
+		slots.Loc = core.NewTextRange(start, p.nodePos())
+	} else {
+		keyword = p.parseExpectedToken(ast.KindTypeKeyword)
+	}
+	return p.finishNode(p.factory.NewTypeFunctionKind(keyword, slots), pos)
 }

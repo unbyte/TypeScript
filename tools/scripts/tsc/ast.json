@@ -451,6 +451,7 @@
                 "comment": "Imperative typefn DSL (opt-in)"
             },
             "TypeFunctionDeclaration",
+            "TypeFunctionKind",
             "TypeFunctionBlock",
             "TypeFunctionBinding",
             "TypeFunctionAssignment",
@@ -5272,6 +5273,11 @@
                         "list": "NodeList"
                     },
                     {
+                        "name": "ResultKind",
+                        "type": "TypeFunctionKind",
+                        "optional": true
+                    },
+                    {
                         "name": "Body",
                         "type": "TypeFunctionBlock"
                     }
@@ -5502,6 +5508,25 @@
                         "default": "TypeFunctionPatternKind"
                     }
                 ]
+            },
+            "TypeFunctionKind": {
+                "extends": [
+                    "NodeBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "KindToken",
+                        "type": "Token"
+                    },
+                    {
+                        "name": "Slots",
+                        "type": "Identifier",
+                        "list": "NodeList",
+                        "optional": true
+                    }
+                ],
+                "arena": true
             }
         },
         "aliases": {

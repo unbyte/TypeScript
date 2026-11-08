@@ -33,7 +33,20 @@ func (c *Checker) TypeFunctionSignature(symbol *ast.Symbol) string {
 	for _, parameter := range declaration.TypeParameters() {
 		parameters = append(parameters, scanner.GetTextOfNode(parameter))
 	}
-	return "typefn " + declaration.Name().Text() + "<" + strings.Join(parameters, ", ") + ">: type"
+	resultKind := "type"
+	if annotation := declaration.AsTypeFunctionDeclaration().ResultKind; annotation != nil {
+		kind := annotation.AsTypeFunctionKind()
+		if kind.KindToken.Kind == ast.KindIdentifier {
+			var slots []string
+			if kind.Slots != nil {
+				for range kind.Slots.Nodes {
+					slots = append(slots, "_")
+				}
+			}
+			resultKind = "typefn<" + strings.Join(slots, ", ") + ">"
+		}
+	}
+	return "typefn " + declaration.Name().Text() + "<" + strings.Join(parameters, ", ") + ">: " + resultKind
 }
 
 // Queries evaluate only native applications, never an arbitrary generic body or

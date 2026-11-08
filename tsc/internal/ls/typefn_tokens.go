@@ -83,6 +83,15 @@ func typefnTokenMetadata(file *ast.SourceFile, root *ast.Node) (map[int]bool, ma
 	intrinsics := map[int]tokenType{}
 	var visit func(*ast.Node) bool
 	visit = func(node *ast.Node) bool {
+		if node.Kind == ast.KindTypeFunctionKind {
+			kind := node.AsTypeFunctionKind()
+			intrinsics[scanner.GetTokenPosOfNode(kind.KindToken, file, false)] = tokenTypeKeyword
+			if kind.Slots != nil {
+				for _, slot := range kind.Slots.Nodes {
+					intrinsics[scanner.GetTokenPosOfNode(slot, file, false)] = tokenTypeOperator
+				}
+			}
+		}
 		if node.Kind == ast.KindTypeFunctionMatch {
 			intrinsics[scanner.GetTokenPosOfNode(node, file, false)] = tokenTypeKeyword
 		}

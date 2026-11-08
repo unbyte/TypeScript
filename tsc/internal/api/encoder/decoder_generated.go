@@ -1148,8 +1148,9 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		modifiers := d.modifierListAt(it.nextIf(mask, 0))
 		name := d.nodeAt(it.nextIf(mask, 1))
 		typeParameters := d.nodeListAt(it.nextIf(mask, 2))
-		body := d.nodeAt(it.nextIf(mask, 3))
-		return d.factory.NewTypeFunctionDeclaration(modifiers, name, typeParameters, body), nil
+		resultKind := d.nodeAt(it.nextIf(mask, 3))
+		body := d.nodeAt(it.nextIf(mask, 4))
+		return d.factory.NewTypeFunctionDeclaration(modifiers, name, typeParameters, resultKind, body), nil
 	case ast.KindTypeFunctionBlock:
 		return d.factory.NewTypeFunctionBlock(d.singleNodeListChild(childIndices)), nil
 	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionAssignment, ast.KindTypeFunctionReturn, ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn, ast.KindTypeFunctionBreak, ast.KindTypeFunctionContinue, ast.KindTypeFunctionExpressionStatement:
@@ -1195,6 +1196,11 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		expression := d.nodeAt(it.nextIf(mask, 1))
 		elements := d.nodeListAt(it.nextIf(mask, 2))
 		return d.factory.NewTypeFunctionPattern(kind, name, expression, elements), nil
+	case ast.KindTypeFunctionKind:
+		it := newChildIter(childIndices)
+		kindToken := d.nodeAt(it.nextIf(mask, 0))
+		slots := d.nodeListAt(it.nextIf(mask, 1))
+		return d.factory.NewTypeFunctionKind(kindToken, slots), nil
 	default:
 		return nil, fmt.Errorf("unhandled node kind %v with %d children", kind, len(childIndices))
 	}

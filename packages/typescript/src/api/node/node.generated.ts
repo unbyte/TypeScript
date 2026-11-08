@@ -792,6 +792,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get jsdocPropertyTags(): RemoteNode | undefined {
         return this.getNamedChild("jsdocPropertyTags") as RemoteNode;
     }
+    get kindToken(): RemoteNode | undefined {
+        return this.getNamedChild("kindToken") as RemoteNode;
+    }
     get label(): RemoteNode | undefined {
         return this.getNamedChild("label") as RemoteNode;
     }
@@ -882,8 +885,14 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get readonlyToken(): RemoteNode | undefined {
         return this.getNamedChild("readonlyToken") as RemoteNode;
     }
+    get resultKind(): RemoteNode | undefined {
+        return this.getNamedChild("resultKind") as RemoteNode;
+    }
     get right(): RemoteNode | undefined {
         return this.getNamedChild("right") as RemoteNode;
+    }
+    get slots(): RemoteNodeList | undefined {
+        return this.getNamedChild("slots") as RemoteNodeList;
     }
     get spans(): RemoteNodeList | undefined {
         return this.getNamedChild("spans") as RemoteNodeList;

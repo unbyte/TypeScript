@@ -538,7 +538,7 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 		return (boolToByte(n.TagName != nil) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeExpression != nil) << 2) | (boolToByte(n.Comment != nil) << 3)
 	case ast.KindTypeFunctionDeclaration:
 		n := node.AsTypeFunctionDeclaration()
-		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.Body != nil) << 3)
+		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.ResultKind != nil) << 3) | (boolToByte(n.Body != nil) << 4)
 	case ast.KindTypeFunctionBlock:
 		n := node.AsTypeFunctionBlock()
 		return (boolToByte(n.Statements != nil) << 0)
@@ -563,6 +563,9 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindTypeFunctionWildcardPattern, ast.KindTypeFunctionCapturePattern, ast.KindTypeFunctionLiteralPattern, ast.KindTypeFunctionIsPattern, ast.KindTypeFunctionNativePattern, ast.KindTypeFunctionTuplePattern, ast.KindTypeFunctionRestPattern, ast.KindTypeFunctionObjectPattern, ast.KindTypeFunctionFieldPattern, ast.KindTypeFunctionTemplatePattern, ast.KindTypeFunctionPinPattern:
 		n := node.AsTypeFunctionPattern()
 		return (boolToByte(n.Name() != nil) << 0) | (boolToByte(n.Expression != nil) << 1) | (boolToByte(n.Elements != nil) << 2)
+	case ast.KindTypeFunctionKind:
+		n := node.AsTypeFunctionKind()
+		return (boolToByte(n.KindToken != nil) << 0) | (boolToByte(n.Slots != nil) << 1)
 	default:
 		return 0
 	}

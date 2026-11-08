@@ -306,6 +306,9 @@ func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
 		return p
 	}
 	b := typefnCompiler{c: c, p: p, scopes: []map[string]typefnBinding{{}}}
+	if kind := node.AsTypeFunctionDeclaration().ResultKind; kind != nil && kind.AsTypeFunctionKind().KindToken.Kind == ast.KindIdentifier {
+		b.error(kind, "constructor results are not implemented yet")
+	}
 	if typefnReserved(node.Name().Text()) {
 		b.error(node.Name(), "reserved function name "+node.Name().Text())
 	}

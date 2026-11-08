@@ -246,6 +246,7 @@ import type {
     TypeFunctionDeclaration,
     TypeFunctionExpression,
     TypeFunctionExpressionKind,
+    TypeFunctionKind,
     TypeFunctionMatch,
     TypeFunctionMatchArm,
     TypeFunctionPattern,
@@ -501,6 +502,9 @@ export class NodeObject {
     get keywordToken(): any {
         return this._data?.keywordToken;
     }
+    get kindToken(): any {
+        return this._data?.kindToken;
+    }
     get label(): any {
         return this._data?.label;
     }
@@ -627,11 +631,17 @@ export class NodeObject {
     get referencedFiles(): any {
         return this._data?.referencedFiles;
     }
+    get resultKind(): any {
+        return this._data?.resultKind;
+    }
     get right(): any {
         return this._data?.right;
     }
     get scriptKind(): any {
         return this._data?.scriptKind;
+    }
+    get slots(): any {
+        return this._data?.slots;
     }
     get spanMap(): any {
         return this._data?.spanMap;
@@ -1191,7 +1201,7 @@ function cloneNodeData(node: Node): any {
         case SyntaxKind.JSDocTypeLiteral:
             return { jsdocPropertyTags: n.jsdocPropertyTags, isArrayType: n.isArrayType };
         case SyntaxKind.TypeFunctionDeclaration:
-            return { modifiers: n.modifiers, name: n.name, typeParameters: n.typeParameters, body: n.body };
+            return { modifiers: n.modifiers, name: n.name, typeParameters: n.typeParameters, resultKind: n.resultKind, body: n.body };
         case SyntaxKind.TypeFunctionBlock:
             return { statements: n.statements };
         case SyntaxKind.TypeFunctionBinding:
@@ -1237,6 +1247,8 @@ function cloneNodeData(node: Node): any {
         case SyntaxKind.TypeFunctionTemplatePattern:
         case SyntaxKind.TypeFunctionPinPattern:
             return { name: n.name, expression: n.expression, elements: n.elements };
+        case SyntaxKind.TypeFunctionKind:
+            return { kindToken: n.kindToken, slots: n.slots };
         case SyntaxKind.ForInStatement:
             return { awaitModifier: n.awaitModifier, initializer: n.initializer, expression: n.expression, statement: n.statement };
         case SyntaxKind.ForOfStatement:
@@ -1781,6 +1793,7 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
         visitNodes(cbNode, cbNodes, data.modifiers) ||
         visitNode(cbNode, data.name) ||
         visitNodes(cbNode, cbNodes, data.typeParameters) ||
+        visitNode(cbNode, data.resultKind) ||
         visitNode(cbNode, data.body),
     [SyntaxKind.TypeFunctionBlock]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.statements),
     [SyntaxKind.TypeFunctionBinding]: (data, cbNode, cbNodes) =>
@@ -1901,6 +1914,9 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
         visitNode(cbNode, data.name) ||
         visitNode(cbNode, data.expression) ||
         visitNodes(cbNode, cbNodes, data.elements),
+    [SyntaxKind.TypeFunctionKind]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.kindToken) ||
+        visitNodes(cbNode, cbNodes, data.slots),
     [SyntaxKind.ForInStatement]: (data, cbNode, cbNodes) =>
         visitNode(cbNode, data.awaitModifier) ||
         visitNode(cbNode, data.initializer) ||
@@ -4096,6 +4112,10 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
             const res = yield n;
             if (res) return res;
         }
+        if (data.resultKind) {
+            const res = yield data.resultKind;
+            if (res) return res;
+        }
         if (data.body) {
             const res = yield data.body;
             if (res) return res;
@@ -4513,6 +4533,18 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
         }
         if (data.elements) {
             for (const n of data.elements) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+    },
+    [SyntaxKind.TypeFunctionKind]: function* (data) {
+        if (data.kindToken) {
+            const res = yield data.kindToken;
+            if (res) return res;
+        }
+        if (data.slots) {
+            for (const n of data.slots) {
                 const res = yield n;
                 if (res) return res;
             }
@@ -5988,11 +6020,12 @@ export function createJSDocTypeLiteral(jsdocPropertyTags?: readonly JSDocTag[], 
     }) as unknown as JSDocTypeLiteral;
 }
 
-export function createTypeFunctionDeclaration(modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], body: TypeFunctionBlock): TypeFunctionDeclaration {
+export function createTypeFunctionDeclaration(modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionDeclaration {
     return new NodeObject(SyntaxKind.TypeFunctionDeclaration, {
         modifiers: modifiers ? createNodeArray(modifiers) : undefined,
         name,
         typeParameters: createNodeArray(typeParameters),
+        resultKind,
         body,
     }) as unknown as TypeFunctionDeclaration;
 }
@@ -6058,6 +6091,13 @@ export function createTypeFunctionPattern<TKind extends TypeFunctionPatternKind>
         expression,
         elements: elements ? createNodeArray(elements) : undefined,
     }) as unknown as TypeFunctionPattern<TKind>;
+}
+
+export function createTypeFunctionKind(kindToken: Token, slots?: readonly Identifier[]): TypeFunctionKind {
+    return new NodeObject(SyntaxKind.TypeFunctionKind, {
+        kindToken,
+        slots: slots ? createNodeArray(slots) : undefined,
+    }) as unknown as TypeFunctionKind;
 }
 
 export function createForInStatement(awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {
@@ -6768,8 +6808,8 @@ export function updateJSDocTypeLiteral(node: JSDocTypeLiteral, jsdocPropertyTags
     return node.jsdocPropertyTags !== jsdocPropertyTags ? createJSDocTypeLiteral(jsdocPropertyTags, node.isArrayType) : node;
 }
 
-export function updateTypeFunctionDeclaration(node: TypeFunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], body: TypeFunctionBlock): TypeFunctionDeclaration {
-    return node.modifiers !== modifiers || node.name !== name || node.typeParameters !== typeParameters || node.body !== body ? createTypeFunctionDeclaration(modifiers, name, typeParameters, body) : node;
+export function updateTypeFunctionDeclaration(node: TypeFunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionDeclaration {
+    return node.modifiers !== modifiers || node.name !== name || node.typeParameters !== typeParameters || node.resultKind !== resultKind || node.body !== body ? createTypeFunctionDeclaration(modifiers, name, typeParameters, resultKind, body) : node;
 }
 
 export function updateTypeFunctionBlock(node: TypeFunctionBlock, statements: readonly Node[]): TypeFunctionBlock {
@@ -6802,6 +6842,10 @@ export function updateTypeFunctionMatchArm(node: TypeFunctionMatchArm, pattern: 
 
 export function updateTypeFunctionPattern<TKind extends TypeFunctionPatternKind>(node: TypeFunctionPattern<TKind>, name?: Node, expression?: Node, elements?: readonly Node[]): TypeFunctionPattern<TKind> {
     return node.name !== name || node.expression !== expression || node.elements !== elements ? createTypeFunctionPattern(node.kind, name, expression, elements) : node;
+}
+
+export function updateTypeFunctionKind(node: TypeFunctionKind, kindToken: Token, slots?: readonly Identifier[]): TypeFunctionKind {
+    return node.kindToken !== kindToken || node.slots !== slots ? createTypeFunctionKind(kindToken, slots) : node;
 }
 
 export function updateForInStatement(node: ForInStatement, awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {

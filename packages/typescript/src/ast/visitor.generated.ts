@@ -163,6 +163,7 @@ import type {
     TypeFunctionBlock,
     TypeFunctionDeclaration,
     TypeFunctionExpression,
+    TypeFunctionKind,
     TypeFunctionMatch,
     TypeFunctionMatchArm,
     TypeFunctionPattern,
@@ -343,6 +344,7 @@ import {
     updateTypeAssertion,
     updateTypeFunctionBlock,
     updateTypeFunctionDeclaration,
+    updateTypeFunctionKind,
     updateTypeFunctionMatch,
     updateTypeFunctionMatchArm,
     updateTypeFunctionPattern,
@@ -419,6 +421,7 @@ import {
     isTemplateMiddleOrTail,
     isToken,
     isTypeFunctionBlock,
+    isTypeFunctionKind,
     isTypeLiteralNode,
     isTypeNode,
     isTypeParameterDeclaration,
@@ -1439,8 +1442,9 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
         const _modifiers = visitNodes(node.modifiers, visitor);
         const _name = visitNode(node.name, visitor, isIdentifier);
         const _typeParameters = visitNodes(node.typeParameters, visitor);
+        const _resultKind = visitNode(node.resultKind, visitor, isTypeFunctionKind);
         const _body = visitNode(node.body, visitor, isTypeFunctionBlock);
-        return updateTypeFunctionDeclaration(node, _modifiers, _name, _typeParameters, _body);
+        return updateTypeFunctionDeclaration(node, _modifiers, _name, _typeParameters, _resultKind, _body);
     },
     [SyntaxKind.TypeFunctionBlock]: (node: TypeFunctionBlock, visitor: Visitor): TypeFunctionBlock => {
         const _statements = visitNodes(node.statements, visitor);
@@ -1613,6 +1617,11 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
         const _expression = visitNode(node.expression, visitor);
         const _elements = visitNodes(node.elements, visitor);
         return updateTypeFunctionPattern(node, _name, _expression, _elements);
+    },
+    [SyntaxKind.TypeFunctionKind]: (node: TypeFunctionKind, visitor: Visitor): TypeFunctionKind => {
+        const _kindToken = visitNode(node.kindToken, visitor, isToken);
+        const _slots = visitNodes(node.slots, visitor);
+        return updateTypeFunctionKind(node, _kindToken, _slots);
     },
     [SyntaxKind.ForInStatement]: (node: ForInStatement, visitor: Visitor): ForInStatement => {
         const _awaitModifier = visitNode(node.awaitModifier, visitor, isAwaitKeyword);

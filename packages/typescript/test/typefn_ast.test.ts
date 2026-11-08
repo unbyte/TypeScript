@@ -1,6 +1,6 @@
 import {
-    isTypeFunctionExpression,
     isIdentifier,
+    isTypeFunctionExpression,
     SyntaxKind,
     TokenFlags,
     visitEachChild,
@@ -13,11 +13,12 @@ import {
     createTemplateTail,
     createToken,
     createTypeFunctionBlock,
+    createTypeFunctionDeclaration,
+    createTypeFunctionExpression,
+    createTypeFunctionKind,
     createTypeFunctionMatch,
     createTypeFunctionMatchArm,
     createTypeFunctionPattern,
-    createTypeFunctionDeclaration,
-    createTypeFunctionExpression,
     createTypeFunctionStatement,
     createTypeFunctionTemplate,
     createTypeFunctionTemplateSpan,
@@ -89,7 +90,7 @@ test("all DSL expression kinds participate in transforming visitors", () => {
 
 test("remote DSL trees transform and re-encode without changing kinds", () => {
     const ret = createTypeFunctionStatement(SyntaxKind.TypeFunctionReturn, undefined, binary());
-    const fn = createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], createTypeFunctionBlock([ret]));
+    const fn = createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], undefined, createTypeFunctionBlock([ret]));
     const source = createSourceFile([fn], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
     const remote = new RemoteSourceFile(encodeSourceFile(source), new TextDecoder());
     const expression = remote.statements!.at(0)!.body!.statements!.at(0)!.expression!;
@@ -102,7 +103,7 @@ test("remote DSL trees transform and re-encode without changing kinds", () => {
     const transformed = visitEachChild(expression, child => child.kind === SyntaxKind.Identifier ? createIdentifier("changed") : child);
     assert.equal(transformed.kind, SyntaxKind.TypeFunctionBinary);
     const newRet = createTypeFunctionStatement(SyntaxKind.TypeFunctionReturn, undefined, transformed);
-    const next = createSourceFile([createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], createTypeFunctionBlock([newRet]))], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
+    const next = createSourceFile([createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], undefined, createTypeFunctionBlock([newRet]))], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
     const decoded = new RemoteSourceFile(encodeSourceFile(next), new TextDecoder());
     const result = decoded.statements!.at(0)!.body!.statements!.at(0)!;
     assert.equal(result.kind, SyntaxKind.TypeFunctionReturn);
@@ -123,6 +124,7 @@ test("DSL child iterators preserve source order and early termination locally an
                 undefined,
                 createIdentifier("F"),
                 [],
+                undefined,
                 createTypeFunctionBlock([
                     createTypeFunctionStatement(SyntaxKind.TypeFunctionReturn, undefined, expression),
                 ]),
@@ -162,7 +164,6 @@ test("DSL template children preserve interpolation and literal order", () => {
     assert.equal(changed.expression.kind, SyntaxKind.TypeFunctionBinary);
 });
 
-
 test("match arm and pattern visitors retain native nodes across serialization", () => {
     const capture = createTypeFunctionPattern(SyntaxKind.TypeFunctionCapturePattern, createIdentifier("item"));
     const rest = createTypeFunctionPattern(SyntaxKind.TypeFunctionRestPattern, undefined, capture);
@@ -173,9 +174,35 @@ test("match arm and pattern visitors retain native nodes across serialization", 
     assert.equal(transformed.kind, SyntaxKind.TypeFunctionCapturePattern);
     assert.ok(isIdentifier(transformed.name!));
     assert.equal(transformed.name.text, "changed");
-    const source = createSourceFile([createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], createTypeFunctionBlock([match]))], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
+    const source = createSourceFile([createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], undefined, createTypeFunctionBlock([match]))], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
     const remote = new RemoteSourceFile(encodeSourceFile(source), new TextDecoder());
     const decoded = remote.statements!.at(0)!.body!.statements!.at(0)!;
     assert.equal(decoded.kind, SyntaxKind.TypeFunctionMatch);
     assert.equal(decoded.arms!.at(0)!.pattern!.elements!.at(0)!.expression!.name!.text, "item");
+});
+
+test("DSL result kinds retain source order and zero constructor arity over the wire", () => {
+    for (const slots of [undefined, [], [createIdentifier("_"), createIdentifier("_")]]) {
+        const keyword = slots === undefined ? SyntaxKind.TypeKeyword : SyntaxKind.Identifier;
+        const kind = createTypeFunctionKind(slots === undefined ? createToken(SyntaxKind.TypeKeyword) : createIdentifier("typefn"), slots);
+        const fn = createTypeFunctionDeclaration(undefined, createIdentifier("F"), [], kind, createTypeFunctionBlock([]));
+        const source = createSourceFile([fn], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
+        const remote = new RemoteSourceFile(encodeSourceFile(source), new TextDecoder());
+        for (const value of [fn, remote.statements!.at(0)!]) {
+            const order: SyntaxKind[] = [];
+            value.forEachChild(child => {
+                order.push(child.kind);
+            });
+            assert.deepEqual(order, [SyntaxKind.Identifier, SyntaxKind.TypeFunctionKind, SyntaxKind.TypeFunctionBlock]);
+            assert.equal(value.resultKind!.kindToken!.kind, keyword);
+            assert.equal(value.resultKind!.slots?.length, slots?.length);
+            const children: SyntaxKind[] = [];
+            value.resultKind!.forEachChild(child => {
+                children.push(child.kind);
+            });
+            assert.deepEqual(children, [keyword, ...(slots ?? []).map(() => SyntaxKind.Identifier)]);
+        }
+        const updated = visitEachChild(kind, child => child === kind.kindToken ? createToken(SyntaxKind.TypeKeyword) : child);
+        assert.equal(updated.kindToken!.kind, SyntaxKind.TypeKeyword);
+    }
 });

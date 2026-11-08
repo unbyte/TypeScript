@@ -176,7 +176,7 @@ export const childProperties: Readonly<Partial<Record<SyntaxKind, readonly (stri
     [SyntaxKind.JSDocTypeLiteral]: ["jsdocPropertyTags"],
     [SyntaxKind.JSDocParameterTag]: ["tagName", "name", "typeExpression", "comment"],
     [SyntaxKind.JSDocPropertyTag]: ["tagName", "name", "typeExpression", "comment"],
-    [SyntaxKind.TypeFunctionDeclaration]: ["modifiers", "name", "typeParameters", "body"],
+    [SyntaxKind.TypeFunctionDeclaration]: ["modifiers", "name", "typeParameters", "resultKind", "body"],
     [SyntaxKind.TypeFunctionBlock]: ["statements"],
     [SyntaxKind.TypeFunctionBinding]: ["name", "expression", "body", "elseBody"],
     [SyntaxKind.TypeFunctionAssignment]: ["name", "expression", "body", "elseBody"],
@@ -214,6 +214,7 @@ export const childProperties: Readonly<Partial<Record<SyntaxKind, readonly (stri
     [SyntaxKind.TypeFunctionFieldPattern]: ["name", "expression", "elements"],
     [SyntaxKind.TypeFunctionTemplatePattern]: ["name", "expression", "elements"],
     [SyntaxKind.TypeFunctionPinPattern]: ["name", "expression", "elements"],
+    [SyntaxKind.TypeFunctionKind]: ["kindToken", "slots"],
 };
 
 export const singleChildNodePropertyNames: Readonly<Partial<Record<SyntaxKind, string>>> = {

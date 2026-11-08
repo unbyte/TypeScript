@@ -78,3 +78,23 @@ func TestTypefnPreludeDoesNotReplaceNativeNamespaces(t *testing.T) {
 		t.Fatalf("native namespace checking: %v", ds)
 	}
 }
+
+func TestTypefnResultKindTokens(t *testing.T) {
+	source := "typefn Factory<>: typefn<_, _> { return string; }"
+	l, ctx, _ := typefnService(t, source)
+	file := l.program.GetSourceFile("/main.ts")
+	tokens := l.typefnLexicalTokens(ctx, file, 0, len(source))
+	keywords, slots := 0, 0
+	for _, token := range tokens {
+		spelling := source[token.node.Pos():token.node.End()]
+		if spelling == "typefn" && token.tokenType == tokenTypeKeyword {
+			keywords++
+		}
+		if spelling == "_" && token.tokenType == tokenTypeOperator {
+			slots++
+		}
+	}
+	if keywords != 2 || slots != 2 {
+		t.Fatalf("result kind token counts: typefn=%d slots=%d", keywords, slots)
+	}
+}

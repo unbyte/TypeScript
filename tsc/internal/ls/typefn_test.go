@@ -479,3 +479,17 @@ func TestTypefnArmBodyHasNestedScope(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnAnnotatedResultHover(t *testing.T) {
+	for _, annotation := range []string{"type", "typefn<>", "typefn<_, _>"} {
+		source := "typefn /*name*/Factory<>: " + annotation + " { return string; }"
+		l, ctx, pos := typefnService(t, source)
+		hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*name*/")})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if hover.Hover == nil || !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "Factory<>: "+annotation) {
+			t.Fatalf("lost result kind %s in hover: %#v", annotation, hover.Hover)
+		}
+	}
+}

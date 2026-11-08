@@ -390,6 +390,7 @@ const (
 	KindNotEmittedTypeElement
 	// Imperative typefn DSL (opt-in)
 	KindTypeFunctionDeclaration
+	KindTypeFunctionKind
 	KindTypeFunctionBlock
 	KindTypeFunctionBinding
 	KindTypeFunctionAssignment

@@ -18,7 +18,8 @@ func TestTypefnRoundTrip(t *testing.T) {
  for (type item in T) { F<item>; }
  return [-(1 + 2) * 3, !false, type((v: T) => T), x["value"]];
  }
- typefn Empty<> { return []; }`
+ typefn Empty<>: type { return []; }
+ typefn Factory<>: typefn<_, _> { return []; }`
 	source += "\ntypefn Text<T> { return `head${T + 1} middle${`nested${T}`} tail\\`${T}`; }"
 	source += "\ntypefn Patterns<T> { match (T) { [head, {value: item}, ...rest] if (true) => { return head; } is F<T> => { return 1; } -2n => { return 2; } type(string) => { return 3; } `GET ${path}${=text.concat<[\"/\", \":id\"]>}${_}` => { return path; } _ => { return never; } } }"
 	opts := ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}
@@ -35,7 +36,7 @@ func TestTypefnRoundTrip(t *testing.T) {
 	if roundTrip := p.EmitSourceFile(again); roundTrip != printed {
 		t.Fatalf("unstable printer:\n%s\n%s", printed, roundTrip)
 	}
-	if !strings.Contains(printed, "return [];") || !strings.Contains(printed, "Empty<>") {
+	if !strings.Contains(printed, "return [];") || !strings.Contains(printed, "Empty<>: type") || !strings.Contains(printed, "Factory<>: typefn<_, _>") {
 		t.Fatalf("lost required syntax: %s", printed)
 	}
 }

@@ -148,19 +148,19 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   Explicit `nativeWork` or `cacheBytes` overrides diagnose on DSL
   execution until their accounting is implemented. Full native-operation
   cancellation and budget instrumentation remain required before calling this a hardened service boundary.
-* Definition checking still needs the complete kind/readiness analysis and conservative
-  return-path analysis. There is no claim of optimized append or memoized VM calls.
+* Definition checking validates conservative return paths and still needs the complete
+  kind/readiness analysis. There is no claim of optimized append or memoized VM calls.
   Parameter bounds currently use native Type grammar rather than full DSL expressions.
   Bound checking can evaluate header applications at definition time, and an earlier
   blocked bound delays later checks. Later-parameter references are accepted even
   though the R2 text describes preceding-parameter scope. These behaviors need an
   explicit contract decision; see the [constraint decisions and probes](design-notes.md#input-constraints).
-  Explicit `: type` result annotations are accepted but not retained in the AST or
-  printer; the result-kind representation needs to be completed.
+  Result-kind annotations are retained in the native AST and printer.
+  Constructor execution, kind inference and recursive annotation validation remain pending.
 
 ## Validation
 
-The compiler-project harness has 218 fixtures covering native calibration, execution,
+The compiler-project harness has 219 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -343,3 +343,9 @@ may execute zero times, both branch outcomes remain possible, and return/explici
 failure terminate paths. Final wildcard and whole-value capture patterns always
 match. Return-kind inference and recursive-component annotation validation remain
 separate pending work.
+
+Result-kind annotations now survive parsing, printing, native traversal and the
+public AST protocol. `: type` and `: typefn<...>` have explicit kind nodes; an empty
+constructor slot list differs from a missing annotation. Constructor-result syntax
+currently receives an explicit definition diagnostic until constructor values and
+kind checking land. It does not silently execute as an ordinary Type function.
