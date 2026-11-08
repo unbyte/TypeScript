@@ -46,7 +46,9 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 		ast.KindTypeFunctionFieldPattern, ast.KindTypeFunctionTemplatePattern, ast.KindTypeFunctionPinPattern:
 		d := node.AsTypeFunctionPattern()
 		switch node.Kind {
-		case ast.KindTypeFunctionWildcardPattern, ast.KindTypeFunctionCapturePattern:
+		case ast.KindTypeFunctionWildcardPattern:
+			p.writePunctuation("_")
+		case ast.KindTypeFunctionCapturePattern:
 			p.emitBindingIdentifier(node.Name().AsIdentifier())
 		case ast.KindTypeFunctionTuplePattern, ast.KindTypeFunctionObjectPattern:
 			open, close := "[", "]"

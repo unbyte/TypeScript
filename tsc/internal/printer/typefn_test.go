@@ -39,3 +39,13 @@ func TestTypefnRoundTrip(t *testing.T) {
 		t.Fatalf("lost required syntax: %s", printed)
 	}
 }
+
+func TestTypefnPatternRecoveryPrint(t *testing.T) {
+	source := "typefn F<T> { match (T) { " + strings.Repeat("[", 100) + "item" + strings.Repeat("]", 100) + " => {} _ => {} } }"
+	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1, TypefnSyntaxDepth: 16}, source, core.ScriptKindTS)
+	if len(file.Diagnostics()) == 0 {
+		t.Fatal("expected recovery nodes")
+	}
+	p := printer.NewPrinter(printer.PrinterOptions{}, printer.PrintHandlers{}, nil)
+	p.EmitSourceFile(file)
+}
