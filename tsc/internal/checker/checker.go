@@ -593,6 +593,10 @@ type Host interface {
 var nextCheckerID atomic.Uint32
 
 type Checker struct {
+	typefnVM                                    *typefnVM
+	typefnTerms                                 map[typefnTermKey]*Type
+	typefnSyntaxChecks                          map[*ast.Node]bool
+	typefnObjects                               map[*Type]bool
 	typefnPrograms                              map[*ast.Node]*typefnProgram
 	id                                          uint32
 	program                                     Program
