@@ -168,6 +168,14 @@ func (c *Checker) areTypesComparable(type1 *Type, type2 *Type) bool {
 }
 
 func (c *Checker) isTypeRelatedTo(source *Type, target *Type, relation *Relation) bool {
+	if source != target && (source.flags|target.flags)&TypeFlagsTypefn != 0 {
+		a, ra := splitTypefn(source)
+		b, rb := splitTypefn(target)
+		if !slices.Equal(ra, rb) || a == source && b == target {
+			return false
+		}
+		return c.isTypeRelatedTo(a, b, relation)
+	}
 	if isFreshLiteralType(source) {
 		source = source.AsLiteralType().regularType
 	}
@@ -2635,6 +2643,18 @@ func (r *Relater) isRelatedTo(source *Type, target *Type, recursionFlags Recursi
 }
 
 func (r *Relater) isRelatedToEx(originalSource *Type, originalTarget *Type, recursionFlags RecursionFlags, reportErrors bool, headMessage *diagnostics.Message, intersectionState IntersectionState) Ternary {
+	if originalSource != originalTarget && (originalSource.flags|originalTarget.flags)&TypeFlagsTypefn != 0 {
+		a, ra := splitTypefn(originalSource)
+		b, rb := splitTypefn(originalTarget)
+		if !slices.Equal(ra, rb) || a == originalSource && b == originalTarget {
+			if reportErrors {
+				r.reportRelationError(headMessage, originalSource, originalTarget)
+			}
+			return TernaryFalse
+		}
+		return r.isRelatedToEx(a, b, recursionFlags, reportErrors, headMessage, intersectionState)
+	}
+
 	if originalSource == originalTarget {
 		return TernaryTrue
 	}
