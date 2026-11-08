@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 184 fixtures covering native calibration, execution,
+The compiler-project harness has 187 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -278,3 +278,8 @@ Native diagnostics are attributed to each application, with their operation span
 as related information. Tests cover mutable snapshots, mapped Types, conditional
 infer, generic signatures, typeof, nominal identity, native patterns and symbolic
 replay. Symbolic capture shape publication and environment caching remain pending.
+
+Native-island reference names and generic arities are checked during lowering,
+including unexecuted branches. Captured Types cannot be applied as constructors;
+native typefn references require explicit applications. Tests cover missing value
+names in typeof, missing native generic arguments and unapplied typefn names.

@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"fmt"
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/binder"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
@@ -21,12 +22,33 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 	var visit func(*ast.Node) bool
 	visit = func(node *ast.Node) bool {
 		plan.nodes++
+		if ast.IsTypeQueryNode(node) {
+			name := node.AsTypeQueryNode().ExprName
+			if !ast.IsThisIdentifier(name) {
+				symbol := b.c.resolveEntityName(name, ast.SymbolFlagsValue, false, false, nil)
+				if symbol == nil || symbol == b.c.unknownSymbol {
+					b.p.valid = false
+				}
+			}
+		}
 		if ast.IsTypeReferenceNode(node) {
 			name := node.AsTypeReferenceNode().TypeName
 			symbol := b.c.resolveEntityName(name, ast.SymbolFlagsType, false, false, nil)
 			if symbol == nil || symbol == b.c.unknownSymbol {
 				b.p.valid = false
 				return false
+			}
+			parameters := b.c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
+			count, minimum := len(parameters), b.c.getMinTypeArgumentCount(parameters)
+			if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration); declaration != nil {
+				count, minimum = len(declaration.TypeParameters()), len(declaration.TypeParameters())
+				if node.TypeArgumentList() == nil {
+					b.error(node, "typefn requires an explicit application in a native island")
+				}
+			}
+			actual := len(node.TypeArguments())
+			if actual < minimum || actual > count {
+				b.error(node, fmt.Sprintf("native application requires %d..%d Type arguments", minimum, count))
 			}
 			if ast.IsIdentifier(name) {
 				if binding, ok := b.lookup(name.Text()); ok && binding.symbol == symbol {

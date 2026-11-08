@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-island-static-value-name.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2304,
+      "file": "main.ts",
+      "message": "Cannot find name 'absent'"
+    }
+  ]
+}
