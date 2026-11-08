@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "object-descriptors.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": true
+  },
+  "diagnostics": []
+}

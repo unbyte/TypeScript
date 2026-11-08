@@ -154,7 +154,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 130 fixtures covering native calibration, execution,
+The compiler-project harness has 140 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -211,3 +211,13 @@ arrays, replay symbolic flags, and reject tuples and numeric-indexer impostors.
 Computed object keys accept unique-symbol Types and preserve the native key handle
 through generic object instantiation. Tests use imported symbols, `keyof`, indexing,
 optional/readonly fields, snapshot assignment and duplicate/broad-symbol rejection.
+
+### Descriptor object construction
+
+`types.object<Properties>` now constructs property-only structural objects from
+required finite descriptor tuples. It validates required/public metadata, unknown
+fields, native key equivalence, duplicate keys and literal optional/readonly flags;
+`read` is accepted and ignored. Field values may remain symbolic. Tests cover
+intersected descriptors, unique-symbol keys, generic key/flag replay, and both
+exact-optional modes. The optional indexer/call/construct lists currently accept
+empty tuples only; nonempty lists still diagnose pending their implementation.
