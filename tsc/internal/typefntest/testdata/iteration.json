@@ -1,0 +1,4 @@
+{
+ "files": {"main.ts": "iteration.ts"},
+ "options": {"typefn": {"version": 1}}
+}

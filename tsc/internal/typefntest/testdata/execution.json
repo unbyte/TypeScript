@@ -1,0 +1,5 @@
+{
+ "files": {"main.ts": "execution.ts"},
+ "options": {"typefn": {"version": 1}},
+ "outputs": {"out/main.js": "export const answer = 42;\n"}
+}

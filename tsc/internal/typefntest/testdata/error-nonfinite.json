@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-nonfinite.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "file": "main.ts",
+      "code": -1,
+      "message": "finite value"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-constraint.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "file": "main.ts",
+      "code": 2344,
+      "message": "does not satisfy the constraint 'string'"
+    }
+  ]
+}

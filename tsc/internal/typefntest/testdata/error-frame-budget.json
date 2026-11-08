@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "error-frame-budget.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "liveBytes": 32
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "live VM allocation limit exceeded"
+    }
+  ]
+}

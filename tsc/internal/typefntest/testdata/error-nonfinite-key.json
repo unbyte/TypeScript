@@ -1,0 +1,4 @@
+{"files":{"main.ts":"error-nonfinite-key.ts"},"options":{"typefn":{"version":1}},"diagnostics":[
+{"phase":"semantic","code":-1,"file":"main.ts","message":"number property key must be finite"},
+{"phase":"semantic","code":-1,"file":"main.ts","message":"number property key must be finite"}
+]}
