@@ -21,6 +21,8 @@ export { ScriptTarget } from "../../enums/scriptTarget.js";
 
 /** CompilerOptions contains the compiler options exposed by the API. */
 export interface CompilerOptions {
+    /** Opt-in type function language profile. Limits are positive safe integers; omitted limits use defaults. */
+    typefn?: TypefnOptions | undefined;
     allowJs?: boolean | undefined;
     allowArbitraryExtensions?: boolean | undefined;
     allowImportingTsExtensions?: boolean | undefined;
@@ -128,6 +130,24 @@ export interface CompilerOptions {
     // Internal fields
 
     configFilePath?: RootedFilePath | undefined;
+}
+
+export interface TypefnOptions {
+    version: 1;
+    limits?: TypefnLimits | undefined;
+}
+
+export interface TypefnLimits {
+    vmInstructions?: number | undefined;
+    callDepth?: number | undefined;
+    syntaxDepth?: number | undefined;
+    parserWork?: number | undefined;
+    liveBytes?: number | undefined;
+    bigintBits?: number | undefined;
+    stringUnits?: number | undefined;
+    nativeWork?: number | undefined;
+    nativeNodes?: number | undefined;
+    cacheBytes?: number | undefined;
 }
 
 export interface PluginImport {

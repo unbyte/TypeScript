@@ -18,12 +18,16 @@ export function diagnostic(text: keyof typeof messages): DiagnosticMessage {
 export type GoValue = string | number | boolean | DiagnosticMessage | { go: `core.${string}`; };
 export type OptionKind = "Boolean" | "String" | "Number" | "Object" | "List" | "ListOrElement" | "Enum";
 export type PathKind = "file" | "directory" | "fileOrDirectory" | "sourceMapLocation" | "fileSpec" | "pathPattern" | "resolvedPathPattern" | "configLocator";
+// Shared by the Go options, public API, and config schema generators.
+export const typefnLimits = ["vmInstructions", "callDepth", "syntaxDepth", "parserWork", "liveBytes", "bigintBits", "stringUnits", "nativeWork", "nativeNodes", "cacheBytes"] as const;
+
 export type CompilerOptionType =
     | "Tristate"
     | "string"
     | "*int"
     | "[]string"
     | "[]PluginImport"
+    | "*TypefnOptions"
     | "*collections.OrderedMap[string, []string]"
     | "JsxEmit"
     | "ModuleKind"
@@ -45,7 +49,7 @@ export interface DeclarationMetadata {
     defaultValueDescription?: GoValue;
     showInSimplifiedHelpView?: boolean;
     category?: DiagnosticMessage;
-    extraValidation?: "locale";
+    extraValidation?: "locale" | "typefn";
     minValue?: number;
     /** Defaults to isFilePath for compiler options; false explicitly disables substitution. */
     allowConfigDirTemplateSubstitution?: boolean;
@@ -157,6 +161,7 @@ export function optionKind(option: CompilerOption): OptionKind {
         case "[]string":
         case "[]PluginImport":
             return "List";
+        case "*TypefnOptions":
         case "*collections.OrderedMap[string, []string]":
             return "Object";
         default:

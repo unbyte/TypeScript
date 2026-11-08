@@ -18,6 +18,7 @@ import type {
 import type {
     CompilerOptions,
     PluginImport,
+    TypefnOptions,
 } from "./compilerOptions.generated.ts";
 import type { UserPreferences } from "./userPreferences.generated.ts";
 
@@ -31,7 +32,7 @@ export { ScriptKind } from "../../enums/scriptKind.js";
 export { ScriptTarget } from "../../enums/scriptTarget.js";
 export { SymbolOwnerKind } from "../../enums/symbolOwnerKind.js";
 export type { PathKey, RootedDirectoryPath, RootedFilePath, RootedPath } from "../ast/index.ts";
-export type { CompilerOptions, PluginImport } from "./compilerOptions.generated.ts";
+export type { CompilerOptions, PluginImport, TypefnOptions } from "./compilerOptions.generated.ts";
 export * from "./compilerOptions.generated.ts";
 export type { UserPreferences } from "./userPreferences.generated.ts";
 
@@ -1891,6 +1892,8 @@ export interface StaticModuleResolution {
  * directory and constructs a CompilerOptions with typed path guarantees.
  */
 export interface RawCompilerOptions {
+    /** Opt-in type function language profile. Limits are positive safe integers; omitted limits use defaults. */
+    typefn?: TypefnOptions | undefined;
     allowJs?: boolean | undefined;
     allowArbitraryExtensions?: boolean | undefined;
     allowImportingTsExtensions?: boolean | undefined;

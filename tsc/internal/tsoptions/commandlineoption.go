@@ -114,7 +114,10 @@ type CommandLineOption struct {
 
 type extraValidation string
 
-const extraValidationLocale extraValidation = "locale"
+const (
+	extraValidationLocale extraValidation = "locale"
+	extraValidationTypefn extraValidation = "typefn"
+)
 
 func (o *CommandLineOption) DeprecatedKeys() *collections.Set[string] {
 	if o.Kind != CommandLineOptionTypeEnum {

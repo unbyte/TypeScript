@@ -954,6 +954,12 @@ var optionsForCompiler = []*CommandLineOption{
 		Category:       diagnostics.Editor_Support,
 	},
 	{
+		Name:            "typefn",
+		Kind:            CommandLineOptionTypeObject,
+		IsTSConfigOnly:  true,
+		extraValidation: extraValidationTypefn,
+	},
+	{
 		Name:                    "moduleDetection",
 		Kind:                    CommandLineOptionTypeEnum,
 		Description:             diagnostics.Control_what_method_is_used_to_detect_module_format_JS_files,
