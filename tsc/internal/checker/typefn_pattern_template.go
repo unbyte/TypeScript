@@ -18,7 +18,7 @@ type typefnPatternCursor struct {
 	index, offset int
 }
 
-func (v *typefnVM) templatePattern(p *typefnPattern, subject *Type, slots []*Type) bool {
+func (v *typefnVM) templatePattern(p *typefnPattern, subject *Type, slots []typefnValue) bool {
 	node := p.node
 	if subject.flags != TypeFlagsStringLiteral && subject.flags != TypeFlagsString && subject.flags != TypeFlagsTemplateLiteral {
 		if typefnUnresolved(subject) {
@@ -166,7 +166,7 @@ func (v *typefnVM) templatePattern(p *typefnPattern, subject *Type, slots []*Typ
 			if v.failed {
 				return false
 			}
-			slots[part.capture.slot] = value
+			slots[part.capture.slot] = typefnValue{native: value}
 			return true
 		}
 		available := cursor.texts[cursor.index][cursor.offset:]
@@ -195,7 +195,7 @@ func (v *typefnVM) templatePattern(p *typefnPattern, subject *Type, slots []*Typ
 			if v.failed {
 				return false
 			}
-			slots[part.capture.slot] = value
+			slots[part.capture.slot] = typefnValue{native: value}
 		}
 		cursor.offset += count
 	}

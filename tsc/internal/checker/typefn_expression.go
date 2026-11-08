@@ -8,24 +8,33 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
 )
 
-func (v *typefnVM) expression(e *typefnExpression, slots []*Type) *Type {
-	value := v.expressionWorker(e, slots)
-	// Preserve native operation failure even if this value would be discarded,
-	// absorbed by a union, or projected away by the surrounding DSL expression.
-	if v.c.isErrorType(value) && !v.blocked {
-		v.failed = true
-	}
-	return v.observe(value)
+func (v *typefnVM) expression(e *typefnExpression, slots []typefnValue) *Type {
+	return v.nativeValue(e.node, v.valueExpression(e, slots))
 }
 
-func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
-	node := e.node
-	if !v.step(node) {
-		return v.c.errorType
+func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typefnValue {
+	if !v.step(e.node) {
+		return typefnValue{native: v.c.errorType}
 	}
+	var value typefnValue
 	if e.slot >= 0 {
-		return slots[e.slot]
+		value = slots[e.slot]
+	} else {
+		value = typefnValue{native: v.expressionWorker(e, slots)}
 	}
+	// Keep native failures and reached checks even when a result is discarded,
+	// absorbed by normalization or projected away from the returned shape.
+	if value.native != nil {
+		if v.c.isErrorType(value.native) && !v.blocked {
+			v.failed = true
+		}
+		value.native = v.observe(value.native)
+	}
+	return value
+}
+
+func (v *typefnVM) expressionWorker(e *typefnExpression, slots []typefnValue) *Type {
+	node := e.node
 	if node.Kind == ast.KindTypeFunctionTemplate {
 		return v.templateExpression(e, slots)
 	}

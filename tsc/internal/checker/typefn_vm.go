@@ -201,14 +201,16 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 	// Charge register/argument backing storage and iterator slots, in addition to
 	// the existing fixed bookkeeping allowance. No iterator storage is allocated
 	// for programs that do not iterate.
-	frameBytes := (p.slots+len(args))*int(unsafe.Sizeof((*Type)(nil))) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
+	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof((*Type)(nil))) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
 	if frameBytes > v.limits.LiveBytes-v.liveBytes {
 		return v.error(node, "live VM allocation limit exceeded")
 	}
 	v.liveBytes += frameBytes
 	defer func() { v.liveBytes -= frameBytes }()
-	registers := make([]*Type, p.slots)
-	copy(registers, args)
+	registers := make([]typefnValue, p.slots)
+	for i, arg := range args {
+		registers[i] = typefnValue{native: arg}
+	}
 	iterators := make([]typefnIterator, p.iterators)
 	for pc := 0; pc < len(p.code); {
 		i := &p.code[pc]
@@ -216,9 +218,13 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 		if !v.step(i.node) {
 			return v.c.errorType
 		}
-		var value *Type
+		var value typefnValue
 		if i.expr != nil {
-			value = v.expression(i.expr, registers)
+			if i.op == tfStore || i.op == tfReturn {
+				value = v.valueExpression(i.expr, registers)
+			} else {
+				value = typefnValue{native: v.expression(i.expr, registers)}
+			}
 			if v.failed || v.blocked {
 				return v.c.errorType
 			}
@@ -227,9 +233,9 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 		case tfStore:
 			registers[i.slot] = value
 		case tfReturn:
-			return value
+			return v.nativeValue(i.node, value)
 		case tfBranch:
-			truth, ok := v.boolean(i.node, value)
+			truth, ok := v.boolean(i.node, value.native)
 			if !ok {
 				return v.c.errorType
 			}
@@ -237,7 +243,7 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 				pc = i.target
 			}
 		case tfMatch:
-			matched := v.pattern(i.pattern, registers[i.slot], registers)
+			matched := v.pattern(i.pattern, v.nativeValue(i.node, registers[i.slot]), registers)
 			if v.failed || v.blocked {
 				return v.c.errorType
 			}
@@ -247,7 +253,7 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 		case tfJump:
 			pc = i.target
 		case tfIterStart:
-			values := v.elements(i.node, value, i.node.Kind == ast.KindTypeFunctionForIn)
+			values := v.elements(i.node, value.native, i.node.Kind == ast.KindTypeFunctionForIn)
 			if v.failed || v.blocked {
 				return v.c.errorType
 			}
@@ -258,7 +264,7 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 				*iter = typefnIterator{}
 				pc = i.target
 			} else {
-				registers[i.slot] = iter.values[iter.index]
+				registers[i.slot] = typefnValue{native: iter.values[iter.index]}
 				iter.index++
 			}
 		}

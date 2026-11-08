@@ -150,12 +150,7 @@ func (c *Checker) instantiateTypefn(t *Type, m *TypeMapper) *Type {
 		case typefnNativeCallTerm:
 			return v.apply(d.node, d.symbol, args)
 		case typefnExpressionTerm:
-			value := v.expression(d.expression, args)
-			if v.blocked && !v.failed {
-				v.blocked = false
-				return v.deferExpression(d.expression, args)
-			}
-			return value
+			return v.replayExpression(d.expression, args)
 		}
 		panic("unknown typefn recipe")
 	})
@@ -206,7 +201,7 @@ func (v *typefnVM) observe(t *Type) *Type {
 	return shape
 }
 
-func (v *typefnVM) deferExpression(e *typefnExpression, slots []*Type) *Type {
+func (v *typefnVM) deferExpression(e *typefnExpression, slots []typefnValue) *Type {
 	frozen := make([]*Type, len(slots))
 	var capture func(*typefnExpression)
 	capture = func(e *typefnExpression) {
@@ -214,7 +209,7 @@ func (v *typefnVM) deferExpression(e *typefnExpression, slots []*Type) *Type {
 			return
 		}
 		if e.slot >= 0 {
-			frozen[e.slot] = slots[e.slot]
+			frozen[e.slot] = slots[e.slot].native
 		}
 		for _, a := range e.args {
 			capture(a)

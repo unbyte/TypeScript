@@ -28,6 +28,7 @@ All modules below are private to `tsc/internal/checker`:
 
 | Module | Responsibility |
 | --- | --- |
+| `typefn_value.go` | Explicit VM value/Type boundary and metered expression-replay frames |
 | `typefn_program.go`, `typefn_flow.go` | Definition validation, resolved bindings, lowered control flow and conservative return paths |
 | `typefn_vm.go` | Root budgets, cancellation, recursion checks and call frames |
 | `typefn_expression.go` | Expression evaluation and structural construction |
@@ -43,7 +44,9 @@ All modules below are private to `tsc/internal/checker`:
 | `typefn_state.go` | Lazy checker-owned tables and active root VM |
 | `typefn_display.go`, `typefn_services.go` | Pending display, signatures and cancelable result queries |
 
-Registers hold native Type identities. Assignment changes a local slot, not a Type.
+Registers hold explicit VM values; the current alternative contains a native Type
+identity. Native operations check that boundary before using operands. Assignment
+changes a local slot, not a Type.
 Lowering assigns dense iterator indices; each call owns its iterator storage, and
 non-iterating programs allocate no iterator backing storage. Re-entry replaces its
 own slot while iteration retains the original immutable subject.
@@ -62,8 +65,8 @@ by the native checker pool. There is no general completed-call memoization cache
 
 The next VM extension must keep `Constructor(n)` separate from native `Type`
 handles. A constructor is not a new TypeFlags case, an invented native generic
-parameter, or an object/tuple field. Registers and immutable capture snapshots need
-an explicit value representation with Type and constructor alternatives; native
+parameter, or an object/tuple field. Registers now have an explicit value representation. Immutable capture snapshots
+and the constructor alternative must extend the same boundary; native
 operators and structural builders accept only the Type alternative.
 
 A constructor identity consists of eligible code or a known native generic symbol,

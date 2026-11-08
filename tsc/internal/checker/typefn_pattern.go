@@ -6,7 +6,7 @@ import (
 
 // A false result is a definite non-match only when neither blocked nor failed
 // was set. Registers for captures are arm-private and cannot leak to later arms.
-func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []*Type) bool {
+func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []typefnValue) bool {
 	node := p.node
 	if !v.step(node) {
 		return false
@@ -18,7 +18,7 @@ func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []*Type) bool 
 	case ast.KindTypeFunctionWildcardPattern:
 		return true
 	case ast.KindTypeFunctionCapturePattern:
-		slots[p.slot] = subject
+		slots[p.slot] = typefnValue{native: subject}
 		return true
 	case ast.KindTypeFunctionLiteralPattern:
 		value := v.expression(p.expr, slots)

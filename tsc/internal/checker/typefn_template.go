@@ -2,7 +2,7 @@ package checker
 
 import "github.com/microsoft/TypeScript/tsc/internal/ast"
 
-func (v *typefnVM) templateExpression(e *typefnExpression, slots []*Type) *Type {
+func (v *typefnVM) templateExpression(e *typefnExpression, slots []typefnValue) *Type {
 	node := e.node
 	template := node.AsTypeFunctionTemplate()
 	texts := make([]string, len(e.args)+1)

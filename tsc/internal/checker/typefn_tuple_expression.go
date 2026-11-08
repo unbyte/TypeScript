@@ -6,7 +6,7 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 // Spreads preserve optional/label/rest metadata and may expand native unions.
 // Unknown spread shapes retain the whole expression so legality is rechecked
 // after substitution, including the host's multiple-rest restriction.
-func (v *typefnVM) tupleExpression(e *typefnExpression, slots []*Type) *Type {
+func (v *typefnVM) tupleExpression(e *typefnExpression, slots []typefnValue) *Type {
 	if !v.allocate(e.node, len(e.args)+1) {
 		return v.c.errorType
 	}

@@ -77,7 +77,7 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 // Each native AST is bound in an immutable lexical snapshot. Captured values are
 // real native alias symbols, not text substitutions or fake deferred type
 // parameters. No source AST cache is mutated or reused across environments.
-func (v *typefnVM) nativeIsland(e *typefnExpression, slots []*Type) *Type {
+func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type {
 	values := make([]*Type, len(e.args))
 	for i, argument := range e.args {
 		values[i] = v.expression(argument, slots)

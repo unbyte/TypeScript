@@ -97,7 +97,7 @@ func (b *typefnCompiler) intrinsic(e *typefnExpression) bool {
 	return true
 }
 
-func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *Type) {
+func (v *typefnVM) intrinsic(e *typefnExpression, args []*Type, slots []typefnValue) (result *Type) {
 	// Each pure intrinsic can discover a dependency below its outer arguments.
 	// Retain one frozen operation for replay; aborting operations block the call.
 	defer func() {
