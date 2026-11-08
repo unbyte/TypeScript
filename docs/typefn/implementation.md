@@ -131,7 +131,7 @@ remain part of the outstanding island bridge.
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
 * Property/tuple/signature reflection, general tuple metadata/spreads,
-  callable/constructable builders, and recursive structural sealing
+  fresh signature builders, and recursive structural sealing
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
 * Declaration source recipes, advanced refactorings/auto-import completion, complete
@@ -161,7 +161,7 @@ remain part of the outstanding island bridge.
 
 ## Validation
 
-The compiler-project harness has 148 fixtures covering native calibration, execution,
+The compiler-project harness has 154 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -232,5 +232,15 @@ numeric/string domains and template patterns. Symbolic compatibility requirement
 remain attached to the published object shape and replay even after absorption.
 `reflect.indexers` returns ordered descriptors, and generic object instantiation
 retains indexers. Tests cover overlapping domains, invalid keys, duplicate domains,
-readonly native writes, reflection, generic replay and retained failures. Call and
-construct lists still accept empty tuples only pending signature implementation.
+readonly native writes, reflection, generic replay and retained failures.
+
+Native signatures can now be forwarded through `reflect.calls`,
+`reflect.constructs`, `types.overload`, and the object builder's call/construct
+lists. The adapter retains original signature pointers/order, generic binders,
+method variance and abstract flags. Queries expose public signatures;
+`reflect.isGeneric` requires exactly one signature. TypeMapper replay follows
+native signature provenance without evaluating latent generic return computations.
+Tests exercise actual overload calls, generic inference, outer-Type specialization,
+generic default constructors, method/function variance, abstract/private
+constructors and category errors. Fresh signature construction and descriptor
+reflection remain separate unfinished contracts.

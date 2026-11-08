@@ -71,19 +71,25 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 			return v.c.errorType
 		}
 	}
-	for _, argument := range args[min(2, len(args)):] {
-		entries, ok := v.requiredTuple(node, argument)
+	var calls, constructs []*Signature
+	if len(args) > 2 {
+		var ok bool
+		calls, ok = v.signatureList(node, args[2], SignatureKindCall)
 		if !ok {
 			return v.c.errorType
 		}
-		if len(entries) != 0 {
-			return v.error(node, "nonempty object signatures are not implemented yet")
+	}
+	if len(args) > 3 {
+		var ok bool
+		constructs, ok = v.signatureList(node, args[3], SignatureKindConstruct)
+		if !ok {
+			return v.c.errorType
 		}
 	}
 	if !v.allocate(node, 1) {
 		return v.c.errorType
 	}
-	result := v.c.newTypefnObjectEx(members, indexInfos)
+	result := v.c.newTypefnObjectEx(members, calls, constructs, indexInfos)
 	v.validateObjectIndexers(node, result, indexInfos)
 	if v.failed {
 		return v.c.errorType

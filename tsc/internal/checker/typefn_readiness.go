@@ -12,12 +12,19 @@ func (v *typefnVM) unresolvedGraph(node *ast.Node, root *Type) bool {
 	if root.flags&(TypeFlagsObject|TypeFlagsUnionOrIntersection) == 0 {
 		return typefnUnresolved(root)
 	}
-	seen := map[*Type]bool{}
+	type dependencyKey struct {
+		value     *Type
+		signature *Signature
+	}
+	seen := map[dependencyKey]bool{}
+	bound := map[*Type]int{}
+	var scope *Signature
 	charged := 0
 	defer func() { v.liveBytes -= charged }()
 	var visit func(*Type) bool
 	visit = func(t *Type) bool {
-		if t == nil || seen[t] {
+		key := dependencyKey{t, scope}
+		if t == nil || bound[t] != 0 || seen[key] {
 			return false
 		}
 		if !v.step(node) {
@@ -29,7 +36,7 @@ func (v *typefnVM) unresolvedGraph(node *ast.Node, root *Type) bool {
 		}
 		v.liveBytes += 32
 		charged += 32
-		seen[t] = true
+		seen[key] = true
 		t = v.observe(t)
 		if t.flags&TypeFlagsTypeParameter != 0 && t.AsTypeParameter().isThisType {
 			return false
@@ -52,6 +59,26 @@ func (v *typefnVM) unresolvedGraph(node *ast.Node, root *Type) bool {
 			for _, property := range v.c.getPropertiesOfType(t) {
 				if visit(v.c.getTypeOfSymbol(property)) {
 					return true
+				}
+			}
+			for _, kind := range []SignatureKind{SignatureKindCall, SignatureKindConstruct} {
+				for _, signature := range v.c.getSignaturesOfType(t, kind) {
+					if !v.step(node) {
+						return true
+					}
+					outer := scope
+					scope = signature
+					for _, parameter := range signature.TypeParameters() {
+						bound[parameter]++
+					}
+					unresolved := v.c.typefnSignatureDependencies(signature, visit)
+					for _, parameter := range signature.TypeParameters() {
+						bound[parameter]--
+					}
+					scope = outer
+					if unresolved {
+						return true
+					}
 				}
 			}
 			for _, info := range v.c.getIndexInfosOfType(t) {

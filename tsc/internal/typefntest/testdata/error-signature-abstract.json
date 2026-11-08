@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-signature-abstract.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2511,
+      "file": "main.ts",
+      "message": "Cannot create an instance of an abstract class."
+    }
+  ]
+}

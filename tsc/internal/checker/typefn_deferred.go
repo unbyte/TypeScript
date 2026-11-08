@@ -230,12 +230,12 @@ func (v *typefnVM) deferExpression(e *typefnExpression, slots []*Type) *Type {
 // DSL-created anonymous objects have no source declaration/symbol for the native
 // object instantiator. Instantiate their immutable property table explicitly.
 func (c *Checker) newTypefnObject(members ast.SymbolTable) *Type {
-	return c.newTypefnObjectEx(members, nil)
+	return c.newTypefnObjectEx(members, nil, nil, nil)
 }
 
-func (c *Checker) newTypefnObjectEx(members ast.SymbolTable, indexInfos []*IndexInfo) *Type {
+func (c *Checker) newTypefnObjectEx(members ast.SymbolTable, calls, constructs []*Signature, indexInfos []*IndexInfo) *Type {
 	state := c.getTypefnState()
-	t := c.newAnonymousType(nil, members, nil, nil, indexInfos)
+	t := c.newAnonymousType(nil, members, calls, constructs, indexInfos)
 	if state.objects == nil {
 		state.objects = make(map[*Type]bool)
 	}
@@ -266,10 +266,13 @@ func (c *Checker) instantiateTypefnObject(t *Type, m *TypeMapper) *Type {
 		}
 		changed = changed || info != oldIndexInfos[i]
 	}
+	calls := c.instantiateTypefnSignatures(c.getSignaturesOfType(t, SignatureKindCall), m)
+	constructs := c.instantiateTypefnSignatures(c.getSignaturesOfType(t, SignatureKindConstruct), m)
+	changed = changed || !slices.Equal(calls, c.getSignaturesOfType(t, SignatureKindCall)) || !slices.Equal(constructs, c.getSignaturesOfType(t, SignatureKindConstruct))
 	if !changed {
 		return t
 	}
-	return c.newTypefnObjectEx(members, indexInfos)
+	return c.newTypefnObjectEx(members, calls, constructs, indexInfos)
 }
 
 // Inspect only eager native Type expressions. Native object members, mapped

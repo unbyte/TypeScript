@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-signature-variance.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2322,
+      "file": "main.ts",
+      "message": "Type '(x: Dog) => void' is not assignable to type '(x: Animal) => void'."
+    }
+  ]
+}

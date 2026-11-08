@@ -18,6 +18,10 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"reflect.calls":         {1, 1, false, "Object"},
+	"reflect.constructs":    {1, 1, false, "Object"},
+	"reflect.isGeneric":     {1, 1, false, "Signature"},
+	"types.overload":        {1, 2, false, "Calls, Constructs = []"},
 	"reflect.indexers":      {1, 1, false, "Object"},
 	"types.object":          {1, 4, false, "Properties, Indexers = [], Calls = [], Constructs = []"},
 	"types.array":           {1, 2, false, "Element, Readonly = false"},
@@ -98,6 +102,8 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 	// Constructors can publish structure containing symbolic Type leaves. Only
 	// their control/metadata operands need concrete observations.
 	switch e.intrinsic {
+	case "types.overload":
+		return v.overloadType(e.node, args)
 	case "types.array":
 		return v.arrayType(e.node, args)
 	case "types.object":
@@ -119,6 +125,18 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 		}
 	}
 	if strings.HasPrefix(e.intrinsic, "reflect.") {
+		switch e.intrinsic {
+		case "reflect.calls":
+			return v.reflectSignatures(e.node, args[0], SignatureKindCall)
+		case "reflect.constructs":
+			return v.reflectSignatures(e.node, args[0], SignatureKindConstruct)
+		case "reflect.isGeneric":
+			sig, _, ok := v.singleSignature(e.node, args[0])
+			if !ok {
+				return v.c.errorType
+			}
+			return v.boolType(len(sig.TypeParameters()) != 0)
+		}
 		if e.intrinsic == "reflect.indexers" {
 			return v.reflectIndexers(e.node, args[0])
 		}
