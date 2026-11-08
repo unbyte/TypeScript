@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "native-declaration.ts"
+  },
+  "options": {
+    "declaration": true
+  },
+  "outputs": {
+    "out/main.js": "export const answer = 42;\n",
+    "out/main.d.ts": "export declare const answer: 42;\n"
+  }
+}
