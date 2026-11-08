@@ -197,3 +197,94 @@ func BenchmarkTypefnHover(b *testing.B) {
 		}
 	}
 }
+
+func TestTypefnCompletionScope(t *testing.T) {
+	source := strings.Replace(typefnEditorSource, "Twice<21>", "Twice</*arg*/21>", 1)
+	l, ctx, pos := typefnService(t, source)
+	completion, err := l.ProvideCompletion(ctx, "file:///main.ts", pos("/*return*/"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if completion.List == nil {
+		t.Fatal("no completions")
+	}
+	names := map[string]bool{}
+	for _, item := range completion.List.Items {
+		names[item.Label] = true
+	}
+	for _, name := range []string{"current", "N", "Twice", "return"} {
+		if !names[name] {
+			t.Errorf("missing completion %s", name)
+		}
+	}
+	if names["saved"] {
+		t.Error("completion leaked inner scope")
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatalf("queries corrupted diagnostics: %v", ds)
+	}
+}
+
+func TestTypefnSignature(t *testing.T) {
+	source := strings.Replace(typefnEditorSource, "Twice<21>", "Twice</*arg*/21>", 1)
+	l, ctx, pos := typefnService(t, source)
+	signature, err := l.ProvideSignatureHelp(ctx, "file:///main.ts", pos("/*arg*/"), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if signature.SignatureHelp == nil || signature.SignatureHelp.Signatures[0].Label != "typefn Twice<N>: type" {
+		t.Fatalf("signature: %#v", signature)
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatalf("queries corrupted diagnostics: %v", ds)
+	}
+}
+
+func TestTypefnSignatureWhileTyping(t *testing.T) {
+	for _, test := range []struct {
+		source string
+		active uint32
+	}{
+		{`typefn F<A,B> { return A; } typefn G<> { return F</*at*/`, 0},
+		{`typefn F<A,B> { return A; } typefn G<> { return F<1, /*at*/`, 1},
+		{`typefn F<A,B> { return A; } typefn G<> { return F<[1,2], /*at*/string>; }`, 1},
+		{`typefn F<A,B> { return A; } typefn G<> { return F<F<1,2>, /*at*/string>; }`, 1},
+		{`typefn F<A,B> { return A; } type R = F<1, /*at*/string>;`, 1},
+		{`typefn F<A,B> { return A; } type R = F</*at*/`, 0},
+		{`typefn F<A,B> { return A; } typefn G<N> { return F<(N < 2), /*at*/string>; }`, 1},
+		{`typefn F<A,B> { return A; } typefn G<N> { return F<(N < 2), [/*at*/1,2]>; }`, 1},
+	} {
+		t.Run(test.source, func(t *testing.T) {
+			l, ctx, pos := typefnService(t, test.source)
+			result, err := l.ProvideSignatureHelp(ctx, "file:///main.ts", pos("/*at*/"), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			help := result.SignatureHelp
+			if help == nil || help.Signatures[0].Label != "typefn F<A, B>: type" || help.ActiveParameter == nil || help.ActiveParameter.Uinteger == nil || *help.ActiveParameter.Uinteger != test.active {
+				t.Fatalf("signature: %#v", help)
+			}
+		})
+	}
+}
+
+func TestTypefnNamespaceCompletion(t *testing.T) {
+	for _, suffix := range []string{`/*at*/Id<1>; }`, `/*at*/`} {
+		source := `namespace Types { export typefn Id<T> { return T; } export type Alias = 1; export const runtime = 1; } typefn F<> { return Types.` + suffix
+		l, ctx, pos := typefnService(t, source)
+		response, err := l.ProvideCompletion(ctx, "file:///main.ts", pos("/*at*/"), nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response.List == nil {
+			t.Fatal("missing member completions")
+		}
+		names := map[string]bool{}
+		for _, item := range response.List.Items {
+			names[item.Label] = true
+		}
+		if !names["Id"] || !names["Alias"] || names["runtime"] || names["return"] {
+			t.Fatalf("member names: %#v", names)
+		}
+	}
+}
