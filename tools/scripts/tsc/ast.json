@@ -452,6 +452,7 @@
             },
             "TypeFunctionDeclaration",
             "TypeFunctionLambda",
+            "TypeFunctionParameter",
             "TypeFunctionKind",
             "TypeFunctionBlock",
             "TypeFunctionBinding",
@@ -5270,7 +5271,7 @@
                     },
                     {
                         "name": "TypeParameters",
-                        "type": "TypeParameterDeclaration",
+                        "type": "TypeFunctionParameter",
                         "list": "NodeList"
                     },
                     {
@@ -5294,7 +5295,7 @@
                 "members": [
                     {
                         "name": "TypeParameters",
-                        "type": "TypeParameterDeclaration",
+                        "type": "TypeFunctionParameter",
                         "list": "NodeList"
                     },
                     {
@@ -5305,6 +5306,32 @@
                     {
                         "name": "Body",
                         "type": "TypeFunctionBlock"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionParameter": {
+                "extends": [
+                    "NodeBase",
+                    "DeclarationBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "name",
+                        "type": "Identifier",
+                        "private": true
+                    },
+                    {
+                        "name": "Slots",
+                        "type": "Identifier",
+                        "list": "NodeList",
+                        "optional": true
+                    },
+                    {
+                        "name": "Constraint",
+                        "type": "Node",
+                        "optional": true
                     }
                 ],
                 "arena": true

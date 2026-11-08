@@ -17,6 +17,7 @@ import {
     createTypeFunctionExpression,
     createTypeFunctionKind,
     createTypeFunctionLambda,
+    createTypeFunctionParameter,
     createTypeFunctionMatch,
     createTypeFunctionMatchArm,
     createTypeFunctionPattern,
@@ -231,4 +232,25 @@ test("anonymous typefn AST retains a separate lexical function through serializa
     assert.equal(decoded.body!.statements!.at(0)!.kind, SyntaxKind.TypeFunctionReturn);
     const transformed = visitEachChild(decoded, child => child.kind === SyntaxKind.TypeFunctionBlock ? createTypeFunctionBlock([]) : child);
     assert.equal(transformed.kind, SyntaxKind.TypeFunctionLambda);
+});
+
+
+test("DSL parameters retain constructor arity and expression bounds", () => {
+    const bound = createTypeFunctionExpression(SyntaxKind.TypeFunctionName, createIdentifier("A"));
+    const parameters = [
+        createTypeFunctionParameter(createIdentifier("F"), [createIdentifier("_"), createIdentifier("_")]),
+        createTypeFunctionParameter(createIdentifier("A")),
+        createTypeFunctionParameter(createIdentifier("B"), undefined, bound),
+    ];
+    const fn = createTypeFunctionDeclaration(undefined, createIdentifier("Apply"), parameters, undefined, createTypeFunctionBlock([]));
+    const source = createSourceFile([fn], createToken(SyntaxKind.EndOfFile), "", toRootedFilePath("/test.ts", undefined), pathKey(toRootedFilePath("/test.ts", undefined), CaseSensitivity.Sensitive));
+    const remote = new RemoteSourceFile(encodeSourceFile(source), new TextDecoder());
+    const decoded = remote.statements!.at(0)!.typeParameters!;
+    assert.equal(decoded.at(0)!.kind, SyntaxKind.TypeFunctionParameter);
+    assert.equal(decoded.at(0)!.slots!.length, 2);
+    assert.equal(decoded.at(1)!.slots, undefined);
+    assert.equal(decoded.at(2)!.constraint!.kind, SyntaxKind.TypeFunctionName);
+    const changed = visitEachChild(parameters[2]!, child => child === bound ? createTypeFunctionExpression(SyntaxKind.TypeFunctionName, createIdentifier("Changed")) : child);
+    assert.notEqual(changed, parameters[2]);
+    assert.equal(changed.kind, SyntaxKind.TypeFunctionParameter);
 });

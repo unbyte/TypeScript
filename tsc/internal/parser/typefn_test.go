@@ -257,3 +257,32 @@ func TestTypefnResultKinds(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnParameterKindsAndBounds(t *testing.T) {
+	file := parseTypefn(t, `typefn Apply<F<_, _>, A, B extends types.array<A>>: type {return F<A,B>;} typefn Zero<F<>> {return F<>;}`, ast.SourceFileParseOptions{TypefnVersion: 1})
+	if ds := file.Diagnostics(); len(ds) != 0 {
+		t.Fatal(ds)
+	}
+	parameters := file.Statements.Nodes[0].TypeParameters()
+	if len(parameters) != 3 || parameters[0].AsTypeFunctionParameter().Slots == nil || len(parameters[0].AsTypeFunctionParameter().Slots.Nodes) != 2 {
+		t.Fatal("constructor parameter lost its arity")
+	}
+	if parameters[1].AsTypeFunctionParameter().Slots != nil {
+		t.Fatal("Type parameter became a zero-arity constructor")
+	}
+	if parameters[2].AsTypeFunctionParameter().Constraint.Kind != ast.KindTypeFunctionCall {
+		t.Fatal("bound did not use DSL expression grammar")
+	}
+	if slots := file.Statements.Nodes[1].TypeParameters()[0].AsTypeFunctionParameter().Slots; slots == nil || len(slots.Nodes) != 0 {
+		t.Fatal("lost zero-arity slot list")
+	}
+	checkTypefnTree(t, file.AsNode())
+	for _, source := range []string{
+		`typefn F<A=1> {return A;}`, `typefn F<A<X>> {return 1;}`, `typefn F<A<_,>> {return 1;}`,
+		`typefn F<A<_> extends string> {return 1;}`, `type Native<F<_>> = F<string>;`,
+	} {
+		if file := parseTypefn(t, source, ast.SourceFileParseOptions{TypefnVersion: 1}); len(file.Diagnostics()) == 0 {
+			t.Fatalf("accepted invalid parameters: %s", source)
+		}
+	}
+}

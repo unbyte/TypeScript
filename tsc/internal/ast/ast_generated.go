@@ -67,6 +67,7 @@ type NodeFactory struct {
 	typeFunctionLambdaArena            core.Arena[TypeFunctionLambda]
 	typeFunctionMatchArena             core.Arena[TypeFunctionMatch]
 	typeFunctionMatchArmArena          core.Arena[TypeFunctionMatchArm]
+	typeFunctionParameterArena         core.Arena[TypeFunctionParameter]
 	typeFunctionPatternArena           core.Arena[TypeFunctionPattern]
 	typeFunctionStatementArena         core.Arena[TypeFunctionStatement]
 	typeFunctionTemplateArena          core.Arena[TypeFunctionTemplate]
@@ -461,6 +462,7 @@ type (
 	JSDocParameterOrPropertyTagNode   = Node
 	TypeFunctionDeclarationNode       = Node
 	TypeFunctionLambdaNode            = Node
+	TypeFunctionParameterNode         = Node
 	TypeFunctionBlockNode             = Node
 	TypeFunctionStatementNode         = Node
 	TypeFunctionExpressionNode        = Node
@@ -8839,12 +8841,12 @@ type TypeFunctionDeclaration struct {
 	ModifiersBase
 	LocalsContainerBase
 	name           *IdentifierNode
-	TypeParameters *TypeParameterList
+	TypeParameters *NodeList
 	ResultKind     *TypeFunctionKindNode // Optional
 	Body           *TypeFunctionBlockNode
 }
 
-func (f *NodeFactory) NewTypeFunctionDeclaration(modifiers *ModifierList, name *IdentifierNode, typeParameters *TypeParameterList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
+func (f *NodeFactory) NewTypeFunctionDeclaration(modifiers *ModifierList, name *IdentifierNode, typeParameters *NodeList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
 	data := f.typeFunctionDeclarationArena.New()
 	data.modifiers = modifiers
 	data.name = name
@@ -8854,7 +8856,7 @@ func (f *NodeFactory) NewTypeFunctionDeclaration(modifiers *ModifierList, name *
 	return f.newNode(KindTypeFunctionDeclaration, data.AsNode())
 }
 
-func (f *NodeFactory) UpdateTypeFunctionDeclaration(node *TypeFunctionDeclaration, modifiers *ModifierList, name *IdentifierNode, typeParameters *TypeParameterList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
+func (f *NodeFactory) UpdateTypeFunctionDeclaration(node *TypeFunctionDeclaration, modifiers *ModifierList, name *IdentifierNode, typeParameters *NodeList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
 	if modifiers != node.modifiers || name != node.name || typeParameters != node.TypeParameters || resultKind != node.ResultKind || body != node.Body {
 		return updateNode(f.NewTypeFunctionDeclaration(modifiers, name, typeParameters, resultKind, body), node.AsNode(), f.hooks)
 	}
@@ -8893,12 +8895,12 @@ type TypeFunctionLambda struct {
 	TypeSyntaxBase
 	NodeBase
 	LocalsContainerBase
-	TypeParameters *TypeParameterList
+	TypeParameters *NodeList
 	ResultKind     *TypeFunctionKindNode // Optional
 	Body           *TypeFunctionBlockNode
 }
 
-func (f *NodeFactory) NewTypeFunctionLambda(typeParameters *TypeParameterList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
+func (f *NodeFactory) NewTypeFunctionLambda(typeParameters *NodeList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
 	data := f.typeFunctionLambdaArena.New()
 	data.TypeParameters = typeParameters
 	data.ResultKind = resultKind
@@ -8906,7 +8908,7 @@ func (f *NodeFactory) NewTypeFunctionLambda(typeParameters *TypeParameterList, r
 	return f.newNode(KindTypeFunctionLambda, data.AsNode())
 }
 
-func (f *NodeFactory) UpdateTypeFunctionLambda(node *TypeFunctionLambda, typeParameters *TypeParameterList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
+func (f *NodeFactory) UpdateTypeFunctionLambda(node *TypeFunctionLambda, typeParameters *NodeList, resultKind *TypeFunctionKindNode, body *TypeFunctionBlockNode) *Node {
 	if typeParameters != node.TypeParameters || resultKind != node.ResultKind || body != node.Body {
 		return updateNode(f.NewTypeFunctionLambda(typeParameters, resultKind, body), node.AsNode(), f.hooks)
 	}
@@ -8927,6 +8929,54 @@ func (node *TypeFunctionLambda) Clone(f NodeFactoryCoercible) *Node {
 
 func IsTypeFunctionLambda(node *Node) bool {
 	return node.Kind == KindTypeFunctionLambda
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionParameter
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionParameter struct {
+	TypeSyntaxBase
+	NodeBase
+	DeclarationBase
+	name       *IdentifierNode
+	Slots      *NodeList // Optional
+	Constraint *Node     // Optional
+}
+
+func (f *NodeFactory) NewTypeFunctionParameter(name *IdentifierNode, slots *NodeList, constraint *Node) *Node {
+	data := f.typeFunctionParameterArena.New()
+	data.name = name
+	data.Slots = slots
+	data.Constraint = constraint
+	return f.newNode(KindTypeFunctionParameter, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionParameter(node *TypeFunctionParameter, name *IdentifierNode, slots *NodeList, constraint *Node) *Node {
+	if name != node.name || slots != node.Slots || constraint != node.Constraint {
+		return updateNode(f.NewTypeFunctionParameter(name, slots, constraint), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionParameter) ForEachChild(v Visitor) bool {
+	return visit(v, node.name) || visitNodeList(v, node.Slots) || visit(v, node.Constraint)
+}
+
+func (node *TypeFunctionParameter) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionParameter(node, v.visitNode(node.name), v.visitNodes(node.Slots), v.visitNode(node.Constraint))
+}
+
+func (node *TypeFunctionParameter) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionParameter(node.name, node.Slots, node.Constraint), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func (node *TypeFunctionParameter) Name() *DeclarationName {
+	return node.name
+}
+
+func IsTypeFunctionParameter(node *Node) bool {
+	return node.Kind == KindTypeFunctionParameter
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -9874,6 +9924,9 @@ func (n *Node) ForEachChild(v Visitor) bool {
 	case KindTypeFunctionLambda:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionLambda, which embeds its Node header at offset zero.
 		return (*TypeFunctionLambda)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionParameter:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+		return (*TypeFunctionParameter)(unsafe.Pointer(n)).ForEachChild(v)
 	case KindTypeFunctionBlock:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionBlock, which embeds its Node header at offset zero.
 		return (*TypeFunctionBlock)(unsafe.Pointer(n)).ForEachChild(v)
@@ -10422,6 +10475,9 @@ func (n *Node) VisitEachChild(v *NodeVisitor) *Node {
 	case KindTypeFunctionLambda:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionLambda, which embeds its Node header at offset zero.
 		return (*TypeFunctionLambda)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionParameter:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+		return (*TypeFunctionParameter)(unsafe.Pointer(n)).VisitEachChild(v)
 	case KindTypeFunctionBlock:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionBlock, which embeds its Node header at offset zero.
 		return (*TypeFunctionBlock)(unsafe.Pointer(n)).VisitEachChild(v)
@@ -11047,6 +11103,9 @@ func (n *Node) Clone(f NodeFactoryCoercible) *Node {
 	case KindTypeFunctionLambda:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionLambda, which embeds its Node header at offset zero.
 		return (*TypeFunctionLambda)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionParameter:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+		return (*TypeFunctionParameter)(unsafe.Pointer(n)).Clone(f)
 	case KindTypeFunctionBlock:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionBlock, which embeds its Node header at offset zero.
 		return (*TypeFunctionBlock)(unsafe.Pointer(n)).Clone(f)
@@ -11549,6 +11608,8 @@ func (n *Node) SubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionDeclaration:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionLambda:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionParameter:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionBlock:
 		return n.computeSubtreeFacts()
@@ -12160,6 +12221,9 @@ func (n *Node) computeSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionLambda:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionLambda, which embeds its Node header at offset zero.
 		return (*TypeFunctionLambda)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionParameter:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+		return (*TypeFunctionParameter)(unsafe.Pointer(n)).computeSubtreeFacts()
 	case KindTypeFunctionBlock:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionBlock, which embeds its Node header at offset zero.
 		return (*TypeFunctionBlock)(unsafe.Pointer(n)).computeSubtreeFacts()
@@ -12779,6 +12843,9 @@ func (n *Node) propagateSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionLambda:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionLambda, which embeds its Node header at offset zero.
 		return (*TypeFunctionLambda)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionParameter:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+		return (*TypeFunctionParameter)(unsafe.Pointer(n)).propagateSubtreeFacts()
 	case KindTypeFunctionBlock:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionBlock, which embeds its Node header at offset zero.
 		return (*TypeFunctionBlock)(unsafe.Pointer(n)).propagateSubtreeFacts()
@@ -13086,27 +13153,28 @@ var nodeDeclarationDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindTypeParameter:                   55,
 	KindJSDocTypeLiteral:                56,
 	KindTypeFunctionDeclaration:         57,
-	KindTypeFunctionBinding:             58,
-	KindTypeFunctionAssignment:          58,
-	KindTypeFunctionReturn:              58,
-	KindTypeFunctionIf:                  58,
-	KindTypeFunctionWhile:               58,
-	KindTypeFunctionForOf:               58,
-	KindTypeFunctionForIn:               58,
-	KindTypeFunctionBreak:               58,
-	KindTypeFunctionContinue:            58,
-	KindTypeFunctionExpressionStatement: 58,
-	KindTypeFunctionWildcardPattern:     59,
-	KindTypeFunctionCapturePattern:      59,
-	KindTypeFunctionLiteralPattern:      59,
-	KindTypeFunctionIsPattern:           59,
-	KindTypeFunctionNativePattern:       59,
-	KindTypeFunctionTuplePattern:        59,
-	KindTypeFunctionRestPattern:         59,
-	KindTypeFunctionObjectPattern:       59,
-	KindTypeFunctionFieldPattern:        59,
-	KindTypeFunctionTemplatePattern:     59,
-	KindTypeFunctionPinPattern:          59,
+	KindTypeFunctionParameter:           58,
+	KindTypeFunctionBinding:             59,
+	KindTypeFunctionAssignment:          59,
+	KindTypeFunctionReturn:              59,
+	KindTypeFunctionIf:                  59,
+	KindTypeFunctionWhile:               59,
+	KindTypeFunctionForOf:               59,
+	KindTypeFunctionForIn:               59,
+	KindTypeFunctionBreak:               59,
+	KindTypeFunctionContinue:            59,
+	KindTypeFunctionExpressionStatement: 59,
+	KindTypeFunctionWildcardPattern:     60,
+	KindTypeFunctionCapturePattern:      60,
+	KindTypeFunctionLiteralPattern:      60,
+	KindTypeFunctionIsPattern:           60,
+	KindTypeFunctionNativePattern:       60,
+	KindTypeFunctionTuplePattern:        60,
+	KindTypeFunctionRestPattern:         60,
+	KindTypeFunctionObjectPattern:       60,
+	KindTypeFunctionFieldPattern:        60,
+	KindTypeFunctionTemplatePattern:     60,
+	KindTypeFunctionPinPattern:          60,
 }
 
 func (n *Node) DeclarationData() *DeclarationBase {
@@ -13283,9 +13351,12 @@ func (n *Node) DeclarationData() *DeclarationBase {
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
 		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).DeclarationData()
 	case 58:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+		return (*TypeFunctionParameter)(unsafe.Pointer(n)).DeclarationData()
+	case 59:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionStatement, which embeds its Node header at offset zero.
 		return (*TypeFunctionStatement)(unsafe.Pointer(n)).DeclarationData()
-	case 59:
+	case 60:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
 		return (*TypeFunctionPattern)(unsafe.Pointer(n)).DeclarationData()
 	default:
@@ -13735,38 +13806,39 @@ var nodeNameDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindJSDocParameterTag:               41,
 	KindJSDocPropertyTag:                41,
 	KindTypeFunctionDeclaration:         42,
-	KindTypeFunctionBinding:             43,
-	KindTypeFunctionAssignment:          43,
-	KindTypeFunctionReturn:              43,
-	KindTypeFunctionIf:                  43,
-	KindTypeFunctionWhile:               43,
-	KindTypeFunctionForOf:               43,
-	KindTypeFunctionForIn:               43,
-	KindTypeFunctionBreak:               43,
-	KindTypeFunctionContinue:            43,
-	KindTypeFunctionExpressionStatement: 43,
-	KindTypeFunctionName:                44,
-	KindTypeFunctionLiteral:             44,
-	KindTypeFunctionCall:                44,
-	KindTypeFunctionUnary:               44,
-	KindTypeFunctionBinary:              44,
-	KindTypeFunctionTuple:               44,
-	KindTypeFunctionObject:              44,
-	KindTypeFunctionField:               44,
-	KindTypeFunctionIndex:               44,
-	KindTypeFunctionNativeType:          44,
-	KindTypeFunctionSpread:              44,
-	KindTypeFunctionWildcardPattern:     45,
-	KindTypeFunctionCapturePattern:      45,
-	KindTypeFunctionLiteralPattern:      45,
-	KindTypeFunctionIsPattern:           45,
-	KindTypeFunctionNativePattern:       45,
-	KindTypeFunctionTuplePattern:        45,
-	KindTypeFunctionRestPattern:         45,
-	KindTypeFunctionObjectPattern:       45,
-	KindTypeFunctionFieldPattern:        45,
-	KindTypeFunctionTemplatePattern:     45,
-	KindTypeFunctionPinPattern:          45,
+	KindTypeFunctionParameter:           43,
+	KindTypeFunctionBinding:             44,
+	KindTypeFunctionAssignment:          44,
+	KindTypeFunctionReturn:              44,
+	KindTypeFunctionIf:                  44,
+	KindTypeFunctionWhile:               44,
+	KindTypeFunctionForOf:               44,
+	KindTypeFunctionForIn:               44,
+	KindTypeFunctionBreak:               44,
+	KindTypeFunctionContinue:            44,
+	KindTypeFunctionExpressionStatement: 44,
+	KindTypeFunctionName:                45,
+	KindTypeFunctionLiteral:             45,
+	KindTypeFunctionCall:                45,
+	KindTypeFunctionUnary:               45,
+	KindTypeFunctionBinary:              45,
+	KindTypeFunctionTuple:               45,
+	KindTypeFunctionObject:              45,
+	KindTypeFunctionField:               45,
+	KindTypeFunctionIndex:               45,
+	KindTypeFunctionNativeType:          45,
+	KindTypeFunctionSpread:              45,
+	KindTypeFunctionWildcardPattern:     46,
+	KindTypeFunctionCapturePattern:      46,
+	KindTypeFunctionLiteralPattern:      46,
+	KindTypeFunctionIsPattern:           46,
+	KindTypeFunctionNativePattern:       46,
+	KindTypeFunctionTuplePattern:        46,
+	KindTypeFunctionRestPattern:         46,
+	KindTypeFunctionObjectPattern:       46,
+	KindTypeFunctionFieldPattern:        46,
+	KindTypeFunctionTemplatePattern:     46,
+	KindTypeFunctionPinPattern:          46,
 }
 
 func (n *Node) Name() *DeclarationName {
@@ -13898,12 +13970,15 @@ func (n *Node) Name() *DeclarationName {
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
 		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).Name()
 	case 43:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+		return (*TypeFunctionParameter)(unsafe.Pointer(n)).Name()
+	case 44:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionStatement, which embeds its Node header at offset zero.
 		return (*TypeFunctionStatement)(unsafe.Pointer(n)).Name()
-	case 44:
+	case 45:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 		return (*TypeFunctionExpression)(unsafe.Pointer(n)).Name()
-	case 45:
+	case 46:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionPattern, which embeds its Node header at offset zero.
 		return (*TypeFunctionPattern)(unsafe.Pointer(n)).Name()
 	default:
@@ -14353,6 +14428,7 @@ var (
 	_ [0 - unsafe.Offsetof(JSDocParameterOrPropertyTag{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionDeclaration{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionLambda{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionParameter{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionBlock{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionStatement{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionExpression{}.Node)]byte
@@ -15938,6 +16014,14 @@ func (n *Node) AsTypeFunctionLambda() *TypeFunctionLambda {
 	}
 	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionLambda, which embeds its Node header at offset zero.
 	return (*TypeFunctionLambda)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionParameter() *TypeFunctionParameter {
+	if n.Kind != KindTypeFunctionParameter {
+		panic("Invalid node cast to TypeFunctionParameter")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionParameter, which embeds its Node header at offset zero.
+	return (*TypeFunctionParameter)(unsafe.Pointer(n))
 }
 
 func (n *Node) AsTypeFunctionBlock() *TypeFunctionBlock {

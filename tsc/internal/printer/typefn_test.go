@@ -20,6 +20,7 @@ func TestTypefnRoundTrip(t *testing.T) {
  }
  typefn Empty<>: type { return []; }
  typefn Factory<>: typefn<_, _> { return []; }`
+	source += "\ntypefn Apply<F<_, _>, A, B extends types.array<A>> { return F<A,B>; }"
 	source += "\ntypefn Lambdas<T> { type F = typefn<U extends T>: type { return U; }; type Z = typefn<> { return 1; }; return F<Z<>>; }"
 	source += "\ntypefn Text<T> { return `head${T + 1} middle${`nested${T}`} tail\\`${T}`; }"
 	source += "\ntypefn Patterns<T> { match (T) { [head, {value: item}, ...rest] if (true) => { return head; } is F<T> => { return 1; } -2n => { return 2; } type(string) => { return 3; } `GET ${path}${=text.concat<[\"/\", \":id\"]>}${_}` => { return path; } _ => { return never; } } }"

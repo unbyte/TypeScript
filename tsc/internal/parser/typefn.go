@@ -70,21 +70,7 @@ func (p *Parser) parseTypefnDeclaration(pos int, jsdoc jsdocScannerInfo, modifie
 }
 
 func (p *Parser) parseTypefnHeader() (*ast.NodeList, *ast.Node) {
-	if p.token != ast.KindLessThanToken {
-		p.typefnError("expected an explicit parameter list")
-	}
-	parameters := p.parseTypeParameters()
-	if parameters == nil {
-		parameters = p.factory.NewNodeList(nil)
-	}
-	for _, parameter := range parameters.Nodes {
-		if len(parameter.ModifierNodes()) != 0 {
-			p.parseErrorAtRange(parameter.Loc, diagnostics.NewAdHocMessage("typefn: parameter modifiers are not supported"))
-		}
-		if parameter.AsTypeParameterDeclaration().DefaultType != nil {
-			p.typefnError("parameter defaults are not supported")
-		}
-	}
+	parameters := p.parseTypefnParameters()
 	var resultKind *ast.Node
 	if p.token == ast.KindColonToken {
 		p.nextToken()
@@ -486,29 +472,71 @@ func (p *Parser) parseTypefnResultKind() *ast.Node {
 	var slots *ast.NodeList
 	if p.token == ast.KindIdentifier && p.scanner.TokenValue() == "typefn" {
 		keyword = p.parseIdentifier()
-		start := p.nodePos()
-		p.parseExpected(ast.KindLessThanToken)
-		var names []*ast.Node
-		for p.token != ast.KindGreaterThanToken && p.token != ast.KindOpenBraceToken && p.token != ast.KindEndOfFile && p.typefnStep() {
-			before := p.nodePos()
-			name := p.parseIdentifier()
-			if name.Text() != "_" {
-				p.parseErrorAtRange(name.Loc, diagnostics.NewAdHocMessage("typefn: constructor kind slots must be '_'"))
-			}
-			names = append(names, name)
-			if p.nodePos() == before || p.token != ast.KindCommaToken {
-				break
-			}
-			p.nextToken()
-			if p.token == ast.KindGreaterThanToken {
-				p.typefnError("constructor kind slots do not allow a trailing comma")
-			}
-		}
-		p.parseExpected(ast.KindGreaterThanToken)
-		slots = p.factory.NewNodeList(names)
-		slots.Loc = core.NewTextRange(start, p.nodePos())
+		slots = p.parseTypefnSlots()
 	} else {
 		keyword = p.parseExpectedToken(ast.KindTypeKeyword)
 	}
 	return p.finishNode(p.factory.NewTypeFunctionKind(keyword, slots), pos)
+}
+
+func (p *Parser) parseTypefnSlots() *ast.NodeList {
+	start := p.nodePos()
+	p.parseExpected(ast.KindLessThanToken)
+	var names []*ast.Node
+	for p.token != ast.KindGreaterThanToken && p.token != ast.KindOpenBraceToken && p.token != ast.KindEndOfFile && p.typefnStep() {
+		before := p.nodePos()
+		name := p.parseIdentifier()
+		if name.Text() != "_" {
+			p.parseErrorAtRange(name.Loc, diagnostics.NewAdHocMessage("typefn: constructor kind slots must be '_'"))
+		}
+		names = append(names, name)
+		if p.nodePos() == before || p.token != ast.KindCommaToken {
+			break
+		}
+		p.nextToken()
+		if p.token == ast.KindGreaterThanToken {
+			p.typefnError("constructor kind slots do not allow a trailing comma")
+		}
+	}
+	p.parseExpected(ast.KindGreaterThanToken)
+	slots := p.factory.NewNodeList(names)
+	slots.Loc = core.NewTextRange(start, p.nodePos())
+	return slots
+}
+
+func (p *Parser) parseTypefnParameters() *ast.NodeList {
+	start := p.nodePos()
+	var parameters []*ast.Node
+	if p.parseExpected(ast.KindLessThanToken) {
+		for p.token != ast.KindGreaterThanToken && p.token != ast.KindOpenBraceToken && p.token != ast.KindEndOfFile && p.typefnStep() {
+			pos := p.nodePos()
+			name := p.parseIdentifier()
+			var slots *ast.NodeList
+			var bound *ast.Node
+			if p.token == ast.KindLessThanToken {
+				slots = p.parseTypefnSlots()
+			}
+			if p.token == ast.KindExtendsKeyword {
+				if slots != nil {
+					p.typefnError("constructor parameters specify arity only")
+				}
+				p.nextToken()
+				bound = p.parseTypefnExpression(4)
+			}
+			if p.token == ast.KindEqualsToken {
+				p.typefnError("parameter defaults are not supported")
+				p.nextToken()
+				p.parseTypefnExpression(4)
+			}
+			parameters = append(parameters, p.finishNode(p.factory.NewTypeFunctionParameter(name, slots, bound), pos))
+			if p.nodePos() == pos || p.token != ast.KindCommaToken {
+				break
+			}
+			p.nextToken()
+		}
+		p.parseExpected(ast.KindGreaterThanToken)
+	}
+	list := p.factory.NewNodeList(parameters)
+	list.Loc = core.NewTextRange(start, p.nodePos())
+	return list
 }

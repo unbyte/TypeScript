@@ -43,6 +43,7 @@ import {
     isTypeAliasDeclaration,
     isTypeFunctionDeclaration,
     isTypeFunctionExpression,
+    isTypeFunctionLambda,
     isTypeFunctionStatement,
     isTypeNode,
     isVariableDeclarationList,
@@ -814,7 +815,7 @@ describe("API", { concurrency }, () => {
 
     test("typefn profile crosses the native API and produces computed native types", () => {
         using api = spawnAPI({
-            "/src/index.ts": `typefn Twice<N>: type { return N * 2; } type Answer = Twice<21>; const valid: Answer = 42; const invalid: Answer = 43;`,
+            "/src/index.ts": `typefn Twice<N extends number>: type { return N * 2; } type Answer = Twice<21>; const valid: Answer = 42; const invalid: Answer = 43; typefn Factory<> { return typefn<T extends string> { return T; }; }`,
         });
         const options: CompilerOptions = { noLib: true, strict: true, typefn: { version: 1, limits: { callDepth: 16 } } };
         using program = api.createProgram(["/src/index.ts"], options);
@@ -827,6 +828,17 @@ describe("API", { concurrency }, () => {
         assert.equal(declaration.resultKind?.kind, SyntaxKind.TypeFunctionKind);
         assert.equal(declaration.resultKind?.kindToken.kind, SyntaxKind.TypeKeyword);
         assert.equal(declaration.resultKind?.slots, undefined);
+        assert.equal(declaration.typeParameters[0].kind, SyntaxKind.TypeFunctionParameter);
+        assert.equal(declaration.typeParameters[0].slots, undefined);
+        assert.equal(declaration.typeParameters[0].constraint?.kind, SyntaxKind.TypeFunctionLiteral);
+        const factory = file.statements[4];
+        assert.ok(isTypeFunctionDeclaration(factory));
+        const factoryReturn = factory.body.statements[0];
+        assert.ok(isTypeFunctionStatement(factoryReturn));
+        const lambda = factoryReturn.expression!;
+        assert.ok(isTypeFunctionLambda(lambda));
+        assert.equal(lambda.typeParameters[0].kind, SyntaxKind.TypeFunctionParameter);
+        assert.equal(lambda.typeParameters[0].constraint?.kind, SyntaxKind.TypeFunctionLiteral);
         const returned = declaration.body.statements[0];
         assert.ok(isTypeFunctionStatement(returned));
         assert.equal(returned.kind, SyntaxKind.TypeFunctionReturn);

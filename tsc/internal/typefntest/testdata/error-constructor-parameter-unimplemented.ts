@@ -1,0 +1,2 @@
+export {};
+typefn Apply<F<_>,T> {return F<T>;}

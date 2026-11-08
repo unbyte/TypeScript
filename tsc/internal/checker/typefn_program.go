@@ -65,11 +65,12 @@ type typefnProgram struct {
 	bindings               map[*ast.Symbol]*typefnKind
 }
 type typefnBinding struct {
-	slot    int
-	mutable bool
-	symbol  *ast.Symbol
-	helper  *typefnProgram // Named function signature, not a constructor binding.
-	kind    *typefnKind
+	slot             int
+	mutable          bool
+	symbol           *ast.Symbol
+	helper           *typefnProgram // Named function signature, not a constructor binding.
+	kind             *typefnKind
+	unavailableBound bool
 }
 type (
 	typefnLoop     struct{ breaks, continues []int }
@@ -120,6 +121,15 @@ func (b *typefnCompiler) bind(node *ast.Node, mutable bool) int {
 func (b *typefnCompiler) lookup(name string) (typefnBinding, bool) {
 	for i := len(b.scopes) - 1; i >= 0; i-- {
 		if v, ok := b.scopes[i][name]; ok {
+			if b.boundParameter >= 0 {
+				for index, parameter := range b.p.declaration.TypeParameters() {
+					if parameter.Symbol() == v.symbol && index >= b.boundParameter {
+						v.slot = -1
+						v.unavailableBound = true
+						break
+					}
+				}
+			}
 			return v, true
 		}
 	}
@@ -306,7 +316,11 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 		if ast.IsIdentifier(name) {
 			if binding, ok := b.lookup(name.Text()); ok {
 				if binding.slot < 0 {
-					b.error(node, "binding read before initialization")
+					if binding.unavailableBound {
+						b.error(node, "input bound may reference only preceding Type parameters")
+					} else {
+						b.error(node, "binding read before initialization")
+					}
 				}
 				if node.Kind == ast.KindTypeFunctionCall {
 					if binding.helper != nil {
@@ -461,8 +475,12 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 	}
 	for _, parameter := range node.TypeParameters() {
 		b.bind(parameter.Name(), false)
-		if parent == nil && parameter.AsTypeParameterDeclaration().Constraint != nil {
-			c.checkSourceElement(parameter.AsTypeParameterDeclaration().Constraint)
+		if slots := parameter.AsTypeFunctionParameter().Slots; slots != nil {
+			binding := b.scopes[len(b.scopes)-1][parameter.Name().Text()]
+			binding.kind = typefnConstructorKind(len(slots.Nodes))
+			b.scopes[len(b.scopes)-1][parameter.Name().Text()] = binding
+			p.bindings[parameter.Symbol()] = binding.kind
+			b.error(parameter, "constructor parameters are not implemented yet")
 		}
 	}
 	if parent != nil {
@@ -473,18 +491,16 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 			self := map[string]typefnBinding{node.Name().Text(): {slot: p.selfSlot, symbol: node.Symbol(), helper: p, kind: typefnConstructorKind(len(node.TypeParameters()))}}
 			b.scopes = append([]map[string]typefnBinding{self}, b.scopes...)
 		}
-		p.bounds = make([]*typefnExpression, len(node.TypeParameters()))
-		for i, parameter := range node.TypeParameters() {
-			if constraint := parameter.AsTypeParameterDeclaration().Constraint; constraint != nil {
-				factory := ast.NewNodeFactory(ast.NodeFactoryHooks{})
-				wrapper := factory.NewTypeFunctionExpression(ast.KindTypeFunctionNativeType, nil, nil, nil, constraint, false, false)
-				wrapper.Loc, wrapper.Parent = constraint.Loc, parameter
-				b.boundParameter = i
-				p.bounds[i] = b.expression(wrapper)
-				b.boundParameter = -1
-			}
+	}
+	p.bounds = make([]*typefnExpression, len(node.TypeParameters()))
+	for i, parameter := range node.TypeParameters() {
+		if constraint := parameter.AsTypeFunctionParameter().Constraint; constraint != nil {
+			b.boundParameter = i
+			p.bounds[i] = b.typeExpression(constraint)
+			b.boundParameter = -1
 		}
 	}
+
 	b.block(ast.TypeFunctionBody(node), false)
 	flow := p.flow()
 	p.hasValueReturn = flow.returns

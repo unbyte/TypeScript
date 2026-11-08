@@ -601,6 +601,12 @@ func (b *Binder) bind(node *ast.Node) bool {
 	// However, not all symbols will end up in any of these tables. 'Anonymous' symbols
 	// (like TypeLiterals for example) will not be put in any table.
 	switch node.Kind {
+	case ast.KindTypeFunctionParameter:
+		if node.AsTypeFunctionParameter().Slots == nil {
+			b.bindTypeParameter(node)
+		} else {
+			b.declareSymbolAndAddToSymbolTable(node, ast.SymbolFlagsTypeAlias, ast.SymbolFlagsTypeAliasExcludes)
+		}
 	case ast.KindTypeFunctionBinding, ast.KindTypeFunctionCapturePattern:
 		b.declareSymbolAndAddToSymbolTable(node, ast.SymbolFlagsTypeAlias, ast.SymbolFlagsTypeAliasExcludes)
 

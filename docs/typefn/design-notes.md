@@ -21,7 +21,7 @@ restricted design is already implemented. The probes in
 
 ## Input constraints
 
-Keep native `extends` bounds for now. A constraint proves eligibility; it does not
+Keep `extends` bounds with native assignability for now. A constraint proves eligibility; it does not
 supply a literal value to execute, enumerate a union, or authorize an inverse
 inference rule. Assignability, class ancestry and equality are distinct contracts.
 In particular, special `any`/`never` behavior and conditional-Type distribution
@@ -36,19 +36,19 @@ include [lower bounds](https://github.com/microsoft/TypeScript/issues/14520),
 [generic narrowing](https://github.com/microsoft/TypeScript/issues/13995) and
 [circular constraints](https://github.com/microsoft/TypeScript/issues/51011).
 
-Three existing behaviors need a contract decision before adding `where`:
-
-* An earlier unresolved parameter bound delays checking later bounds. Parameter
-  order can therefore affect diagnostic timing.
-* Checking a header bound can evaluate an application at declaration time, even
-  when the surrounding typefn is never called.
-* Later-parameter references in bounds are accepted, while the target specification
-  describes preceding-parameter scope.
+The original probes found eager header evaluation and acceptance of later
+parameters. The implementation now follows the R2 contract: dedicated DSL
+parameter nodes retain bound expressions, definitions validate their names/kinds,
+and applications evaluate them against preceding parameters and frozen captures.
+Native TypeScript generic declarations remain unchanged. An earlier unresolved
+bound suspends the call before later bounds; source order still affects diagnostic
+timing, as it does for sequential DSL operations.
 
 The executable observations are `probes/where-baseline.ts`,
 `probes/check-where-baseline.mjs` and `probes/check-where-native.py`.
-[Testing](testing.md) gives their commands. They record current behavior, including
-known mismatches; they are not `where` conformance tests.
+[Testing](testing.md) gives their commands. The native baseline remains calibration;
+the fork probes now assert application-time bounds and preceding-parameter scope.
+They do not introduce or establish conformance for `where`.
 
 A possible future `where` limited to one upper bound per declared parameter would
 need equivalence to inline bounds, fixed parameter-order checks, defined scope and

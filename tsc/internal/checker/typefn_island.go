@@ -62,7 +62,11 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 			if ast.IsIdentifier(name) {
 				if binding, ok := b.lookup(name.Text()); ok && binding.symbol == symbol {
 					if binding.slot < 0 {
-						b.error(name, "binding read before initialization")
+						if binding.unavailableBound {
+							b.error(name, "input bound may reference only preceding Type parameters")
+						} else {
+							b.error(name, "binding read before initialization")
+						}
 						return false
 					}
 					if b.boundParameter >= 0 {

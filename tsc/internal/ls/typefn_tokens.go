@@ -92,6 +92,13 @@ func typefnTokenMetadata(file *ast.SourceFile, root *ast.Node) (map[int]bool, ma
 				}
 			}
 		}
+		if node.Kind == ast.KindTypeFunctionParameter {
+			if slots := node.AsTypeFunctionParameter().Slots; slots != nil {
+				for _, slot := range slots.Nodes {
+					intrinsics[scanner.GetTokenPosOfNode(slot, file, false)] = tokenTypeOperator
+				}
+			}
+		}
 		if ast.IsTypeFunctionLike(node) || node.Kind == ast.KindTypeFunctionMatch {
 			intrinsics[scanner.GetTokenPosOfNode(node, file, false)] = tokenTypeKeyword
 		}

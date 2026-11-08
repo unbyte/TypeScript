@@ -238,10 +238,7 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure 
 		if p.local {
 			return typefnValue{native: v.error(node, "local helper requires its captured environment")}
 		}
-		parameters := v.c.appendTypeParameters(nil, declaration.TypeParameters())
-		if !v.constraints(node, parameters, args) {
-			return typefnValue{native: v.c.errorType}
-		}
+
 	}
 	// Charge register/argument backing storage and iterator slots, in addition to
 	// the existing fixed bookkeeping allowance. No iterator storage is allocated
@@ -263,9 +260,9 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure 
 		for i, capture := range p.captures {
 			registers[capture.target] = closure.captures[i]
 		}
-		if !v.helperConstraints(node, p, registers, args) {
-			return typefnValue{native: v.c.errorType}
-		}
+	}
+	if !v.inputConstraints(node, p, registers, args) {
+		return typefnValue{native: v.c.errorType}
 	}
 	iterators := make([]typefnIterator, p.iterators)
 	for pc := 0; pc < len(p.code); {

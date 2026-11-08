@@ -5,6 +5,7 @@ import (
 	"unsafe"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
 )
 
 // A helper closes over values, never mutable caller registers. Self-reference is
@@ -163,7 +164,7 @@ func (c *Checker) instantiateTypefnValues(values []typefnValue, mapper *TypeMapp
 	return result
 }
 
-func (v *typefnVM) helperConstraints(node *ast.Node, p *typefnProgram, registers []typefnValue, args []*Type) bool {
+func (v *typefnVM) inputConstraints(node *ast.Node, p *typefnProgram, registers []typefnValue, args []*Type) bool {
 	for i, bound := range p.bounds {
 		if bound == nil {
 			continue
@@ -172,10 +173,39 @@ func (v *typefnVM) helperConstraints(node *ast.Node, p *typefnProgram, registers
 		if v.failed || v.blocked {
 			return false
 		}
-		v.requireAssignable(node, args[i], constraint, "input Type does not satisfy the helper constraint")
-		if v.failed || v.blocked {
+		if !v.step(bound.node) {
 			return false
 		}
+		if v.c.isTypeAssignableTo(args[i], constraint) {
+			continue
+		}
+		if v.unresolvedGraph(bound.node, args[i]) || v.unresolvedGraph(bound.node, constraint) {
+			if !v.failed {
+				v.blocked = true
+			}
+			return false
+		}
+		if p.local {
+			v.error(bound.node, "input Type does not satisfy the helper constraint")
+		} else {
+			site := node
+			if v.rootSite != nil {
+				site = v.rootSite
+			}
+			if v.replaySite != nil {
+				site = v.replaySite
+			}
+			var reports []*ast.Diagnostic
+			if v.c.checkTypeAssignableToEx(args[i], constraint, site, diagnostics.Type_0_does_not_satisfy_the_constraint_1, &reports) {
+				continue
+			}
+			for _, report := range reports {
+				report.AddRelatedInfo(NewDiagnosticForNode(bound.node, diagnostics.NewAdHocMessage("typefn input constraint declared here")))
+				v.c.addDiagnostic(report)
+			}
+			v.failed = true
+		}
+		return false
 	}
 	return true
 }

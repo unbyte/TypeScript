@@ -11,7 +11,7 @@ func IsTypeFunctionIteration(node *Node) bool {
 }
 
 func IsTypeFunctionLocalDeclaration(node *Node) bool {
-	return node != nil && (node.Kind == KindTypeFunctionBinding || node.Kind == KindTypeFunctionCapturePattern || IsTypeFunctionIteration(node))
+	return node != nil && (node.Kind == KindTypeFunctionParameter || node.Kind == KindTypeFunctionBinding || node.Kind == KindTypeFunctionCapturePattern || IsTypeFunctionIteration(node))
 }
 
 // TypeFunctionReference returns the whole qualified Type name for a DSL read,

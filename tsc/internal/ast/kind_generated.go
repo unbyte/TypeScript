@@ -391,6 +391,7 @@ const (
 	// Imperative typefn DSL (opt-in)
 	KindTypeFunctionDeclaration
 	KindTypeFunctionLambda
+	KindTypeFunctionParameter
 	KindTypeFunctionKind
 	KindTypeFunctionBlock
 	KindTypeFunctionBinding

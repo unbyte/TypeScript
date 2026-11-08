@@ -105,7 +105,7 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 				p.writePunctuation(",")
 				p.writeSpace()
 			}
-			p.emitTypeParameter(parameter.AsTypeParameterDeclaration())
+			p.emitTypefn(parameter)
 		}
 		p.writePunctuation(">")
 		if kind := ast.TypeFunctionResultKind(node); kind != nil {
@@ -115,6 +115,26 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 		}
 		p.writeSpace()
 		p.emitTypefn(ast.TypeFunctionBody(node))
+	case ast.KindTypeFunctionParameter:
+		parameter := node.AsTypeFunctionParameter()
+		p.emitBindingIdentifier(node.Name().AsIdentifier())
+		if parameter.Slots != nil {
+			p.writePunctuation("<")
+			for i := range parameter.Slots.Nodes {
+				if i > 0 {
+					p.writePunctuation(",")
+					p.writeSpace()
+				}
+				p.writePunctuation("_")
+			}
+			p.writePunctuation(">")
+		}
+		if parameter.Constraint != nil {
+			p.writeSpace()
+			p.writeKeyword("extends")
+			p.writeSpace()
+			p.emitTypefn(parameter.Constraint)
+		}
 	case ast.KindTypeFunctionKind:
 		d := node.AsTypeFunctionKind()
 		if d.KindToken.Kind == ast.KindIdentifier {

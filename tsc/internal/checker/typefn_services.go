@@ -87,6 +87,12 @@ func (c *Checker) TypeFunctionBindingKind(declaration *ast.Node) string {
 	if declaration == nil {
 		return "type"
 	}
+	if declaration.Kind == ast.KindTypeFunctionParameter {
+		if slots := declaration.AsTypeFunctionParameter().Slots; slots != nil {
+			return typefnKindDisplay(typefnConstructorKind(len(slots.Nodes)))
+		}
+		return "type"
+	}
 	fn := ast.FindAncestor(declaration.Parent, ast.IsTypeFunctionLike)
 	if fn == nil {
 		return "type"

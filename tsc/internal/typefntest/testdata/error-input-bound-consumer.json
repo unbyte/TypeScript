@@ -1,0 +1,45 @@
+{
+  "files": {
+    "main.ts": "error-input-bound-consumer.ts",
+    "library.ts": "input-bound-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2344,
+      "file": "main.ts",
+      "at": "Outer<123>",
+      "message": "does not satisfy",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.ts",
+          "at": "string",
+          "message": "typefn input constraint declared here"
+        }
+      ]
+    },
+    {
+      "phase": "semantic",
+      "code": 2344,
+      "file": "main.ts",
+      "at": "Pending<false>",
+      "message": "does not satisfy",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.ts",
+          "at": "string",
+          "message": "typefn input constraint declared here"
+        }
+      ]
+    }
+  ]
+}

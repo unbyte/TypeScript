@@ -139,3 +139,13 @@ with pending creation checks blocks its enclosing Type computation; it does not
 publish a constructor with hidden requirements or encode one as a native Type.
 Type-valued bindings and arguments retain their own checks in addition to the
 frame journal, so a native shape cannot bypass factory readiness after storage.
+
+DSL signatures use `TypeFunctionParameter` nodes, distinct from native
+`TypeParameterDeclaration`. An ordinary parameter has a Type kind and an optional
+DSL bound expression; a constructor parameter records an exact slot count. This
+keeps DSL bounds out of native declaration-time constraint evaluation and permits
+the full TypeArgument expression grammar without changing native generics.
+Programs lower bounds against preceding parameter slots and frozen captures, then
+validate them after arguments/captures are installed in the call frame. Header
+names and kinds are checked without executing the bound. Constructor parameter
+syntax is retained while its mixed-value call adapter remains pending.

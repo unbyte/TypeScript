@@ -109,7 +109,7 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 		}
 		if decl != nil {
 			kind = lsproto.CompletionItemKindTypeParameter
-			detail = "type " + name + ": type"
+			detail = "type " + name + ": " + c.TypeFunctionBindingKind(decl)
 		}
 		item := &lsproto.CompletionItem{Label: name, Kind: &kind}
 		if detail != "" {

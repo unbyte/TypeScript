@@ -1354,15 +1354,21 @@ export interface JSDocTypeLiteral extends JSDocTypeBase, DeclarationBase {
 export interface TypeFunctionDeclaration extends StatementBase, DeclarationBase, ModifiersBase {
     readonly kind: SyntaxKind.TypeFunctionDeclaration;
     readonly name: Identifier;
-    readonly typeParameters: NodeArray<TypeParameterDeclaration>;
+    readonly typeParameters: NodeArray<TypeFunctionParameter>;
     readonly resultKind?: TypeFunctionKind;
     readonly body: TypeFunctionBlock;
 }
 export interface TypeFunctionLambda extends NodeBase {
     readonly kind: SyntaxKind.TypeFunctionLambda;
-    readonly typeParameters: NodeArray<TypeParameterDeclaration>;
+    readonly typeParameters: NodeArray<TypeFunctionParameter>;
     readonly resultKind?: TypeFunctionKind;
     readonly body: TypeFunctionBlock;
+}
+export interface TypeFunctionParameter extends NodeBase, DeclarationBase {
+    readonly kind: SyntaxKind.TypeFunctionParameter;
+    readonly name: Identifier;
+    readonly slots?: NodeArray<Identifier>;
+    readonly constraint?: Node;
 }
 export interface TypeFunctionBlock extends NodeBase {
     readonly kind: SyntaxKind.TypeFunctionBlock;

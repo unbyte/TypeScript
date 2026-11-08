@@ -22,6 +22,8 @@ func typefnSymbolInfo(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, vs
 		text = "type " + symbol.Name() + ": " + c.TypeFunctionBindingKind(declaration)
 		if ast.FindAncestor(node, ast.IsTypeFunctionLike) != ast.FindAncestor(declaration, ast.IsTypeFunctionLike) {
 			text += " (capture, readonly)"
+		} else if declaration.Kind == ast.KindTypeFunctionParameter {
+			text += " (parameter, readonly)"
 		} else if ast.IsTypeFunctionIteration(declaration) {
 			text += " (iteration binding)"
 		} else if declaration.Kind == ast.KindTypeFunctionCapturePattern {

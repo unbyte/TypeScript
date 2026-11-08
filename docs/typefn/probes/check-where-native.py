@@ -58,18 +58,18 @@ typefn Accept<T extends string> { return 0; }
 typefn Choose<> { if (false) { return Accept<number>; } return 1; }
 const result: Choose<> = 1;
 """, []),
-    ("native-bound-checked-at-definition", """
+    ("native-bound-waits-for-application", """
 typefn Unused<T extends Uppercase<number>> { return 0; }
-""", [2344]),
-    ("dsl-in-bound-executes-at-definition", """
+""", []),
+    ("dsl-bound-waits-for-application", """
 typefn Twice<N> { return N * 2; }
 typefn Unused<T extends Twice<"bad">> { return 0; }
-""", [-1]),
-    ("later-parameter-bound-currently-accepted", """
+""", []),
+    ("later-parameter-bound-is-rejected", """
 typefn Select<K extends keyof T, T> { return T[K]; }
 const correct: Select<"id", {id:42}> = 42;
 const incorrect: Select<"id", {id:42}> = 43;
-""", [2322]),
+""", [-1]),
     ("blocked-earlier-bound-delays-later-failure", """
 typefn Gate<T extends string, U extends number> { return 0; }
 type Pending<X> = Gate<X, string>;
@@ -124,8 +124,10 @@ with tempfile.TemporaryDirectory(prefix="typefn-where-native-") as temporary:
         actual, output = run(directory, name, path, True)
         if sorted(d["code"] for d in actual) != sorted(codes):
             raise AssertionError((name, codes, actual, output))
-        if -1 in codes and "scalar operator requires single unbranded literals" not in output:
+        if -1 in codes and name == "numeric-bound-is-not-literal-readiness" and "scalar operator requires single unbranded literals" not in output:
             raise AssertionError((name, "expected scalar-domain diagnostic", output))
+        if name == "later-parameter-bound-is-rejected" and "input bound may reference only preceding Type parameters" not in output:
+            raise AssertionError((name, "expected scope diagnostic", output))
         observations.append({"case": name, "diagnostics": actual})
 
 version = subprocess.run(

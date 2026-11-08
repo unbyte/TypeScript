@@ -250,6 +250,7 @@ import type {
     TypeFunctionLambda,
     TypeFunctionMatch,
     TypeFunctionMatchArm,
+    TypeFunctionParameter,
     TypeFunctionPattern,
     TypeFunctionPatternKind,
     TypeFunctionStatement,
@@ -1205,6 +1206,8 @@ function cloneNodeData(node: Node): any {
             return { modifiers: n.modifiers, name: n.name, typeParameters: n.typeParameters, resultKind: n.resultKind, body: n.body };
         case SyntaxKind.TypeFunctionLambda:
             return { typeParameters: n.typeParameters, resultKind: n.resultKind, body: n.body };
+        case SyntaxKind.TypeFunctionParameter:
+            return { name: n.name, slots: n.slots, constraint: n.constraint };
         case SyntaxKind.TypeFunctionBlock:
             return { statements: n.statements };
         case SyntaxKind.TypeFunctionBinding:
@@ -1802,6 +1805,10 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
         visitNodes(cbNode, cbNodes, data.typeParameters) ||
         visitNode(cbNode, data.resultKind) ||
         visitNode(cbNode, data.body),
+    [SyntaxKind.TypeFunctionParameter]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.name) ||
+        visitNodes(cbNode, cbNodes, data.slots) ||
+        visitNode(cbNode, data.constraint),
     [SyntaxKind.TypeFunctionBlock]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.statements),
     [SyntaxKind.TypeFunctionBinding]: (data, cbNode, cbNodes) =>
         visitNode(cbNode, data.name) ||
@@ -4142,6 +4149,22 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
             if (res) return res;
         }
     },
+    [SyntaxKind.TypeFunctionParameter]: function* (data) {
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.slots) {
+            for (const n of data.slots) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+        if (data.constraint) {
+            const res = yield data.constraint;
+            if (res) return res;
+        }
+    },
     [SyntaxKind.TypeFunctionBlock]: function* (data) {
         for (const n of data.statements) {
             const res = yield n;
@@ -6041,7 +6064,7 @@ export function createJSDocTypeLiteral(jsdocPropertyTags?: readonly JSDocTag[], 
     }) as unknown as JSDocTypeLiteral;
 }
 
-export function createTypeFunctionDeclaration(modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionDeclaration {
+export function createTypeFunctionDeclaration(modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeFunctionParameter[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionDeclaration {
     return new NodeObject(SyntaxKind.TypeFunctionDeclaration, {
         modifiers: modifiers ? createNodeArray(modifiers) : undefined,
         name,
@@ -6051,12 +6074,20 @@ export function createTypeFunctionDeclaration(modifiers: readonly ModifierLike[]
     }) as unknown as TypeFunctionDeclaration;
 }
 
-export function createTypeFunctionLambda(typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionLambda {
+export function createTypeFunctionLambda(typeParameters: readonly TypeFunctionParameter[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionLambda {
     return new NodeObject(SyntaxKind.TypeFunctionLambda, {
         typeParameters: createNodeArray(typeParameters),
         resultKind,
         body,
     }) as unknown as TypeFunctionLambda;
+}
+
+export function createTypeFunctionParameter(name: Identifier, slots?: readonly Identifier[], constraint?: Node): TypeFunctionParameter {
+    return new NodeObject(SyntaxKind.TypeFunctionParameter, {
+        name,
+        slots: slots ? createNodeArray(slots) : undefined,
+        constraint,
+    }) as unknown as TypeFunctionParameter;
 }
 
 export function createTypeFunctionBlock(statements: readonly Node[]): TypeFunctionBlock {
@@ -6837,12 +6868,16 @@ export function updateJSDocTypeLiteral(node: JSDocTypeLiteral, jsdocPropertyTags
     return node.jsdocPropertyTags !== jsdocPropertyTags ? createJSDocTypeLiteral(jsdocPropertyTags, node.isArrayType) : node;
 }
 
-export function updateTypeFunctionDeclaration(node: TypeFunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionDeclaration {
+export function updateTypeFunctionDeclaration(node: TypeFunctionDeclaration, modifiers: readonly ModifierLike[] | undefined, name: Identifier, typeParameters: readonly TypeFunctionParameter[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionDeclaration {
     return node.modifiers !== modifiers || node.name !== name || node.typeParameters !== typeParameters || node.resultKind !== resultKind || node.body !== body ? createTypeFunctionDeclaration(modifiers, name, typeParameters, resultKind, body) : node;
 }
 
-export function updateTypeFunctionLambda(node: TypeFunctionLambda, typeParameters: readonly TypeParameterDeclaration[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionLambda {
+export function updateTypeFunctionLambda(node: TypeFunctionLambda, typeParameters: readonly TypeFunctionParameter[], resultKind: TypeFunctionKind | undefined, body: TypeFunctionBlock): TypeFunctionLambda {
     return node.typeParameters !== typeParameters || node.resultKind !== resultKind || node.body !== body ? createTypeFunctionLambda(typeParameters, resultKind, body) : node;
+}
+
+export function updateTypeFunctionParameter(node: TypeFunctionParameter, name: Identifier, slots?: readonly Identifier[], constraint?: Node): TypeFunctionParameter {
+    return node.name !== name || node.slots !== slots || node.constraint !== constraint ? createTypeFunctionParameter(name, slots, constraint) : node;
 }
 
 export function updateTypeFunctionBlock(node: TypeFunctionBlock, statements: readonly Node[]): TypeFunctionBlock {

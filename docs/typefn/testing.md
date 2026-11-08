@@ -1,29 +1,32 @@
 # Testing and validation
 
-Validation through [`3175dc0e3`](https://github.com/unbyte/TypeScript/commit/3175dc0e3),
-2026-11-08. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64.
-The implementation remains incomplete against the language specification; these
-results establish the tested boundaries below.
+Latest verification recorded on 2026-11-08, including DSL parameter nodes and
+application-time bounds. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
+the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
+against the language specification; these checks establish the boundaries below.
 
-* Passed: 219 isolated compiler-project fixtures. The harness checks complete
+* Passed: 270 isolated compiler-project fixtures across the full harness run and
+  the subsequent imported-bound diagnostic fixture. The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
-  directly; reflection/builders, native islands, symbolic replay, imported failures
-  and definition-time return paths have executable coverage.
-* Passed during this integration: full parser, printer, AST, Go API encoder, checker,
-  DSL harness and language-service suites. Subsequent annotation hover changes passed
-  the targeted language-service suite.
+  directly. Recent cases cover tuple provenance, closures/factories, static kinds,
+  creation-check readiness, computed bounds and preceding-parameter scope.
+* Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
+  language-service suites. Subsequent parameter hover/coloring changes passed the
+  Typefn language-service suite.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
-  baselines. These were rerun after the result-kind AST change.
+  baselines, rerun after the parameter AST change.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
-* Passed: API/test project type checks, eight DSL AST traversal/factory/protocol tests
+* Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
 * Passed: async and generated sync RPC profile tests against the rebuilt compiler.
-  Both read the new result-kind node from the Go-encoded AST, preserve computed
-  native results and reject the disabled profile.
-* Passed: rebuilt CLI against the editor example project; changed Go source formatting
-  and `git diff --check`.
+  Both read parameter, bound, lambda and result-kind nodes from the Go-encoded AST,
+  preserve computed native results and reject the disabled profile.
+* Passed: rebuilt CLI against the editor example project and the constraint probe
+  script (13 fork cases and the native baseline). Unused bounds no longer execute,
+  and later-parameter references diagnose. This does not add `where` syntax.
+* Passed: changed Go source formatting and `git diff --check`.
 
 Earlier race, project-invalidation, extension-build and wider package checks are
 recorded in the [historical validation record](https://github.com/unbyte/TypeScript/blob/7fe54fd975b95531092485468ac5677ed3a453fc/docs/typefn/testing.md).

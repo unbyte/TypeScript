@@ -605,3 +605,47 @@ func TestTypefnFactoryKindHover(t *testing.T) {
 		t.Fatal(ds)
 	}
 }
+
+func TestTypefnParameterKindsInEditor(t *testing.T) {
+	source := `typefn Apply</*decl*/F</*slot*/_>, T> {return /*use*/F<T>;}`
+	l, ctx, pos := typefnService(t, source)
+	hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*use*/")})
+	if err != nil || hover.Hover == nil || !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "type F: typefn<_> (parameter, readonly)") {
+		t.Fatalf("parameter hover: %#v %v", hover, err)
+	}
+	response, err := l.ProvideSemanticTokens(ctx, "file:///main.ts")
+	if err != nil || response.SemanticTokens == nil {
+		t.Fatalf("tokens: %#v %v", response, err)
+	}
+	line, column := uint32(0), uint32(0)
+	found := map[string]bool{}
+	for i := 0; i < len(response.SemanticTokens.Data); i += 5 {
+		token := response.SemanticTokens.Data[i : i+5]
+		line += token[0]
+		if token[0] != 0 {
+			column = 0
+		}
+		column += token[1]
+		for _, marker := range []string{"/*decl*/", "/*use*/", "/*slot*/"} {
+			if (lsproto.Position{Line: line, Character: column}) == pos(marker) {
+				found[marker] = true
+				want := tokenTypeTypeParameter
+				if marker == "/*slot*/" {
+					want = tokenTypeOperator
+				}
+				if tokenType(token[3]) != want {
+					t.Fatalf("wrong %s token: %v", marker, token)
+				}
+				if marker != "/*slot*/" && tokenModifier(token[4])&tokenModifierReadonly == 0 {
+					t.Fatalf("parameter not readonly: %v", token)
+				}
+				if marker == "/*decl*/" && tokenModifier(token[4])&tokenModifierDeclaration == 0 {
+					t.Fatalf("missing declaration modifier: %v", token)
+				}
+			}
+		}
+	}
+	if len(found) != 3 {
+		t.Fatal(found)
+	}
+}

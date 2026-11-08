@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-input-bound-later.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "input bound may reference only preceding Type parameters"
+    }
+  ]
+}

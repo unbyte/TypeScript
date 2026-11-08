@@ -282,7 +282,7 @@ func (l *LanguageService) collectSemanticTokensInRange(ctx context.Context, c *c
 					if parent != nil && parent.Kind == ast.KindTypeFunctionAssignment && parent.Name() == node {
 						tokenModifier |= tokenModifierModification
 					}
-					if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration); declaration != nil && (ast.IsTypeFunctionIteration(declaration) || declaration.Kind == ast.KindTypeFunctionCapturePattern) {
+					if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration); declaration != nil && (ast.IsTypeFunctionIteration(declaration) || declaration.Kind == ast.KindTypeFunctionCapturePattern || declaration.Kind == ast.KindTypeFunctionParameter) {
 						tokenModifier |= tokenModifierReadonly
 					}
 					// Type-based reclassification
@@ -355,6 +355,9 @@ func classifySymbol(symbol *ast.Symbol, meaning ast.SemanticMeaning) (tokenType,
 		return tokenTypeEnum, true
 	}
 	if flags&ast.SymbolFlagsTypeAlias != 0 {
+		if declarations := symbol.Declarations(); len(declarations) != 0 && declarations[0].Kind == ast.KindTypeFunctionParameter {
+			return tokenTypeTypeParameter, true
+		}
 		return tokenTypeType, true
 	}
 	if flags&ast.SymbolFlagsInterface != 0 {
@@ -413,7 +416,7 @@ func tokenFromDeclarationMapping(kind ast.Kind) tokenType {
 		return tokenTypeInterface
 	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBinding, ast.KindTypeFunctionCapturePattern, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
 		return tokenTypeType
-	case ast.KindTypeParameter:
+	case ast.KindTypeParameter, ast.KindTypeFunctionParameter:
 		return tokenTypeTypeParameter
 	case ast.KindPropertyAssignment, ast.KindShorthandPropertyAssignment:
 		return tokenTypeProperty

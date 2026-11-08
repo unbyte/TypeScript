@@ -542,6 +542,9 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindTypeFunctionLambda:
 		n := node.AsTypeFunctionLambda()
 		return (boolToByte(n.TypeParameters != nil) << 0) | (boolToByte(n.ResultKind != nil) << 1) | (boolToByte(n.Body != nil) << 2)
+	case ast.KindTypeFunctionParameter:
+		n := node.AsTypeFunctionParameter()
+		return (boolToByte(n.Name() != nil) << 0) | (boolToByte(n.Slots != nil) << 1) | (boolToByte(n.Constraint != nil) << 2)
 	case ast.KindTypeFunctionBlock:
 		n := node.AsTypeFunctionBlock()
 		return (boolToByte(n.Statements != nil) << 0)

@@ -150,20 +150,20 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   Explicit `nativeWork` or `cacheBytes` overrides diagnose on DSL
   execution until their accounting is implemented. Full native-operation
   cancellation and budget instrumentation remain required before calling this a hardened service boundary.
-* Definition checking validates conservative return paths and still needs the complete
-  kind/readiness analysis. There is no claim of optimized append or memoized VM calls.
-  Parameter bounds currently use native Type grammar rather than full DSL expressions.
-  Module-level bound checking can evaluate header applications at definition time,
-  and an earlier blocked bound delays later checks. Module bounds accept later-parameter
-  references even
-  though the R2 text describes preceding-parameter scope. These behaviors need an
-  explicit contract decision; see the [constraint decisions and probes](design-notes.md#input-constraints).
-  Result-kind annotations are retained in the native AST and printer.
-  Constructor execution, kind inference and recursive annotation validation remain pending.
+* Definition checking validates conservative return paths, finite value kinds and
+  recursive result-kind dependencies. Module functions, local helpers and lambdas
+  use the same DSL bound-expression evaluator. Bounds run at application time,
+  in parameter order, and may reference preceding parameters and frozen outer
+  bindings. A blocked proof suspends the call before checking later bounds.
+  Native generic declarations retain native constraint semantics. Constructor
+  parameter syntax is retained but execution still diagnoses explicitly pending
+  the mixed-kind call adapter. Native constructor values and the alias/island
+  bridges also remain incomplete. There is no claim of optimized append or
+  memoized VM calls.
 
 ## Validation
 
-The compiler-project harness has 263 fixtures covering native calibration, execution,
+The compiler-project harness has 270 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -364,8 +364,7 @@ captures, generic replay, discarded failures, distinct importing callers and JS
 erasure. Forward local-helper references, capture writes, invalid control flow and
 wrong arity diagnose at definition time. Local-helper bounds may refer to preceding
 Type parameters and frozen outer Types; they use immutable native-island evaluation
-and conservatively wait for symbolic captures. Module-level bound timing/scope
-remains separately tracked above.
+and conservatively wait for symbolic captures. Module functions now use the same bound-expression and scope rules.
 
 Editor tests cover native helper/capture definitions and rename, readonly capture
 hover, and declaration-ordered helper completion with self-reference. Constructor
@@ -376,7 +375,7 @@ and applied through aliases. Constructor bindings may be reassigned only to the
 same arity; Type/constructor kind changes and constructor operands in native Type
 positions diagnose during definition checking, including dead branches. Captures
 freeze the selected constructor, and generic substitution maps captured Types.
-Module helper aliases retain native input constraints and share deferred-call
+Module helper aliases retain declared input constraints and share deferred-call
 identity with direct calls. Native generic names still require explicit constructor
 context; a bare defaulted native alias retains its ordinary Type meaning.
 
@@ -414,3 +413,14 @@ cover checks through local bindings, ignored factory results, input bounds,
 recursive closures returned after their creation frame ends, two-stage native
 substitution and distinct imported consumer/operation diagnostics. Factory and
 constructor-binding hover use inferred static kinds without evaluating bodies.
+
+Typefn parameters have dedicated native AST nodes containing an optional DSL
+bound expression or constructor slot list. Native TypeScript type-parameter nodes
+and their eager constraint caches are unchanged. Computed bounds now include
+arithmetic, text operations, helper calls and native Type islands. Unused bounds
+are bound and kind-checked but never executed. Later/self references diagnose even
+when a same-named outer Type exists. Native constraint diagnostics are attributed
+to the importing application and include the bound's source location. Editor
+services preserve parameter identity, readonly status, constructor slot coloring,
+kind hover and signature help. Constructor parameter execution is the next bridge
+step; parsing its syntax does not claim executable HKT support.
