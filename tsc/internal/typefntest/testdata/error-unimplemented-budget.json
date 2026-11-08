@@ -15,7 +15,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "requested nativeWork, stringUnits or cacheBytes limit is not implemented yet"
+      "message": "requested nativeWork or cacheBytes limit is not implemented yet"
     }
   ]
 }

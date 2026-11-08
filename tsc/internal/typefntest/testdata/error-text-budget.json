@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "error-text-budget.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "stringUnits": 3
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "string work limit exceeded"
+    }
+  ]
+}

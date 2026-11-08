@@ -92,6 +92,9 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 				return v.c.errorType
 			}
 			if spread {
+				if value.flags == TypeFlagsStringLiteral {
+					return v.error(node, "tuple spread requires a tuple")
+				}
 				elements := v.elements(node, value, false)
 				if v.blocked && !v.failed {
 					v.blocked = false

@@ -12,7 +12,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Contract | Status | Remaining acceptance evidence |
 | --- | --- | --- |
 | Core bindings/control/scalars | partial | Complete definition-time kind/return-path validation and scalar edge cases |
-| Strings and string iteration | pending | Every text intrinsic; UTF-16 including lone surrogates; bounds, symbolic replay and budgets |
+| Strings and string iteration | partial | Cursor operations and iteration tested; remaining text intrinsics; UTF-16 including lone surrogates; bounds, symbolic replay and budgets |
 | Numeric and tuple library | pending | Every intrinsic; exact conversion, invalid domains and metadata preservation |
 | Explicit failure | partial | fail/failAt, statement-only use and deferred operands tested; related producer/consumer diagnostic spans remain |
 | Templates and match | pending | Every pattern, captures/pins/guards, pending earlier arms, structural template subjects |

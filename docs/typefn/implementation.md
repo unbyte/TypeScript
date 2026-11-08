@@ -85,7 +85,7 @@ implemented before executable definitions can be published safely in `.d.ts` fil
 ## Supported execution
 
 Module-level named functions with ordinary Type parameters; mutable `type` locals;
-lexical block scopes; return, if/else, while, break/continue; required finite tuple
+lexical block scopes; return, if/else, while, break/continue; required finite tuple and UTF-16 string
 iteration; conservative closed-scalar union iteration; tuple construction and finite
 tuple spreads; object construction with string/number keys and optional/readonly
 properties; native indexing and `keyof`; native union/intersection construction;
@@ -109,8 +109,10 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 * Native islands parse and print but execution diagnoses as unsupported. The lexical
   bridge must preserve local snapshots, native scopes and constraints before enabling
   dynamic function/mapped/signature construction.
-* Strings can be native Type values, but string iteration, text/numeric/tuple
-  intrinsics, interpolation and structural pattern matching are not implemented.
+* String iteration and `text.length`, `peek`, `slice`, `digit`, `codeUnit`, and
+  `fromCodeUnit` execute with UTF-16/lone-surrogate preservation and a shared
+  string-work budget. Other text/numeric/tuple intrinsics, interpolation and
+  structural pattern matching are not implemented.
   The manual's HTTP-route and calculator examples are not executable yet.
 * Constructor slots, closures/local typefns and restricted HKT support are pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
@@ -133,7 +135,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
   tuple/property construction, frame allocation and arithmetic bigint magnitude are
   checked. This is **not** complete accounting for all live buffers, native graph
   visits, native allocations, literal parsing or retained compilation caches.
-  Explicit `nativeWork`, `stringUnits` or `cacheBytes` overrides diagnose on DSL
+  Explicit `nativeWork` or `cacheBytes` overrides diagnose on DSL
   execution until their accounting is implemented. Full native-operation
   cancellation and budget instrumentation remain required before calling this a hardened service boundary.
 * Definition checking still needs the complete kind/readiness analysis and conservative
@@ -148,7 +150,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 69 fixtures covering native calibration, execution,
+The compiler-project harness has 75 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad

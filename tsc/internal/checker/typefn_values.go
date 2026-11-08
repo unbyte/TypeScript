@@ -44,8 +44,25 @@ func (v *typefnVM) elements(node *ast.Node, value *Type, union bool) []*Type {
 		}
 		return []*Type{value}
 	}
+	if value.flags == TypeFlagsStringLiteral {
+		units, ok := v.stringUnitsOf(node, value)
+		if !ok {
+			return nil
+		}
+		if !v.allocate(node, len(units)+1) {
+			return nil
+		}
+		values := make([]*Type, len(units))
+		for i := range units {
+			values[i] = v.textResult(node, units[i:i+1])
+			if v.failed {
+				return nil
+			}
+		}
+		return values
+	}
 	if !isTupleType(value) || value.TargetTupleType().combinedFlags & ^ElementFlagsRequired != 0 {
-		v.error(node, "iteration/spread requires a required finite tuple; string iteration is not implemented yet")
+		v.error(node, "iteration/spread requires a required finite tuple or a string literal")
 		return nil
 	}
 	return v.c.getTypeArguments(value)

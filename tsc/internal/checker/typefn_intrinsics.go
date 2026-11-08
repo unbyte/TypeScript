@@ -3,6 +3,7 @@ package checker
 import (
 	"fmt"
 	"math"
+	"strings"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
@@ -16,8 +17,14 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
-	"fail":   {1, 1, true},
-	"failAt": {2, 2, true},
+	"text.length":       {1, 1, false},
+	"text.peek":         {2, 2, false},
+	"text.slice":        {2, 3, false},
+	"text.digit":        {1, 1, false},
+	"text.codeUnit":     {2, 2, false},
+	"text.fromCodeUnit": {1, 1, false},
+	"fail":              {1, 1, true},
+	"failAt":            {2, 2, true},
 }
 
 func typefnEntityName(node *ast.Node) string {
@@ -61,6 +68,9 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) *Type {
 			}
 			return v.deferExpression(e, slots)
 		}
+	}
+	if strings.HasPrefix(e.intrinsic, "text.") {
+		return v.textIntrinsic(e.node, e.intrinsic, args)
 	}
 	switch e.intrinsic {
 	case "fail", "failAt":

@@ -32,6 +32,8 @@ type typefnVM struct {
 	blocked             bool
 	checks              []*Type
 	checkSet            map[*Type]bool
+	stringUnits         int
+	textUnits           map[string][]uint16
 	replaySite          *ast.Node
 }
 
@@ -43,12 +45,15 @@ func (c *Checker) runTypefn(node *ast.Node, run func(*typefnVM) *Type) *Type {
 	state := c.getTypefnState()
 	root := state.vm == nil
 	if root {
-		limits := core.TypefnLimits{VMInstructions: 1000000, CallDepth: 256, NativeNodes: 250000, BigintBits: 1048576, LiveBytes: 64 << 20}
+		limits := core.TypefnLimits{VMInstructions: 1000000, CallDepth: 256, NativeNodes: 250000, BigintBits: 1048576, LiveBytes: 64 << 20, StringUnits: 16777216}
 		if c.compilerOptions.Typefn != nil {
 			configured := c.compilerOptions.Typefn.Limits
-			if configured.NativeWork != 0 || configured.StringUnits != 0 || configured.CacheBytes != 0 {
-				c.typefnError(node, "requested nativeWork, stringUnits or cacheBytes limit is not implemented yet")
+			if configured.NativeWork != 0 || configured.CacheBytes != 0 {
+				c.typefnError(node, "requested nativeWork or cacheBytes limit is not implemented yet")
 				return c.errorType
+			}
+			if configured.StringUnits != 0 {
+				limits.StringUnits = configured.StringUnits
 			}
 			if configured.BigintBits != 0 {
 				limits.BigintBits = configured.BigintBits
