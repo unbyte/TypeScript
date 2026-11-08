@@ -86,7 +86,19 @@ func (s *inlayHintState) visit(node *ast.Node) bool {
 		return false
 	}
 
+	if s.preferences.IncludeInlayTypefnResultHints.IsTrue() && ast.IsTypeReferenceNode(node) {
+		if result := s.checker.GetTypeFunctionApplicationResult(s.ctx, node); result != nil {
+			position, fidelity := s.converters.ToLSPPositionForFeature(s.file, core.TextPos(node.End()), spanmap.FeatureInlayHints)
+			if fidelity.IsExact() {
+				text := " = " + s.checker.TypeToString(result)
+				s.result = append(s.result, &lsproto.InlayHint{Position: position, Label: lsproto.StringOrInlayHintLabelParts{String: &text}, Kind: new(lsproto.InlayHintKindType), PaddingLeft: new(true)})
+			}
+		}
+	}
 	if ast.IsTypeNode(node) && !ast.IsExpressionWithTypeArguments(node) {
+		if s.preferences.IncludeInlayTypefnResultHints.IsTrue() {
+			return node.ForEachChild(s.visit)
+		}
 		return false
 	}
 
@@ -990,7 +1002,7 @@ func (s *inlayHintState) getTypeAnnotationPosition(decl *ast.FunctionLikeDeclara
 }
 
 func isAnyInlayHintEnabled(preferences lsutil.InlayHintsPreferences) bool {
-	return preferences.IncludeInlayParameterNameHints != lsutil.IncludeInlayParameterNameHintsNone ||
+	return preferences.IncludeInlayTypefnResultHints.IsTrue() || preferences.IncludeInlayParameterNameHints != lsutil.IncludeInlayParameterNameHintsNone ||
 		preferences.IncludeInlayFunctionParameterTypeHints.IsTrue() ||
 		preferences.IncludeInlayVariableTypeHints.IsTrue() ||
 		preferences.IncludeInlayPropertyDeclarationTypeHints.IsTrue() ||
