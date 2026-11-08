@@ -5,6 +5,8 @@ import (
 	"strings"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/astnav"
+	"github.com/microsoft/TypeScript/tsc/internal/checker"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 )
@@ -41,6 +43,14 @@ func (l *LanguageService) typefnLexicalTokens(ctx context.Context, file *ast.Sou
 			switch {
 			case kind == ast.KindIdentifier && scan.TokenValue() == "typefn" && lo < node.Name().Pos():
 				category = tokenTypeKeyword
+			case kind == ast.KindIdentifier:
+				actual := astnav.GetTokenAtPosition(file, lo)
+				if info := checker.TypeFunctionIntrinsicAtLocation(actual); info != nil {
+					category = tokenTypeFunction
+					if actual.Parent != nil && ast.IsQualifiedName(actual.Parent) && actual.Parent.AsQualifiedName().Left == actual {
+						category = tokenTypeNamespace
+					}
+				}
 			case ast.IsKeywordKind(kind):
 				category = tokenTypeKeyword
 			case kind == ast.KindStringLiteral || kind == ast.KindNoSubstitutionTemplateLiteral:

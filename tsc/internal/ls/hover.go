@@ -186,6 +186,11 @@ func (l *LanguageService) ProvideHover(ctx context.Context, params *lsproto.Hove
 }
 
 func (l *LanguageService) getQuickInfoAndDocumentationForSymbol(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, contentFormat lsproto.MarkupKind, vc *checker.VerbosityContext, vsCapability bool) (string, string, string, []*lsproto.VSClassifiedTextRun) {
+	if info := checker.TypeFunctionIntrinsicAtLocation(node); info != nil {
+		runs := []*lsproto.VSClassifiedTextRun{{ClassificationTypeName: string(lsproto.ClassificationTypeNameText), Text: info.Signature}}
+		return info.Signature, "", "", runs
+	}
+
 	info := getQuickInfoAndDeclarationAtLocation(c, symbol, node, vc, vsCapability, getMeaningFromLocation(node))
 	quickInfo := info.displayParts.String()
 	if quickInfo == "" {

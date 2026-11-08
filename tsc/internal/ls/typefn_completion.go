@@ -7,6 +7,7 @@ import (
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/astnav"
+	"github.com/microsoft/TypeScript/tsc/internal/checker"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/lsp/lsproto"
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
@@ -47,12 +48,16 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 	defer done()
 	symbols := c.GetSymbolsInScope(scope, ast.SymbolFlagsType|ast.SymbolFlagsNamespace|ast.SymbolFlagsAlias)
 	memberCompletion := false
+	preludePrefix := ""
 	for name := scope.Name(); name != nil && ast.IsQualifiedName(name); name = name.AsQualifiedName().Left {
 		qualifier := name.AsQualifiedName().Left
 		if position <= qualifier.End() {
 			continue
 		}
 		memberCompletion = true
+		if ast.IsIdentifier(qualifier) {
+			preludePrefix = qualifier.Text() + "."
+		}
 		symbols = nil
 		symbol := c.GetSymbolAtLocation(qualifier)
 		if symbol != nil && symbol.Flags()&ast.SymbolFlagsAlias != 0 {
@@ -62,6 +67,15 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 			symbols = c.GetExportsOfModule(symbol)
 		}
 		break
+	}
+	catalog := checker.TypeFunctionIntrinsics()
+	preludeRoots := map[string]bool{}
+	for _, info := range catalog {
+		root, _, _ := strings.Cut(info.Name, ".")
+		preludeRoots[root] = true
+		if memberCompletion && preludePrefix != "" && strings.HasPrefix(info.Name, preludePrefix) {
+			symbols = nil
+		}
 	}
 	var items []*lsproto.CompletionItem
 	seen := map[string]bool{}
@@ -77,7 +91,7 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 			return &lsproto.CompletionList{Items: items}
 		}
 		name := symbol.Name()
-		if seen[name] || strings.HasPrefix(name, "__") {
+		if seen[name] || strings.HasPrefix(name, "__") || !memberCompletion && preludeRoots[name] {
 			continue
 		}
 		decl := core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration)
@@ -100,6 +114,21 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 		}
 		items = append(items, item)
 		seen[name] = true
+	}
+	for _, info := range catalog {
+		name, kind, detail := info.Name, lsproto.CompletionItemKindFunction, info.Signature
+		if memberCompletion {
+			if preludePrefix == "" || !strings.HasPrefix(name, preludePrefix) {
+				continue
+			}
+			name = strings.TrimPrefix(name, preludePrefix)
+		} else if root, _, ok := strings.Cut(name, "."); ok {
+			name, kind, detail = root, lsproto.CompletionItemKindModule, "typefn intrinsic namespace"
+		}
+		if !seen[name] {
+			items = append(items, &lsproto.CompletionItem{Label: name, Kind: &kind, Detail: &detail})
+			seen[name] = true
+		}
 	}
 	keywords := []string{"type", "return", "if", "else", "while", "for", "break", "continue", "keyof", "never", "unknown", "any", "string", "number", "bigint", "boolean", "true", "false"}
 	if memberCompletion {
@@ -206,6 +235,13 @@ func (l *LanguageService) typefnSignatureHelp(ctx context.Context, file *ast.Sou
 			continue
 		}
 		name := astnav.GetTokenAtPosition(file, entry.namePos)
+		if info := checker.TypeFunctionIntrinsicAtLocation(name); info != nil {
+			var parameters []*lsproto.ParameterInformation
+			for _, label := range info.Parameters {
+				parameters = append(parameters, &lsproto.ParameterInformation{Label: lsproto.StringOrTuple{String: new(label)}})
+			}
+			return &lsproto.SignatureHelp{Signatures: []*lsproto.SignatureInformation{{Label: info.Signature, Parameters: &parameters}}, ActiveSignature: new(uint32(0)), ActiveParameter: &lsproto.UintegerOrNull{Uinteger: &entry.argument}}
+		}
 		symbol := c.GetSymbolAtLocation(name)
 		declaration := c.GetTypeFunctionDeclaration(symbol)
 		if declaration == nil {
