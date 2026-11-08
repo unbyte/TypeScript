@@ -1,11 +1,12 @@
 package checker
 
 import (
-	"github.com/microsoft/TypeScript/tsc/internal/ast"
-	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
 	"math"
 	"math/big"
 	"strings"
+
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
 )
 
 func (v *typefnVM) binary(node *ast.Node, op ast.Kind, a, b *Type) *Type {

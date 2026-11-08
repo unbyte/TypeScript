@@ -1,10 +1,11 @@
 package checker
 
 import (
+	"slices"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
-	"slices"
 )
 
 func (v *typefnVM) constraints(node *ast.Node, parameters, args []*Type) bool {

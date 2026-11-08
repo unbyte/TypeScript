@@ -1,10 +1,11 @@
 package checker
 
 import (
-	"github.com/microsoft/TypeScript/tsc/internal/ast"
-	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
 	"math"
 	"math/big"
+
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
 )
 
 func (v *typefnVM) expression(e *typefnExpression, slots []*Type) *Type {
