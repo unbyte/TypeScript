@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-object-indexers-unimplemented.ts"
+    "main.ts": "error-indexer-property.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "nonempty object indexers/signatures are not implemented yet"
+      "message": "property Type is incompatible with an applicable indexer"
     }
   ]
 }

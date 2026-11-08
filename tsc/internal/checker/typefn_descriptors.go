@@ -1,8 +1,9 @@
 package checker
 
 import (
-	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"slices"
+
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
 )
 
 // Descriptor schemas are small and fixed. A value array avoids allocating maps

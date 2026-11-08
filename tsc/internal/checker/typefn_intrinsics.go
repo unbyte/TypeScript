@@ -18,6 +18,7 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"reflect.indexers":      {1, 1, false, "Object"},
 	"types.object":          {1, 4, false, "Properties, Indexers = [], Calls = [], Constructs = []"},
 	"types.array":           {1, 2, false, "Element, Readonly = false"},
 	"reflect.array":         {1, 1, false, "Array"},
@@ -100,7 +101,12 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 	case "types.array":
 		return v.arrayType(e.node, args)
 	case "types.object":
-		return v.objectType(e.node, args)
+		result := v.objectType(e.node, args)
+		if v.blocked && !v.failed && !v.c.isErrorType(result) {
+			v.blocked = false
+			return v.c.guardTypefn(result, []*Type{v.deferExpression(e, slots)})
+		}
+		return result
 	}
 	for _, arg := range args {
 		if typefnUnresolved(arg) {
@@ -113,6 +119,9 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 		}
 	}
 	if strings.HasPrefix(e.intrinsic, "reflect.") {
+		if e.intrinsic == "reflect.indexers" {
+			return v.reflectIndexers(e.node, args[0])
+		}
 		if e.intrinsic == "reflect.array" {
 			return v.reflectArray(e.node, args[0])
 		}

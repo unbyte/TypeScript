@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-indexer-key.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "index key requires a native string, number, symbol or pattern domain"
+    }
+  ]
+}

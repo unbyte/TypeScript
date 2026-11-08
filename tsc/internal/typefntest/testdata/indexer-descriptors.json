@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "indexer-descriptors.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "noUncheckedIndexedAccess": true
+  },
+  "diagnostics": []
+}

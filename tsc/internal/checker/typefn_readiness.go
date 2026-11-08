@@ -54,6 +54,11 @@ func (v *typefnVM) unresolvedGraph(node *ast.Node, root *Type) bool {
 					return true
 				}
 			}
+			for _, info := range v.c.getIndexInfosOfType(t) {
+				if visit(info.keyType) || visit(info.valueType) {
+					return true
+				}
+			}
 			return false
 		}
 		if t.objectFlags&ObjectFlagsReference != 0 {

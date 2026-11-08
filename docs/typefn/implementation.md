@@ -130,8 +130,8 @@ remain part of the outstanding island bridge.
   and union traversal use native dependency summaries; exhaustive native forms
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
-* Property/indexer/tuple/signature reflection, general tuple metadata/spreads,
-  indexer and callable/constructable builders, and recursive structural sealing
+* Property/tuple/signature reflection, general tuple metadata/spreads,
+  callable/constructable builders, and recursive structural sealing
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
 * Declaration source recipes, advanced refactorings/auto-import completion, complete
@@ -161,7 +161,7 @@ remain part of the outstanding island bridge.
 
 ## Validation
 
-The compiler-project harness has 140 fixtures covering native calibration, execution,
+The compiler-project harness has 148 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -226,5 +226,11 @@ required finite descriptor tuples. It validates required/public metadata, unknow
 fields, native key equivalence, duplicate keys and literal optional/readonly flags;
 `read` is accepted and ignored. Field values may remain symbolic. Tests cover
 intersected descriptors, unique-symbol keys, generic key/flag replay, and both
-exact-optional modes. The optional indexer/call/construct lists currently accept
-empty tuples only; nonempty lists still diagnose pending their implementation.
+exact-optional modes. Index descriptors now retain native key domains, value Types, readonly flags and
+order. Validation follows native index applicability and assignability, including
+numeric/string domains and template patterns. Symbolic compatibility requirements
+remain attached to the published object shape and replay even after absorption.
+`reflect.indexers` returns ordered descriptors, and generic object instantiation
+retains indexers. Tests cover overlapping domains, invalid keys, duplicate domains,
+readonly native writes, reflection, generic replay and retained failures. Call and
+construct lists still accept empty tuples only pending signature implementation.

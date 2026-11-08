@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-indexer-readonly.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2542,
+      "file": "main.ts",
+      "message": "only permits reading"
+    }
+  ]
+}

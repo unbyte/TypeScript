@@ -1,24 +1,16 @@
 package checker
 
 import (
+	"math"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
-	"math"
 )
 
 func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 	properties, ok := v.requiredTuple(node, args[0])
 	if !ok {
 		return v.c.errorType
-	}
-	for _, argument := range args[1:] {
-		entries, ok := v.requiredTuple(node, argument)
-		if !ok {
-			return v.c.errorType
-		}
-		if len(entries) != 0 {
-			return v.error(node, "nonempty object indexers/signatures are not implemented yet")
-		}
 	}
 	members := ast.NewSymbolTable()
 	for _, property := range properties {
@@ -71,8 +63,30 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 		}
 		members.Set(name, symbol)
 	}
+	var indexInfos []*IndexInfo
+	if len(args) > 1 {
+		var ok bool
+		indexInfos, ok = v.indexDescriptors(node, args[1])
+		if !ok {
+			return v.c.errorType
+		}
+	}
+	for _, argument := range args[min(2, len(args)):] {
+		entries, ok := v.requiredTuple(node, argument)
+		if !ok {
+			return v.c.errorType
+		}
+		if len(entries) != 0 {
+			return v.error(node, "nonempty object signatures are not implemented yet")
+		}
+	}
 	if !v.allocate(node, 1) {
 		return v.c.errorType
 	}
-	return v.c.newTypefnObject(members)
+	result := v.c.newTypefnObjectEx(members, indexInfos)
+	v.validateObjectIndexers(node, result, indexInfos)
+	if v.failed {
+		return v.c.errorType
+	}
+	return result
 }

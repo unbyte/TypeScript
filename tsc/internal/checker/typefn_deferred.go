@@ -230,8 +230,12 @@ func (v *typefnVM) deferExpression(e *typefnExpression, slots []*Type) *Type {
 // DSL-created anonymous objects have no source declaration/symbol for the native
 // object instantiator. Instantiate their immutable property table explicitly.
 func (c *Checker) newTypefnObject(members ast.SymbolTable) *Type {
+	return c.newTypefnObjectEx(members, nil)
+}
+
+func (c *Checker) newTypefnObjectEx(members ast.SymbolTable, indexInfos []*IndexInfo) *Type {
 	state := c.getTypefnState()
-	t := c.newAnonymousType(nil, members, nil, nil, nil)
+	t := c.newAnonymousType(nil, members, nil, nil, indexInfos)
 	if state.objects == nil {
 		state.objects = make(map[*Type]bool)
 	}
@@ -254,10 +258,18 @@ func (c *Checker) instantiateTypefnObject(t *Type, m *TypeMapper) *Type {
 		c.valueSymbolLinks.Get(p).setNameType(c, c.valueSymbolLinks.Get(property).getNameType())
 		members.Set(name, p)
 	}
+	oldIndexInfos := c.getIndexInfosOfType(t)
+	indexInfos := c.instantiateIndexInfos(oldIndexInfos, m)
+	for i, info := range indexInfos {
+		if c.isErrorType(info.valueType) {
+			return c.errorType
+		}
+		changed = changed || info != oldIndexInfos[i]
+	}
 	if !changed {
 		return t
 	}
-	return c.newTypefnObject(members)
+	return c.newTypefnObjectEx(members, indexInfos)
 }
 
 // Inspect only eager native Type expressions. Native object members, mapped
