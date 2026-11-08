@@ -1,0 +1,7 @@
+{
+  "files": { "main.ts": "native.ts", "helper.ts": "native-helper.ts" },
+  "outputs": {
+    "out/main.js": "export const answer = 42;\n",
+    "out/helper.js": "export {};\n"
+  }
+}
