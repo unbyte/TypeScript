@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "intrinsic-text-search.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

@@ -33,6 +33,13 @@ var typefnIntrinsics = map[string]typefnIntrinsic{
 	"numeric.abs":           {1, 1, false},
 	"numeric.format":        {1, 1, false},
 	"numeric.parseInteger":  {1, 1, false},
+	"text.indexOf":          {2, 3, false},
+	"text.includes":         {2, 2, false},
+	"text.startsWith":       {2, 2, false},
+	"text.endsWith":         {2, 2, false},
+	"text.split":            {2, 2, false},
+	"text.replaceAll":       {3, 3, false},
+	"text.concat":           {1, 1, false},
 	"fail":                  {1, 1, true},
 	"failAt":                {2, 2, true},
 }
@@ -80,7 +87,12 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) *Type {
 		}
 	}
 	if strings.HasPrefix(e.intrinsic, "text.") {
-		return v.textIntrinsic(e.node, e.intrinsic, args)
+		result := v.textIntrinsic(e.node, e.intrinsic, args)
+		if v.blocked && !v.failed {
+			v.blocked = false
+			return v.deferExpression(e, slots)
+		}
+		return result
 	}
 	if strings.HasPrefix(e.intrinsic, "numeric.") {
 		return v.numericIntrinsic(e.node, e.intrinsic, args[0])

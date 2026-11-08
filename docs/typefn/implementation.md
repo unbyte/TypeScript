@@ -109,10 +109,10 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 * Native islands parse and print but execution diagnoses as unsupported. The lexical
   bridge must preserve local snapshots, native scopes and constraints before enabling
   dynamic function/mapped/signature construction.
-* String iteration and `text.length`, `peek`, `slice`, `digit`, `codeUnit`, and
-  `fromCodeUnit` execute with UTF-16/lone-surrogate preservation and a shared
-  string-work budget. The numeric library executes explicit exact conversions, rounding, integer
-  parsing/checks and formatting. Other text/tuple intrinsics, interpolation and
+* The complete text library and string iteration execute with UTF-16/lone-surrogate
+  preservation and a shared string-work budget. Searches use linear prefix-table
+  matching; split/replacement reserve output storage before constructing Types. The numeric library executes explicit exact conversions, rounding, integer
+  parsing/checks and formatting. Tuple intrinsics, interpolation and
   structural pattern matching are not implemented.
   The calculator and numeric examples are executable and tested from their actual
   documentation sources. The HTTP-route example still requires templates/matching.
@@ -152,7 +152,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 91 fixtures covering native calibration, execution,
+The compiler-project harness has 94 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad

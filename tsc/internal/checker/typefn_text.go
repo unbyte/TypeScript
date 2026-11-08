@@ -103,6 +103,9 @@ func (v *typefnVM) textResult(node *ast.Node, units []uint16) *Type {
 }
 
 func (v *typefnVM) textIntrinsic(node *ast.Node, name string, args []*Type) *Type {
+	if name == "text.concat" {
+		return v.textConcat(node, args[0])
+	}
 	if name == "text.fromCodeUnit" {
 		n, ok := v.intrinsicOffset(node, args[0])
 		if !ok {
@@ -132,6 +135,10 @@ func (v *typefnVM) textIntrinsic(node *ast.Node, name string, args []*Type) *Typ
 			return v.c.getBigIntLiteralType(jsnum.NewPseudoBigInt("1", true))
 		}
 		return v.c.getBigIntLiteralType(jsnum.NewPseudoBigInt(string(rune('0'+n)), false))
+	}
+	switch name {
+	case "text.indexOf", "text.includes", "text.startsWith", "text.endsWith", "text.split", "text.replaceAll":
+		return v.textSearchIntrinsic(node, name, units, args)
 	}
 	start, ok := v.intrinsicOffset(node, args[1])
 	if !ok {
