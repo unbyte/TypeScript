@@ -1,0 +1,26 @@
+{
+  "files": {
+    "library.ts": "error-declaration-stripped-import.ts",
+    "provider.ts": "error-declaration-stripped-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "outputs": {
+    "out/provider.d.ts": "export {};\n"
+  },
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "stripped declaration dependency"
+    }
+  ]
+}

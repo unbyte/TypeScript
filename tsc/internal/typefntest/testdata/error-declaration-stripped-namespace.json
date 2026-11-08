@@ -1,0 +1,26 @@
+{
+  "files": {
+    "library.ts": "error-declaration-stripped-namespace.ts",
+    "provider.ts": "error-declaration-stripped-namespace-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "outputs": {
+    "out/provider.d.ts": "// @typefn-abi: 1\nexport typefn Visible<T> {\n    return T;\n}\n"
+  },
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "stripped declaration dependency"
+    }
+  ]
+}

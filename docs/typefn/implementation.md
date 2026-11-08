@@ -666,3 +666,10 @@ A decoded-mapping regression checks local-binding and return-statement positions
 inside an emitted body, including the generated-line shift from the ABI pragma.
 Declaration-map navigation, redirects and multi-file mapping scenarios still need
 integration coverage.
+
+Recipe dependency records now retain both the written import/name and its resolved
+declarations. `stripInternal` rejects direct dependencies it would remove, including
+private/exported helpers and imports from another source module. Namespace imports
+track distinct target members; already-authored declaration dependencies remain
+available and are not treated as newly stripped source. Transitive native dependency
+validation and cross-file failure propagation still require further work.

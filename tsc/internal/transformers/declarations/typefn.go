@@ -4,6 +4,7 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
 	"github.com/microsoft/TypeScript/tsc/internal/printer"
+	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 )
 
 func (tx *DeclarationTransformer) typefnError(node *ast.Node, message string) {
@@ -12,6 +13,9 @@ func (tx *DeclarationTransformer) typefnError(node *ast.Node, message string) {
 }
 
 func (tx *DeclarationTransformer) checkTypefnDeclaration(node *ast.Node) bool {
+	if tx.compilerOptions.GetTypefnVersion() != 1 {
+		return true
+	}
 	needsABI, valid := tx.resolver.TypefnDeclarationStatus(node)
 	tx.needsTypefnABI = tx.needsTypefnABI || needsABI
 	if !valid {
@@ -27,7 +31,21 @@ func (tx *DeclarationTransformer) transformTypeFunctionDeclaration(node *ast.Nod
 	}
 	for _, dependency := range tx.resolver.GetTypefnDeclarationDependencies(node) {
 		if dependency.Accessibility == printer.SymbolAccessibilityAccessible {
-			tx.tracker.handleSymbolAccessibilityError(dependency)
+			tx.tracker.handleSymbolAccessibilityError(dependency.SymbolAccessibilityResult)
+			if tx.state.stripInternal {
+				for _, declaration := range dependency.Declarations {
+					source := ast.GetSourceFileOfNode(declaration)
+					if source.IsDeclarationFile || !tx.host.SourceFileMayBeEmitted(source, false) {
+						continue
+					}
+					for parent := declaration; parent != nil && !ast.IsSourceFile(parent); parent = parent.Parent {
+						if tx.isInternalDeclaration(parent, source) {
+							tx.typefnError(dependency.Reference, "stripped declaration dependency: "+scanner.GetTextOfNode(dependency.Reference))
+							break
+						}
+					}
+				}
+			}
 		} else {
 			tx.typefnError(dependency.ErrorNode, "declaration recipe dependency cannot be named: "+dependency.ErrorSymbolName)
 		}

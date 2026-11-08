@@ -24,6 +24,15 @@ type SymbolAccessibilityResult struct {
 	ErrorModuleName      string      // Optional - If the symbol is not visible from module, module's name
 }
 
+// TypefnDeclarationDependency separates the native visibility result for the
+// written name from the resolved declarations whose recipes must remain available.
+// A namespace import can name several distinct dependencies.
+type TypefnDeclarationDependency struct {
+	SymbolAccessibilityResult
+	Reference    *ast.Node
+	Declarations []*ast.Node
+}
+
 /**
  * Indicates how to serialize the name for a TypeReferenceNode when emitting decorator metadata
  *
@@ -96,7 +105,7 @@ type EmitResolver interface {
 
 	// declaration emit checker functionality projections
 	TypefnDeclarationStatus(node *ast.Node) (needsABI, valid bool)
-	GetTypefnDeclarationDependencies(node *ast.Node) []SymbolAccessibilityResult
+	GetTypefnDeclarationDependencies(node *ast.Node) []TypefnDeclarationDependency
 	PrecalculateDeclarationEmitVisibility(file *ast.SourceFile)
 	IsSymbolAccessible(symbol *ast.Symbol, enclosingDeclaration *ast.Node, meaning ast.SymbolFlags, shouldComputeAliasToMarkVisible bool) SymbolAccessibilityResult
 	IsEntityNameVisible(entityName *ast.Node, enclosingDeclaration *ast.Node) SymbolAccessibilityResult // previously SymbolVisibilityResult in strada - ErrorModuleName never set

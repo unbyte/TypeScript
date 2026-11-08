@@ -1,0 +1,27 @@
+{
+  "files": {
+    "library.ts": "error-declaration-stripped-import.ts",
+    "provider.d.ts": "declaration-existing-internal-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-existing-internal-consumer.ts",
+      "out/provider.d.ts": "declaration-existing-internal-provider.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

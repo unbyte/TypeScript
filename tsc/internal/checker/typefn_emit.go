@@ -9,15 +9,17 @@ import (
 // using native declaration visibility. Walk the lexical syntax, including dead
 // branches and nested helpers; executing the recipe cannot discover this closure.
 // Local DSL and native island binders are resolved in their original scopes.
-func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node) []printer.SymbolAccessibilityResult {
+func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node) []printer.TypefnDeclarationDependency {
 	r.checkerMu.Lock()
 	defer r.checkerMu.Unlock()
 	c := r.checker
-	var results []printer.SymbolAccessibilityResult
-	seen := map[*ast.Symbol]bool{}
+	var results []printer.TypefnDeclarationDependency
+	type referenceKey struct{ root, target *ast.Symbol }
+	seen := map[referenceKey]bool{}
 	var visit func(*ast.Node) bool
 	visit = func(n *ast.Node) bool {
 		var name *ast.Node
+		meaning := ast.SymbolFlagsType
 		switch n.Kind {
 		case ast.KindTypeFunctionName, ast.KindTypeFunctionCall, ast.KindTypeFunctionAssignment:
 			name = n.Name()
@@ -28,43 +30,54 @@ func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node) []printe
 			name = n.AsTypeReferenceNode().TypeName
 		case ast.KindTypeQuery:
 			name = n.AsTypeQueryNode().ExprName
+			meaning = ast.SymbolFlagsValue | ast.SymbolFlagsExportValue
 		case ast.KindComputedPropertyName:
 			if ast.IsEntityNameExpression(n.Expression()) {
 				name = n.Expression()
 			}
+			meaning = ast.SymbolFlagsValue | ast.SymbolFlagsExportValue
 		}
 		if name != nil {
 			first := ast.GetFirstIdentifier(name)
-			symbol := c.resolveName(first, first.Text(), getMeaningOfEntityNameReference(name), nil, false, false)
-			if symbol == nil {
-				results = append(results, printer.SymbolAccessibilityResult{Accessibility: printer.SymbolAccessibilityNotResolved, ErrorSymbolName: first.Text(), ErrorNode: first})
-			} else if !seen[symbol] {
-				seen[symbol] = true
+			root := c.resolveName(first, first.Text(), getMeaningOfEntityNameReference(name), nil, false, false)
+			target := c.resolveEntityName(name, meaning, true, false, nil)
+			key := referenceKey{root, target}
+			if !seen[key] {
+				seen[key] = true
 				local := false
-				for _, declaration := range symbol.Declarations() {
-					for parent := declaration; parent != nil; parent = parent.Parent {
-						if parent == node {
-							local = true
+				if root != nil {
+					for _, declaration := range root.Declarations() {
+						for parent := declaration; parent != nil; parent = parent.Parent {
+							if parent == node {
+								local = true
+								break
+							}
+						}
+						if local {
 							break
 						}
 					}
-					if local {
-						break
-					}
 				}
 				if !local {
-					// Native declaration emit normally considers every Type parameter
-					// visible. An outer parameter is a free capture here: moving
-					// this recipe requires explicit lifting, not that shortcut.
-					var visible *printer.SymbolAccessibilityResult
-					if symbol.Flags()&ast.SymbolFlagsTypeParameter == 0 {
-						visible = c.hasVisibleDeclarations(symbol, true)
-					}
-					if visible != nil {
-						results = append(results, *visible)
+					dependency := printer.TypefnDeclarationDependency{Reference: name}
+					dependency.ErrorNode, dependency.ErrorSymbolName = first, first.Text()
+					if root == nil || target == nil || target == c.unknownSymbol {
+						dependency.Accessibility = printer.SymbolAccessibilityNotResolved
 					} else {
-						results = append(results, printer.SymbolAccessibilityResult{Accessibility: printer.SymbolAccessibilityNotAccessible, ErrorSymbolName: first.Text(), ErrorNode: first})
+						dependency.Declarations = target.Declarations()
+						// Native visibility treats all Type parameters as visible. An outer
+						// parameter is a free recipe capture and needs explicit lifting instead.
+						var visible *printer.SymbolAccessibilityResult
+						if root.Flags()&ast.SymbolFlagsTypeParameter == 0 {
+							visible = c.hasVisibleDeclarations(root, true)
+						}
+						if visible != nil {
+							dependency.SymbolAccessibilityResult = *visible
+						} else {
+							dependency.Accessibility = printer.SymbolAccessibilityNotAccessible
+						}
 					}
+					results = append(results, dependency)
 				}
 			}
 		}
