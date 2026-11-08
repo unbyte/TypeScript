@@ -164,3 +164,41 @@ func (c *Checker) copyTypefnTupleMetadata(source, result *Type) {
 		state.tupleDeclared[result] = declared
 	}
 }
+
+// Fresh native inference uses its computed element Type as the declaration. Only
+// the host's internal missing marker is removed; explicit undefined is retained.
+// Copying producers must instead carry the originating tuple's provenance.
+func (c *Checker) typefnFreshTupleDeclared(values []*Type, infos []TupleElementInfo) []*Type {
+	if c.compilerOptions.GetTypefnVersion() != 1 {
+		return nil
+	}
+	if !core.Some(infos, func(info TupleElementInfo) bool { return info.flags&ElementFlagsOptional != 0 }) {
+		return nil
+	}
+	return core.MapIndex(values, func(value *Type, i int) *Type {
+		return c.removeMissingType(value, infos[i].flags&ElementFlagsOptional != 0)
+	})
+}
+
+func (c *Checker) typefnParameterTupleDeclared(signature *Signature, pos int, values []*Type, infos []TupleElementInfo) []*Type {
+	declared := c.typefnFreshTupleDeclared(values, infos)
+	if declared == nil || !signatureHasRestParameter(signature) {
+		return declared
+	}
+	restIndex := len(signature.parameters) - 1
+	rest := c.getTypeOfSymbol(signature.parameters[restIndex])
+	if !isTupleType(rest) {
+		return declared
+	}
+	source := c.typefnTupleDeclaredIfEnabled(rest)
+	if source == nil {
+		return declared
+	}
+	for i, info := range infos {
+		index := pos + i - restIndex
+		if info.flags&ElementFlagsOptional != 0 && index >= 0 && index < len(source) {
+			declared[i] = source[index]
+		}
+	}
+	return declared
+}

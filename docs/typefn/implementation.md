@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 207 fixtures covering native calibration, execution,
+The compiler-project harness has 210 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -325,5 +325,10 @@ projections (Partial/Readonly) and compute other templates before optional-read
 wrapping. Tests cover both exact-optional modes, transformed templates, explicit
 undefined, labels and generic replay. Native tuple slicing, inference slices,
 readonly-to-mutable copies, normalization, widening and literal clones carry provenance
-without changing native element read Types. Fresh native tuple inference producers
-still need provenance adapters.
+without changing native element read Types. Fresh native tuple inference records
+its computed values before optional wrapping, removing only the internal missing
+marker. Parameter tuple synthesis preserves originating rest-tuple declarations;
+ordinary optional parameters/defaults retain their native undefined acceptance.
+Tests cover Parameters/ConstructorParameters, prefixed rest tuples, generic replay,
+reverse mappings, destructuring defaults and exact-optional array holes. Exhaustive
+producer combinations and cross-declaration serialization remain acceptance work.

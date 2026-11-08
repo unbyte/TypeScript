@@ -1053,7 +1053,21 @@ func (c *Checker) createReverseMappedType(source *Type, target *Type, constraint
 				return info
 			})
 		}
-		return c.createTupleTypeEx(elementTypes, elementInfos, source.TargetTupleType().readonly)
+		var declared []*Type
+		if raw := c.typefnTupleDeclaredIfEnabled(source); raw != nil {
+			declared = core.MapIndex(elementTypes, func(value *Type, i int) *Type {
+				if elementInfos[i].flags&ElementFlagsOptional == 0 {
+					return value
+				}
+				if raw[i] == nil {
+					return nil
+				}
+				return c.inferReverseMappedType(raw[i], target, constraint)
+			})
+		} else {
+			declared = c.typefnFreshTupleDeclared(elementTypes, elementInfos)
+		}
+		return c.createTupleTypeWithDeclared(elementTypes, elementInfos, source.TargetTupleType().readonly, declared)
 	}
 	// For all other object types we infer a new object type where the reverse mapping has been
 	// applied to the type of each property.

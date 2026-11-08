@@ -17328,6 +17328,9 @@ func (c *Checker) padTupleType(t *Type, pattern *ast.Node) *Type {
 	}
 	elementTypes := slices.Clone(c.getElementTypes(t))
 	declared := slices.Clone(c.typefnTupleDeclaredIfEnabled(t))
+	if declared == nil && c.compilerOptions.GetTypefnVersion() == 1 {
+		declared = slices.Clone(elementTypes)
+	}
 	elementInfos := slices.Clone(t.TargetTupleType().elementInfos)
 	for i := c.getTypeReferenceArity(t); i < len(patternElements); i++ {
 		e := patternElements[i]
@@ -17337,7 +17340,7 @@ func (c *Checker) padTupleType(t *Type, pattern *ast.Node) *Type {
 				elementType = c.getTypeFromBindingElement(e, false /*includePatternInType*/, false /*reportErrors*/)
 			}
 			elementTypes = append(elementTypes, elementType)
-			if declared != nil {
+			if c.compilerOptions.GetTypefnVersion() == 1 {
 				declared = append(declared, elementType)
 			}
 			elementInfos = append(elementInfos, TupleElementInfo{flags: ElementFlagsOptional})
@@ -25664,7 +25667,7 @@ func (c *Checker) createTupleType(elementTypes []*Type) *Type {
 }
 
 func (c *Checker) createTupleTypeEx(elementTypes []*Type, elementInfos []TupleElementInfo, readonly bool) *Type {
-	return c.createTupleTypeWithDeclared(elementTypes, elementInfos, readonly, nil)
+	return c.createTupleTypeWithDeclared(elementTypes, elementInfos, readonly, c.typefnFreshTupleDeclared(elementTypes, elementInfos))
 }
 
 func (c *Checker) createTupleTypeWithDeclared(elementTypes []*Type, elementInfos []TupleElementInfo, readonly bool, declared []*Type) *Type {

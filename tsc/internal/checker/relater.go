@@ -1865,7 +1865,7 @@ func (c *Checker) getRestTypeAtPosition(source *Signature, pos int, readonly boo
 		}
 		infos[i] = TupleElementInfo{flags: flags, labeledDeclaration: c.getNameableDeclarationAtPosition(source, i+pos)}
 	}
-	return c.createTupleTypeEx(types, infos, readonly)
+	return c.createTupleTypeWithDeclared(types, infos, readonly, c.typefnParameterTupleDeclared(source, pos, types, infos))
 }
 
 func (c *Checker) getNameableDeclarationAtPosition(signature *Signature, pos int) *ast.Node {

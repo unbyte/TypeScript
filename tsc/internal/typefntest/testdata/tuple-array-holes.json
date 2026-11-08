@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "tuple-array-holes.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": true
+  },
+  "diagnostics": []
+}
