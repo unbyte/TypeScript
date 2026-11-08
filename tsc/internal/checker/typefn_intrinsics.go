@@ -40,6 +40,8 @@ var typefnIntrinsics = map[string]typefnIntrinsic{
 	"text.split":            {2, 2, false},
 	"text.replaceAll":       {3, 3, false},
 	"text.concat":           {1, 1, false},
+	"tuple.length":          {1, 1, false},
+	"tuple.slice":           {2, 3, false},
 	"fail":                  {1, 1, true},
 	"failAt":                {2, 2, true},
 }
@@ -96,6 +98,9 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) *Type {
 	}
 	if strings.HasPrefix(e.intrinsic, "numeric.") {
 		return v.numericIntrinsic(e.node, e.intrinsic, args[0])
+	}
+	if strings.HasPrefix(e.intrinsic, "tuple.") {
+		return v.tupleIntrinsic(e.node, e.intrinsic, args)
 	}
 	switch e.intrinsic {
 	case "fail", "failAt":

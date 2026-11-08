@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "intrinsic-tuple.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}
