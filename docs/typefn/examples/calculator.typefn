@@ -1,0 +1,102 @@
+// R2 specification example; the current compiler does not execute this DSL.
+// Integer arithmetic parser: + - * /, unary signs, parentheses, ASCII whitespace.
+// ABI/library contracts: ../spec/README.md. Results below are design oracles.
+
+typefn SkipSpace<Text, Start> {
+  type cursor = Start;
+  type end = text.length<Text>;
+  while (cursor < end) {
+    type character = text.peek<Text, cursor>;
+    if (character is " " | "\t" | "\r" | "\n") {
+      cursor = cursor + 1;
+    } else {
+      break;
+    }
+  }
+  return cursor;
+}
+
+typefn ReadInteger<Text, Start> {
+  type cursor = Start;
+  type value = 0n;
+  type end = text.length<Text>;
+
+  while (cursor < end) {
+    type character = text.peek<Text, cursor>;
+    type digit = text.digit<character>;
+    if (digit < 0n) { break; }
+    value = value * 10n + digit;
+    cursor = cursor + 1;
+  }
+
+  if (cursor == Start) { failAt<"Expected a decimal digit", cursor>; }
+  return [value, cursor];
+}
+
+// Result is [bigint literal Type, next-offset number literal Type].
+typefn Expression<Text, Start, Minimum>: type {
+  type cursor = SkipSpace<Text, Start>;
+  type end = text.length<Text>;
+  if (cursor == end) { failAt<"Expected an expression", cursor>; }
+
+  type first = text.peek<Text, cursor>;
+  type value = 0n;
+
+  if (first is "+" | "-") {
+    type operand = Expression<Text, cursor + 1, 30>;
+    value = operand[0];
+    if (first == "-") { value = -value; }
+    cursor = operand[1];
+  } else {
+    if (first == "(") {
+      type inner = Expression<Text, cursor + 1, 0>;
+      cursor = SkipSpace<Text, inner[1]>;
+      if (text.peek<Text, cursor> != ")") { failAt<"Expected ')'", cursor>; }
+      value = inner[0];
+      cursor = cursor + 1;
+    } else {
+      type integer = ReadInteger<Text, cursor>;
+      value = integer[0];
+      cursor = integer[1];
+    }
+  }
+
+  while (true) {
+    cursor = SkipSpace<Text, cursor>;
+    type operator = text.peek<Text, cursor>;
+    type power = -1;
+    if (operator is "+" | "-") { power = 10; }
+    if (operator is "*" | "/") { power = 20; }
+    if (power < Minimum) { break; }
+
+    type right = Expression<Text, cursor + 1, power + 1>;
+    type operand = right[0];
+    if (operator == "+") { value = value + operand; }
+    if (operator == "-") { value = value - operand; }
+    if (operator == "*") { value = value * operand; }
+    if (operator == "/") {
+      if (operand == 0n) { failAt<"Division by zero", cursor>; }
+      if (value % operand != 0n) { failAt<"Non-integral division", cursor>; }
+      value = value / operand;
+    }
+    cursor = right[1];
+  }
+
+  return [value, cursor];
+}
+
+typefn CalcBig<Text> {
+  type parsed = Expression<Text, 0, 0>;
+  type end = SkipSpace<Text, parsed[1]>;
+  if (end != text.length<Text>) { failAt<"Unexpected token", end>; }
+  return parsed[0];
+}
+
+typefn Calc<Text> {
+  return numeric.toNumber<CalcBig<Text>>;
+}
+
+type Parsed = ReadInteger<"123x", 0>; // [123n, 3]
+type A = Calc<"2 + 3 * 4">; // 14
+type B = Calc<"(2 + 3) * 4">; // 20
+type C = CalcBig<"9007199254740992 + 1">; // 9007199254740993n
