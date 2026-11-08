@@ -18,6 +18,20 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 	count = func(node *ast.Node) bool { plan.nodes++; node.ForEachChild(count); return false }
 	count(e.node.AsTypeFunctionExpression().NativeType)
 	captured := map[*ast.Symbol]bool{}
+	capturedValues := map[*ast.Symbol]bool{}
+	addCapture := func(symbol *ast.Symbol, info typefnIslandCapture, expression *typefnExpression) {
+		seen := captured
+		if info.value {
+			seen = capturedValues
+		}
+		if seen[symbol] {
+			return
+		}
+		seen[symbol] = true
+		plan.captures = append(plan.captures, info)
+		expression.environment = b.p
+		e.args = append(e.args, expression)
+	}
 	var visit func(*ast.Node, *typefnKind)
 	visit = func(node *ast.Node, expected *typefnKind) {
 		if node.Kind == ast.KindParenthesizedType {
@@ -25,11 +39,15 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 			return
 		}
 		if ast.IsTypeQueryNode(node) {
-			name := node.AsTypeQueryNode().ExprName
+			name := ast.GetFirstIdentifier(node.AsTypeQueryNode().ExprName)
 			if !ast.IsThisIdentifier(name) {
 				symbol := b.c.resolveEntityName(name, ast.SymbolFlagsValue, false, false, nil)
 				if symbol == nil || symbol == b.c.unknownSymbol {
 					b.p.valid = false
+				} else if !core.Some(symbol.Declarations(), func(declaration *ast.Node) bool {
+					return isNodeDescendantOf(declaration, e.node.AsTypeFunctionExpression().NativeType)
+				}) {
+					addCapture(symbol, typefnIslandCapture{name: name.Text(), value: true}, &typefnExpression{node: name, slot: -1, valueSymbol: symbol})
 				}
 			}
 		}
@@ -58,11 +76,15 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 					return
 				}
 				binding = &local
-				if !captured[symbol] {
-					captured[symbol] = true
-					plan.names = append(plan.names, name.Text())
-					plan.helpers = append(plan.helpers, local.helper)
-					e.args = append(e.args, &typefnExpression{node: name, slot: local.slot, kind: local.kind})
+				addCapture(symbol, typefnIslandCapture{name: name.Text(), helper: local.helper}, &typefnExpression{node: name, slot: local.slot, kind: local.kind})
+			}
+		}
+		if binding == nil && ast.IsIdentifier(name) {
+			for i, parameter := range b.p.nativeOuter {
+				if parameter.symbol == symbol && symbol.Flags()&ast.SymbolFlagsTypeParameter != 0 {
+					binding = &typefnBinding{slot: b.p.nativeSlots[i], symbol: symbol}
+					addCapture(symbol, typefnIslandCapture{name: name.Text()}, &typefnExpression{node: name, slot: binding.slot})
+					break
 				}
 			}
 		}
@@ -82,6 +104,16 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 			constructorKind = typefnConstructorKind(len(declaration.TypeParameters()))
 		} else if alias := b.c.typefnConstructorAlias(symbol); alias != nil {
 			constructorKind = alias.kind
+			if ast.IsIdentifier(name) {
+				addCapture(symbol, typefnIslandCapture{name: name.Text()}, &typefnExpression{node: name, slot: -1, constructorAlias: alias, kind: alias.kind})
+			}
+		} else if ast.IsIdentifier(name) {
+			if code := b.c.typefnNativeConstructor(symbol); code != nil && len(code.outer) != 0 {
+				addCapture(symbol, typefnIslandCapture{name: name.Text(), nativeDirect: true}, &typefnExpression{node: name, slot: -1, nativeConstructor: code, kind: typefnConstructorKind(len(code.parameters))})
+			}
+		}
+		if binding == nil && function != nil && len(function.nativeOuter) != 0 && ast.IsIdentifier(name) {
+			addCapture(symbol, typefnIslandCapture{name: name.Text(), helper: function}, &typefnExpression{node: name, slot: -1, helper: function, kind: constructorKind})
 		}
 		applied := node.TypeArgumentList() != nil
 		if !applied && (constructorKind.resolved() > 0 || expected.resolved() > 0) {

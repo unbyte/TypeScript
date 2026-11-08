@@ -32,6 +32,8 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 			}
 		}
 		value = v.callValue(e.node, e.callee.declaration, args, nil)
+	} else if e.valueSymbol != nil {
+		value.native = v.mapNative(v.c.getTypeOfSymbol(e.valueSymbol))
 	} else if e.constructorAlias != nil {
 		closure := v.constructorAlias(e.constructorAlias)
 		if v.failed {
@@ -45,7 +47,7 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 		if v.failed {
 			return typefnValue{native: v.c.errorType}
 		}
-		if e.node.Kind == ast.KindTypeFunctionName {
+		if e.node.Kind != ast.KindTypeFunctionCall {
 			value.closure = closure
 		} else {
 			args := make([]*Type, len(e.args))

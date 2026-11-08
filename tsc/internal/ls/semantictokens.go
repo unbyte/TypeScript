@@ -354,7 +354,7 @@ func classifySymbol(symbol *ast.Symbol, meaning ast.SemanticMeaning) (tokenType,
 	if flags&ast.SymbolFlagsEnum != 0 {
 		return tokenTypeEnum, true
 	}
-	if flags&ast.SymbolFlagsTypeAlias != 0 {
+	if flags&ast.SymbolFlagsTypeAlias != 0 && meaning&ast.SemanticMeaningType != 0 {
 		if declarations := symbol.Declarations(); len(declarations) != 0 && declarations[0].Kind == ast.KindTypeFunctionParameter {
 			return tokenTypeTypeParameter, true
 		}

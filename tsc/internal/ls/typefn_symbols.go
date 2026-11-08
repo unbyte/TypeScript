@@ -7,7 +7,7 @@ import (
 )
 
 func typefnSymbolInfo(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, vs bool) (symbolDisplayInfo, bool) {
-	if symbol == nil {
+	if symbol == nil || getMeaningFromLocation(node)&ast.SemanticMeaningType == 0 {
 		return symbolDisplayInfo{}, false
 	}
 	declaration := c.GetTypeFunctionDeclaration(symbol)

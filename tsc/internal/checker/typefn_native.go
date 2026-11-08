@@ -36,13 +36,12 @@ func (v *typefnVM) apply(node *ast.Node, symbol *ast.Symbol, args []*Type) *Type
 		return v.call(node, declaration, args)
 	}
 	if code := v.c.typefnNativeConstructor(symbol); code != nil {
-		args = v.c.fillMissingTypeArguments(args, code.parameters, v.c.getMinTypeArgumentCount(code.parameters), false)
 		args = core.Map(args, v.mapNative)
 		closure := v.captureNativeConstructor(code)
 		if v.failed {
 			return v.c.errorType
 		}
-		return v.applyNativeConstructor(node, closure, args)
+		return v.applyNativeDirect(node, closure, args)
 	}
 	return v.mapNative(v.c.getDeclaredTypeOfSymbol(symbol))
 }
@@ -68,4 +67,18 @@ func typefnNativeEnvironmentSize(p *typefnProgram) int {
 		return size + int(unsafe.Sizeof(SimpleTypeMapper{}))
 	}
 	return size + int(unsafe.Sizeof(ArrayTypeMapper{}))
+}
+
+func (v *typefnVM) applyNativeDirect(node *ast.Node, closure *typefnClosure, args []*Type) *Type {
+	code := closure.native
+	args = v.c.fillMissingTypeArguments(args, code.parameters, v.c.getMinTypeArgumentCount(code.parameters), false)
+	if len(code.outer) != 0 {
+		outer := make([]*Type, len(code.outer))
+		for i, value := range closure.captures {
+			outer[i] = value.native
+		}
+		mapper := newTypeMapper(code.outer, outer)
+		args = core.Map(args, func(t *Type) *Type { return v.c.instantiateType(t, mapper) })
+	}
+	return v.applyNativeConstructor(node, closure, args)
 }

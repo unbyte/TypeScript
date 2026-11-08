@@ -39,6 +39,7 @@ type typefnExpression struct {
 	environment       *typefnProgram
 	slot              int
 	symbol            *ast.Symbol
+	valueSymbol       *ast.Symbol
 	intrinsic         string
 	island            *typefnIsland
 	helper            *typefnProgram // Code for a constructor-valued expression.

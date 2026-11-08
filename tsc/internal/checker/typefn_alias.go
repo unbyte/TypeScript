@@ -9,11 +9,12 @@ import (
 // Their finite kind is discovered without evaluating a factory body. Ordinary
 // aliases, including bare defaulted generics, keep the native Type interpretation.
 type typefnAlias struct {
-	declaration *ast.Node
-	kind        *typefnKind
-	value       *typefnClosure
-	helper      *typefnProgram // Only synthetic island bindings carry a named combinator signature.
-	evaluating  bool
+	declaration  *ast.Node
+	kind         *typefnKind
+	value        *typefnClosure
+	helper       *typefnProgram // Only synthetic island bindings carry a named combinator signature.
+	nativeDirect bool           // A captured native name keeps ordinary default-instantiation semantics.
+	evaluating   bool
 }
 
 func (c *Checker) typefnAlias(symbol *ast.Symbol) *typefnAlias {
@@ -114,12 +115,15 @@ func (c *Checker) checkTypefnConstructorAlias(alias *typefnAlias) {
 }
 func (c *Checker) applyTypefnConstructorAlias(node *ast.Node, alias *typefnAlias) *Type {
 	return c.runTypefn(node, func(v *typefnVM) *Type {
-		if node.TypeArgumentList() == nil {
-			return v.error(node, "constructor value cannot be used as a Type")
-		}
 		closure := v.constructorAlias(alias)
 		if v.failed {
 			return c.errorType
+		}
+		if alias.nativeDirect {
+			return v.applyNativeDirect(node, closure, c.getTypeArgumentsFromNode(node))
+		}
+		if node.TypeArgumentList() == nil {
+			return v.error(node, "constructor value cannot be used as a Type")
 		}
 		if alias.helper != nil {
 			args := v.nativeArguments(node, alias.helper)

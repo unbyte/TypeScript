@@ -776,3 +776,48 @@ func TestTypefnIslandConstructorBindingsStayNative(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnIslandValueCaptureKeepsSourceMeaning(t *testing.T) {
+	source := `function outer<T>(/*valueDecl*/Shared:{value:T}) {
+ typefn /*typeDecl*/Shared<U> {return [U];}
+ typefn F<> {if(T==1) {return type([/*typeUse*/Shared<2>,typeof /*valueUse*/Shared.value]);} return 0;}
+ let result!:F<>;return result;
+ }
+ type Result=ReturnType<typeof outer<1>>;`
+	l, ctx, pos := typefnService(t, source)
+	for pass := 0; pass < 2; pass++ {
+		for _, test := range []struct{ marker, want string }{{"/*typeUse*/", "typefn Shared<U>"}, {"/*valueUse*/", "value: T"}} {
+			hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(test.marker)})
+			if err != nil || hover.Hover == nil {
+				t.Fatalf("source hover %s: %#v %v", test.marker, hover, err)
+			}
+			if !strings.Contains(hover.Hover.Contents.MarkupContent.Value, test.want) {
+				t.Fatalf("source hover %s: %s", test.marker, hover.Hover.Contents.MarkupContent.Value)
+			}
+			if test.marker == "/*valueUse*/" && strings.Contains(hover.Hover.Contents.MarkupContent.Value, "typefn Shared") {
+				t.Fatal("value hover used the type-space declaration")
+			}
+		}
+		tokens, err := l.ProvideSemanticTokens(ctx, "file:///main.ts")
+		if err != nil || tokens.SemanticTokens == nil {
+			t.Fatalf("tokens: %v", err)
+		}
+		got := map[lsproto.Position]tokenType{}
+		line, char := uint32(0), uint32(0)
+		for i := 0; i < len(tokens.SemanticTokens.Data); i += 5 {
+			data := tokens.SemanticTokens.Data[i : i+5]
+			line += data[0]
+			if data[0] != 0 {
+				char = 0
+			}
+			char += data[1]
+			got[lsproto.Position{Line: line, Character: char}] = tokenType(data[3])
+		}
+		if got[pos("/*typeUse*/")] != tokenTypeType || got[pos("/*valueUse*/")] != tokenTypeParameter {
+			t.Fatalf("shared name classifications: type %v, value %v", got[pos("/*typeUse*/")], got[pos("/*valueUse*/")])
+		}
+		if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+			t.Fatal(ds)
+		}
+	}
+}

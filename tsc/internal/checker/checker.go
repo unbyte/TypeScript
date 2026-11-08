@@ -3078,7 +3078,7 @@ func (c *Checker) checkTypeReferenceNode(node *ast.Node) {
 		if symbol != nil {
 			typefnDeclaration = core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration)
 			if alias := c.typefnConstructorAlias(symbol); alias != nil {
-				constructorAliasApplication = true
+				constructorAliasApplication = !alias.nativeDirect
 				if alias.helper != nil {
 					typefnDeclaration = alias.helper.declaration
 				}

@@ -45,7 +45,7 @@ func (b *NodeBuilderImpl) typefnDisplayLiteral(t *Type) *ast.Node {
 }
 
 func (b *NodeBuilderImpl) typefnExpressionToNode(e *typefnExpression, slots []typefnValue) *ast.Node {
-	if ast.IsTypeFunctionLambda(e.node) {
+	if ast.IsTypeFunctionLambda(e.node) || e.node.Kind == ast.KindTypeFunctionNativeType {
 		return e.node
 	}
 	if e.slot >= 0 {

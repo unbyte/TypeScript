@@ -7,10 +7,15 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 )
 
+type typefnIslandCapture struct {
+	name         string
+	helper       *typefnProgram
+	nativeDirect bool
+	value        bool
+}
 type typefnIsland struct {
-	names   []string
-	helpers []*typefnProgram
-	nodes   int
+	captures []typefnIslandCapture
+	nodes    int
 }
 
 // Each native AST is bound in an immutable lexical snapshot. Captured values are
@@ -33,18 +38,37 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 		}
 	}
 	plan := e.island
-	if !v.allocate(e.node, plan.nodes+len(values)*4+7) {
+	captureNodes := 0
+	for _, capture := range plan.captures {
+		if capture.value {
+			captureNodes += 6
+		} else {
+			captureNodes += 4
+		}
+	}
+	if !v.allocate(e.node, plan.nodes+captureNodes+7) {
 		return v.c.errorType
 	}
 	source := ast.GetSourceFileOfNode(e.node)
 	factory := ast.NewNodeFactory(ast.NodeFactoryHooks{})
 	body := factory.DeepCloneReparse(e.node.AsTypeFunctionExpression().NativeType)
 	statements := make([]*ast.Node, 0, len(values)+1)
-	for _, name := range plan.names {
-		alias := factory.NewTypeAliasDeclaration(nil, factory.NewIdentifier(name), nil, factory.NewKeywordTypeNode(ast.KindUnknownKeyword))
-		alias.Loc = e.node.Loc
-		alias.Name().Loc = e.node.Loc
-		statements = append(statements, alias)
+	declarations := make([]*ast.Node, len(values))
+	for i, capture := range plan.captures {
+		name := factory.NewIdentifier(capture.name)
+		name.Loc = e.node.Loc
+		var declaration, statement *ast.Node
+		if capture.value {
+			declaration = factory.NewVariableDeclaration(name, nil, factory.NewKeywordTypeNode(ast.KindUnknownKeyword), nil)
+			statement = factory.NewVariableStatement(factory.NewModifierList([]*ast.Node{factory.NewToken(ast.KindDeclareKeyword)}), factory.NewVariableDeclarationList(factory.NewNodeList([]*ast.Node{declaration}), ast.NodeFlagsConst))
+		} else {
+			declaration = factory.NewTypeAliasDeclaration(nil, name, nil, factory.NewKeywordTypeNode(ast.KindUnknownKeyword))
+			statement = declaration
+		}
+		declaration.Loc = e.node.Loc
+		statement.Loc = e.node.Loc
+		declarations[i] = declaration
+		statements = append(statements, statement)
 	}
 	result := factory.NewTypeAliasDeclaration(nil, factory.NewIdentifier("(typefn result)"), nil, body)
 	result.Loc, result.Name().Loc = e.node.Loc, e.node.Loc
@@ -61,15 +85,18 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 	// the original source scope and source spans after its local binders are installed.
 	scope.Parent = e.node
 	for i, value := range values {
-		symbol := statements[i].Symbol()
-		if value.native != nil {
+		symbol := declarations[i].Symbol()
+		capture := plan.captures[i]
+		if capture.value {
+			v.c.valueSymbolLinks.Get(symbol).resolvedType = value.native
+		} else if value.native != nil {
 			v.c.typeAliasLinks.Get(symbol).declaredType = value.native
 		} else {
 			state := v.c.getTypefnState()
 			if state.aliases == nil {
 				state.aliases = map[*ast.Symbol]*typefnAlias{}
 			}
-			state.aliases[symbol] = &typefnAlias{declaration: statements[i], kind: e.args[i].kind, value: value.closure, helper: plan.helpers[i]}
+			state.aliases[symbol] = &typefnAlias{declaration: declarations[i], kind: e.args[i].kind, value: value.closure, helper: capture.helper, nativeDirect: capture.nativeDirect}
 		}
 	}
 	saved := v.nativeIslandSite

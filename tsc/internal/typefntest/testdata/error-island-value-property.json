@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-island-value-property.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2339,
+      "file": "main.ts",
+      "message": "does not exist"
+    }
+  ]
+}

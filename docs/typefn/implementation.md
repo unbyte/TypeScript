@@ -165,7 +165,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 303 fixtures covering native calibration, execution,
+The compiler-project harness has 307 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -486,7 +486,8 @@ blocking. Native mappers specialize those environments before bounds/body execut
 sibling calls and returned closures inherit the captured binder identities. Direct
 native applications share the native-constructor adapter for mapped outer bounds
 and defaults. These cases cover DSL expressions and direct constructor applications;
-ambient native island references and value queries still require their own bridge.
+ambient native island references and value queries use the captured-scope bridge
+described below.
 
 Native source evaluation deliberately clears the incidental VM invocation mapper.
 Native alias declared-Type and constructor caches therefore retain their defining
@@ -502,3 +503,12 @@ just registers named by explicit operands. Expression replay rebuilds its mapper
 from that frozen snapshot using the same layout as call replay. Tests cover text
 and tuple intrinsics, computed object keys, and a local value changed after the
 original expression was captured. Mapper storage is charged before allocation.
+
+Native islands also freeze ambient native parameters, scoped aliases with defaults,
+scoped typefns, and value roots of `typeof` queries. Native generic constraints are
+checked with their original binders and mapped outer environments. Type and value
+captures have separate namespaces even when their spelling is shared. Native
+signature-local binders remain local. Source declaration caches stay unspecialized;
+query-order tests cover aliases and value annotations first forced during a
+specialized call. Hover preserves source meaning and generic Types. Polymorphic
+`this`, stable symbolic shape publication and complete latent dependencies remain.
