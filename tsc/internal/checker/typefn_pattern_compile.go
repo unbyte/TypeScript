@@ -63,7 +63,6 @@ func (b *typefnCompiler) pattern(node *ast.Node) *typefnPattern {
 	case ast.KindTypeFunctionRestPattern:
 		p.children = append(p.children, b.pattern(d.Expression))
 	case ast.KindTypeFunctionTemplatePattern:
-		b.error(node, "template pattern evaluation is not implemented yet")
 		if d.Expression.Kind == ast.KindTypeFunctionTemplate {
 			for _, span := range d.Expression.AsTypeFunctionTemplate().Spans.Nodes {
 				p.children = append(p.children, b.pattern(span.AsTypeFunctionTemplateSpan().Expression))

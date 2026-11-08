@@ -15,7 +15,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Strings and string iteration | partial | All text intrinsics/iteration implemented; tests cover UTF-16, bounds, symbolic replay and budgets; declaration-only coverage awaits recipes |
 | Numeric and tuple library | partial | Numeric and finite-tuple library implemented with conversion/bounds/symbolic tests; declaration-only coverage awaits recipes |
 | Explicit failure | partial | fail/failAt, statement-only use, deferred operands and producer/consumer spans tested; declaration-only cases await recipes |
-| Templates and match | partial | Template AST/parser/printer/API and evaluation implemented; match syntax/scopes, basic captures/guards and tuple/object execution added; template/pin execution and general structural relations remain |
+| Templates and match | partial | Template AST/parser/printer/API and evaluation implemented; match scopes, captures/guards, tuple/object and template/pin execution added; native-island patterns and general structural relations remain |
 | Local helpers and closures | pending | Lexical capture snapshots, constructor identity, recursive captures and scope diagnostics |
 | Restricted constructors/HKT | pending | Fixed-arity slots, passing/returning constructors and kind errors |
 | Native islands | partial | Executable native Types using frozen local environments; binding and replay |

@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "pattern-template.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

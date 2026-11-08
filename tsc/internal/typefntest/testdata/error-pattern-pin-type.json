@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-template-pattern-unimplemented.ts"
+    "main.ts": "error-pattern-pin-type.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "template pattern evaluation is not implemented yet"
+      "message": "text operand requires one unbranded string literal"
     }
   ]
 }

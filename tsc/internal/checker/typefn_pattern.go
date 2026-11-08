@@ -13,6 +13,8 @@ func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []*Type) bool 
 	}
 	subject = v.observe(subject)
 	switch node.Kind {
+	case ast.KindTypeFunctionTemplatePattern:
+		return v.templatePattern(p, subject, slots)
 	case ast.KindTypeFunctionWildcardPattern:
 		return true
 	case ast.KindTypeFunctionCapturePattern:

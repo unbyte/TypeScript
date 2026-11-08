@@ -154,7 +154,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 110 fixtures covering native calibration, execution,
+The compiler-project harness has 117 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -176,5 +176,11 @@ blocks the call and replays at specialization. Arm-private registers cannot leak
 captures to a later arm; reached checks survive a failed guard. Tests cover
 continuation after an arm, loop control, symbolic specialization, private/optional
 properties, static wildcard/key/capture errors and union-domain rejection.
-Template patterns and native-island patterns still diagnose as unimplemented;
-general structural relation readiness is also pending.
+Template patterns now use bounded UTF-16 decomposition, earliest delimiters without
+backtracking, adjacent-unit captures and computed nonempty literal pins. Pins use
+outer bindings and are validated before literal chunks are attempted. Native
+opaque template holes remain opaque; final captures preserve a remaining symbolic
+suffix. Free binders that must be inspected block and replay at specialization.
+Tests cover header splitting, surrogate pairs, opaque holes, pin scope/errors,
+anchoring and resource exhaustion. Native-island patterns and general structural
+relation readiness remain pending.

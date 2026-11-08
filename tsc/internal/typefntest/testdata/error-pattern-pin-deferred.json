@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-pattern-pin-deferred.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "template pin requires a nonempty string literal"
+    }
+  ]
+}
