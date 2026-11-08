@@ -38,6 +38,8 @@ against the language specification; these checks establish the boundaries below.
 * Passed: CLI rebuilt at `1a884501c` against the editor example project and the constraint probe
   script (13 fork cases and the native baseline). Unused bounds no longer execute,
   and later-parameter references diagnose. This does not add `where` syntax.
+* Passed: decoded declaration mappings for DSL statement starts after the ABI header;
+  full printer and integration suites rerun after enabling per-node mapping.
 * Passed: changed Go source formatting and `git diff --check`.
 
 Earlier race, project-invalidation, extension-build and wider package checks are

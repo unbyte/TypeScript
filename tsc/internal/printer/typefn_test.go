@@ -8,6 +8,8 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/parser"
 	"github.com/microsoft/TypeScript/tsc/internal/printer"
+	"github.com/microsoft/TypeScript/tsc/internal/sourcemap"
+	"github.com/microsoft/TypeScript/tsc/internal/tspath"
 )
 
 func TestTypefnRoundTrip(t *testing.T) {
@@ -79,6 +81,42 @@ export typefn Identity<T> { return T; }`, core.ScriptKindTS)
 			if output := p.EmitSourceFile(file); strings.Contains(output, "@typefn-abi:") {
 				t.Fatalf("ABI leaked to source output: %s", output)
 			}
+		}
+	}
+}
+
+func TestTypefnDeclarationSourceMaps(t *testing.T) {
+	source := "export typefn Identity<T> {\n  type copy = T;\n  return copy;\n}"
+	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}, source, core.ScriptKindTS)
+	file.IsDeclarationFile = true
+	context := printer.NewEmitContext()
+	context.SetTypefnDeclarationABI(file)
+	p := printer.NewPrinter(printer.PrinterOptions{NewLine: core.NewLineKindLF, SourceMap: true, OnlyPrintJSDocStyle: true}, printer.PrintHandlers{}, context)
+	writer := printer.NewTextWriter("\n", 4)
+	generator := sourcemap.NewGenerator("test.d.ts", "", "/", tspath.CaseSensitive)
+	p.Write(file.AsNode(), file, writer, generator)
+	decoder := sourcemap.DecodeMappings(generator.RawSourceMap().Mappings)
+	// The semantic ABI line shifts all generated positions by one. Check statement
+	// starts inside the DSL body, not just the identifier mappings native printing
+	// already supplied. These positions drive declaration-map navigation.
+	found := map[int]bool{}
+	for mapping := range decoder.Values() {
+		if !mapping.IsSourceMapping() {
+			continue
+		}
+		if mapping.GeneratedLine == 0 {
+			t.Fatal("ABI pragma acquired a false source mapping")
+		}
+		if mapping.GeneratedCharacter == 4 && mapping.SourceCharacter == 2 && mapping.GeneratedLine == mapping.SourceLine+1 {
+			found[mapping.SourceLine] = true
+		}
+	}
+	if err := decoder.Error(); err != nil {
+		t.Fatal(err)
+	}
+	for _, line := range []int{1, 2} {
+		if !found[line] {
+			t.Fatalf("missing statement mapping for source line %d: %s\n%s", line, generator.RawSourceMap().Mappings, writer.String())
 		}
 	}
 }

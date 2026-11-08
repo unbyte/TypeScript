@@ -660,3 +660,9 @@ native files can emit. Pending display-only Types cannot be serialized as invent
 declaration syntax: inferred escaping recipes currently require a nameable source
 annotation/helper. Complete inferred-recipe lifting, dependency closure validation
 (including stripInternal), source maps, redirects and cancellation remain open.
+
+DSL printing now enters the native source-map/comment pipeline for each node.
+A decoded-mapping regression checks local-binding and return-statement positions
+inside an emitted body, including the generated-line shift from the ABI pragma.
+Declaration-map navigation, redirects and multi-file mapping scenarios still need
+integration coverage.

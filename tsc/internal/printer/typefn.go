@@ -8,6 +8,7 @@ import (
 // Printing DSL syntax must not route its nodes through the JavaScript emitter.
 // Parenthesized operators deliberately preserve the DSL's angle-list grammar.
 func (p *Printer) emitTypefn(node *ast.Node) {
+	state := p.enterNode(node)
 	switch node.Kind {
 	case ast.KindTypeFunctionMatch:
 		d := node.AsTypeFunctionMatch()
@@ -311,4 +312,5 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 			p.emitTypefn(e.Operands.Nodes[0])
 		}
 	}
+	p.exitNode(node, state)
 }
