@@ -805,6 +805,9 @@ func symbolFlagsHaveMeaning(flags ast.SymbolFlags, meaning ast.SemanticMeaning) 
 }
 
 func getMeaningFromLocation(node *ast.Node) ast.SemanticMeaning {
+	if ast.TypeFunctionReference(node) != nil {
+		return ast.SemanticMeaningType | ast.SemanticMeaningNamespace
+	}
 	// todo: check if this function needs to be changed for jsdoc updates
 	node = getAdjustedLocation(ast.GetReparsedNodeForNode(node), false /*forRename*/, nil)
 	parent := node.Parent
@@ -845,6 +848,9 @@ func getMeaningFromLocation(node *ast.Node) ast.SemanticMeaning {
 
 func getMeaningFromDeclaration(node *ast.Node) ast.SemanticMeaning {
 	switch node.Kind {
+	case ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBinding, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
+		return ast.SemanticMeaningType
+
 	case ast.KindVariableDeclaration, ast.KindParameter, ast.KindBindingElement,
 		ast.KindPropertyDeclaration, ast.KindPropertySignature, ast.KindPropertyAssignment, ast.KindShorthandPropertyAssignment,
 		ast.KindMethodDeclaration, ast.KindMethodSignature, ast.KindConstructor, ast.KindGetAccessor, ast.KindSetAccessor,
