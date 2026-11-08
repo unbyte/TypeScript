@@ -99,6 +99,17 @@ func (v *typefnVM) unresolvedGraph(node *ast.Node, root *Type) bool {
 			}
 			return false
 		}
+		if v.c.typefn != nil {
+			if plan := v.c.typefn.constructionMembers[t.symbol]; plan != nil {
+				for _, sources := range [][]*ast.Node{plan.calls, plan.constructs} {
+					for _, source := range sources {
+						if visit(v.c.instantiateType(v.c.getTypeFromTypeNode(source), t.Mapper())) {
+							return true
+						}
+					}
+				}
+			}
+		}
 		if t.symbol != nil {
 			for _, declaration := range t.symbol.Declarations() {
 				for _, parameter := range v.c.getOuterTypeParameters(declaration, false) {

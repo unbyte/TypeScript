@@ -15,7 +15,6 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 	fieldsPlan := []typefnConstructionProperty{}
 	values := []*Type{}
 	names := map[string]bool{}
-	private := false
 	for _, property := range properties {
 		fields, ok := v.descriptor(node, property, []string{"key", "value", "optional", "readonly"}, []string{"read"})
 		if !ok {
@@ -57,11 +56,6 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 		fieldsPlan = append(fieldsPlan, typefnConstructionProperty{name: name, key: nameType, optional: optional, readonly: readonly})
 		values = append(values, value)
 		names[name] = true
-		private = private || constructionOf(value) != nil
-	}
-	// Signature lists still require their separate native member adapter.
-	if len(args) > 2 && v.rejectConstruction(node, args[2:]...) {
-		return v.c.errorType
 	}
 	var indexers []typefnIndexDescriptor
 	if len(args) > 1 {
@@ -70,11 +64,8 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 		if !ok {
 			return v.c.errorType
 		}
-		for _, info := range indexers {
-			private = private || constructionOf(info.value) != nil
-		}
 	}
-	var calls, constructs []*Signature
+	var calls, constructs []typefnSignatureEntry
 	if len(args) > 2 {
 		var ok bool
 		calls, ok = v.signatureList(node, args[2], SignatureKindCall)
@@ -89,25 +80,53 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 			return v.c.errorType
 		}
 	}
+	return v.finishObject(node, fieldsPlan, values, indexers, calls, constructs)
+}
+
+func (v *typefnVM) finishObject(node *ast.Node, properties []typefnConstructionProperty, values []*Type, indexers []typefnIndexDescriptor, calls, constructs []typefnSignatureEntry) *Type {
+	private := false
+	for _, value := range values {
+		private = private || constructionOf(value) != nil
+	}
+	for _, info := range indexers {
+		private = private || constructionOf(info.value) != nil
+	}
+	for _, entry := range calls {
+		private = private || entry.signature == nil
+	}
+	for _, entry := range constructs {
+		private = private || entry.signature == nil
+	}
 	if private {
-		if len(calls)+len(constructs) != 0 {
-			return v.error(node, "recursive object signature adapters are not implemented yet")
-		}
 		plan := make([]typefnConstructionIndexer, len(indexers))
 		for i, info := range indexers {
 			plan[i] = typefnConstructionIndexer{info.key, info.readonly}
 			values = append(values, info.value)
 		}
-		return v.construct(node, &typefnConstruction{kind: ast.KindTypeLiteral, inputs: values, properties: fieldsPlan, indexers: plan})
+		for _, entry := range calls {
+			values = append(values, entry.value)
+		}
+		for _, entry := range constructs {
+			values = append(values, entry.value)
+		}
+		return v.construct(node, &typefnConstruction{kind: ast.KindTypeLiteral, inputs: values, properties: properties, indexers: plan, calls: len(calls), constructs: len(constructs)})
 	}
-	if !v.allocate(node, len(fieldsPlan)+1) {
+	if !v.allocate(node, len(properties)+1) {
 		return v.c.errorType
 	}
 	indexInfos := make([]*IndexInfo, len(indexers))
 	for i, info := range indexers {
 		indexInfos[i] = v.c.newIndexInfo(info.key, info.value, info.readonly, nil, nil)
 	}
-	result := v.c.newTypefnObjectEx(v.c.typefnPropertyMembers(fieldsPlan, values), calls, constructs, indexInfos)
+	callSignatures := make([]*Signature, len(calls))
+	for i, entry := range calls {
+		callSignatures[i] = entry.signature
+	}
+	constructSignatures := make([]*Signature, len(constructs))
+	for i, entry := range constructs {
+		constructSignatures[i] = entry.signature
+	}
+	result := v.c.newTypefnObjectEx(v.c.typefnPropertyMembers(properties, values), callSignatures, constructSignatures, indexInfos)
 	v.validateObjectIndexers(node, result, indexInfos)
 	if v.failed {
 		return v.c.errorType

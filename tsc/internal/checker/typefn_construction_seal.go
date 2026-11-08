@@ -33,6 +33,10 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 					return v.error(node, "recursive reference belongs to another construction")
 				}
 				edgeGuarded := guarded
+				if graph.kind == ast.KindTypeLiteral && i >= len(graph.properties)+len(graph.indexers) {
+					// Forwarding a signature handle adds no structural guard of its own.
+					edgeGuarded = false
+				}
 				if graph.kind == ast.KindTupleType && graph.elements[i].flags == ElementFlagsVariadic {
 					edgeGuarded = false
 				}
@@ -167,6 +171,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		return f.NewIdentifier(name)
 	}
 	aliases := map[int]*ast.Node{}
+	membersPlans := map[*ast.Node]*typefnConstructionMembers{}
 	for _, index := range reachable {
 		if !v.step(node) {
 			return v.c.errorType
@@ -253,6 +258,15 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 				return v.c.errorType
 			}
 			body = f.NewTypeLiteralNode(f.NewNodeList(members))
+			if graph.calls+graph.constructs != 0 {
+				start := len(graph.properties) + len(graph.indexers)
+				sources := inputs[start:]
+				for _, source := range sources {
+					ast.SetParentInChildren(source)
+					source.Parent = body
+				}
+				membersPlans[body] = &typefnConstructionMembers{calls: sources[:graph.calls], constructs: sources[graph.calls:]}
+			}
 		default:
 			panic("unknown recursive construction shape")
 		}
@@ -271,6 +285,15 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 	ast.SetParentInChildren(file.AsNode())
 	binder.BindSourceFile(file)
 	scope.Parent = source.AsNode()
+	if len(membersPlans) != 0 {
+		state := v.c.getTypefnState()
+		if state.constructionMembers == nil {
+			state.constructionMembers = map[*ast.Symbol]*typefnConstructionMembers{}
+		}
+		for body, members := range membersPlans {
+			state.constructionMembers[body.Symbol()] = members
+		}
+	}
 	for key, binding := range domainBindings {
 		v.c.typeAliasLinks.Get(binding.Symbol()).declaredType = key
 	}

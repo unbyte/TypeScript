@@ -12,16 +12,17 @@ import (
 // relation, alias or closure caches. Every container that carries a scratch handle
 // is itself scratch. Thus membership is an O(1) test, not a native graph walk.
 type typefnConstruction struct {
-	arena      *typefnConstructionArena
-	index      int
-	kind       ast.Kind
-	inputs     []*Type
-	properties []typefnConstructionProperty
-	indexers   []typefnConstructionIndexer
-	elements   []TupleElementInfo
-	readonly   bool
-	abstract   bool
-	reference  int
+	arena             *typefnConstructionArena
+	index             int
+	kind              ast.Kind
+	inputs            []*Type
+	properties        []typefnConstructionProperty
+	indexers          []typefnConstructionIndexer
+	elements          []TupleElementInfo
+	readonly          bool
+	abstract          bool
+	calls, constructs int
+	reference         int
 }
 type typefnConstructionProperty struct {
 	name               string

@@ -76,15 +76,43 @@ func (v *typefnVM) singleSignature(node *ast.Node, value *Type) (*Signature, Sig
 	return sig, kind, true
 }
 
-func (v *typefnVM) signatureList(node *ast.Node, value *Type, kind SignatureKind) ([]*Signature, bool) {
+type typefnSignatureEntry struct {
+	value     *Type
+	signature *Signature
+}
+
+func (v *typefnVM) signatureList(node *ast.Node, value *Type, kind SignatureKind) ([]typefnSignatureEntry, bool) {
 	entries, ok := v.requiredTuple(node, value)
 	if !ok || !v.allocate(node, len(entries)) {
 		return nil, false
 	}
-	result := make([]*Signature, 0, len(entries))
+	result := make([]typefnSignatureEntry, 0, len(entries))
 	for _, entry := range entries {
 		if !v.step(node) {
 			return nil, false
+		}
+		if graph := constructionOf(entry); graph != nil {
+			calls, constructs := graph.calls, graph.constructs
+			switch graph.kind {
+			case ast.KindFunctionType:
+				calls = 1
+			case ast.KindConstructorType:
+				constructs = 1
+			case ast.KindTypeLiteral:
+			default:
+				v.error(node, "cannot observe an unsealed recursive reference")
+				return nil, false
+			}
+			if calls+constructs != 1 {
+				v.error(node, "signature requires exactly one call or construct signature")
+				return nil, false
+			}
+			if (kind == SignatureKindCall && calls != 1) || (kind == SignatureKindConstruct && constructs != 1) {
+				v.error(node, "signature category does not match the call/construct list")
+				return nil, false
+			}
+			result = append(result, typefnSignatureEntry{value: entry})
+			continue
 		}
 		sig, actual, ok := v.singleSignature(node, entry)
 		if !ok {
@@ -94,7 +122,7 @@ func (v *typefnVM) signatureList(node *ast.Node, value *Type, kind SignatureKind
 			v.error(node, "signature category does not match the call/construct list")
 			return nil, false
 		}
-		result = append(result, sig)
+		result = append(result, typefnSignatureEntry{entry, sig})
 	}
 	return result, true
 }
@@ -104,17 +132,14 @@ func (v *typefnVM) overloadType(node *ast.Node, args []*Type) *Type {
 	if !ok {
 		return v.c.errorType
 	}
-	var constructs []*Signature
+	var constructs []typefnSignatureEntry
 	if len(args) > 1 {
 		constructs, ok = v.signatureList(node, args[1], SignatureKindConstruct)
 		if !ok {
 			return v.c.errorType
 		}
 	}
-	if !v.allocate(node, 1) {
-		return v.c.errorType
-	}
-	return v.c.newTypefnObjectEx(ast.NewSymbolTable(), calls, constructs, nil)
+	return v.finishObject(node, nil, nil, nil, calls, constructs)
 }
 
 // Native signatures keep their own binders and lazy return/predicate evaluation.

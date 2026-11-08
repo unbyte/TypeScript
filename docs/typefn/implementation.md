@@ -531,7 +531,7 @@ environment, preserving native generic substitution through lazy recursive membe
 Self-free definitions retain their ordinary native result. Tests assert native
 indexing, bidirectional assignability, distinct substitutions, group iteration,
 invalid cycles, forbidden observations, finite kinds and allocation failures.
-Object signature descriptors and broader native constructor adapters remain
+Full signature descriptors and broader native constructor adapters remain
 follow-up work; unsupported observations diagnose.
 
 Recursive construction also supports `types.function`/`types.constructor`, including
@@ -597,3 +597,13 @@ objects whose results are discarded. Symbolic failed proofs defer and replay;
 independent check components do not add dependencies to the returned shape. Tests
 cover native indexing/reflection, overlap compatibility, generic substitution,
 duplicate/invalid domains and discarded failures, including an ordinary result.
+
+Recursive `types.object` and `types.overload` now forward ordered call/construct
+handles through a narrow native anonymous-member resolver. Each sealed object
+resolves its immutable signature sources under the native instance mapper, rather
+than instantiating an incomplete raw-environment signature list. This preserves
+native generic binders, duplicate overloads, method variance and abstract constructor
+metadata. Signature-only free dependencies participate in readiness checks.
+Tests cover nested single-signature forwarding, object/indexer combinations,
+recursive parameters/results, native inference, query-order substitution and
+invalid categories/counts. No signature is approximated by an intersection.

@@ -21358,6 +21358,12 @@ func (c *Checker) instantiateIndexInfo(info *IndexInfo, m *TypeMapper) *IndexInf
 }
 
 func (c *Checker) resolveAnonymousTypeMembers(t *Type) {
+	if c.typefn != nil {
+		if plan := c.typefn.constructionMembers[t.symbol]; plan != nil {
+			c.resolveTypefnConstructionMembers(t, plan)
+			return
+		}
+	}
 	d := t.AsObjectType()
 	if d.target != nil {
 		c.setStructuredTypeMembers(t, nil, nil, nil, nil)
