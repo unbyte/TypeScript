@@ -104,29 +104,36 @@ calculation even when an intermediate value is discarded. Pending operations ret
 checks for later specialization. Identical active applications diagnose cycles; changing-argument recursion
 is bounded by call depth. Runtime fallthrough diagnoses.
 
+The complete text library and string iteration preserve UTF-16/lone-surrogate
+semantics under a shared string-work budget. Searches use linear prefix-table
+matching, and split/replacement reserve output storage. The numeric library covers
+explicit exact conversions, rounding, parsing/checks and formatting. Finite tuple
+length/slicing preserve labels and readonly. Interpolation builds native template
+Types and retains eligibility/resource checks; matching includes captures, guards,
+computed pins, tuples/objects and opaque template suffixes. Native-island patterns
+remain part of the outstanding island bridge.
+
 ## Important remaining work
 
 * Native islands parse and print but execution diagnoses as unsupported. The lexical
   bridge must preserve local snapshots, native scopes and constraints before enabling
   dynamic function/mapped/signature construction.
-* The complete text library and string iteration execute with UTF-16/lone-surrogate
-  preservation and a shared string-work budget. Searches use linear prefix-table
-  matching; split/replacement reserve output storage before constructing Types. The numeric library executes explicit exact conversions, rounding, integer
-  parsing/checks and formatting. `tuple.length` and `tuple.slice` preserve finite tuple shape, labels and readonly.
-  Interpolation constructs native template Types, preserves symbolic holes and
-  replays eligibility/resource checks before specialization. Structural pattern
-  matching is not implemented.
-  The calculator and numeric examples are executable and tested from their actual
-  documentation sources. The HTTP-route example still requires templates/matching.
+* The calculator and numeric examples execute directly from their documentation
+  sources. The HTTP-route example now has string/match/property-builder support,
+  but still requires the native-island bridge for mapped and function Types.
 * Constructor slots, closures/local typefns and restricted HKT support are pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
   relation proofs, scoped generic-body assumptions, latent member/signature
   dependencies, and exhaustive inference/replay laws remain pending. Guarded
-  relations currently require the same canonical check set. Non-scalar predicates
-  and union traversal remain conservative; no constraint is enumerated as a value.
-* General tuple spreads, symbol-key construction, reflection, descriptors and dynamic
-  callable/constructable builders are pending. Enum-specific support stays deferred.
+  relations currently require the same canonical check set. Structural predicates
+  and union traversal use native dependency summaries; exhaustive native forms
+  and ordinary cast/assignment boundaries still need coverage. No constraint is
+  enumerated as a value.
+* Property/indexer/tuple/signature reflection, general tuple metadata/spreads,
+  indexer and callable/constructable builders, and recursive structural sealing
+  remain. Classification, arrays, symbol-key construction and property descriptors
+  are implemented. Enum-specific support stays deferred.
 * Declaration source recipes, advanced refactorings/auto-import completion, complete
   incremental dependency/replay tests and broad API factory compatibility remain pending.
   Native symbols now support definition/references/rename, hover, scoped completion,
