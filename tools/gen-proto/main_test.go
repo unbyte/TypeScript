@@ -46,8 +46,8 @@ func TestGenerate(t *testing.T) {
 		`reconfigurePrograms?: readonly ReconfigureSnapshotProgramParams[] | undefined;`,
 		`snapshot: number;`,
 		`file: DocumentIdentifier;`,
-		`import type { CompilerOptions, PluginImport } from "./compilerOptions.generated.ts";`,
-		`export type { CompilerOptions, PluginImport } from "./compilerOptions.generated.ts";`,
+		`import type { CompilerOptions, PluginImport, TypefnOptions } from "./compilerOptions.generated.ts";`,
+		`export type { CompilerOptions, PluginImport, TypefnOptions } from "./compilerOptions.generated.ts";`,
 		`export * from "./compilerOptions.generated.ts";`,
 		`export interface CreateBuildOrchestratorParams extends BuildOptions, CompilerOptions`,
 		`jsx?: JsxEmit | undefined;`,
@@ -77,8 +77,8 @@ export interface RawCompilerOptions`,
 		`export interface CreateSnapshotProgramParams {
     rootFiles: readonly DocumentIdentifier[] | null;
     compilerOptions: RawCompilerOptions;`,
-		`export interface RawCompilerOptions {
-    allowJs?: boolean | undefined;`,
+		`typefn?: TypefnOptions | undefined;`,
+		`allowJs?: boolean | undefined;`,
 		`declarationDir?: string | undefined;`,
 		`rootDirs?: string[] | undefined;`,
 		`tsBuildInfoFile?: string | undefined;`,
@@ -132,7 +132,7 @@ export interface RawCompilerOptions`,
 			t.Errorf("generated ProjectResponse contains deprecated API field %q", deprecated)
 		}
 	}
-	for _, name := range []string{"CompilerOptions", "PluginImport"} {
+	for _, name := range []string{"CompilerOptions", "PluginImport", "TypefnOptions", "TypefnLimits"} {
 		if strings.Contains(generated, "export interface "+name+" {") {
 			t.Errorf("%s must be imported, not regenerated from Go", name)
 		}

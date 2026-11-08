@@ -59,6 +59,21 @@ export const options: OptionsModel = {
     ],
     compilerOptions: [
         {
+            name: "typefn",
+            type: "*TypefnOptions",
+            comment: "Opt-in type function language profile. Limits are positive safe integers; omitted limits use defaults.",
+            declaration: {
+                group: "optionsForCompiler",
+                isTSConfigOnly: true,
+                extraValidation: "typefn",
+                affectsSemanticDiagnostics: true,
+                affectsEmit: true,
+                affectsBuildInfo: true,
+                schemaDescription: "Enable the type function language profile.",
+                documentationAnchor: false,
+            },
+        },
+        {
             name: "allowJs",
             type: "Tristate",
             jsconfigDefault: true,
@@ -1831,6 +1846,7 @@ export const options: OptionsModel = {
             "maxNodeModuleJsDepth",
             "useDefineForClassFields",
             "plugins",
+            "typefn",
             "moduleDetection",
             "ignoreDeprecations",
         ],

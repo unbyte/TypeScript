@@ -516,10 +516,11 @@ func (r *typeRenderer) namedType(named *types.Named) string {
 		return "unknown"
 	case "github.com/microsoft/TypeScript/tsc/internal/core.Tristate":
 		return "boolean"
-	case "github.com/microsoft/TypeScript/tsc/internal/core.CompilerOptions":
-		return r.importTypeOnly("CompilerOptions", "./compilerOptions.generated.ts")
-	case "github.com/microsoft/TypeScript/tsc/internal/core.PluginImport":
-		return r.importTypeOnly("PluginImport", "./compilerOptions.generated.ts")
+	case "github.com/microsoft/TypeScript/tsc/internal/core.CompilerOptions",
+		"github.com/microsoft/TypeScript/tsc/internal/core.PluginImport",
+		"github.com/microsoft/TypeScript/tsc/internal/core.TypefnOptions",
+		"github.com/microsoft/TypeScript/tsc/internal/core.TypefnLimits":
+		return r.importTypeOnly(obj.Name(), "./compilerOptions.generated.ts")
 	case "github.com/microsoft/TypeScript/tsc/internal/ls/lsutil.UserPreferences":
 		return r.importTypeOnly(obj.Name(), "./userPreferences.generated.ts")
 	case "github.com/microsoft/TypeScript/tsc/internal/core.JsxEmit":

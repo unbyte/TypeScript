@@ -75,6 +75,9 @@ func TestGeneratedCompilerOptionParsingAndClone(t *testing.T) {
 				expected = reflect.ValueOf(input).Convert(field.Type).Interface()
 			case field.Type == reflect.TypeFor[*int]():
 				input, expected = float64(2), new(2)
+			case field.Type == reflect.TypeFor[*core.TypefnOptions]():
+				input = map[string]any{"version": float64(1), "limits": map[string]any{"callDepth": float64(16)}}
+				expected = &core.TypefnOptions{Version: 1, Limits: core.TypefnLimits{CallDepth: 16}}
 			case field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.String:
 				input = []any{"/first", "/second"}
 				value := reflect.MakeSlice(field.Type, 2, 2)

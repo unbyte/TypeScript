@@ -17,6 +17,7 @@ import {
     optionKind,
     type OptionsModel,
     type StoredDeclaration,
+    typefnLimits,
 } from "./options-model.ts";
 import { generateConfigSchema } from "./options-schema.ts";
 import {
@@ -119,7 +120,7 @@ export function validateOptions(model: OptionsModel): void {
         if (declaration.kind === "List" || declaration.kind === "ListOrElement") {
             assert(model.elements[declaration.name], `Missing list element: ${declaration.name}`);
         }
-        assert(declaration.extraValidation === undefined || declaration.extraValidation === "locale", `Invalid extra validation: ${declaration.extraValidation}`);
+        assert(declaration.extraValidation === undefined || declaration.extraValidation === "locale" || declaration.extraValidation === "typefn", `Invalid extra validation: ${declaration.extraValidation}`);
         for (const value of Object.values(declaration)) {
             if (typeof value === "object" && value !== null && "go" in value) {
                 assert(/^(?:core|diagnostics)\.[A-Za-z_]\w*$/.test(value.go), `Invalid Go reference: ${value.go}`);
@@ -172,7 +173,17 @@ function coreOptions(): string {
         ].map(comment => `// ${comment}\n`).join("");
         return `${sectionComment(option.section)}${comments}${fieldName(option)} ${goType(option)} \`json:"${option.name},omitzero"\``;
     });
-    return `type PluginImport struct {
+    return `// TypefnOptions selects the opt-in language profile. Treat published options as immutable.
+type TypefnOptions struct {
+    Version int \`json:"version"\`
+    Limits TypefnLimits \`json:"limits,omitzero"\`
+}
+
+type TypefnLimits struct {
+${typefnLimits.map(name => `${name === "vmInstructions" ? "VMInstructions" : name[0].toUpperCase() + name.slice(1)} int \`json:"${name},omitzero"\``).join("\n")}
+}
+
+type PluginImport struct {
 ${pluginImportFields.map(field => `${fieldName(field)} ${field.type} \`json:"${field.name}"\``).join("\n")}
 }
 
@@ -222,6 +233,8 @@ export function generateCompilerOptionsAPI(model = options): string {
                 return "string[]";
             case "[]PluginImport":
                 return "PluginImport[]";
+            case "*TypefnOptions":
+                return "TypefnOptions";
             case "*collections.OrderedMap[string, []string]":
                 return "Record<string, string[]>";
             default:
@@ -248,6 +261,15 @@ ${optionEnums.map(name => `export { ${name} } from "${enumPath(name)}";`).join("
 /** CompilerOptions contains the compiler options exposed by the API. */
 export interface CompilerOptions {
 ${fields.join("\n")}
+}
+
+export interface TypefnOptions {
+    version: 1;
+    limits?: TypefnLimits | undefined;
+}
+
+export interface TypefnLimits {
+${typefnLimits.map(name => `${name}?: number | undefined;`).join("\n")}
 }
 
 export interface PluginImport {
@@ -299,6 +321,7 @@ export function prepareCompilerOptions(options: RawCompilerOptions, currentDirec
 
 function optionValuesDiffer(type: GoCompilerOptionType, a: string, b: string): string {
     switch (type) {
+        case "*TypefnOptions":
         case "*int":
             return `${a} != ${b} && (${a} == nil || ${b} == nil || *${a} != *${b})`;
         case "[]string":
@@ -627,7 +650,7 @@ function declarationLiteral(declaration: Declaration): string {
         const goName = declarationFields.get(key);
         if (goName === undefined || value === undefined) continue;
         const goValueText = key === "extraValidation"
-            ? "extraValidationLocale"
+            ? `extraValidation${value[0].toUpperCase() + value.slice(1)}`
             : key === "pathKind"
             ? `CommandLineOptionPathKind${value[0].toUpperCase() + value.slice(1)}`
             : goValue(value);
@@ -719,6 +742,9 @@ function parserAssignment(option: CompilerOption): string {
     }
     if (option.name === "lib") {
         return `if libs, ok := value.([]string); ok { ${target} = libs } else { ${target} = ParseStringArray(value) }`;
+    }
+    if (option.name === "typefn") {
+        return `${target}, _ = parseTypefnOptions(value)`;
     }
     if (option.name === "plugins") {
         return `if plugins, ok := value.([]any); ok {

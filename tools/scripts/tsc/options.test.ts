@@ -307,6 +307,8 @@ function accepts(schema: JSONSchema, value: unknown, root: JSONSchema): boolean 
                 "pattern",
                 "default",
                 "minimum",
+                "maximum",
+                "const",
                 "minLength",
                 "deprecated",
                 "deprecationMessage",
@@ -327,8 +329,10 @@ function accepts(schema: JSONSchema, value: unknown, root: JSONSchema): boolean 
     if (schema.type) {
         const types = Array.isArray(schema.type) ? schema.type : [schema.type];
         const type = value === null ? "null" : Array.isArray(value) ? "array" : typeof value;
-        if (!types.includes(type)) return false;
+        if (!types.includes(type) && !(types.includes("integer") && typeof value === "number" && Number.isSafeInteger(value))) return false;
     }
+    if (schema.const !== undefined && value !== schema.const) return false;
+    if (typeof value === "number" && schema.maximum !== undefined && value > schema.maximum) return false;
     if (schema.enum && !schema.enum.some(item => item === value)) return false;
     if (typeof value === "string") {
         if (schema.pattern && !new RegExp(schema.pattern).test(value)) return false;
@@ -475,7 +479,7 @@ test("schema hover documentation includes reference links and conditional defaul
             const declaration = options.compilerOptions.find(option => option.name === name)?.declaration
                 ?? options.schemaOnlyOptions.find(option => option.name === name);
             assert(declaration, `${kind}: ${name}`);
-            if (!declaration.description) {
+            if (!declaration.description && !("schemaDescription" in declaration && declaration.schemaDescription)) {
                 assert.equal(property.markdownDescription, undefined, `${kind}: ${name}`);
                 continue;
             }
@@ -483,7 +487,7 @@ test("schema hover documentation includes reference links and conditional defaul
             const markdown = property.markdownDescription;
             assert(markdown, `${kind}: ${name}`);
             assert(markdown.startsWith(property.description), `${kind}: ${name}`);
-            if (name === "deduplicatePackages" || name === "stableTypeOrdering") {
+            if ("documentationAnchor" in declaration && declaration.documentationAnchor === false) {
                 assert.equal(property.markdownDescription, property.description);
             }
             else {
@@ -510,7 +514,7 @@ test("invalid metadata is rejected before generating files", () => {
     delete missingElement.elements.lib;
     assert.throws(() => validateOptions(missingElement), /Missing list element: lib/);
     const removedValidation = structuredClone(options);
-    // @ts-expect-error Only locale validation is supported.
+    // @ts-expect-error Validation hooks must be registered in the model.
     removedValidation.elements.lib.extraValidation = "spec";
     assert.throws(() => validateOptions(removedValidation), /Invalid extra validation: spec/);
     const missingConstant = structuredClone(options);
@@ -520,7 +524,7 @@ test("invalid metadata is rejected before generating files", () => {
     invalidAlias.enums[0].members[0].value = "Missing";
     assert.throws(() => validateOptions(invalidAlias), /Unknown enum alias/);
     const invalidTranspile = structuredClone(options);
-    invalidTranspile.compilerOptions[0].transpile = { value: true, unless: "missing" };
+    invalidTranspile.compilerOptions.find(option => option.type === "Tristate")!.transpile = { value: true, unless: "missing" };
     assert.throws(() => validateOptions(invalidTranspile), /Unknown transpile condition/);
 });
 
@@ -544,4 +548,17 @@ test("jsconfig defaults are distinct from tsconfig defaults", () => {
     }
     assert.equal(js.definitions.typeAcquisition.properties.enable.default, true);
     assert.equal(ts.definitions.typeAcquisition.properties.enable.default, false);
+});
+
+test("typefn schemas validate profiles and bounded integer resource limits", () => {
+    for (const kind of ["tsconfig", "jsconfig"] as const) {
+        const schema = generateConfigSchema(kind);
+        const profile = schema.definitions.compilerOptions.properties.typefn;
+        for (const valid of [null, { version: 1 }, { version: 1, limits: { callDepth: 16, vmInstructions: 9007199254740991 } }]) {
+            assert(accepts(profile, valid, schema), JSON.stringify(valid));
+        }
+        for (const invalid of [false, {}, { version: 2 }, { version: 1, extra: true }, { version: 1, limits: { calls: 1 } }, ...[0, -1, 1.5, 9007199254740992, "16"].map(callDepth => ({ version: 1, limits: { callDepth } }))]) {
+            assert(!accepts(profile, invalid, schema), JSON.stringify(invalid));
+        }
+    }
 });

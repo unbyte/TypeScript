@@ -1,0 +1,5 @@
+{
+  "files": { "main.ts": "native-error.ts" },
+  "options": { "typefn": { "version": 2 } },
+  "diagnostics": [{ "phase": "config", "code": -1, "file": "tsconfig.json", "at": "{\"version\":2}", "message": "only language version 1 is supported" }]
+}
