@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-native-island.ts"
+    "main.ts": "error-island-before-init.ts"
   },
   "options": {
     "typefn": {
@@ -10,9 +10,9 @@
   "diagnostics": [
     {
       "phase": "semantic",
-      "file": "main.ts",
       "code": -1,
-      "message": "native islands are not implemented yet"
+      "file": "main.ts",
+      "message": "binding read before initialization"
     }
   ]
 }

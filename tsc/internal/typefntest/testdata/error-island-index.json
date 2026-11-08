@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-island-index.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2339,
+      "file": "main.ts",
+      "message": "Property 'missing' does not exist"
+    }
+  ]
+}

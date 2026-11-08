@@ -110,17 +110,16 @@ matching, and split/replacement reserve output storage. The numeric library cove
 explicit exact conversions, rounding, parsing/checks and formatting. Finite tuple
 length/slicing preserve labels and readonly. Interpolation builds native template
 Types and retains eligibility/resource checks; matching includes captures, guards,
-computed pins, tuples/objects and opaque template suffixes. Native-island patterns
-remain part of the outstanding island bridge.
+computed pins, tuples/objects and opaque template suffixes. Native-island patterns now execute through the same lexical bridge.
 
 ## Important remaining work
 
-* Native islands parse and print but execution diagnoses as unsupported. The lexical
-  bridge must preserve local snapshots, native scopes and constraints before enabling
-  dynamic function/mapped/signature construction.
-* The calculator and numeric examples execute directly from their documentation
-  sources. The HTTP-route example now has string/match/property-builder support,
-  but still requires the native-island bridge for mapped and function Types.
+* Native islands execute in checker-owned, freshly bound capture scopes. Symbolic
+  DSL captures conservatively retain the whole island for replay. Publishing stable
+  symbolic native shapes, reusing equivalent environments and complete native work
+  accounting still require work.
+* The calculator, numeric and HTTP-route examples execute directly from their
+  documentation sources. They are milestones, not full conformance coverage.
 * Constructor slots, closures/local typefns and restricted HKT support are pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
@@ -161,7 +160,7 @@ remain part of the outstanding island bridge.
 
 ## Validation
 
-The compiler-project harness has 178 fixtures covering native calibration, execution,
+The compiler-project harness has 184 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -270,3 +269,12 @@ remain attached to the constructed callable shape and survive absorption.
 Executable tests cover native call/new inference, this receivers, actual control-flow
 narrowing/assertions, ordinary variance after rebuilding a method, deferred rest and
 predicate validation, and invalid descriptor cases.
+
+Native islands bind a cloned native subtree beneath immutable capture aliases,
+using native symbol binding, checking and Type construction. Original source AST
+caches are never rebound to invocation-local values. Inner native binders shadow
+captures by symbol identity; captured nominal Types retain their original handles.
+Native diagnostics are attributed to each application, with their operation spans
+as related information. Tests cover mutable snapshots, mapped Types, conditional
+infer, generic signatures, typeof, nominal identity, native patterns and symbolic
+replay. Symbolic capture shape publication and environment caching remain pending.

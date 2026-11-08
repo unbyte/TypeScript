@@ -37,6 +37,7 @@ type typefnVM struct {
 	textUnits           map[string][]uint16
 	rootSite            *ast.Node
 	replaySite          *ast.Node
+	nativeIslandSite    *ast.Node
 }
 
 func (c *Checker) evaluateTypefn(node, declaration *ast.Node, args []*Type) *Type {

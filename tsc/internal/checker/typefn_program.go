@@ -37,6 +37,7 @@ type typefnExpression struct {
 	slot      int
 	symbol    *ast.Symbol
 	intrinsic string
+	island    *typefnIsland
 	args      []*typefnExpression
 	keys      []*typefnExpression
 }
@@ -123,7 +124,7 @@ func (b *typefnCompiler) block(node *ast.Node, newScope bool) {
 			if _, exists := scope[name]; exists {
 				b.error(statement.Name(), "duplicate binding "+name)
 			}
-			scope[name] = typefnBinding{slot: -1, mutable: true}
+			scope[name] = typefnBinding{slot: -1, mutable: true, symbol: statement.Symbol()}
 		}
 	}
 	for _, s := range node.AsTypeFunctionBlock().Statements.Nodes {
@@ -266,7 +267,8 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 			}
 		}
 	case ast.KindTypeFunctionNativeType:
-		b.error(node, "native islands are not implemented yet")
+		b.island(e)
+		return e
 	case ast.KindTypeFunctionObject:
 		for _, field := range data.Operands.Nodes {
 			name := field.Name()

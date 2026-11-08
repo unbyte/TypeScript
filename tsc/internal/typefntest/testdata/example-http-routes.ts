@@ -1,0 +1,11 @@
+type Assert<T extends true> = T;
+type Equal<A,B> = (<T>()=>T extends A?1:2) extends (<T>()=>T extends B?1:2)?true:false;
+type HeaderCheck = Assert<Equal<Header,{method:"GET";route:"/users/:id"}>>;
+type ParamsCheck = Assert<Equal<Endpoint['params'],{id:number;slug:string}>>;
+type MethodCheck = Assert<Equal<Endpoint['method'],"GET">>;
+type HandlerCheck = Assert<Equal<Parameters<GetHandler>,[params:{id:number}]>>;
+type ReturnCheck = Assert<Equal<ReturnType<GetHandler>,Promise<void>>>;
+type RoutesCheck = Assert<Equal<GetRoutes,"/users/:id<number>">>;
+type PiecesCheck = Assert<Equal<Pieces,["a","b::c"]>>;
+type GenericRoute<T> = HttpBinding<T>;
+type GenericCheck = Assert<Equal<GenericRoute<"POST /users/:name">['params'],{name:string}>>;

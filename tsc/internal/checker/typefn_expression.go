@@ -31,6 +31,8 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 	}
 	data := node.AsTypeFunctionExpression()
 	switch node.Kind {
+	case ast.KindTypeFunctionNativeType:
+		return v.nativeIsland(e, slots)
 	case ast.KindTypeFunctionLiteral:
 		value := v.c.getTypeFromTypeNode(data.NativeType)
 		if value.flags == TypeFlagsNumberLiteral {

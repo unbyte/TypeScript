@@ -31,6 +31,7 @@ All modules below are private to `tsc/internal/checker`:
 | `typefn_program.go` | Definition validation, resolved bindings and lowered control flow |
 | `typefn_vm.go` | Root budgets, cancellation, recursion checks and call frames |
 | `typefn_expression.go` | Expression evaluation and structural construction |
+| `typefn_island.go` | Immutable native capture scopes, native checking and application diagnostics |
 | `typefn_native.go` | Native applications, defaults and parameter bounds |
 | `typefn_values.go`, `typefn_operators.go` | Scalar observation, iteration domains and operators |
 | `typefn_readiness.go` | Cycle-aware native argument/lexical-dependency summaries for structural observation |
@@ -83,3 +84,17 @@ same syntax and native Types. See [editor integration](editor-integration.md).
 [Testing](testing.md) records fixture, project-invalidation, cancellation, mapped
 projection, protocol and generated-file checks. [Implementation status](implementation.md)
 separates these implemented boundaries from the target specification.
+
+## Native island cache isolation
+
+An island's native subtree is cloned and bound beneath a checker-owned scope whose
+alias symbols hold the frozen native capture Types. The subtree keeps original
+source positions and an outward link to the original lexical scope. Inner mapped,
+infer and signature binders use native symbols; they never resolve by textual
+replacement. Original parsed nodes and their checker caches are untouched.
+
+For now, a reachable unresolved DSL capture retains the original island and capture
+snapshot as a deferred expression. This is conservative and costs shape information;
+stable symbolic native shape publication is still an acceptance item. Executions
+also allocate fresh native subtrees rather than reusing completed environment keys.
+Neither strategy is presented as the finished performance architecture.

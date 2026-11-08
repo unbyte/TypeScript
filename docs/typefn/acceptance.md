@@ -15,10 +15,10 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Strings and string iteration | partial | All text intrinsics/iteration implemented; tests cover UTF-16, bounds, symbolic replay and budgets; declaration-only coverage awaits recipes |
 | Numeric and tuple library | partial | Numeric and finite-tuple library implemented with conversion/bounds/symbolic tests; declaration-only coverage awaits recipes |
 | Explicit failure | partial | fail/failAt, statement-only use, deferred operands and producer/consumer spans tested; declaration-only cases await recipes |
-| Templates and match | partial | Template AST/parser/printer/API and evaluation implemented; match scopes, captures/guards, tuple/object and template/pin execution added; native-island patterns and exhaustive native shape/dependency cases remain |
+| Templates and match | partial | Template AST/parser/printer/API and evaluation implemented; match scopes, captures/guards, tuple/object and template/pin execution added; native-island patterns implemented; exhaustive native shape/dependency cases remain |
 | Local helpers and closures | pending | Lexical capture snapshots, constructor identity, recursive captures and scope diagnostics |
 | Restricted constructors/HKT | pending | Fixed-arity slots, passing/returning constructors and kind errors |
-| Native islands | partial | Executable native Types using frozen local environments; binding and replay |
+| Native islands | partial | Frozen native capture scopes and whole-island symbolic replay implemented; stable symbolic shape publication, environment reuse and full dependency coverage remain |
 | Union and structural predicates | partial | Native object/function/mapped/recursive cases now tested; exhaustive dependency summaries, ordinary cast/assignment boundaries and native relation fidelity remain |
 | Reflection | partial | Classification, arrays, indexers and ordered signature handles implemented/tested; nongeneric signature descriptors implemented; properties, tuple metadata and nominal boundaries remain |
 | Structural builders | partial | Property/indexer descriptors, symbol keys, arrays and native signature forwarding implemented; tuple-based functions/constructors implemented; full signature descriptors implemented; general tuple metadata/spreads remain |
@@ -48,3 +48,9 @@ constraint contract. See [design decisions](design-notes.md).
   specialization. Separate calculator fixtures check empty input, missing operands
   and parentheses, division by zero, nonintegral division and trailing input at the
   importing application. This completes these examples, not the language matrix.
+
+* HTTP-route example source now executes directly (`example-http-routes`). Native
+  mapped parameter objects and handler signatures are asserted alongside route
+  splitting, typed parameters, unions and generic specialization. Native-island
+  negative fixtures check missing names, initialization, indexing, constraints and
+  distinct importing-application diagnostics.

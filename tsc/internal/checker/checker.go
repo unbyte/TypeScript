@@ -14297,6 +14297,9 @@ func (c *Checker) produceDeferredDiagnostics() {
 }
 
 func (c *Checker) addDiagnostic(diagnostic *ast.Diagnostic) *ast.Diagnostic {
+	if c.typefn != nil && c.typefn.vm != nil && c.typefn.vm.nativeIslandSite != nil {
+		diagnostic = c.typefn.vm.islandDiagnostic(diagnostic)
+	}
 	// Discard diagnostics created while at the maximum number of recursive TypeToString invocations.
 	if c.serializationLevel < maxSerializationLevel {
 		return c.diagnostics.Add(diagnostic)

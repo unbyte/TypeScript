@@ -1,0 +1,12 @@
+{
+  "files": {
+    "routes.ts": "../../../../docs/typefn/examples/http-routes.typefn",
+    "assertions.ts": "example-http-routes.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

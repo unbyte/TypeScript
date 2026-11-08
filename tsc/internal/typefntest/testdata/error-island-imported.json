@@ -1,0 +1,45 @@
+{
+  "files": {
+    "main.ts": "error-island-imported.ts",
+    "library.ts": "island-diagnostic-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2344,
+      "file": "main.ts",
+      "at": "Make<number>",
+      "message": "does not satisfy the constraint 'string'",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": 2344,
+          "file": "library.ts",
+          "at": "T>);",
+          "message": "does not satisfy the constraint 'string'"
+        }
+      ]
+    },
+    {
+      "phase": "semantic",
+      "code": 2344,
+      "file": "main.ts",
+      "at": "Make<boolean>",
+      "message": "does not satisfy the constraint 'string'",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": 2344,
+          "file": "library.ts",
+          "at": "T>);",
+          "message": "does not satisfy the constraint 'string'"
+        }
+      ]
+    }
+  ]
+}

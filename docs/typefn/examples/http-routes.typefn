@@ -1,4 +1,4 @@
-// R2 specification example, not executable by the current compiler.
+// Executable example; checked directly by the compiler integration harness.
 // Binding grammar and limitations are documented in ../manual.md.
 
 type HttpMethod = "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | "HEAD" | "OPTIONS";
