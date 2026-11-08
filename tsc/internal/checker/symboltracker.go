@@ -127,3 +127,10 @@ func (this *SymbolTrackerImpl) PopErrorFallbackNode() {
 	}
 	this.inner.PopErrorFallbackNode()
 }
+
+func (this *SymbolTrackerImpl) ReportTypefnRecipeError() {
+	this.onDiagnosticReported()
+	if this.inner != nil {
+		this.inner.ReportTypefnRecipeError()
+	}
+}

@@ -265,7 +265,7 @@ func (e *emitter) emitDeclarationFile(emitResolver printer.EmitResolver, sourceF
 		return
 	}
 
-	declBlocked := len(diags) > 0 && !e.forceEmit && e.emitOnly != EmitOnlyBuilderSignature
+	declBlocked := emitContext.TypefnDeclarationBlocked(sourceFile) || len(diags) > 0 && !e.forceEmit && e.emitOnly != EmitOnlyBuilderSignature
 	if declBlocked {
 		e.emitResult.EmitSkipped = true
 		return

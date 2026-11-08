@@ -1,0 +1,14 @@
+import type {Branch,Save,Result,Frozen,API,Unique,Native} from './out/library';
+import type {External} from './out/external';
+type Assert<T extends true>=T;
+type Equal<A,B>=(<T>()=>T extends A?1:2) extends (<T>()=>T extends B?1:2)?true:false;
+type Selected=Assert<Equal<Branch<"yes">,["yes","yes"]>>;
+type Expected = {dead:{dead:true};external:External;nominal:Native} & {[key in Unique]:0};
+type DeadBranch=Assert<Branch<0> extends Expected ? true : false>;
+type ExactBranch=Assert<Expected extends Branch<0> ? true : false>;
+type Captured=Assert<Equal<Frozen<number>,[string,number]>>;
+type Factory<T>=Branch<T>;
+type Replayed=Assert<Equal<Factory<"x">,["x","x"]>>;
+type Errors=Assert<Equal<Result<1>,{ok:true;value:1}|{ok:false;error:Error}>>;
+type Namespace=Assert<Equal<API.Wrap<true>,[true]>>;
+type Nominality=Assert<{} extends Native ? false : true>;

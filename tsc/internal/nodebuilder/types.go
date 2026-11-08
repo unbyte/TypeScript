@@ -16,6 +16,7 @@ type SymbolTracker interface {
 	ReportTruncationError()
 	ReportNonlocalAugmentation(containingFile *ast.SourceFile, parentSymbol *ast.Symbol, augmentingSymbol *ast.Symbol)
 	ReportNonSerializableProperty(propertyName string)
+	ReportTypefnRecipeError()
 
 	ReportInferenceFallback(node *ast.Node)
 	PushErrorFallbackNode(node *ast.Node)
@@ -76,4 +77,5 @@ const (
 	InternalFlagsDoNotIncludeSymbolChain InternalFlags = 1 << 2
 	InternalFlagsAllowUnresolvedNames    InternalFlags = 1 << 3
 	InternalFlagsRewriteModuleSpecifiers InternalFlags = 1 << 4
+	InternalFlagsTypefnDeclaration       InternalFlags = 1 << 5
 )

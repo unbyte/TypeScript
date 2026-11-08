@@ -1,0 +1,27 @@
+{
+  "files": {
+    "main.ts": "calculations.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true
+  },
+  "outputs": {
+    "out/main.js": "export {};\n",
+    "out/main.d.ts": "// @typefn-abi: 1\nexport typefn Double<T> {\n    return (T * 2);\n}\n"
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-recipe-simple-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

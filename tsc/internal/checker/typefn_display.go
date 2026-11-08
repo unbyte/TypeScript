@@ -3,11 +3,17 @@ package checker
 import (
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
+	"github.com/microsoft/TypeScript/tsc/internal/nodebuilder"
 )
 
 // Render deferred calculations as DSL expressions, rather than invented native
 // generic names. This is display-only; declaration recipes are still unsupported.
 func (b *NodeBuilderImpl) typefnTypeToTypeNode(t *Type) *ast.Node {
+	if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnDeclaration != 0 {
+		b.ctx.tracker.ReportTypefnRecipeError()
+		b.ctx.encounteredError = true
+		return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)
+	}
 	b.typefnDisplayDepth++
 	defer func() { b.typefnDisplayDepth-- }()
 	b.ctx.approximateLength += 4

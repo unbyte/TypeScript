@@ -503,6 +503,7 @@ const (
 	hasCommentRange emitNodeFlags = 1 << iota
 	hasSourceMapRange
 	hasTypefnABI
+	blockedTypefnDeclaration
 )
 
 type SnippetKind int
@@ -562,6 +563,15 @@ func (c *EmitContext) SetTypefnDeclarationABI(file *ast.SourceFile) {
 func (c *EmitContext) hasTypefnDeclarationABI(file *ast.SourceFile) bool {
 	info := c.emitNodes.TryGet(file.AsNode())
 	return info != nil && info.flags&hasTypefnABI != 0
+}
+
+// Invalid executable recipes are never published, including forced/builder emit.
+func (c *EmitContext) BlockTypefnDeclaration(file *ast.SourceFile) {
+	c.emitNodes.Get(file.AsNode()).flags |= blockedTypefnDeclaration
+}
+func (c *EmitContext) TypefnDeclarationBlocked(file *ast.SourceFile) bool {
+	info := c.emitNodes.TryGet(file.AsNode())
+	return info != nil && info.flags&blockedTypefnDeclaration != 0
 }
 
 func (c *EmitContext) EmitFlags(node *ast.Node) EmitFlags {

@@ -237,6 +237,7 @@ func createDiagnosticForNode(node *ast.Node, message *diagnostics.Message, args 
 }
 
 type SymbolTrackerSharedState struct {
+	invalidTypefnRecipe              bool
 	lateMarkedStatements             []*ast.Node
 	diagnostics                      []*ast.Diagnostic
 	getSymbolAccessibilityDiagnostic GetSymbolAccessibilityDiagnostic
@@ -255,4 +256,11 @@ func (s *SymbolTrackerSharedState) addDiagnostic(diag *ast.Diagnostic) {
 func NewSymbolTracker(host DeclarationEmitHost, resolver printer.EmitResolver, state *SymbolTrackerSharedState) *SymbolTrackerImpl {
 	tracker := &SymbolTrackerImpl{host: host, resolver: resolver, state: state, getIsolatedDeclarationError: createGetIsolatedDeclarationErrors(resolver)}
 	return tracker
+}
+
+func (s *SymbolTrackerImpl) ReportTypefnRecipeError() {
+	s.state.invalidTypefnRecipe = true
+	if location := s.errorLocation(); location != nil {
+		s.state.addDiagnostic(createDiagnosticForNode(location, diagnostics.NewAdHocMessage("typefn: inferred recipe requires an exportable annotation or helper")))
+	}
 }

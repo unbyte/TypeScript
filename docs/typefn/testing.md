@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 380 compiler fixtures (full harness, including three producer/consumer pairs). The harness checks complete
+* Passed: 388 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -18,13 +18,16 @@ against the language specification; these checks establish the boundaries below.
   `typeof` queries, mapped generic constraints and Type/value namespace separation.
   Authored declaration recipes test ABI headers, constructor captures and skipLibCheck;
   editor regressions check consumer diagnostic provenance in both query orders.
+  Generated declarations additionally exercise frozen captures, private helper visibility,
+  namespace scope, native identities and the calculator/route source modules.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
-  after native receiver capture, recovery-Type rejection and declaration ABI checks; optional-provenance assertions pass
+  after native receiver capture, recovery-Type rejection and declaration ABI checks.
+  Parser/binder/printer/checker/LS suites also pass at written-recipe emission; optional-provenance assertions pass
   in both exact-optional modes, and the added generic-body dependency assertion passes.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
-  baselines, rerun at recursive integration checkpoint `1a884501c`.
+  baselines, rerun after enabling written-recipe declaration emission.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
@@ -121,4 +124,4 @@ semantic errors, so emit-on-error and atomic suppression can be tested.
 Three harness regressions verify generic/nominal declaration consumption, a failed
 import of the absent producer source, and native declaration consumption following
 an allowed emit-on-error. They establish the harness; they do not yet demonstrate
-DSL declaration recipes.
+DSL declaration recipes; generated-recipe fixtures now use the same isolated consumer path.

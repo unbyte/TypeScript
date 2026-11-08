@@ -66,6 +66,7 @@ func isDeclarationAndNotVisible(emitContext *printer.EmitContext, resolver print
 		ast.KindInterfaceDeclaration,
 		ast.KindClassDeclaration,
 		ast.KindTypeAliasDeclaration,
+		ast.KindTypeFunctionDeclaration,
 		ast.KindJSTypeAliasDeclaration,
 		ast.KindEnumDeclaration:
 		return !resolver.IsDeclarationVisible(node)
@@ -109,6 +110,7 @@ func getBindingNameVisible(resolver printer.EmitResolver, elem *ast.Node) bool {
 func isEnclosingDeclaration(node *ast.Node) bool {
 	return ast.IsSourceFile(node) ||
 		ast.IsTypeAliasDeclaration(node) ||
+		ast.IsTypeFunctionDeclaration(node) ||
 		ast.IsJSTypeAliasDeclaration(node) ||
 		ast.IsModuleDeclaration(node) ||
 		ast.IsClassDeclaration(node) ||

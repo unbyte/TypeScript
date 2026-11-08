@@ -1,0 +1,32 @@
+{
+  "files": {
+    "library.ts": "declaration-recipes-producer.ts",
+    "external.ts": "declaration-recipes-external.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-declaration-private-helper-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": 2459,
+        "file": "consumer.ts",
+        "message": "declares"
+      }
+    ]
+  }
+}

@@ -67,6 +67,7 @@ type DeclarationTransformer struct {
 	resolver            printer.EmitResolver
 	declarationFilePath tspath.RootedFilePath
 
+	needsTypefnABI                   bool
 	needsDeclare                     bool
 	needsScopeFixMarker              bool
 	resultHasScopeMarker             bool
@@ -219,7 +220,7 @@ const declarationEmitNodeBuilderFlags = nodebuilder.FlagsMultilineObjectLiterals
 	nodebuilder.FlagsGenerateNamesForShadowedTypeParams |
 	nodebuilder.FlagsNoTruncation
 
-const declarationEmitInternalNodeBuilderFlags = nodebuilder.InternalFlagsAllowUnresolvedNames | nodebuilder.InternalFlagsRewriteModuleSpecifiers
+const declarationEmitInternalNodeBuilderFlags = nodebuilder.InternalFlagsAllowUnresolvedNames | nodebuilder.InternalFlagsRewriteModuleSpecifiers | nodebuilder.InternalFlagsTypefnDeclaration
 
 // functions as both `visitDeclarationStatements` and `transformRoot`, utilitzing SyntaxList nodes
 func (tx *DeclarationTransformer) visit(node *ast.Node) *ast.Node {
@@ -237,6 +238,7 @@ func (tx *DeclarationTransformer) visit(node *ast.Node) *ast.Node {
 		ast.KindClassDeclaration,
 		ast.KindJSTypeAliasDeclaration,
 		ast.KindTypeAliasDeclaration,
+		ast.KindTypeFunctionDeclaration,
 		ast.KindEnumDeclaration,
 		ast.KindVariableStatement,
 		ast.KindImportDeclaration,
@@ -338,6 +340,8 @@ func (tx *DeclarationTransformer) appendCjsExports(combinedStatements *ast.State
 }
 
 func (tx *DeclarationTransformer) transformSourceFile(node *ast.SourceFile) *ast.Node {
+	tx.needsTypefnABI = false
+	tx.state.invalidTypefnRecipe = false
 	tx.cjsExportAssignment = nil
 	tx.cjsExportAssignmentName = nil
 	tx.cjsExportMembers = nil
@@ -373,6 +377,12 @@ func (tx *DeclarationTransformer) transformSourceFile(node *ast.SourceFile) *ast
 	result.AsSourceFile().LibReferenceDirectives = tx.getLibReferences()
 	result.AsSourceFile().TypeReferenceDirectives = tx.getTypeReferences()
 	result.AsSourceFile().IsDeclarationFile = true
+	if tx.needsTypefnABI {
+		tx.EmitContext().SetTypefnDeclarationABI(result.AsSourceFile())
+	}
+	if tx.state.invalidTypefnRecipe {
+		tx.EmitContext().BlockTypefnDeclaration(result.AsSourceFile())
+	}
 	result.AsSourceFile().ReferencedFiles = tx.getReferencedFiles(tx.declarationFilePath.Directory())
 	return result.AsNode()
 }
@@ -1781,6 +1791,8 @@ func (tx *DeclarationTransformer) transformTopLevelDeclaration(input *ast.Node) 
 
 	var result *ast.Node
 	switch input.Kind {
+	case ast.KindTypeFunctionDeclaration:
+		result = tx.transformTypeFunctionDeclaration(input)
 	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
 		result = tx.transformTypeAliasDeclaration(input.AsTypeAliasDeclaration())
 	case ast.KindInterfaceDeclaration:
@@ -1808,6 +1820,7 @@ func (tx *DeclarationTransformer) transformTopLevelDeclaration(input *ast.Node) 
 }
 
 func (tx *DeclarationTransformer) transformTypeAliasDeclaration(input *ast.TypeAliasDeclaration) *ast.Node {
+	tx.checkTypefnDeclaration(input.AsNode())
 	tx.needsDeclare = false
 	t := tx.Visitor().Visit(input.Type)
 	if t == nil {
@@ -2705,6 +2718,10 @@ func (tx *DeclarationTransformer) stripDeclareModifiers(node *ast.Node) *ast.Nod
 }
 
 func (tx *DeclarationTransformer) visitCJSExportAssignments(expression *ast.Node) *ast.Node {
+	// DSL bodies contain type calculations, never runtime export assignments.
+	if ast.IsTypeFunctionNode(expression) {
+		return expression
+	}
 	if expression != nil {
 		_, cleanupDiagnosticContext := tx.setupDiagnosticContext(expression)
 		defer cleanupDiagnosticContext()
@@ -2725,6 +2742,10 @@ func (tx *DeclarationTransformer) visitCJSExportAssignments(expression *ast.Node
 }
 
 func (tx *DeclarationTransformer) visitNestedExpression(expression *ast.Node) *ast.Node {
+	// DSL bodies contain type calculations, never runtime export assignments.
+	if ast.IsTypeFunctionNode(expression) {
+		return expression
+	}
 	if expression != nil {
 		_, cleanupDiagnosticContext := tx.setupDiagnosticContext(expression)
 		defer cleanupDiagnosticContext()

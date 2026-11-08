@@ -47,8 +47,9 @@ type Result = Reverse<Range<4>>; // [3, 2, 1, 0]
 
 Native Type assertions, assignments, type-only imports and re-exports consume the
 results through the actual checker. JavaScript emit erases the declarations.
-Declaration emit currently fails explicitly: source-recipe serialization must be
-implemented before executable definitions can be published safely in `.d.ts` files.
+Declaration emit preserves written typefn bodies, constructor aliases and their
+lexical dependencies with ABI 1. Inferred escaping recipes, full dependency-failure
+handling and declaration source maps still need further implementation and validation.
 
 ## Implemented architecture
 
@@ -637,13 +638,25 @@ diagnostics; the recovery regression previously executed an invalid definition.
 The integration harness now supports a declaration-only consumer in a fresh checker
 and filesystem. It transfers emitted declaration bytes, never producer ASTs or
 sources. Native controls test nominal/generic behavior, unavailable producer-source
-imports and emit-on-error. DSL recipe support remains pending until the same path
-passes its source/declaration equivalence cases.
+imports and emit-on-error. The same path now tests generated DSL recipes.
 
 Authored declaration files now enforce ABI 1 before DSL execution. The parser
 checks definitions; the checker also validates constructor-valued aliases and
 cached programs at consumer use sites. Missing, conflicting and unsupported
 headers fail with `skipLibCheck` enabled. Consumer diagnostics retain producer
 provenance, including hover-before-diagnostics requests. Native-only declaration
-files need no header. This establishes consumption of authored recipes; generated
-recipe emission and capture lifting remain pending.
+files need no header. Generated recipes use a printer marker that survives comment
+removal and does not leak into unrelated files.
+
+Written typefn declarations now emit source-equivalent bodies through the native
+declaration transformer. Lexical dependency tracking retains private helpers,
+imports, native nominal classes and unique-symbol declarations, including references
+in unselected branches and native islands. Source recipes preserve closure capture
+timing, namespace scope and constructor-valued aliases. Fresh consumers test the
+calculator and HTTP-route modules directly, generic replay, private-helper visibility,
+comment removal and aliases emitted in a separate module from their factory.
+Invalid compiled recipes suppress the affected declaration output while independent
+native files can emit. Pending display-only Types cannot be serialized as invented
+declaration syntax: inferred escaping recipes currently require a nameable source
+annotation/helper. Complete inferred-recipe lifting, dependency closure validation
+(including stripInternal), source maps, redirects and cancellation remain open.

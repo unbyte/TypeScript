@@ -1,0 +1,25 @@
+{
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "files": {
+    "provider.ts": "declaration-recipe-alias-provider.ts",
+    "library.ts": "declaration-recipe-alias-producer.ts"
+  },
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-recipe-alias-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

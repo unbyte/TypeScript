@@ -1,0 +1,26 @@
+{
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "files": {
+    "routes.ts": "../../../../docs/typefn/examples/http-routes.typefn"
+  },
+  "consumer": {
+    "files": {
+      "out/assertions.ts": "example-http-routes.ts",
+      "out/references.ts": "declaration-recipe-http-routes-reference.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "rootDir": "."
+    },
+    "diagnostics": []
+  }
+}

@@ -32,9 +32,10 @@ The [editor project](examples/editor/README.md) runs with the implemented compil
 The [calculator](examples/calculator.typefn) and [numbers](examples/numbers.typefn)
 are executable modules: the integration harness reads these exact files as TypeScript
 and checks their native results, including generic specialization and invalid inputs.
-Copy them to `.ts` files to use them in an enabled project. The
-[HTTP routes](examples/http-routes.typefn) and [construction](examples/construction.typefn)
-remain target-design examples, not executable conformance fixtures.
+Copy them to `.ts` files to use them in an enabled project.
+[HTTP routes](examples/http-routes.typefn) also executes in the harness. Calculator
+and route tests additionally consume their emitted declarations in fresh checkers.
+[Construction](examples/construction.typefn) remains a target-design example.
 
 Superseded drafts, full research reports and historical validation journals remain
 in the [preserved snapshot](https://github.com/unbyte/TypeScript/tree/7fe54fd975b95531092485468ac5677ed3a453fc/docs/typefn) on

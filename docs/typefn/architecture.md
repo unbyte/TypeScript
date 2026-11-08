@@ -43,6 +43,7 @@ All modules below are private to `tsc/internal/checker`:
 | `typefn_properties.go` | Public property projection and declared/optional-read provenance |
 | `typefn_state.go` | Lazy checker-owned tables and active root VM |
 | `typefn_display.go`, `typefn_services.go` | Pending display, signatures and cancelable result queries |
+| `typefn_abi.go`, `typefn_emit.go` | Declaration ABI validation, lexical recipe dependencies and emit validation |
 
 Registers hold explicit VM values containing a native Type or helper closure.
 Native operations check that boundary before using operands. Assignment
@@ -108,7 +109,10 @@ the existing composite-cache fast paths.
 ## Emit, editor and API
 
 The source printer round-trips DSL nodes. JavaScript emit erases declarations;
-declaration emit diagnoses until executable source recipes can be serialized.
+declaration emit preserves written recipes and retains lexical dependencies through
+native declaration visibility. ABI and invalid-recipe markers live in the emit
+context, so comment removal cannot remove the ABI and forced emit cannot publish
+a recipe marked invalid. Inferred-recipe lifting remains incomplete.
 Normal imports, namespaces, aliases and symbol identities supply composition.
 
 Editor providers use native symbols, source mappings and scanner tokens. Completed

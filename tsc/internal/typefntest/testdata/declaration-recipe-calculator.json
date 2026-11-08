@@ -1,0 +1,25 @@
+{
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "files": {
+    "calculator.ts": "../../../../docs/typefn/examples/calculator.typefn"
+  },
+  "consumer": {
+    "files": {
+      "out/assertions.ts": "example-calculator.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "rootDir": "."
+    },
+    "diagnostics": []
+  }
+}

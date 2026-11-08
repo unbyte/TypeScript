@@ -1,0 +1,31 @@
+{
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "bad.ts",
+      "message": "assignment requires a mutable local binding"
+    },
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "bad.ts",
+      "message": "cannot emit an invalid declaration recipe"
+    }
+  ],
+  "files": {
+    "bad.ts": "error-declaration-invalid-recipe.ts",
+    "native.ts": "declaration-independent-native.ts"
+  },
+  "outputs": {
+    "out/native.d.ts": "export type Valid = 1;\n"
+  },
+  "emitSkipped": true
+}

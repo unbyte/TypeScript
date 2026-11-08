@@ -902,3 +902,7 @@ func getExistingNodeTreeVisitor(b *NodeBuilderImpl, bound *recoveryBoundary) *as
 	})
 	return visitor
 }
+
+func (w *wrappingTracker) ReportTypefnRecipeError() {
+	w.bound.markError(w.wrapped.ReportTypefnRecipeError)
+}
