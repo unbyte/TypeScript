@@ -3113,11 +3113,13 @@ func (c *Checker) checkTypeReferenceOrImport(node *ast.Node) {
 }
 
 func (c *Checker) checkTypeArgumentConstraints(node *ast.Node, typeParameters []*Type) bool {
-	// A deferred native application owns the constraint check and will repeat it
-	// on substitution. It is not an unconditional successful constraint proof.
-	resultType := c.getTypeFromTypeNode(node)
-	if resultType.flags&TypeFlagsTypefn != 0 && resultType.asTypefnTerm().kind == typefnNativeCallTerm {
-		return true
+	if c.compilerOptions.GetTypefnVersion() == 1 {
+		// A deferred native application owns the constraint check and will repeat it
+		// on substitution. It is not an unconditional successful constraint proof.
+		resultType := c.getTypeFromTypeNode(node)
+		if resultType.flags&TypeFlagsTypefn != 0 && resultType.asTypefnTerm().kind == typefnNativeCallTerm {
+			return true
+		}
 	}
 	var typeArguments []*Type
 	var mapper *TypeMapper
@@ -17657,7 +17659,7 @@ func (c *Checker) getTypeParametersForTypeReferenceOrImport(node *ast.Node) []*T
 }
 
 func (c *Checker) getTypeParametersForTypeAndSymbol(t *Type, symbol *ast.Symbol) []*Type {
-	if core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil {
+	if c.compilerOptions.GetTypefnVersion() == 1 && core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil {
 		return nil
 	} // The VM checks declared bounds, not parameters of the returned Type.
 	if !c.isErrorType(t) {
@@ -23948,14 +23950,16 @@ func (c *Checker) getTypeReferenceType(node *ast.Node, symbol *ast.Symbol) *Type
  * Get type from type-reference that reference to class or interface
  */
 func (c *Checker) getTypeFromClassOrInterfaceReference(node *ast.Node, symbol *ast.Symbol) (result *Type) {
-	if pending := c.pendingTypefnNativeApplication(node, symbol); pending != nil {
-		return pending
+	if c.compilerOptions.GetTypefnVersion() == 1 {
+		if pending := c.pendingTypefnNativeApplication(node, symbol); pending != nil {
+			return pending
+		}
+		defer func() {
+			args, _ := c.typefnNativeArguments(node, symbol)
+			_, checks := c.splitTypefnOperands(args)
+			result = c.guardTypefn(result, checks)
+		}()
 	}
-	defer func() {
-		args, _ := c.typefnNativeArguments(node, symbol)
-		_, checks := c.splitTypefnOperands(args)
-		result = c.guardTypefn(result, checks)
-	}()
 	t := c.getDeclaredTypeOfClassOrInterface(c.getMergedSymbol(symbol))
 	d := t.AsInterfaceType()
 	typeParameters := d.LocalTypeParameters()
@@ -24367,15 +24371,17 @@ func (c *Checker) getTupleElementType(t *Type, index int) *Type {
  * declared type. Instantiations are cached using the type identities of the type arguments as the key.
  */
 func (c *Checker) getTypeFromTypeAliasReference(node *ast.Node, symbol *ast.Symbol) *Type {
-	if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration); declaration != nil {
-		if node.TypeArgumentList() == nil {
-			c.typefnError(node, "constructor values are not implemented yet; use an explicit application")
-			return c.errorType
+	if c.compilerOptions.GetTypefnVersion() == 1 {
+		if declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration); declaration != nil {
+			if node.TypeArgumentList() == nil {
+				c.typefnError(node, "constructor values are not implemented yet; use an explicit application")
+				return c.errorType
+			}
+			return c.evaluateTypefn(node, declaration, c.getTypeArgumentsFromNode(node))
 		}
-		return c.evaluateTypefn(node, declaration, c.getTypeArgumentsFromNode(node))
-	}
-	if pending := c.pendingTypefnNativeApplication(node, symbol); pending != nil {
-		return pending
+		if pending := c.pendingTypefnNativeApplication(node, symbol); pending != nil {
+			return pending
+		}
 	}
 	typeArguments := node.TypeArguments()
 	if symbol.CheckFlags()&ast.CheckFlagsUnresolved != 0 {
@@ -24658,12 +24664,14 @@ func (c *Checker) getDeclaredTypeOfTypeParameter(symbol *ast.Symbol) *Type {
 }
 
 func (c *Checker) getDeclaredTypeOfTypeAlias(symbol *ast.Symbol) *Type {
-	if core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration) != nil {
-		return c.errorType
-	}
+	if c.compilerOptions.GetTypefnVersion() == 1 {
+		if core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration) != nil {
+			return c.errorType
+		}
 
-	if core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil {
-		return c.errorType
+		if core.Find(symbol.Declarations(), ast.IsTypeFunctionDeclaration) != nil {
+			return c.errorType
+		}
 	}
 	links := c.typeAliasLinks.Get(symbol)
 	if links.declaredType == nil {

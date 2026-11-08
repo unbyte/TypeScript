@@ -52,6 +52,9 @@ func (c *Checker) guardTypefn(shape *Type, checks []*Type) *Type {
 	if shape == nil || c.isErrorType(shape) {
 		return shape
 	}
+	if len(checks) == 0 && shape.flags&TypeFlagsTypefn == 0 {
+		return shape
+	}
 	shape, own := splitTypefn(shape)
 	if len(checks) == 0 {
 		checks = own
@@ -84,11 +87,18 @@ func (c *Checker) guardTypefn(shape *Type, checks []*Type) *Type {
 }
 
 func (c *Checker) splitTypefnOperands(types []*Type) ([]*Type, []*Type) {
+	profileEnabled := c.compilerOptions.GetTypefnVersion() == 1
+	// A checker without DSL state cannot own any deferred terms. Preserve the
+	// native hot path, but still propagate recovery errors in enabled projects.
+	if c.typefn == nil && !profileEnabled {
+		return types, nil
+	}
+
 	var values []*Type
 	var checks []*Type
 	for i, t := range types {
 		value, requirements := splitTypefn(t)
-		if c.compilerOptions.GetTypefnVersion() == 1 && c.isErrorType(t) {
+		if profileEnabled && c.isErrorType(t) {
 			requirements = []*Type{t}
 		}
 		if len(requirements) != 0 {
