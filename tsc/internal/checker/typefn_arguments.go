@@ -9,6 +9,11 @@ import (
 // Constructor arguments bypass the native Type cache and never masquerade as Types.
 func (c *Checker) evaluateTypefnReference(node, declaration *ast.Node) *Type {
 	return c.runTypefn(node, func(v *typefnVM) *Type {
+		// Native AST caches describe their source scope, never an incidental VM
+		// caller. Instantiation specializes the resulting Type/closure recipe.
+		savedMapper := v.nativeMapper
+		v.nativeMapper = nil
+		defer func() { v.nativeMapper = savedMapper }()
 		p := c.compileTypefn(declaration)
 		args := v.nativeArguments(node, p)
 		if v.failed {
@@ -77,7 +82,7 @@ func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnVa
 			v.error(node, "constructor argument kind or arity does not match the parameter")
 			return typefnValue{}
 		}
-		return typefnValue{closure: v.c.internTypefnConstructor(nil, native, typefnTypeValues(native.outer))}
+		return typefnValue{closure: v.captureNativeConstructor(native)}
 	}
 	p := v.c.compileTypefn(declaration)
 	if !p.valid {
@@ -90,7 +95,7 @@ func (v *typefnVM) nativeConstructorArgument(node *ast.Node, arity int) typefnVa
 			v.error(node, "a first-class constructor must accept only Types and return a Type")
 			return typefnValue{}
 		}
-		value.closure = v.c.internTypefnClosure(p, nil)
+		value.closure = v.captureHelper(p, nil)
 	} else {
 		value = v.nativeFactoryArgument(node, p, nil, arity)
 	}

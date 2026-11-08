@@ -165,7 +165,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 299 fixtures covering native calibration, execution,
+The compiler-project harness has 302 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -478,3 +478,21 @@ parenthesized constructor arguments. Tests cover local factories/combinators,
 constraints, self calls, snapshot reassignment, generic replay, dead-code errors
 and native editor navigation before/after execution. Shadowed native binders do
 not create phantom transitive DSL captures.
+
+Typefns nested in native generic scopes now retain native lexical parameters as
+implicit immutable environment inputs. A blocked zero-argument call therefore
+has substitution dependencies even when it produced no Type-valued operand before
+blocking. Native mappers specialize those environments before bounds/body execution;
+sibling calls and returned closures inherit the captured binder identities. Direct
+native applications share the native-constructor adapter for mapped outer bounds
+and defaults. These cases cover DSL expressions and direct constructor applications;
+ambient native island references and value queries still require their own bridge.
+
+Native source evaluation deliberately clears the incidental VM invocation mapper.
+Native alias declared-Type and constructor caches therefore retain their defining
+environment; DSL consumers obtain a mapped immutable closure view. Query-order
+regressions force specialization before native source declaration checks and
+verify that two different outer substitutions cannot contaminate each other.
+Tests also cover nested native generic functions, class methods and actual bound
+failures after specialization. Native mapper backing storage is charged with the
+invocation frame, and native constructor snapshots charge their temporary storage.

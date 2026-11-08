@@ -48,7 +48,10 @@ type typefnExpression struct {
 	args              []*typefnExpression
 	keys              []*typefnExpression
 }
-type typefnCapture struct{ source, target int }
+type typefnCapture struct {
+	source, target int
+	native         *Type
+}
 
 type typefnProgram struct {
 	declaration            *ast.Node
@@ -59,6 +62,8 @@ type typefnProgram struct {
 	selfSlot               int
 	local                  bool
 	captures               []typefnCapture
+	nativeOuter            []*Type
+	nativeSlots            []int
 	bounds                 []*typefnExpression
 	parameterKinds         []*typefnKind
 	resultKind             *typefnKind
@@ -529,6 +534,16 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 			self := map[string]typefnBinding{node.Name().Text(): {slot: p.selfSlot, symbol: node.Symbol(), helper: p, kind: typefnConstructorKind(len(node.TypeParameters()))}}
 			b.scopes = append([]map[string]typefnBinding{self}, b.scopes...)
 		}
+	}
+	// Native lexical parameters are implicit immutable environment inputs.
+	// Retain them even when a zero-argument invocation blocks before producing a
+	// Type expression that would otherwise carry its substitution dependencies.
+	p.nativeOuter = c.getOuterTypeParameters(node, true)
+	for _, native := range p.nativeOuter {
+		slot := p.slots
+		p.slots++
+		p.nativeSlots = append(p.nativeSlots, slot)
+		p.captures = append(p.captures, typefnCapture{source: -1, target: slot, native: native})
 	}
 	p.bounds = make([]*typefnExpression, len(node.TypeParameters()))
 	for i, parameter := range node.TypeParameters() {

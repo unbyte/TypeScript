@@ -82,7 +82,11 @@ func (v *typefnVM) captureHelper(p *typefnProgram, registers []typefnValue) *typ
 		if !v.step(p.declaration) {
 			return nil
 		}
-		captures[i] = registers[capture.source]
+		if capture.native != nil {
+			captures[i].native = v.mapNative(capture.native)
+		} else {
+			captures[i] = registers[capture.source]
+		}
 	}
 	return v.c.internTypefnClosure(p, captures)
 }

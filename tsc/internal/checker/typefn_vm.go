@@ -39,6 +39,7 @@ type typefnVM struct {
 	rootSite            *ast.Node
 	replaySite          *ast.Node
 	nativeIslandSite    *ast.Node
+	nativeMapper        *TypeMapper
 }
 
 func (c *Checker) evaluateTypefn(node, declaration *ast.Node, args []*Type) *Type {
@@ -160,16 +161,21 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []typefnVal
 }
 
 func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, closure *typefnClosure) (result typefnValue) {
-	// Module helpers have no captured environment. Canonicalize direct and
-	// constructor-valued applications to the same call recipe and cycle identity.
-	if closure != nil && !closure.program.local {
-		closure = nil
-	}
 	var p *typefnProgram
 	if closure != nil {
 		p = closure.program
 	} else {
 		p = v.c.compileTypefn(declaration)
+	}
+	if closure == nil && !p.local && len(p.captures) != 0 {
+		closure = v.captureHelper(p, nil)
+	}
+	if v.failed {
+		return typefnValue{native: v.c.errorType}
+	}
+	// Only truly environment-free helpers canonicalize to a declaration alone.
+	if closure != nil && !p.local && len(p.captures) == 0 {
+		closure = nil
 	}
 	originalArgs := args
 	savedChecks, savedSet, savedBlocked := v.checks, v.checkSet, v.blocked
@@ -245,7 +251,7 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, cl
 	// Charge register/argument backing storage and iterator slots, in addition to
 	// the existing fixed bookkeeping allowance. No iterator storage is allocated
 	// for programs that do not iterate.
-	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof(typefnValue{})) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
+	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof(typefnValue{})) + len(p.nativeOuter)*int(unsafe.Sizeof((*Type)(nil))) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
 	if frameBytes > v.limits.LiveBytes-v.liveBytes {
 		return typefnValue{native: v.error(node, "live VM allocation limit exceeded")}
 	}
@@ -267,6 +273,16 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, cl
 			registers[capture.target] = closure.captures[i]
 		}
 	}
+	savedMapper := v.nativeMapper
+	v.nativeMapper = nil
+	if len(p.nativeOuter) != 0 {
+		values := make([]*Type, len(p.nativeOuter))
+		for i, slot := range p.nativeSlots {
+			values[i] = registers[slot].native
+		}
+		v.nativeMapper = newTypeMapper(p.nativeOuter, values)
+	}
+	defer func() { v.nativeMapper = savedMapper }()
 	if !v.inputConstraints(node, p, registers, args) {
 		return typefnValue{native: v.c.errorType}
 	}

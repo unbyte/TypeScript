@@ -136,6 +136,10 @@ func (v *typefnVM) applyNativeConstructor(node *ast.Node, closure *typefnClosure
 		}
 	}
 	declared := v.c.getDeclaredTypeOfSymbol(code.symbol)
+	if v.c.isErrorType(declared) {
+		v.failed = true
+		return v.c.errorType
+	}
 	if code.symbol.Flags()&ast.SymbolFlagsTypeAlias != 0 {
 		if len(code.outer) == 0 || declared == v.c.intrinsicMarkerType {
 			if len(code.parameters) == 0 {

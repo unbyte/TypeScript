@@ -94,7 +94,9 @@ func (v *typefnVM) constructorAlias(alias *typefnAlias) *typefnClosure {
 		return nil
 	}
 	alias.evaluating = true
-	defer func() { alias.evaluating = false }()
+	savedMapper := v.nativeMapper
+	v.nativeMapper = nil
+	defer func() { alias.evaluating = false; v.nativeMapper = savedMapper }()
 	node := ast.SkipTypeParentheses(alias.declaration.Type())
 	value := v.nativeConstructorArgument(node, alias.kind.resolved()-1)
 	if v.failed || v.blocked {

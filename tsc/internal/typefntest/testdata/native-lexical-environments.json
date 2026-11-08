@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "native-lexical-environments.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

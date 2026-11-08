@@ -1,20 +1,21 @@
 # Testing and validation
 
 Latest verification recorded on 2026-11-08, including mixed constructor arguments, native
-constructors, nongeneric constructor aliases and native island capture bridges. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
+constructors, native island capture bridges and native lexical invocation environments. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 299 isolated compiler-project fixtures in the full harness run. The harness checks complete
+* Passed: 302 isolated compiler-project fixtures in the full harness run. The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
   creation-check readiness, computed bounds, mixed constructor arguments, native
   constructor identity, dependent bounds, lexical capture substitution, constructor
-  aliases, forward chains, imports, creation cycles and native island constructors.
+  aliases, forward chains, imports, creation cycles, native island constructors and
+  native lexical replay with query-order isolation.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
-  after native island constructor support.
+  after native lexical invocation environment support.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
   baselines, rerun after native constructor aliases.

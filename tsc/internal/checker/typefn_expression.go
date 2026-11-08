@@ -37,6 +37,14 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 		if v.failed {
 			return typefnValue{native: v.c.errorType}
 		}
+		// A native alias caches its defining environment. A DSL use selects a
+		// mapped immutable view without mutating that declaration's cache.
+		if v.nativeMapper != nil {
+			closure = v.c.instantiateTypefnClosure(closure, v.nativeMapper)
+		}
+		if v.failed {
+			return typefnValue{native: v.c.errorType}
+		}
 		if e.node.Kind == ast.KindTypeFunctionName {
 			value.closure = closure
 		} else {
@@ -50,12 +58,12 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 			value.native = v.applyConstructor(e.node, closure, args)
 		}
 	} else if e.nativeConstructor != nil {
-		value.closure = v.c.internTypefnConstructor(nil, e.nativeConstructor, typefnTypeValues(e.nativeConstructor.outer))
+		value.closure = v.captureNativeConstructor(e.nativeConstructor)
 	} else if e.helper != nil {
 		if e.helper.local {
 			value = typefnValue{closure: v.captureHelper(e.helper, slots)}
 		} else {
-			value = typefnValue{closure: v.c.internTypefnClosure(e.helper, nil)}
+			value = typefnValue{closure: v.captureHelper(e.helper, nil)}
 		}
 	} else {
 		value = typefnValue{native: v.expressionWorker(e, slots)}
