@@ -164,7 +164,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 337 fixtures covering native calibration, execution,
+The compiler-project harness has 338 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -561,3 +561,9 @@ only the output-reachable graph is materialized: discarded valid builders do not
 introduce phantom native generic parameters. Regressions cover both discarded
 failures and a generic-body reflection assertion that resolves without depending
 on the unused builder's symbolic leaf.
+
+Closures created inside a recursive arena charge storage to that arena rather than
+the ordinary retained constructor cache. Their live charge is released together
+with the arena on sealing, failure or deferral. A regression performs 100 separate
+recursive constructions under a 4 KiB live budget; the same case previously
+exhausted the budget by retaining charges for discarded private closures.

@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.ts": "recursive-scratch-lifetime.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "liveBytes": 4096
+      }
+    }
+  },
+  "diagnostics": []
+}

@@ -59,8 +59,14 @@ func (c *Checker) internTypefnConstructor(p *typefnProgram, native *typefnNative
 		return value
 	}
 	if state.vm != nil {
-		if !state.vm.allocate(node, len(captures)+1) || !state.vm.reserveValues(node, len(captures)*int(unsafe.Sizeof(typefnValue{}))+int(unsafe.Sizeof(typefnClosure{}))) {
+		size := len(captures)*int(unsafe.Sizeof(typefnValue{})) + int(unsafe.Sizeof(typefnClosure{}))
+		if !state.vm.allocate(node, len(captures)+1) || !state.vm.reserveValues(node, size) {
 			return nil
+		}
+		if private {
+			// These closures are not retained by the ordinary intern cache. Their
+			// live storage ends with the arena, including on failure or deferral.
+			state.vm.construction.bytes += size
 		}
 	}
 	if state.closures == nil {
