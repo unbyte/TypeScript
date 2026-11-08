@@ -796,7 +796,7 @@ func (c *Checker) inferFromObjectTypes(n *InferenceState, source *Type, target *
 								endIndex := sourceArity - getEndElementCount(target.TargetTupleType(), ElementFlagsFixed)
 								startIndex := endIndex - impliedArity
 								if startIndex >= startLength {
-									trailingSlice := c.createTupleTypeEx(c.getTypeArguments(source)[startIndex:endIndex], source.TargetTupleType().elementInfos[startIndex:endIndex], false /*readonly*/)
+									trailingSlice := c.copyTupleTypeRange(source, startIndex, endIndex, false /*readonly*/)
 									if restType := c.getElementTypeOfSliceOfTupleType(source, startLength, endLength+impliedArity, false, false); restType != nil {
 										c.inferFromTypes(n, restType, elementTypes[startLength])
 									}

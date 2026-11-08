@@ -1,9 +1,10 @@
 package checker
 
 import (
+	"testing"
+
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
-	"testing"
 )
 
 func TestTypefnTupleMetadataViews(t *testing.T) {
@@ -46,6 +47,14 @@ func TestTypefnTupleNormalizationRetainsDeclaredValues(t *testing.T) {
 	target := c.getTupleTargetType([]TupleElementInfo{{flags: ElementFlagsOptional}}, false)
 	implicit := c.createNormalizedTupleTypeWithDeclared(target, []*Type{optionalRead}, []*Type{types[0]}, ObjectFlagsNone)
 	explicit := c.createNormalizedTupleTypeWithDeclared(target, []*Type{optionalRead}, []*Type{optionalRead}, ObjectFlagsNone)
+	clone := c.cloneTypeReference(implicit)
+	if c.typefnTupleDeclared(clone)[0] != types[0] {
+		t.Fatal("native tuple clone lost declared values")
+	}
+	copy := c.copyTupleTypeRange(implicit, 0, 1, true)
+	if c.typefnTupleDeclared(copy)[0] != types[0] || !copy.TargetTupleType().readonly {
+		t.Fatal("native tuple copy lost declared values or readonly flag")
+	}
 	if implicit == explicit {
 		t.Fatal("native optional-read interning erased declared undefined")
 	}

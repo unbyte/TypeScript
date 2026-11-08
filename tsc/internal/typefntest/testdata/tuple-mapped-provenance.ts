@@ -28,3 +28,18 @@ type ReplayNever = Assert<Equal<Pending<never>['elements'][1]['value'],never>>;
 type Nested<T> = Readonly<Partial<T>>;
 type NestedIdentity = Assert<Equal<Reflect<Nested<Input>>['elements'][1]['value'],number>>;
 type Empty = Assert<Equal<Rebuild<Partial<[]>>,[]>>;
+
+// Native inference and literal tuple copies retain the originating declaration.
+type Tail<T extends unknown[]> = T extends [unknown,...infer R] ? R : never;
+type TailValue = Assert<Equal<Reflect<Tail<[0,a?:string,b?:number|undefined]>>['elements'][0]['value'],string>>;
+type TailExplicit = Assert<Equal<Reflect<Tail<[0,a?:string,b?:number|undefined]>>['elements'][1]['value'],number|undefined>>;
+declare const optional: readonly [a?:string,b?:number|undefined];
+const copied = [...optional] as const;
+type LiteralCopy = Assert<Equal<Reflect<typeof copied>['elements'][0]['value'],string>>;
+type LiteralExplicit = Assert<Equal<Reflect<typeof copied>['elements'][1]['value'],number|undefined>>;
+declare function collect<T extends unknown[]>(...args:T):T;
+const collected = collect(...optional);
+// Native call-spread inference makes these positional arguments required.
+type MutableCopy = Assert<Equal<Reflect<typeof collected>['elements'][0]['value'],string|undefined>>;
+type MutableMode = Assert<Equal<Reflect<typeof collected>['elements'][0]['mode'],'required'>>;
+type MutableExplicit = Assert<Equal<Reflect<typeof collected>['elements'][1]['value'],number|undefined>>;

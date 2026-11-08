@@ -310,8 +310,8 @@ from native read arguments. Immutable metadata views share native tuple targets 
 semantic arguments, are interned per checker and participate in TypeMapper replay.
 Unit tests cover distinct declared values with equal read Types, snapshot isolation,
 reuse, spreads and optional-to-required normalization. Untracked native producers
-retain an explicit unavailable-provenance marker; tuple descriptor APIs and coverage
-of those producers are the next steps.
+retain an explicit unavailable-provenance marker until their producer adapters
+are implemented and tested.
 
 `reflect.tuple` and `types.tuple` now implement the descriptor schema for known
 native tuple shapes. They preserve declared required/optional values, labels,
@@ -323,5 +323,7 @@ symbolic value/shape replay, optional never/undefined and invalid descriptors.
 Native homomorphic tuple mappings now retain declared values through identity
 projections (Partial/Readonly) and compute other templates before optional-read
 wrapping. Tests cover both exact-optional modes, transformed templates, explicit
-undefined, labels and generic replay. Native inferred/copied tuple producers still
-need provenance adapters.
+undefined, labels and generic replay. Native tuple slicing, inference slices,
+readonly-to-mutable copies, normalization, widening and literal clones carry provenance
+without changing native element read Types. Fresh native tuple inference producers
+still need provenance adapters.

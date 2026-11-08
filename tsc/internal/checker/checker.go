@@ -17327,6 +17327,7 @@ func (c *Checker) padTupleType(t *Type, pattern *ast.Node) *Type {
 		return t
 	}
 	elementTypes := slices.Clone(c.getElementTypes(t))
+	declared := slices.Clone(c.typefnTupleDeclaredIfEnabled(t))
 	elementInfos := slices.Clone(t.TargetTupleType().elementInfos)
 	for i := c.getTypeReferenceArity(t); i < len(patternElements); i++ {
 		e := patternElements[i]
@@ -17336,13 +17337,16 @@ func (c *Checker) padTupleType(t *Type, pattern *ast.Node) *Type {
 				elementType = c.getTypeFromBindingElement(e, false /*includePatternInType*/, false /*reportErrors*/)
 			}
 			elementTypes = append(elementTypes, elementType)
+			if declared != nil {
+				declared = append(declared, elementType)
+			}
 			elementInfos = append(elementInfos, TupleElementInfo{flags: ElementFlagsOptional})
 			if !ast.IsOmittedExpression(e) && !c.hasDefaultValue(e) {
 				c.reportImplicitAny(e, c.anyType, WideningKindNormal)
 			}
 		}
 	}
-	return c.createTupleTypeEx(elementTypes, elementInfos, t.TargetTupleType().readonly)
+	return c.createTupleTypeWithDeclared(elementTypes, elementInfos, t.TargetTupleType().readonly, declared)
 }
 
 func (c *Checker) widenTypeInferredFromInitializer(declaration *ast.Node, t *Type) *Type {
@@ -18884,6 +18888,15 @@ func (c *Checker) getWidenedTypeWithContext(t *Type, context *WideningContext) *
 			result = c.getIntersectionType(core.SameMap(t.Types(), c.getWidenedType))
 		case c.isArrayOrTupleType(t):
 			result = c.createTypeReference(t.Target(), core.SameMap(c.getTypeArguments(t), c.getWidenedType))
+			if declared := c.typefnTupleDeclaredIfEnabled(t); declared != nil {
+				widened := core.SameMap(declared, func(value *Type) *Type {
+					if value == nil {
+						return nil
+					}
+					return c.getWidenedType(value)
+				})
+				result = c.withTypefnTupleDeclared(result, widened)
+			}
 		}
 		if result != nil && context == nil {
 			c.cachedTypes[CachedTypeKey{kind: CachedTypeKindWidened, typeId: t.id}] = result
@@ -23406,13 +23419,7 @@ func (c *Checker) instantiateMappedTupleType(tupleType *Type, mappedType *Type, 
 	if slices.Contains(newElementTypes, c.errorType) {
 		return c.errorType
 	}
-	if declared != nil {
-		target := c.getTupleTargetType(newElementInfos, newReadonly)
-		if target.objectFlags&ObjectFlagsTuple != 0 {
-			return c.createNormalizedTupleTypeWithDeclared(target, newElementTypes, declared, ObjectFlagsNone)
-		}
-	}
-	return c.createTupleTypeEx(newElementTypes, newElementInfos, newReadonly)
+	return c.createTupleTypeWithDeclared(newElementTypes, newElementInfos, newReadonly, declared)
 }
 
 func (c *Checker) instantiateMappedTypeTemplate(t *Type, key *Type, isOptional bool, m *TypeMapper) *Type {
@@ -25657,11 +25664,18 @@ func (c *Checker) createTupleType(elementTypes []*Type) *Type {
 }
 
 func (c *Checker) createTupleTypeEx(elementTypes []*Type, elementInfos []TupleElementInfo, readonly bool) *Type {
+	return c.createTupleTypeWithDeclared(elementTypes, elementInfos, readonly, nil)
+}
+
+func (c *Checker) createTupleTypeWithDeclared(elementTypes []*Type, elementInfos []TupleElementInfo, readonly bool, declared []*Type) *Type {
 	tupleTarget := c.getTupleTargetType(elementInfos, readonly)
 	switch {
 	case tupleTarget == c.emptyGenericType:
 		return c.emptyObjectType
 	case len(elementTypes) != 0:
+		if declared != nil && tupleTarget.objectFlags&ObjectFlagsTuple != 0 {
+			return c.createNormalizedTupleTypeWithDeclared(tupleTarget, elementTypes, declared, ObjectFlagsNone)
+		}
 		return c.createNormalizedTypeReference(tupleTarget, elementTypes)
 	}
 	return tupleTarget
@@ -26066,6 +26080,7 @@ func (c *Checker) cloneTypeReference(source *Type) *Type {
 	t.objectFlags = source.objectFlags &^ ObjectFlagsMembersResolved
 	t.AsTypeReference().target = source.AsTypeReference().target
 	t.AsTypeReference().resolvedTypeArguments = source.AsTypeReference().resolvedTypeArguments
+	c.copyTypefnTupleMetadata(source, t)
 	return t
 }
 
@@ -28561,7 +28576,7 @@ func (c *Checker) computeBaseConstraint(t *Type, stack []RecursionId) *Type {
 			}
 			newElements = append(newElements, newElement)
 		}
-		return c.createTupleTypeEx(newElements, elementInfos, t.TargetTupleType().readonly)
+		return c.createTupleTypeWithDeclared(newElements, elementInfos, t.TargetTupleType().readonly, c.typefnTupleDeclaredIfEnabled(t))
 	}
 	return t
 }
@@ -28849,6 +28864,7 @@ func (c *Checker) getNormalizedType(t *Type, writing bool) *Type {
 		case t.objectFlags&ObjectFlagsReference != 0:
 			if t.AsTypeReference().node != nil {
 				n = c.createTypeReference(t.Target(), c.getTypeArguments(t))
+				n = c.withTypefnTupleDeclared(n, c.typefnTupleDeclaredIfEnabled(t))
 			} else {
 				n = c.getSingleBaseForNonAugmentingSubtype(t)
 				if n == nil {
@@ -30589,7 +30605,7 @@ func (c *Checker) getMutableArrayOrTupleType(t *Type) *Type {
 	case t.flags&TypeFlagsAny != 0 || c.isMutableArrayOrTuple(c.getBaseConstraintOrType(t)):
 		return t
 	case isTupleType(t):
-		return c.createTupleTypeEx(c.getElementTypes(t), t.TargetTupleType().elementInfos, false /*readonly*/)
+		return c.copyTupleTypeRange(t, 0, c.getTypeReferenceArity(t), false /*readonly*/)
 	}
 	return c.createTupleTypeEx([]*Type{t}, []TupleElementInfo{{flags: ElementFlagsVariadic}}, false)
 }
