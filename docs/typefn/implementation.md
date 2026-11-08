@@ -154,7 +154,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 123 fixtures covering native calibration, execution,
+The compiler-project harness has 127 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -201,3 +201,9 @@ wait. Tests cover all specified category tags, generic normalization, enum rejec
 and the unsupported closed-category diagnostic (including infinite native templates,
 for which the current category vocabulary has no tag). Prelude editor metadata is
 shared with the intrinsic registry.
+
+`types.array<Element, Readonly = false>` and `reflect.array<Array>` now build and
+inspect native mutable/readonly arrays. Their descriptor is an ordinary native
+record; symbolic element Types are preserved without blocking known array shape.
+Tests prove generic length/element facts before specialization, round-trip readonly
+arrays, replay symbolic flags, and reject tuples and numeric-indexer impostors.

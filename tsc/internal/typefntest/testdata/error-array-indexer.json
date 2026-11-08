@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-array-indexer.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "reflect.array requires a non-tuple native array"
+    }
+  ]
+}

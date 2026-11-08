@@ -18,6 +18,8 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"types.array":           {1, 2, false, "Element, Readonly = false"},
+	"reflect.array":         {1, 1, false, "Array"},
 	"reflect.kind":          {1, 1, false, "Value"},
 	"reflect.isAny":         {1, 1, false, "Value"},
 	"reflect.isNever":       {1, 1, false, "Value"},
@@ -82,7 +84,20 @@ func (b *typefnCompiler) intrinsic(e *typefnExpression) bool {
 	return true
 }
 
-func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) *Type {
+func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *Type) {
+	// Each pure intrinsic can discover a dependency below its outer arguments.
+	// Retain one frozen operation for replay; aborting operations block the call.
+	defer func() {
+		if v.blocked && !v.failed && !typefnIntrinsics[e.intrinsic].aborts {
+			v.blocked = false
+			result = v.deferExpression(e, slots)
+		}
+	}()
+	// Constructors can publish structure containing symbolic Type leaves. Only
+	// their control/metadata operands need concrete observations.
+	if e.intrinsic == "types.array" {
+		return v.arrayType(e.node, args)
+	}
 	for _, arg := range args {
 		if typefnUnresolved(arg) {
 			if typefnIntrinsics[e.intrinsic].aborts {
@@ -94,20 +109,13 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) *Type {
 		}
 	}
 	if strings.HasPrefix(e.intrinsic, "reflect.") {
-		result := v.reflectKind(e.node, e.intrinsic, args[0])
-		if v.blocked && !v.failed {
-			v.blocked = false
-			return v.deferExpression(e, slots)
+		if e.intrinsic == "reflect.array" {
+			return v.reflectArray(e.node, args[0])
 		}
-		return result
+		return v.reflectKind(e.node, e.intrinsic, args[0])
 	}
 	if strings.HasPrefix(e.intrinsic, "text.") {
-		result := v.textIntrinsic(e.node, e.intrinsic, args)
-		if v.blocked && !v.failed {
-			v.blocked = false
-			return v.deferExpression(e, slots)
-		}
-		return result
+		return v.textIntrinsic(e.node, e.intrinsic, args)
 	}
 	if strings.HasPrefix(e.intrinsic, "numeric.") {
 		return v.numericIntrinsic(e.node, e.intrinsic, args[0])
