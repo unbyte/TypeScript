@@ -474,6 +474,13 @@ func (p *Parser) parseSourceFileWorker() *ast.SourceFile {
 			p.finishSourceFile(result, isDeclarationFile)
 		}
 	}
+	// Ordinary native files do not pay for a DSL header scan. Parser work is
+	// charged whenever a DSL body is entered, including an empty/recovered body.
+	if isDeclarationFile && p.typefnWork != 0 {
+		if diagnostic := TypefnDeclarationABIDiagnostic(result); diagnostic != nil {
+			result.SetDiagnostics(append(result.Diagnostics(), diagnostic))
+		}
+	}
 	collectExternalModuleReferences(result)
 	if ast.IsInJSFile(node) {
 		result.SetJSDiagnostics(attachFileToDiagnostics(p.jsDiagnostics, result))

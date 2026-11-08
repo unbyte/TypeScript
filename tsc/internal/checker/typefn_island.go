@@ -136,7 +136,7 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 	return v.c.getTypeFromTypeNode(body)
 }
 
-func (v *typefnVM) islandDiagnostic(diagnostic *ast.Diagnostic) *ast.Diagnostic {
+func (v *typefnVM) sourceDiagnostic(diagnostic *ast.Diagnostic) *ast.Diagnostic {
 	v.failed = true
 	site := core.Coalesce(v.replaySite, core.Coalesce(v.rootSite, v.nativeIslandSite))
 	source := ast.GetSourceFileOfNode(site)

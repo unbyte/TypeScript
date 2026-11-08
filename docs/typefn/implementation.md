@@ -639,3 +639,11 @@ and filesystem. It transfers emitted declaration bytes, never producer ASTs or
 sources. Native controls test nominal/generic behavior, unavailable producer-source
 imports and emit-on-error. DSL recipe support remains pending until the same path
 passes its source/declaration equivalence cases.
+
+Authored declaration files now enforce ABI 1 before DSL execution. The parser
+checks definitions; the checker also validates constructor-valued aliases and
+cached programs at consumer use sites. Missing, conflicting and unsupported
+headers fail with `skipLibCheck` enabled. Consumer diagnostics retain producer
+provenance, including hover-before-diagnostics requests. Native-only declaration
+files need no header. This establishes consumption of authored recipes; generated
+recipe emission and capture lifting remain pending.

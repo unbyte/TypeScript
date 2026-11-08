@@ -38,7 +38,15 @@ func (h typefnTestHost) GetECMALineInfo(tspath.RootedFilePath) *sourcemap.ECMALi
 
 func typefnService(t testing.TB, source string) (*LanguageService, context.Context, func(string) lsproto.Position) {
 	t.Helper()
+	return typefnServiceFiles(t, source, nil)
+}
+
+func typefnServiceFiles(t testing.TB, source string, extras map[string]string) (*LanguageService, context.Context, func(string) lsproto.Position) {
+	t.Helper()
 	files := map[string]string{"/main.ts": source, "/tsconfig.json": `{"compilerOptions":{"typefn":{"version":1},"strict":true,"target":"es2022","ignoreDeprecations":"6.0"},"files":["main.ts"]}`}
+	for name, text := range extras {
+		files[name] = text
+	}
 	fs := bundled.WrapFS(vfstest.FromMap(files, tspath.CaseSensitive))
 	host := compiler.NewCompilerHost(fs, bundled.LibPath(), nil, nil, nil)
 	config, errors := tsoptions.GetParsedCommandLineOfConfigFile("/tsconfig.json", &core.CompilerOptions{}, nil, tsoptions.NewDefaultParseConfigHost(fs), nil)
@@ -819,5 +827,35 @@ func TestTypefnIslandValueCaptureKeepsSourceMeaning(t *testing.T) {
 		if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
 			t.Fatal(ds)
 		}
+	}
+}
+
+func TestTypefnDeclarationABIConsumerDiagnostics(t *testing.T) {
+	for _, hoverFirst := range []bool{false, true} {
+		name := "diagnostics-first"
+		if hoverFirst {
+			name = "hover-first"
+		}
+		t.Run(name, func(t *testing.T) {
+			l, ctx, pos := typefnServiceFiles(t, `import type { Bad } from "./library";
+type Result = /*use*/Bad<>;`, map[string]string{
+				"/library.d.ts":  `export typefn Bad<>: type { fail<"invalid ABI executed">; }`,
+				"/tsconfig.json": `{"compilerOptions":{"typefn":{"version":1},"strict":true,"skipLibCheck":true,"target":"es2022","ignoreDeprecations":"6.0"},"files":["main.ts"]}`,
+			})
+			if hoverFirst {
+				if _, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*use*/")}); err != nil {
+					t.Fatal(err)
+				}
+			}
+			file := l.program.GetSourceFile("/main.ts")
+			diagnostics := l.program.GetSemanticDiagnostics(ctx, file)
+			if len(diagnostics) != 1 || !strings.Contains(diagnostics[0].String(), "declaration file requires") {
+				t.Fatalf("expected consumer ABI diagnostic, got %v", diagnostics)
+			}
+			d := diagnostics[0]
+			if d.File() != file || len(d.RelatedInformation()) != 1 || d.RelatedInformation()[0].File() != l.program.GetSourceFile("/library.d.ts") {
+				t.Fatalf("missing consumer/producer provenance: %v", d)
+			}
+		})
 	}
 }

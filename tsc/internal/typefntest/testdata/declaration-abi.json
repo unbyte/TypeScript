@@ -1,0 +1,13 @@
+{
+  "files": {
+    "library.d.ts": "declaration-abi-library.ts",
+    "main.ts": "declaration-abi-consumer.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "skipLibCheck": false
+  },
+  "diagnostics": []
+}

@@ -1,0 +1,45 @@
+{
+  "files": {
+    "provider.d.ts": "error-declaration-alias-abi-provider.ts",
+    "library.d.ts": "error-declaration-alias-abi-library.ts",
+    "main.ts": "error-declaration-alias-abi-consumer.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "skipLibCheck": true
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Saved<1>",
+      "message": "requires",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.d.ts",
+          "message": "requires"
+        }
+      ]
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Saved<2>",
+      "message": "requires",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.d.ts",
+          "message": "requires"
+        }
+      ]
+    }
+  ]
+}

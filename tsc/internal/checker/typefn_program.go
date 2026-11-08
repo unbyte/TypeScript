@@ -470,7 +470,13 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 
 func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
 	if c.typefn != nil && c.typefn.programs[node] != nil {
-		return c.typefn.programs[node]
+		p := c.typefn.programs[node]
+		// Compilation may have happened during an earlier editor request, outside
+		// a consumer VM. Re-report invalid declaration ABIs at each use site.
+		if !c.checkTypefnDeclarationABI(ast.GetSourceFileOfNode(node)) {
+			p.valid = false
+		}
+		return p
 	}
 	for parent := node.Parent; parent != nil; parent = parent.Parent {
 		if ast.IsTypeFunctionLike(parent) {
@@ -515,7 +521,7 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 	}()
 	// Semantic diagnostics are also requested on incomplete editor snapshots.
 	// Recovery nodes are for syntax services; never lower them to executable code.
-	if len(ast.GetSourceFileOfNode(node).Diagnostics()) != 0 {
+	if source := ast.GetSourceFileOfNode(node); !c.checkTypefnDeclarationABI(source) || len(source.Diagnostics()) != 0 {
 		p.valid = false
 		return p
 	}

@@ -1,0 +1,19 @@
+{
+  "files": {
+    "library.d.ts": "error-declaration-abi-missing.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "skipLibCheck": true
+  },
+  "diagnostics": [
+    {
+      "phase": "syntax",
+      "code": -1,
+      "file": "library.d.ts",
+      "message": "requires"
+    }
+  ]
+}

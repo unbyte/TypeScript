@@ -83,6 +83,10 @@ func (c *Checker) typefnConstructorAlias(symbol *ast.Symbol) *typefnAlias {
 }
 
 func (v *typefnVM) constructorAlias(alias *typefnAlias) *typefnClosure {
+	if !v.c.checkTypefnDeclarationABI(ast.GetSourceFileOfNode(alias.declaration)) {
+		v.failed = true
+		return nil
+	}
 	if len(alias.declaration.TypeParameters()) != 0 {
 		v.error(alias.declaration, "a native constructor alias must be nongeneric; use a typefn factory")
 		return nil
