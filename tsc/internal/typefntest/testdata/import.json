@@ -1,0 +1,17 @@
+{
+  "files": {
+    "main.ts": "import.ts",
+    "calculations.ts": "calculations.ts",
+    "reexport.ts": "reexport.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "outputs": {
+    "out/main.js": "const a = 42;\nconst b = 6;\nexport { a, b };\n",
+    "out/calculations.js": "export {};\n",
+    "out/reexport.js": "export {};\n"
+  }
+}

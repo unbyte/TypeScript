@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.ts": "error-nonfinite-literal.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {}
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "number literal must be finite"
+    }
+  ]
+}

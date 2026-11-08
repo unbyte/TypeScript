@@ -420,6 +420,11 @@ func (p *fileLoader) parseSourceFile(t *parseTask) *ast.SourceFile {
 		FileName:                       t.normalizedFilePath,
 		PathKey:                        t.path,
 		ExternalModuleIndicatorOptions: ast.GetExternalModuleIndicatorOptions(t.normalizedFilePath, options, t.metadata),
+		TypefnVersion:                  options.GetTypefnVersion(),
+	}
+	if options.Typefn != nil {
+		parseOptions.TypefnSyntaxDepth = options.Typefn.Limits.SyntaxDepth
+		parseOptions.TypefnParserWork = options.Typefn.Limits.ParserWork
 	}
 	if t.normalizedFilePath.ExtensionIsOneOf(p.contentMapperExtensions) {
 		return p.parseContentMappedFile(parseOptions)

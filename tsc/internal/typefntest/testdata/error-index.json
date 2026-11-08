@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.ts": "error-index.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {}
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2339,
+      "file": "main.ts",
+      "message": "Property 'missing' does not exist"
+    }
+  ]
+}

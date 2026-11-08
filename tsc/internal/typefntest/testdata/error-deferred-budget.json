@@ -1,0 +1,1 @@
+{"files":{"main.ts":"error-deferred-budget.ts"},"options":{"typefn":{"version":1,"limits":{"vmInstructions":64}}},"diagnostics":[{"phase":"semantic","file":"main.ts","code":-1,"message":"VM instruction limit exceeded"}]}

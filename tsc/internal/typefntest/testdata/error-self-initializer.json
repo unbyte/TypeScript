@@ -1,0 +1,19 @@
+{
+  "files": {
+    "main.ts": "error-self-initializer.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {}
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "binding read before initialization"
+    }
+  ]
+}
