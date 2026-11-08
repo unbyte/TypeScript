@@ -28282,7 +28282,9 @@ func (c *Checker) shouldDeferIndexedAccessType(objectType *Type, indexType *Type
 	if c.isGenericIndexType(indexType) {
 		return true
 	}
-	if accessNode != nil && !ast.IsIndexedAccessTypeNode(accessNode) {
+	// A DSL index is a Type computation, despite its expression-shaped AST.
+	// Preserve symbolic access rather than reading a generic constraint as a value.
+	if accessNode != nil && !ast.IsIndexedAccessTypeNode(accessNode) && accessNode.Kind != ast.KindTypeFunctionIndex {
 		return c.isGenericTupleType(objectType) && !indexTypeLessThan(indexType, getTotalFixedElementCount(objectType.TargetTupleType()))
 	}
 	return c.isGenericObjectType(objectType) && !(isTupleType(objectType) && indexTypeLessThan(indexType, getTotalFixedElementCount(objectType.TargetTupleType()))) ||
