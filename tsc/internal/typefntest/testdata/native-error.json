@@ -1,0 +1,4 @@
+{
+  "files": { "main.ts": "native-error.ts" },
+  "diagnostics": [{ "phase": "semantic", "code": 2322, "file": "main.ts", "at": "wrong:", "message": "not assignable" }]
+}
