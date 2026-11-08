@@ -2,7 +2,7 @@ package checker
 
 import "github.com/microsoft/TypeScript/tsc/internal/ast"
 
-// All DSL-owned state belongs to one checker snapshot. Native-only checking does
+// All DSL-owned state belongs to one checker snapshot. Disabled-profile checking does
 // not allocate it. The VM is scoped to a root evaluation; programs, immutable
 // terms and syntax-dependency tables live for the owning checker lifetime.
 type typefnState struct {

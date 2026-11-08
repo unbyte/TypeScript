@@ -1,35 +1,38 @@
 # Testing and validation
 
-Validation date: 2026-11-08. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64.
-These checks were run on the implementation preserved at
-[`7fe54fd97`](https://github.com/unbyte/TypeScript/commit/7fe54fd975b95531092485468ac5677ed3a453fc).
-The documentation-only history rewrite preserves that implementation exactly.
-The implementation remains experimental; a green integration suite is not full
-language-spec conformance or an exhaustive native compiler regression run.
+Validation through [`3175dc0e3`](https://github.com/unbyte/TypeScript/commit/3175dc0e3),
+2026-11-08. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64.
+The implementation remains incomplete against the language specification; these
+results establish the tested boundaries below.
 
-* Passed: 65 isolated compiler-project fixtures, including iterator-frame accounting
-  and native declaration output with the profile both off and on. The harness checks
-  complete diagnostics, exact emit, and literal-true assertions, with native positive/negative calibration.
-* Passed: full suites for the 17 packages listed below, including native Type layout,
-  casts, composite cache allocations, project invalidation, cancellation, and mapped
-  projections.
+* Passed: 219 isolated compiler-project fixtures. The harness checks complete
+  diagnostics and requires successful native `Assert<...>` applications to resolve
+  to literal true. Calculator, numeric and HTTP-route documentation sources execute
+  directly; reflection/builders, native islands, symbolic replay, imported failures
+  and definition-time return paths have executable coverage.
+* Passed during this integration: full parser, printer, AST, Go API encoder, checker,
+  DSL harness and language-service suites. Subsequent annotation hover changes passed
+  the targeted language-service suite.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
-  template literal, and generic-signature types (including their ordinary emit,
-  type/symbol, union-ordering and source-parent checks).
-* Passed: forced AST, compiler-option/API/enum, preference and sync API regeneration;
-  no tracked-file drift.
-* Passed: 27 option-generator tests, script type checks, API/test project type checks,
-  5 DSL AST traversal/factory tests, the TypeFlags test, and 28 API encoder tests.
-* Passed: async and generated sync RPC profile tests against the built compiler,
-  including the Go-encoded DSL subtree and disabled-profile rejection.
-* Passed: targeted race suites for the harness, parser, language service, project
-  sessions and LSP server, rerun after the declaration-scan guard.
-* Passed: desktop/web extension build, rebuilt CLI editor example, 13 DSL constraint
-  observation cases plus their native baseline, and the JavaScript compiler baseline
-  probe. These probes preserve existing observations; they do not implement `where`.
-* Passed: Go 1.27 formatting for every changed Go file and `git diff --check`.
+  template literal and generic-signature Types, including native emit and type/symbol
+  baselines. These were rerun after the result-kind AST change.
+* Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
+* Passed: API/test project type checks, eight DSL AST traversal/factory/protocol tests
+  and 28 API encoder tests.
+* Passed: async and generated sync RPC profile tests against the rebuilt compiler.
+  Both read the new result-kind node from the Go-encoded AST, preserve computed
+  native results and reject the disabled profile.
+* Passed: rebuilt CLI against the editor example project; changed Go source formatting
+  and `git diff --check`.
 
-Reproducible native checks from the repository root:
+Earlier race, project-invalidation, extension-build and wider package checks are
+recorded in the [historical validation record](https://github.com/unbyte/TypeScript/blob/7fe54fd975b95531092485468ac5677ed3a453fc/docs/typefn/testing.md).
+They are not reported as rerun for this integration. Full conformance, declaration
+recipes, broad community ports, resource accounting and performance acceptance
+remain tracked in [acceptance](acceptance.md).
+
+Reproducible native checks from the repository root (the first command is broader
+than the latest seven-package run):
 
 ```sh
 go test ./tsc/internal/typefntest ./tsc/internal/tsoptions ./tsc/internal/parser ./tsc/internal/printer ./tsc/internal/ast ./tsc/internal/astnav ./tsc/internal/api/encoder ./tsc/internal/binder ./tsc/internal/checker ./tsc/internal/compiler ./tsc/internal/ls ./tsc/internal/format ./tsc/internal/ls/lsutil ./tsc/internal/project ./tsc/internal/lsp ./tsc/internal/core ./tools/gen-proto -count=1
