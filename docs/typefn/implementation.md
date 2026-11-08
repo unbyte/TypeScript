@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 211 fixtures covering native calibration, execution,
+The compiler-project harness has 218 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -336,3 +336,10 @@ producer combinations and cross-declaration serialization remain acceptance work
 Public property, indexer and signature enumeration accepts the native `object`
 keyword and returns its empty public surface, consistent with reflect.kind.
 This does not treat a public structural projection as identity reconstruction.
+
+Definition checking now rejects a reachable end of a typefn, including unused
+definitions. It traverses lowered control flow without evaluating operands: loops
+may execute zero times, both branch outcomes remain possible, and return/explicit
+failure terminate paths. Final wildcard and whole-value capture patterns always
+match. Return-kind inference and recursive-component annotation validation remain
+separate pending work.

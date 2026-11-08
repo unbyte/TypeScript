@@ -11,7 +11,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 
 | Contract | Status | Remaining acceptance evidence |
 | --- | --- | --- |
-| Core bindings/control/scalars | partial | Complete definition-time kind/return-path validation and scalar edge cases |
+| Core bindings/control/scalars | partial | Conservative return-path validation implemented; definition-time kinds and scalar edge cases remain |
 | Strings and string iteration | partial | All text intrinsics/iteration implemented; tests cover UTF-16, bounds, symbolic replay and budgets; declaration-only coverage awaits recipes |
 | Numeric and tuple library | partial | Numeric and finite-tuple library implemented with conversion/bounds/symbolic tests; declaration-only coverage awaits recipes |
 | Explicit failure | partial | fail/failAt, statement-only use, deferred operands and producer/consumer spans tested; declaration-only cases await recipes |

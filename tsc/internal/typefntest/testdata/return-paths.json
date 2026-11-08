@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "return-paths.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

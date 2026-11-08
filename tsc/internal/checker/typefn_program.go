@@ -316,5 +316,8 @@ func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
 		}
 	}
 	b.block(node.AsTypeFunctionDeclaration().Body, false)
+	if p.valid && p.canFallThrough() {
+		b.error(node.Name(), "a control-flow path reaches the end without returning a value")
+	}
 	return p
 }
