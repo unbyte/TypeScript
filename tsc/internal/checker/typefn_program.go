@@ -22,6 +22,7 @@ const (
 	tfIterNext
 	tfDiscard
 	tfMatch
+	tfHelper
 )
 
 type typefnInstruction struct {
@@ -31,6 +32,7 @@ type typefnInstruction struct {
 	pattern      *typefnPattern
 	slot, target int
 	iterator     int
+	helper       *typefnProgram
 }
 type typefnExpression struct {
 	node      *ast.Node
@@ -41,25 +43,34 @@ type typefnExpression struct {
 	args      []*typefnExpression
 	keys      []*typefnExpression
 }
+type typefnCapture struct{ source, target int }
+
 type typefnProgram struct {
 	declaration *ast.Node
 	code        []typefnInstruction
 	slots       int
 	iterators   int
 	valid       bool
+	selfSlot    int
+	captures    []typefnCapture
+	bounds      []*typefnExpression
 }
 type typefnBinding struct {
 	slot    int
 	mutable bool
 	symbol  *ast.Symbol
+	helper  *typefnProgram
 }
 type (
 	typefnLoop     struct{ breaks, continues []int }
 	typefnCompiler struct {
-		c      *Checker
-		p      *typefnProgram
-		scopes []map[string]typefnBinding
-		loops  []*typefnLoop
+		c              *Checker
+		p              *typefnProgram
+		scopes         []map[string]typefnBinding
+		loops          []*typefnLoop
+		parent         *typefnCompiler
+		captures       map[string]typefnBinding
+		boundParameter int
 	}
 )
 
@@ -102,6 +113,26 @@ func (b *typefnCompiler) lookup(name string) (typefnBinding, bool) {
 			return v, true
 		}
 	}
+	if binding, ok := b.captures[name]; ok {
+		return binding, true
+	}
+	if b.parent != nil {
+		if source, ok := b.parent.lookup(name); ok {
+			if source.slot < 0 {
+				return source, true
+			}
+			binding := source
+			binding.mutable = false
+			binding.slot = b.p.slots
+			b.p.slots++
+			b.p.captures = append(b.p.captures, typefnCapture{source: source.slot, target: binding.slot})
+			if b.captures == nil {
+				b.captures = map[string]typefnBinding{}
+			}
+			b.captures[name] = binding
+			return binding, true
+		}
+	}
 	return typefnBinding{}, false
 }
 
@@ -119,7 +150,7 @@ func (b *typefnCompiler) block(node *ast.Node, newScope bool) {
 	// Reserve the block's locals before resolving initializers, including dead code.
 	scope := b.scopes[len(b.scopes)-1]
 	for _, statement := range node.AsTypeFunctionBlock().Statements.Nodes {
-		if statement.Kind == ast.KindTypeFunctionBinding {
+		if statement.Kind == ast.KindTypeFunctionBinding || statement.Kind == ast.KindTypeFunctionDeclaration {
 			name := statement.Name().Text()
 			if _, exists := scope[name]; exists {
 				b.error(statement.Name(), "duplicate binding "+name)
@@ -142,7 +173,15 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		return
 	}
 	if node.Kind == ast.KindTypeFunctionDeclaration {
-		b.error(node, "local typefns are not implemented yet")
+		child := b.c.compileTypefnWithParent(node, b)
+		if !child.valid {
+			b.p.valid = false
+		}
+		slot := b.bind(node.Name(), false)
+		binding := b.scopes[len(b.scopes)-1][node.Name().Text()]
+		binding.helper = child
+		b.scopes[len(b.scopes)-1][node.Name().Text()] = binding
+		b.emit(typefnInstruction{op: tfHelper, node: node, slot: slot, helper: child})
 		return
 	}
 	s := node.AsTypeFunctionStatement()
@@ -236,7 +275,16 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 					b.error(node, "binding read before initialization")
 				}
 				if node.Kind == ast.KindTypeFunctionCall {
-					b.error(node, "constructor-valued locals are not implemented yet")
+					if binding.slot >= 0 && binding.helper == nil {
+						b.error(node, "application requires a constructor value")
+					} else if binding.helper != nil && len(data.Operands.Nodes) != len(binding.helper.declaration.TypeParameters()) {
+						b.error(node, "wrong number of helper Type arguments")
+					}
+					for _, argument := range data.Operands.Nodes {
+						e.args = append(e.args, b.expression(argument))
+					}
+				} else if binding.helper != nil {
+					b.error(node, "first-class helper values are not implemented yet")
 				}
 				e.slot = binding.slot
 				e.symbol = binding.symbol
@@ -290,6 +338,22 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 }
 
 func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
+	if c.typefn != nil && c.typefn.programs[node] != nil {
+		return c.typefn.programs[node]
+	}
+	for parent := node.Parent; parent != nil; parent = parent.Parent {
+		if ast.IsTypeFunctionDeclaration(parent) {
+			c.compileTypefn(parent)
+			if p := c.getTypefnState().programs[node]; p != nil {
+				return p
+			}
+			break
+		}
+	}
+	return c.compileTypefnWithParent(node, nil)
+}
+
+func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler) *typefnProgram {
 	state := c.getTypefnState()
 	if state.programs == nil {
 		state.programs = make(map[*ast.Node]*typefnProgram)
@@ -297,7 +361,7 @@ func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
 	if p := state.programs[node]; p != nil {
 		return p
 	}
-	p := &typefnProgram{declaration: node, valid: true}
+	p := &typefnProgram{declaration: node, valid: true, selfSlot: -1}
 	state.programs[node] = p
 	// Semantic diagnostics are also requested on incomplete editor snapshots.
 	// Recovery nodes are for syntax services; never lower them to executable code.
@@ -305,7 +369,7 @@ func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
 		p.valid = false
 		return p
 	}
-	b := typefnCompiler{c: c, p: p, scopes: []map[string]typefnBinding{{}}}
+	b := typefnCompiler{c: c, p: p, scopes: []map[string]typefnBinding{{}}, parent: parent, boundParameter: -1}
 	if kind := node.AsTypeFunctionDeclaration().ResultKind; kind != nil && kind.AsTypeFunctionKind().KindToken.Kind == ast.KindIdentifier {
 		b.error(kind, "constructor results are not implemented yet")
 	}
@@ -314,8 +378,26 @@ func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
 	}
 	for _, parameter := range node.TypeParameters() {
 		b.bind(parameter.Name(), false)
-		if parameter.AsTypeParameterDeclaration().Constraint != nil {
+		if parent == nil && parameter.AsTypeParameterDeclaration().Constraint != nil {
 			c.checkSourceElement(parameter.AsTypeParameterDeclaration().Constraint)
+		}
+	}
+	if parent != nil {
+		// Parameters/body may shadow the helper's self-name; captures cannot mutate it.
+		p.selfSlot = p.slots
+		p.slots++
+		self := map[string]typefnBinding{node.Name().Text(): {slot: p.selfSlot, symbol: node.Symbol(), helper: p}}
+		b.scopes = append([]map[string]typefnBinding{self}, b.scopes...)
+		p.bounds = make([]*typefnExpression, len(node.TypeParameters()))
+		for i, parameter := range node.TypeParameters() {
+			if constraint := parameter.AsTypeParameterDeclaration().Constraint; constraint != nil {
+				factory := ast.NewNodeFactory(ast.NodeFactoryHooks{})
+				wrapper := factory.NewTypeFunctionExpression(ast.KindTypeFunctionNativeType, nil, nil, nil, constraint, false, false)
+				wrapper.Loc, wrapper.Parent = constraint.Loc, parameter
+				b.boundParameter = i
+				p.bounds[i] = b.expression(wrapper)
+				b.boundParameter = -1
+			}
 		}
 	}
 	b.block(node.AsTypeFunctionDeclaration().Body, false)

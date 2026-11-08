@@ -101,6 +101,9 @@ func (l *LanguageService) typefnCompletions(ctx context.Context, file *ast.Sourc
 		kind := lsproto.CompletionItemKindClass
 		detail := ""
 		if fn := c.GetTypeFunctionDeclaration(symbol); fn != nil {
+			if ast.FindAncestor(fn.Parent, ast.IsTypeFunctionDeclaration) != nil && position < fn.Pos() {
+				continue
+			}
 			kind = lsproto.CompletionItemKindFunction
 			detail = c.TypeFunctionSignature(symbol)
 		}

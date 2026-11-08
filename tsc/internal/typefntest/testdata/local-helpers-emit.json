@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.ts": "local-helpers-emit.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [],
+  "outputs": {
+    "out/main.js": "export const result = [1, 2];\n"
+  }
+}

@@ -16,7 +16,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Numeric and tuple library | partial | Numeric and finite-tuple library implemented with conversion/bounds/symbolic tests; declaration-only coverage awaits recipes |
 | Explicit failure | partial | fail/failAt, statement-only use, deferred operands and producer/consumer spans tested; declaration-only cases await recipes |
 | Templates and match | partial | Template AST/parser/printer/API and evaluation implemented; match scopes, captures/guards, tuple/object and template/pin execution added; native-island patterns implemented; exhaustive native shape/dependency cases remain |
-| Local helpers and closures | pending | Lexical capture snapshots, constructor identity, recursive captures and scope diagnostics |
+| Local helpers and closures | partial | Named Type-returning helpers, frozen captures, recursion, generic replay and editor scope tests implemented; anonymous closures and first-class constructor bindings/results remain |
 | Restricted constructors/HKT | pending | Fixed-arity slots, passing/returning constructors and kind errors |
 | Native islands | partial | Frozen native capture scopes and whole-island symbolic replay implemented; stable symbolic shape publication, environment reuse and full dependency coverage remain |
 | Union and structural predicates | partial | Native object/function/mapped/recursive cases now tested; exhaustive dependency summaries, ordinary cast/assignment boundaries and native relation fidelity remain |

@@ -493,3 +493,59 @@ func TestTypefnAnnotatedResultHover(t *testing.T) {
 		}
 	}
 }
+
+func TestTypefnLocalHelperSymbols(t *testing.T) {
+	source := `typefn Outer<T> {
+ type /*value*/saved = T;
+ typefn /*helper*/Helper<U>: type {if(U == 0) {return /*capture*/saved;} return /*self*/Helper<0>;}
+ return /*call*/Helper<1>;
+ }`
+	l, ctx, pos := typefnService(t, source)
+	for _, test := range []struct{ use, declaration string }{{"/*capture*/", "/*value*/"}, {"/*call*/", "/*helper*/"}, {"/*self*/", "/*helper*/"}} {
+		response, err := l.ProvideDefinition(ctx, "file:///main.ts", pos(test.use))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if response.Locations == nil || len(*response.Locations) != 1 || (*response.Locations)[0].Range.Start != pos(test.declaration) {
+			t.Fatalf("helper definition at %s: %#v", test.use, response)
+		}
+	}
+	hover, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*capture*/")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if hover.Hover == nil || !strings.Contains(hover.Hover.Contents.MarkupContent.Value, "capture, readonly") {
+		t.Fatalf("capture hover: %#v", hover.Hover)
+	}
+	edits, err := l.ProvideRename(ctx, &lsproto.RenameParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos("/*call*/"), NewName: "Renamed"}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if edits.WorkspaceEdit == nil || len((*edits.WorkspaceEdit.Changes)["file:///main.ts"]) != 3 {
+		t.Fatalf("helper rename: %#v", edits)
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatal(ds)
+	}
+}
+
+func TestTypefnLocalHelperCompletionOrder(t *testing.T) {
+	source := `typefn Outer<> {type first = /*before*/0; typefn Later<> {return /*self*/1;} return /*after*/Later<>;}`
+	l, ctx, _ := typefnService(t, source)
+	file := l.program.GetSourceFile("/main.ts")
+	for _, test := range []struct {
+		marker string
+		want   bool
+	}{{"/*before*/", false}, {"/*self*/", true}, {"/*after*/", true}} {
+		items := l.typefnCompletions(ctx, file, strings.Index(source, test.marker)+len(test.marker))
+		found := false
+		if items != nil {
+			for _, item := range items.Items {
+				found = found || item.Label == "Later"
+			}
+		}
+		if found != test.want {
+			t.Fatalf("Later completion at %s: got %v want %v", test.marker, found, test.want)
+		}
+	}
+}

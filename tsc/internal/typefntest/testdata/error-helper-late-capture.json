@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-helper-late-capture.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "binding read before initialization"
+    }
+  ]
+}

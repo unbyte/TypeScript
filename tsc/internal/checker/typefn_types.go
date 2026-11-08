@@ -25,6 +25,8 @@ type typefnTerm struct {
 	expression  *typefnExpression
 	operator    ast.Kind
 	args        []*Type
+	values      []typefnValue
+	closure     *typefnClosure
 	shape       *Type // Only guards have an already-known result shape.
 }
 
@@ -36,4 +38,6 @@ type typefnTermKey struct {
 	operator    ast.Kind
 	operands    CacheHashKey
 	shape       *Type
+	values      CacheHashKey
+	closure     *typefnClosure
 }

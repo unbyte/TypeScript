@@ -24,7 +24,7 @@ func (b *NodeBuilderImpl) typefnTypeToTypeNode(t *Type) *ast.Node {
 		// Type display strips comments, so use an explicit diagnostic label.
 		return b.f.NewTypeReferenceNode(b.f.NewIdentifier("pending validation"), b.f.NewNodeList([]*ast.Node{b.typeToTypeNode(d.shape)}))
 	case typefnExpressionTerm:
-		return b.typefnExpressionToNode(d.expression, d.args)
+		return b.typefnExpressionToNode(d.expression, d.values)
 	case typefnBinaryTerm, typefnUnaryTerm:
 		kind := ast.KindTypeFunctionBinary
 		if d.kind == typefnUnaryTerm {
@@ -40,9 +40,18 @@ func (b *NodeBuilderImpl) typefnDisplayLiteral(t *Type) *ast.Node {
 	return b.f.NewTypeFunctionExpression(ast.KindTypeFunctionLiteral, nil, nil, nil, b.typeToTypeNode(t), false, false)
 }
 
-func (b *NodeBuilderImpl) typefnExpressionToNode(e *typefnExpression, slots []*Type) *ast.Node {
+func (b *NodeBuilderImpl) typefnExpressionToNode(e *typefnExpression, slots []typefnValue) *ast.Node {
 	if e.slot >= 0 {
-		return b.typefnDisplayLiteral(slots[e.slot])
+		value := slots[e.slot]
+		if value.closure != nil {
+			name := b.f.NewIdentifier(value.closure.program.declaration.Name().Text())
+			if e.node.Kind == ast.KindTypeFunctionCall {
+				args := core.Map(e.args, func(arg *typefnExpression) *ast.Node { return b.typefnExpressionToNode(arg, slots) })
+				return b.f.NewTypeFunctionExpression(ast.KindTypeFunctionCall, name, b.f.NewNodeList(args), nil, nil, false, false)
+			}
+			return b.f.NewTypeFunctionExpression(ast.KindTypeFunctionName, name, nil, nil, nil, false, false)
+		}
+		return b.typefnDisplayLiteral(value.native)
 	}
 	if e.node.Kind == ast.KindTypeFunctionTemplate {
 		template := e.node.AsTypeFunctionTemplate()

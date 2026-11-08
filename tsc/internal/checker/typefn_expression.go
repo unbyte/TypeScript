@@ -18,7 +18,11 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 	}
 	var value typefnValue
 	if e.slot >= 0 {
-		value = slots[e.slot]
+		if e.node.Kind == ast.KindTypeFunctionCall {
+			value = typefnValue{native: v.callHelper(e, slots)}
+		} else {
+			value = slots[e.slot]
+		}
 	} else {
 		value = typefnValue{native: v.expressionWorker(e, slots)}
 	}

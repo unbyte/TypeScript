@@ -14,6 +14,7 @@ import (
 type typefnActiveCall struct {
 	declaration *ast.Node
 	args        []*Type
+	closure     *typefnClosure
 }
 
 // Iterator slots belong to the lowered program, while snapshots belong to each
@@ -137,13 +138,17 @@ func (v *typefnVM) allocate(node *ast.Node, count int) bool {
 	return true
 }
 
-func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type) {
+func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) *Type {
+	return v.callWithClosure(node, declaration, args, nil)
+}
+
+func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, closure *typefnClosure) (result *Type) {
 	originalArgs := args
 	savedChecks, savedSet, savedBlocked := v.checks, v.checkSet, v.blocked
 	v.checks, v.checkSet, v.blocked = nil, nil, false
 	defer func() {
 		if v.blocked && !v.failed {
-			result = v.c.newTypefnTerm(&typefnTerm{kind: typefnCallTerm, node: node, declaration: declaration, args: originalArgs})
+			result = v.c.newTypefnTerm(&typefnTerm{kind: typefnCallTerm, node: node, declaration: declaration, args: originalArgs, closure: closure})
 		} else {
 			result = v.c.guardTypefn(result, v.checks)
 		}
@@ -169,7 +174,7 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 		return v.error(node, "call depth limit exceeded")
 	}
 	for _, active := range v.active {
-		if active.declaration != declaration || len(active.args) != len(args) {
+		if active.declaration != declaration || active.closure != closure || len(active.args) != len(args) {
 			continue
 		}
 		same := true
@@ -183,10 +188,15 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 			return v.error(node, "recursive evaluation cycle")
 		}
 	}
-	v.active = append(v.active, typefnActiveCall{declaration, args})
+	v.active = append(v.active, typefnActiveCall{declaration: declaration, args: args, closure: closure})
 	v.depth++
 	defer func() { v.depth--; v.active = v.active[:len(v.active)-1] }()
-	p := v.c.compileTypefn(declaration)
+	var p *typefnProgram
+	if closure != nil {
+		p = closure.program
+	} else {
+		p = v.c.compileTypefn(declaration)
+	}
 	if !p.valid {
 		v.failed = true
 		return v.c.errorType
@@ -194,9 +204,14 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 	if len(args) != len(declaration.TypeParameters()) {
 		return v.error(node, "wrong number of Type arguments")
 	}
-	parameters := v.c.appendTypeParameters(nil, declaration.TypeParameters())
-	if !v.constraints(node, parameters, args) {
-		return v.c.errorType
+	if closure == nil {
+		if p.selfSlot >= 0 {
+			return v.error(node, "local helper requires its captured environment")
+		}
+		parameters := v.c.appendTypeParameters(nil, declaration.TypeParameters())
+		if !v.constraints(node, parameters, args) {
+			return v.c.errorType
+		}
 	}
 	// Charge register/argument backing storage and iterator slots, in addition to
 	// the existing fixed bookkeeping allowance. No iterator storage is allocated
@@ -210,6 +225,15 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 	registers := make([]typefnValue, p.slots)
 	for i, arg := range args {
 		registers[i] = typefnValue{native: arg}
+	}
+	if closure != nil {
+		registers[p.selfSlot] = typefnValue{closure: closure}
+		for i, capture := range p.captures {
+			registers[capture.target] = closure.captures[i]
+		}
+		if !v.helperConstraints(node, p, registers, args) {
+			return v.c.errorType
+		}
 	}
 	iterators := make([]typefnIterator, p.iterators)
 	for pc := 0; pc < len(p.code); {
@@ -230,6 +254,11 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 			}
 		}
 		switch i.op {
+		case tfHelper:
+			registers[i.slot] = typefnValue{closure: v.captureHelper(i.helper, registers)}
+			if v.failed {
+				return v.c.errorType
+			}
 		case tfStore:
 			registers[i.slot] = value
 		case tfReturn:

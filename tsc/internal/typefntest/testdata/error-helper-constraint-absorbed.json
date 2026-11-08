@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-helper-constraint-absorbed.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "input Type does not satisfy the helper constraint"
+    }
+  ]
+}

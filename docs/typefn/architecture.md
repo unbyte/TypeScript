@@ -28,7 +28,7 @@ All modules below are private to `tsc/internal/checker`:
 
 | Module | Responsibility |
 | --- | --- |
-| `typefn_value.go` | Explicit VM value/Type boundary and metered expression-replay frames |
+| `typefn_value.go`, `typefn_closure.go` | VM value/Type boundary, immutable helper captures, interning and substitution |
 | `typefn_program.go`, `typefn_flow.go` | Definition validation, resolved bindings, lowered control flow and conservative return paths |
 | `typefn_vm.go` | Root budgets, cancellation, recursion checks and call frames |
 | `typefn_expression.go` | Expression evaluation and structural construction |
@@ -44,8 +44,8 @@ All modules below are private to `tsc/internal/checker`:
 | `typefn_state.go` | Lazy checker-owned tables and active root VM |
 | `typefn_display.go`, `typefn_services.go` | Pending display, signatures and cancelable result queries |
 
-Registers hold explicit VM values; the current alternative contains a native Type
-identity. Native operations check that boundary before using operands. Assignment
+Registers hold explicit VM values containing a native Type or helper closure.
+Native operations check that boundary before using operands. Assignment
 changes a local slot, not a Type.
 Lowering assigns dense iterator indices; each call owns its iterator storage, and
 non-iterating programs allocate no iterator backing storage. Re-entry replaces its
@@ -61,33 +61,34 @@ syntax-dependency tables, and the active root VM. These belong to a checker snap
 No Type handles or mutable frames cross snapshots. Canceled checkers are discarded
 by the native checker pool. There is no general completed-call memoization cache.
 
-## Constructor-value integration plan
+## Constructor values and integration boundary
 
-The next VM extension must keep `Constructor(n)` separate from native `Type`
-handles. A constructor is not a new TypeFlags case, an invented native generic
-parameter, or an object/tuple field. Registers now have an explicit value representation. Immutable capture snapshots
-and the constructor alternative must extend the same boundary; native
+`Constructor(n)` stays separate from native Type handles. Current local helper
+closures contain eligible code and frozen Type/helper captures. They are not new
+TypeFlags cases, invented native parameters, or object/tuple fields. Native
 operators and structural builders accept only the Type alternative.
 
-A constructor identity consists of eligible code or a known native generic symbol,
-its fixed arity, and frozen captures. Local self-reference names the same code and
-closure environment without a mutable capture cycle. Captures may contain symbolic
-Types or other known constructors. Native substitution must map those captures;
-capturing them alone does not expand their members or evaluate a function body.
+Local self-reference names the same code and closure environment without a mutable
+capture cycle. Snapshots are interned per checker; mutating a caller register never
+changes a published capture. Native substitution maps captured Types and traverses
+constructor edges iteratively. Capturing alone does not expand native members or
+execute a body. New snapshot storage is charged to the current root; complete
+retained-cache accounting/eviction remains pending.
 
-Pending Type results may retain a call recipe containing constructor identities
-and ordinary Type arguments. Their dependency keys, substitution, guard journals,
-diagnostic provenance and display must account for captured values. Constructors
-must never be smuggled through existing `[]*Type` operand lists. Completed-call
-caching must use the same canonical value identities once caching is implemented.
+Pending Type results retain call recipes with closure identities and ordinary Type
+arguments. Deferred expressions retain immutable VM-value snapshots. Their keys,
+substitution and diagnostics include captured values; constructors never travel in
+native `[]*Type` operand lists. This supports named local helper calls, including
+symbolic replay. Native generic constructor values, anonymous closures and
+first-class constructor bindings/slots/results are not enabled yet.
 
 Definition checking will assign parameter/binding/result kinds independently of
 execution, propagate constructor arities through applications, and solve recursive
 result dependencies using explicit annotations. Native Type positions reject
 constructor values. The separate native alias bridge is restricted to nongeneric
 aliases whose constructor identity and creation checks are ready, as required by
-the specification. This section describes the implementation boundary; constructor
-execution and alias integration are still pending.
+the specification. This bridge also remains necessary for helper-constructor captures in native
+islands, which currently diagnose rather than losing their environments.
 
 ## Native checking boundaries
 

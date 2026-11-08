@@ -56,6 +56,18 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 						b.error(name, "binding read before initialization")
 						return false
 					}
+					if b.boundParameter >= 0 {
+						for i, parameter := range b.p.declaration.TypeParameters() {
+							if parameter.Symbol() == symbol && i >= b.boundParameter {
+								b.error(name, "input bound may reference only preceding Type parameters")
+								return false
+							}
+						}
+					}
+					if binding.helper != nil {
+						b.error(node, "constructor captures in native islands are not implemented yet")
+						return false
+					}
 					if node.TypeArgumentList() != nil {
 						b.error(node, "a captured Type is not a constructor")
 						return false

@@ -18,7 +18,7 @@ func (c *Checker) newTypefnTerm(d *typefnTerm) *Type {
 			key.writeType(arg)
 		}
 	}
-	k := typefnTermKey{d.kind, d.declaration, d.symbol, d.expression, d.operator, key.hash(), d.shape}
+	k := typefnTermKey{kind: d.kind, declaration: d.declaration, symbol: d.symbol, expression: d.expression, operator: d.operator, operands: key.hash(), shape: d.shape, values: typefnValueHash(d.values), closure: d.closure}
 	if state.terms == nil {
 		state.terms = make(map[typefnTermKey]*Type)
 	}
@@ -26,10 +26,11 @@ func (c *Checker) newTypefnTerm(d *typefnTerm) *Type {
 		return t
 	}
 	// Charge retained operands as well as the node before allocating the copy.
-	if v := state.vm; v != nil && !v.allocate(d.node, len(d.args)+1) {
+	if v := state.vm; v != nil && !v.allocate(d.node, len(d.args)+len(d.values)+1) {
 		return c.errorType
 	}
 	d.args = slices.Clone(d.args)
+	d.values = slices.Clone(d.values)
 	t := c.newType(TypeFlagsTypefn, ObjectFlagsNone, d.AsType(), typeKindTypefn)
 	state.terms[k] = t
 	return t
@@ -125,6 +126,11 @@ func (c *Checker) instantiateTypefn(t *Type, m *TypeMapper) *Type {
 			return c.errorType
 		}
 		args := c.instantiateTypes(d.args, m)
+		values := c.instantiateTypefnValues(d.values, m)
+		closure := c.instantiateTypefnClosure(d.closure, m)
+		if v.failed {
+			return c.errorType
+		}
 		for _, arg := range args {
 			if arg != nil && c.isErrorType(arg) {
 				return c.errorType
@@ -137,7 +143,7 @@ func (c *Checker) instantiateTypefn(t *Type, m *TypeMapper) *Type {
 			}
 			return c.guardTypefn(shape, args)
 		}
-		if core.Same(args, d.args) {
+		if core.Same(args, d.args) && slices.Equal(values, d.values) && closure == d.closure {
 			return t
 		}
 		switch d.kind {
@@ -146,11 +152,11 @@ func (c *Checker) instantiateTypefn(t *Type, m *TypeMapper) *Type {
 		case typefnUnaryTerm:
 			return v.unary(d.node, d.operator, args[0])
 		case typefnCallTerm:
-			return v.call(d.node, d.declaration, args)
+			return v.callWithClosure(d.node, d.declaration, args, closure)
 		case typefnNativeCallTerm:
 			return v.apply(d.node, d.symbol, args)
 		case typefnExpressionTerm:
-			return v.replayExpression(d.expression, args)
+			return v.replayExpression(d.expression, values)
 		}
 		panic("unknown typefn recipe")
 	})
@@ -202,14 +208,14 @@ func (v *typefnVM) observe(t *Type) *Type {
 }
 
 func (v *typefnVM) deferExpression(e *typefnExpression, slots []typefnValue) *Type {
-	frozen := make([]*Type, len(slots))
+	frozen := make([]typefnValue, len(slots))
 	var capture func(*typefnExpression)
 	capture = func(e *typefnExpression) {
 		if e == nil {
 			return
 		}
 		if e.slot >= 0 {
-			frozen[e.slot] = slots[e.slot].native
+			frozen[e.slot] = slots[e.slot]
 		}
 		for _, a := range e.args {
 			capture(a)
@@ -219,7 +225,7 @@ func (v *typefnVM) deferExpression(e *typefnExpression, slots []typefnValue) *Ty
 		}
 	}
 	capture(e)
-	return v.c.newTypefnTerm(&typefnTerm{kind: typefnExpressionTerm, node: e.node, expression: e, args: frozen})
+	return v.c.newTypefnTerm(&typefnTerm{kind: typefnExpressionTerm, node: e.node, expression: e, values: frozen})
 }
 
 // DSL-created anonymous objects have no source declaration/symbol for the native

@@ -1,43 +1,27 @@
 package checker
 
-import (
-	"unsafe"
+import "github.com/microsoft/TypeScript/tsc/internal/ast"
 
-	"github.com/microsoft/TypeScript/tsc/internal/ast"
-)
-
-// VM registers are values, rather than native Type handles. The current execution
-// alternatives contain only Types; constructor values will extend this boundary
-// without becoming native Types or entering native operator operand lists.
+// VM registers contain either a native Type or a helper closure. Closures never
+// become native Types or enter native operator operand lists.
 type typefnValue struct {
-	native *Type
+	native  *Type
+	closure *typefnClosure
 }
 
 func (v *typefnVM) nativeValue(node *ast.Node, value typefnValue) *Type {
+	if value.closure != nil {
+		return v.error(node, "constructor value cannot be used as a Type")
+	}
 	if value.native == nil {
 		return v.error(node, "uninitialized VM value")
 	}
 	return value.native
 }
 
-func typefnValues(types []*Type) []typefnValue {
-	values := make([]typefnValue, len(types))
-	for i, value := range types {
-		values[i] = typefnValue{native: value}
-	}
-	return values
-}
-
-// Deferred native terms retain Type operands. Replaying their expression crosses
-// into a fresh VM value frame, charged to the same root as ordinary call frames.
-func (v *typefnVM) replayExpression(e *typefnExpression, types []*Type) *Type {
-	size := len(types) * int(unsafe.Sizeof(typefnValue{}))
-	if size > v.limits.LiveBytes-v.liveBytes {
-		return v.error(e.node, "live VM allocation limit exceeded")
-	}
-	v.liveBytes += size
-	defer func() { v.liveBytes -= size }()
-	slots := typefnValues(types)
+// Deferred expression terms already own immutable value snapshots. Execution
+// reads them without copying or permitting assignment to their captured registers.
+func (v *typefnVM) replayExpression(e *typefnExpression, slots []typefnValue) *Type {
 	value := v.expression(e, slots)
 	if v.blocked && !v.failed {
 		v.blocked = false

@@ -62,7 +62,7 @@ implemented before executable definitions can be published safely in `.d.ts` fil
   identities. A checker-owned compiler resolves DSL slots and names, validates all branches,
   and lowers control flow into store, return, branch, jump and iterator instructions.
   Expression trees have resolved slots/symbols and are evaluated by the same VM.
-* Registers hold immutable native checker Types. Assignment changes a slot, and
+* Registers hold immutable native Types or helper closures. Assignment changes a slot, and
   constructed Types retain their previous contents. Named calls share root budgets.
   Native generic applications use native instantiation and constraint checking.
 * Compiled programs belong to one checker instance. No cross-checker Type handles,
@@ -120,7 +120,9 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   accounting still require work.
 * The calculator, numeric and HTTP-route examples execute directly from their
   documentation sources. They are milestones, not full conformance coverage.
-* Constructor slots, closures/local typefns and restricted HKT support are pending.
+* Local named Type-returning helpers now execute with frozen captures. Anonymous
+  closures, first-class constructor bindings/slots/results and restricted HKT
+  composition remain pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
   relation proofs, scoped generic-body assumptions, latent member/signature
@@ -151,8 +153,9 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 * Definition checking validates conservative return paths and still needs the complete
   kind/readiness analysis. There is no claim of optimized append or memoized VM calls.
   Parameter bounds currently use native Type grammar rather than full DSL expressions.
-  Bound checking can evaluate header applications at definition time, and an earlier
-  blocked bound delays later checks. Later-parameter references are accepted even
+  Module-level bound checking can evaluate header applications at definition time,
+  and an earlier blocked bound delays later checks. Module bounds accept later-parameter
+  references even
   though the R2 text describes preceding-parameter scope. These behaviors need an
   explicit contract decision; see the [constraint decisions and probes](design-notes.md#input-constraints).
   Result-kind annotations are retained in the native AST and printer.
@@ -160,7 +163,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 219 fixtures covering native calibration, execution,
+The compiler-project harness has 235 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -349,3 +352,24 @@ public AST protocol. `: type` and `: typefn<...>` have explicit kind nodes; an e
 constructor slot list differs from a missing annotation. Constructor-result syntax
 currently receives an explicit definition diagnostic until constructor values and
 kind checking land. It does not silently execute as an ordinary Type function.
+
+Local named helpers now lower into separate programs with immutable capture
+snapshots. Captures may include earlier helpers; self-reference uses the current
+closure without a mutable cycle. Calls and deferred expression snapshots retain
+closure identities and substitute captured Types when native generic arguments
+change. Constructor edges are traversed iteratively. Closure snapshots are interned
+per checker, and new snapshot storage is charged to the current root budget.
+
+Tests cover reassignment after capture, nested helpers, shared code with different
+captures, self-recursion, iteration captures, shadowing, constraints, native Type
+captures, generic replay, discarded failures, distinct importing callers and JS
+erasure. Forward local-helper references, capture writes, invalid control flow and
+wrong arity diagnose at definition time. Local-helper bounds may refer to preceding
+Type parameters and frozen outer Types; they use immutable native-island evaluation
+and conservatively wait for symbolic captures. Module-level bound timing/scope
+remains separately tracked above.
+
+Editor tests cover native helper/capture definitions and rename, readonly capture
+hover, and declaration-ordered helper completion with self-reference. First-class
+helper values, anonymous closures, constructor slots/results and constructor
+captures in native islands still diagnose explicitly until their integration lands.

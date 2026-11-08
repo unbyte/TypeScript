@@ -1,0 +1,45 @@
+{
+  "files": {
+    "main.ts": "error-helper-consumer.ts",
+    "library.ts": "helper-failure-producer.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Pending<123>",
+      "message": "helper requires string",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.ts",
+          "at": "fail<\"helper requires string\">",
+          "message": "typefn operation failed here"
+        }
+      ]
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Pending<false>",
+      "message": "helper requires string",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.ts",
+          "at": "fail<\"helper requires string\">",
+          "message": "typefn operation failed here"
+        }
+      ]
+    }
+  ]
+}
