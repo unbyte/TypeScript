@@ -164,7 +164,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 338 fixtures covering native calibration, execution,
+The compiler-project harness has 341 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -526,8 +526,8 @@ assembly, groups, nested builders and frozen helper captures participate. Native
 normalization never receives an unsealed handle; scratch closures bypass the
 ordinary constructor cache. Failed or blocked construction discards the arena and
 replays the original builder expression, including implicit lambda capture reads.
-After guard validation, generated native recursive aliases carry explicit leaf
-parameters, preserving native generic substitution through lazy recursive members.
+After guard validation, generated native recursive aliases carry an explicit leaf
+environment, preserving native generic substitution through lazy recursive members.
 Self-free definitions retain their ordinary native result. Tests assert native
 indexing, bidirectional assignability, distinct substitutions, group iteration,
 invalid cycles, forbidden observations, finite kinds and allocation failures.
@@ -570,7 +570,15 @@ exhausted the budget by retaining charges for discarded private closures.
 
 An iterative component planner now groups mutually dependent graph nodes in
 source-to-sink order, including structural edges. This supplies the dependency
-order for narrowing native alias environments in the next adapter change; it does
-not yet alter emitted aliases. Tests compare component membership against an
+order for narrowing native alias environments below. Tests compare component membership against an
 independent transitive-closure oracle, verify dependency order, and exercise a
 100,000-node chain and cancellation without partial output.
+
+Native recursive aliases now use one tuple environment per dependency component.
+Nodes in a cycle pass that environment unchanged; edges to other components
+project only the required slots. Dependency planning is iterative, deterministic
+and charged to the invocation's live/work budgets. This avoids repeating the
+entire group's leaf list at every alias and recursive edge. Both 256 independent
+roots and a 256-root mutual cycle fit a 100,000-node budget; the independent case
+previously exceeded it. Tests also verify distinct substitutions across projected
+child environments and a generic-body assertion for a child with no dependencies.

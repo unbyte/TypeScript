@@ -2,13 +2,14 @@ package checker
 
 import (
 	"fmt"
+	"slices"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/binder"
 )
 
 // Native Types are created only after the complete reachable scratch graph is
-// validated. Generated recursive aliases use explicit leaf parameters, so native
+// validated. Generated recursive aliases use explicit leaf environments, so native
 // instantiation sees every symbolic dependency (including lazy member Types).
 // No native fake type parameter stands in for an unsealed Self handle.
 func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionArena, roots []*Type, group bool) *Type {
@@ -73,62 +74,66 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 			return v.c.errorType
 		}
 	}
-	leaves := []*Type{}
-	leafIndex := map[*Type]int{}
-	leaf := func(t *Type) {
-		if constructionOf(t) == nil {
-			if _, ok := leafIndex[t]; !ok {
-				leafIndex[t] = len(leaves)
-				leaves = append(leaves, t)
-			}
-		}
+	plan := v.constructionEnvironment(node, arena, edges, reachable)
+	defer func() { v.liveBytes -= plan.bytes }()
+	if v.failed {
+		return v.c.errorType
 	}
+	// One native tuple parameter carries each component environment. Recursive
+	// edges pass it unchanged; DAG edges project only the child's leaf slots.
 	for _, index := range reachable {
 		graph := constructionOf(arena.nodes[index])
+		inputs := graph.inputs
 		if graph.kind == ast.KindTypeReference {
-			leaf(arena.definitions[graph.reference])
+			inputs = []*Type{arena.definitions[graph.reference]}
 		}
-		for _, input := range graph.inputs {
-			leaf(input)
+		if !v.allocate(node, 16+12*len(inputs)) {
+			return v.c.errorType
 		}
-	}
-	// Every generated edge carries the explicit leaf environment. Charge before
-	// allocating, using overflow-safe division against the remaining node budget.
-	width := 2*len(leaves) + 8
-	remaining := v.limits.NativeNodes - v.nodes
-	edgeCount := 0
-	for _, index := range reachable {
-		edgeCount += len(constructionOf(arena.nodes[index]).inputs) + 2
-	}
-	if edgeCount > remaining/width || !v.allocate(node, edgeCount*width) {
-		return v.error(node, "native construction limit exceeded")
+		for _, input := range inputs {
+			if child := constructionOf(input); child != nil && !slices.Equal(plan.parameters[index], plan.parameters[child.index]) {
+				if !v.allocate(node, 5*len(plan.parameters[child.index])) {
+					return v.c.errorType
+				}
+			}
+		}
 	}
 	f := ast.NewNodeFactory(ast.NodeFactoryHooks{OnCreate: func(created *ast.Node) { created.Loc = node.Loc }})
 	aliasName := func(index int) string { return fmt.Sprintf("__TypefnRecursive%d", index) }
-	leafName := func(index int) string { return fmt.Sprintf("__TypefnLeaf%d", index) }
-	parameters := func() *ast.NodeList {
-		if len(leaves) == 0 {
+	const environmentName = "__TypefnEnvironment"
+	environmentReference := func() *ast.Node { return f.NewTypeReferenceNode(f.NewIdentifier(environmentName), nil) }
+	parameters := func(index int) *ast.NodeList {
+		if len(plan.parameters[index]) == 0 {
 			return nil
 		}
-		nodes := make([]*ast.Node, len(leaves))
-		for i := range nodes {
-			nodes[i] = f.NewTypeParameterDeclaration(nil, f.NewIdentifier(leafName(i)), nil, nil, nil)
-		}
-		return f.NewNodeList(nodes)
+		bound := f.NewTypeOperatorNode(ast.KindReadonlyKeyword, f.NewArrayTypeNode(f.NewKeywordTypeNode(ast.KindUnknownKeyword)))
+		return f.NewNodeList([]*ast.Node{f.NewTypeParameterDeclaration(nil, f.NewIdentifier(environmentName), bound, nil, nil)})
 	}
-	reference := func(t *Type) *ast.Node {
+	leafReference := func(index, id int) *ast.Node {
+		offset, found := slices.BinarySearch(plan.parameters[index], id)
+		if !found {
+			panic("missing recursive environment dependency")
+		}
+		return f.NewIndexedAccessTypeNode(environmentReference(), f.NewLiteralTypeNode(f.NewNumericLiteral(fmt.Sprint(offset), ast.TokenFlagsNone)))
+	}
+	reference := func(index int, t *Type) *ast.Node {
 		if graph := constructionOf(t); graph != nil {
 			var arguments *ast.NodeList
-			if len(leaves) != 0 {
-				nodes := make([]*ast.Node, len(leaves))
-				for i := range nodes {
-					nodes[i] = f.NewTypeReferenceNode(f.NewIdentifier(leafName(i)), nil)
+			child := plan.parameters[graph.index]
+			if len(child) != 0 {
+				environment := environmentReference()
+				if !slices.Equal(plan.parameters[index], child) {
+					elements := make([]*ast.Node, len(child))
+					for i, id := range child {
+						elements[i] = leafReference(index, id)
+					}
+					environment = f.NewTupleTypeNode(f.NewNodeList(elements))
 				}
-				arguments = f.NewNodeList(nodes)
+				arguments = f.NewNodeList([]*ast.Node{environment})
 			}
 			return f.NewTypeReferenceNode(f.NewIdentifier(aliasName(graph.index)), arguments)
 		}
-		return f.NewTypeReferenceNode(f.NewIdentifier(leafName(leafIndex[t])), nil)
+		return leafReference(index, plan.leafIndex[t])
 	}
 	statements := []*ast.Node{}
 	aliases := map[int]*ast.Node{}
@@ -139,12 +144,12 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		graph := constructionOf(arena.nodes[index])
 		inputs := make([]*ast.Node, len(graph.inputs))
 		for i, input := range graph.inputs {
-			inputs[i] = reference(input)
+			inputs[i] = reference(index, input)
 		}
 		var body *ast.Node
 		switch graph.kind {
 		case ast.KindTypeReference:
-			body = reference(arena.definitions[graph.reference])
+			body = reference(index, arena.definitions[graph.reference])
 		case ast.KindBarToken:
 			body = f.NewUnionTypeNode(f.NewNodeList(inputs))
 		case ast.KindAmpersandToken:
@@ -209,7 +214,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		if graph.readonly {
 			body = f.NewTypeOperatorNode(ast.KindReadonlyKeyword, body)
 		}
-		alias := f.NewTypeAliasDeclaration(nil, f.NewIdentifier(aliasName(index)), parameters(), body)
+		alias := f.NewTypeAliasDeclaration(nil, f.NewIdentifier(aliasName(index)), parameters(index), body)
 		aliases[index] = alias
 		statements = append(statements, alias)
 	}
@@ -227,6 +232,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 	savedSite := v.nativeIslandSite
 	v.nativeIslandSite = node
 	defer func() { v.nativeIslandSite = savedSite }()
+	environments := map[int]*Type{}
 	result := make([]*Type, len(roots))
 	for i, root := range roots {
 		if !v.step(node) {
@@ -238,10 +244,24 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 				v.failed = true
 				return v.c.errorType
 			}
-			if len(leaves) == 0 {
+			if len(plan.parameters[graph.index]) == 0 {
 				result[i] = declared
 			} else {
-				result[i] = v.c.getTypeAliasInstantiation(aliases[graph.index].Symbol(), leaves, nil)
+				owner := plan.owners[graph.index]
+				environment := environments[owner]
+				if environment == nil {
+					parameters := plan.parameters[graph.index]
+					if !plan.reserve(v, node, 16*len(parameters)) || !v.allocate(node, len(parameters)+1) {
+						return v.c.errorType
+					}
+					values := make([]*Type, len(parameters))
+					for i, id := range parameters {
+						values[i] = plan.leaves[id]
+					}
+					environment = v.c.createTupleType(values)
+					environments[owner] = environment
+				}
+				result[i] = v.c.getTypeAliasInstantiation(aliases[graph.index].Symbol(), []*Type{environment}, nil)
 			}
 		} else {
 			result[i] = root

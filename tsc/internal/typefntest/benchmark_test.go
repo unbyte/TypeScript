@@ -5,7 +5,7 @@ import "testing"
 // End-to-end, cold-project measurements include parsing/config, binding, library
 // setup and checking. They are deliberately not advertised as VM-only throughput.
 func BenchmarkTypefnProject(b *testing.B) {
-	for _, source := range []string{"native.ts", "execution.ts", "iteration.ts"} {
+	for _, source := range []string{"native.ts", "execution.ts", "iteration.ts", "recursive-independent-roots.ts", "recursive-mutual-roots.ts"} {
 		b.Run(source, func(b *testing.B) {
 			files := map[string]string{"main.ts": source}
 			if source == "native.ts" {

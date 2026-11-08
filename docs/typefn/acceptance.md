@@ -28,7 +28,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Declaration recipes | pending | Emit/consume standalone declarations, ABI checks, captures, source maps and dependency invalidation |
 | Editor and public API | partial | Services for all syntax, prelude completion, refactorings, auto-imports and API compatibility |
 | Resources/cancellation | partial | All specified work/allocation/cache budgets and cancellation within expensive native work |
-| Caching/performance | partial | Completed-call and blocked-result reuse, eviction/provenance, workload measurements and native overhead |
+| Caching/performance | partial | Component-local tuple environments now bound recursive alias growth; completed-call and blocked-result reuse, eviction/provenance, wider workload measurements and native overhead remain |
 | Community workloads | pending | Ports paired with concrete, symbolic, negative, metadata, declaration and resource cases |
 
 The detailed required cases are in [conformance](spec/conformance.md), with

@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "recursive-environment-projection.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

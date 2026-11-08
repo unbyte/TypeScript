@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 338 isolated compiler-project fixtures in the full harness run. The harness checks complete
+* Passed: 341 isolated compiler-project fixtures (full harness plus added mutual-group and environment-projection cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -17,7 +17,7 @@ against the language specification; these checks establish the boundaries below.
   `typeof` queries, mapped generic constraints and Type/value namespace separation.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
-  after recursive scratch-closure lifetime accounting; optional-provenance assertions pass
+  after recursive environment compaction; optional-provenance assertions pass
   in both exact-optional modes, and the added generic-body dependency assertion passes.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
@@ -86,3 +86,20 @@ go test ./tsc/internal/ls -run '^$' -bench BenchmarkTypefnHover -benchmem
 The full upstream corpus, target conformance matrix, large community workload ports
 and a graphical editor session are not covered by the reported checks. Full native
 work, retained-cache and memory accounting also remain incomplete.
+
+Recursive construction scaling was measured with:
+
+```sh
+PATH=/workspace/toolchains/go/bin:$PATH GOCACHE=/workspace/.cache/go-build GOPATH=/workspace/.cache/go go test ./tsc/internal/typefntest -run '^TestIntegration/recursive-(independent|mutual)-roots$' -bench '^BenchmarkTypefnProject/recursive-' -benchtime=3x -count=1
+```
+
+Linux/amd64, AMD EPYC 9V74, Go 1.27.0, three iterations per case:
+
+| Project | Time/op | Bytes/op | Allocs/op |
+| --- | ---: | ---: | ---: |
+| 256 independent roots | 161.5 ms | 62,112,813 | 305,852 |
+| 256 mutually recursive roots | 178.2 ms | 62,091,901 | 302,855 |
+
+These cold-project figures include parsing, libraries and checking; they are not
+isolated VM throughput. Both fixtures also pass their explicit 100,000 native-node
+budget. The independent case failed that budget before environment compaction.

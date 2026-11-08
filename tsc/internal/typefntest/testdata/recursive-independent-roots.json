@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.ts": "recursive-independent-roots.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "nativeNodes": 100000
+      }
+    }
+  },
+  "diagnostics": []
+}
