@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
-	"github.com/microsoft/TypeScript/tsc/internal/astnav"
 	"github.com/microsoft/TypeScript/tsc/internal/checker"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
@@ -28,6 +27,7 @@ func (l *LanguageService) typefnLexicalTokens(ctx context.Context, file *ast.Sou
 		if node.End() <= start || node.Pos() >= end {
 			return false
 		}
+		templateEnds, intrinsicTokens := typefnTokenMetadata(file, node)
 		base := scanner.GetTokenPosOfNode(node, file, false)
 		scan := scanner.NewScanner()
 		scan.SetText(file.Text()[base:node.End()])
@@ -36,6 +36,10 @@ func (l *LanguageService) typefnLexicalTokens(ctx context.Context, file *ast.Sou
 				return true
 			}
 			lo, hi := base+scan.TokenStart(), base+scan.TokenEnd()
+			if kind == ast.KindCloseBraceToken && templateEnds[lo] {
+				kind = scan.ReScanTemplateToken(false)
+				hi = base + scan.TokenEnd()
+			}
 			if lo < start || hi > end {
 				continue
 			}
@@ -44,16 +48,12 @@ func (l *LanguageService) typefnLexicalTokens(ctx context.Context, file *ast.Sou
 			case kind == ast.KindIdentifier && scan.TokenValue() == "typefn" && lo < node.Name().Pos():
 				category = tokenTypeKeyword
 			case kind == ast.KindIdentifier:
-				actual := astnav.GetTokenAtPosition(file, lo)
-				if info := checker.TypeFunctionIntrinsicAtLocation(actual); info != nil {
-					category = tokenTypeFunction
-					if actual.Parent != nil && ast.IsQualifiedName(actual.Parent) && actual.Parent.AsQualifiedName().Left == actual {
-						category = tokenTypeNamespace
-					}
+				if token, ok := intrinsicTokens[lo]; ok {
+					category = token
 				}
 			case ast.IsKeywordKind(kind):
 				category = tokenTypeKeyword
-			case kind == ast.KindStringLiteral || kind == ast.KindNoSubstitutionTemplateLiteral:
+			case kind == ast.KindStringLiteral || kind == ast.KindNoSubstitutionTemplateLiteral || kind == ast.KindTemplateHead || kind == ast.KindTemplateMiddle || kind == ast.KindTemplateTail:
 				category = tokenTypeString
 			case kind == ast.KindNumericLiteral || kind == ast.KindBigIntLiteral:
 				category = tokenTypeNumber
@@ -74,4 +74,27 @@ func (l *LanguageService) typefnLexicalTokens(ctx context.Context, file *ast.Sou
 	}
 	visit(file.AsNode())
 	return result
+}
+
+// One tree walk supplies scanner mode transitions and intrinsic colors. Avoid
+// searching the AST afresh for every identifier in a large DSL body.
+func typefnTokenMetadata(file *ast.SourceFile, root *ast.Node) (map[int]bool, map[int]tokenType) {
+	ends := map[int]bool{}
+	intrinsics := map[int]tokenType{}
+	var visit func(*ast.Node) bool
+	visit = func(node *ast.Node) bool {
+		if node.Kind == ast.KindTemplateMiddle || node.Kind == ast.KindTemplateTail {
+			ends[scanner.GetTokenPosOfNode(node, file, false)] = true
+		}
+		if ast.IsIdentifier(node) && checker.TypeFunctionIntrinsicAtLocation(node) != nil {
+			kind := tokenTypeFunction
+			if node.Parent != nil && ast.IsQualifiedName(node.Parent) && node.Parent.AsQualifiedName().Left == node {
+				kind = tokenTypeNamespace
+			}
+			intrinsics[scanner.GetTokenPosOfNode(node, file, false)] = kind
+		}
+		return node.ForEachChild(visit)
+	}
+	visit(root)
+	return ends, intrinsics
 }

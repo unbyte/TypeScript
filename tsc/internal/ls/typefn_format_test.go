@@ -20,6 +20,7 @@ func TestTypefnFormattingPreservesSyntax(t *testing.T) {
 		`typefn F<N>{type result=[];for(type item of N){if(item is string){result=[item,...result];}else{continue;}}return result;}`,
 		`typefn F<N>{return {readonly key?:N;value:F<[N,1]>[0]};}`,
 		`typefn F<N>{return type((input:N)=>Promise<N>);}`,
+		"typefn F<N>{return `literal return ${N+1} foo${N}`;}",
 	} {
 		t.Run(source, func(t *testing.T) {
 			l, ctx, _ := typefnService(t, source)

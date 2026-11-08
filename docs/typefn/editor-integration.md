@@ -79,7 +79,7 @@ completed-result overlays. See [deferred calculations](deferred-evaluation.md).
 | Completion | Offers visible Type-space symbols and DSL keywords. Namespace member completion filters out value-only exports. The compiler prelude supplies intrinsic namespaces and members. Native type islands use the native completion path. |
 | Signature help | Supports native applications and DSL angle calls, including unfinished `F<`, commas, and nested argument delimiters. Names must resolve to a typefn or an implemented prelude intrinsic. |
 | Semantic highlighting | Classifies bound Type names, declarations, assignments, and immutable iteration bindings. Native scanner tokens supply DSL keywords, operators, strings, and numbers. |
-| Intrinsic help | Built-in calls expose parameter/default signatures in hover and signature help, including incomplete angle calls. Intrinsic namespace/member names receive semantic coloring. |
+| Intrinsic help | Built-in calls expose parameter/default signatures in hover and signature help, including incomplete angle calls. Intrinsic namespace/member names receive semantic coloring. Template substitutions retain signature-help scope and literal chunks stay string tokens. |
 | Result hints | Opt-in computed results at native TypeScript type applications, including nested applications. |
 | Outline and folding | Lists typefn declarations and local bindings; folds DSL blocks. |
 | Formatting | Uses the native formatter for spacing, indentation, and comments. Preserves required DSL semicolons even with the JavaScript semicolon-removal preference. |

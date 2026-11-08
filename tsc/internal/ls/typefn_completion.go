@@ -180,6 +180,7 @@ func (l *LanguageService) typefnSignatureHelp(ctx context.Context, file *ast.Sou
 		argument uint32
 	}
 	var stack []frame
+	templateEnds, _ := typefnTokenMetadata(file, file.AsNode())
 	scan := scanner.NewScanner()
 	scan.SetText(file.Text()[start:position])
 	previous, previousPos := ast.KindUnknown, 0
@@ -187,7 +188,19 @@ func (l *LanguageService) typefnSignatureHelp(ctx context.Context, file *ast.Sou
 		if ctx.Err() != nil {
 			return nil
 		}
+		if kind == ast.KindCloseBraceToken && templateEnds[start+scan.TokenStart()] {
+			kind = scan.ReScanTemplateToken(false)
+		}
 		switch kind {
+		case ast.KindTemplateHead:
+			stack = append(stack, frame{kind: ast.KindTemplateHead, namePos: -1})
+		case ast.KindTemplateMiddle, ast.KindTemplateTail:
+			for len(stack) > 0 && stack[len(stack)-1].kind != ast.KindTemplateHead {
+				stack = stack[:len(stack)-1]
+			}
+			if kind == ast.KindTemplateTail && len(stack) > 0 {
+				stack = stack[:len(stack)-1]
+			}
 		case ast.KindLessThanToken, ast.KindOpenParenToken, ast.KindOpenBracketToken, ast.KindOpenBraceToken:
 			namePos := -1
 			if kind == ast.KindLessThanToken && previous == ast.KindIdentifier {
