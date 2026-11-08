@@ -607,3 +607,10 @@ metadata. Signature-only free dependencies participate in readiness checks.
 Tests cover nested single-signature forwarding, object/indexer combinations,
 recursive parameters/results, native inference, query-order substitution and
 invalid categories/counts. No signature is approximated by an intersection.
+
+Signature descriptor processing now separates metadata parsing, native Type checks
+and signature creation through one immutable plan. Optionality is added only when
+creating native parameters or checking predicate compatibility; parameter names,
+modes, receiver and predicate metadata stay independent of Type payloads. This
+refactor retains all existing descriptor diagnostics and control-flow behavior,
+and provides a shared validation path for recursive payloads.
