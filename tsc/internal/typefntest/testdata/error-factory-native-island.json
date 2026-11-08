@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-helper-value-return.ts"
+    "main.ts": "error-factory-native-island.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "constructor results are not implemented yet"
+      "message": "constructor value cannot be used as a Type"
     }
   ]
 }

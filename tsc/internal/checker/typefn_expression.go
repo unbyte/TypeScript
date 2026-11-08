@@ -19,10 +19,19 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 	var value typefnValue
 	if e.slot >= 0 {
 		if e.node.Kind == ast.KindTypeFunctionCall {
-			value = typefnValue{native: v.callHelper(e, slots)}
+			value = v.callHelper(e, slots)
 		} else {
 			value = slots[e.slot]
 		}
+	} else if e.callee != nil {
+		args := make([]*Type, len(e.args))
+		for i, arg := range e.args {
+			args[i] = v.typeArgument(arg, slots)
+			if v.failed || v.blocked {
+				return typefnValue{native: v.c.errorType}
+			}
+		}
+		value = v.callValue(e.node, e.callee.declaration, args, nil)
 	} else if e.helper != nil {
 		if e.helper.local {
 			value = typefnValue{closure: v.captureHelper(e.helper, slots)}

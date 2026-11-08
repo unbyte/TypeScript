@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "constructor-factories.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

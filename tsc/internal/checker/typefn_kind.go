@@ -100,9 +100,6 @@ func (c *Checker) finishTypefnKinds(programs []*typefnProgram) {
 		} else if p.resultKind.resolved() < 0 {
 			c.typefnError(p.declaration, "result kind cannot be inferred; add an explicit result-kind annotation")
 			p.valid = false
-		} else if p.resultKind.resolved() > 0 {
-			c.typefnError(p.declaration, "constructor results are not implemented yet")
-			p.valid = false
 		}
 	}
 }

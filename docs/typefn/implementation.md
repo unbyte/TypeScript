@@ -121,8 +121,8 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 * The calculator, numeric and HTTP-route examples execute directly from their
   documentation sources. They are milestones, not full conformance coverage.
 * Local named helpers and anonymous Type-returning closures now execute with frozen captures.
-  Constructor slots/results and restricted HKT
-  composition remain pending.
+  Factories can return constructors inside DSL computations. Constructor slots, native
+  generic constructor values and the native alias bridge remain pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
   relation proofs, scoped generic-body assumptions, latent member/signature
@@ -163,7 +163,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 256 fixtures covering native calibration, execution,
+The compiler-project harness has 263 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -344,14 +344,12 @@ Definition checking now rejects a reachable end of a typefn, including unused
 definitions. It traverses lowered control flow without evaluating operands: loops
 may execute zero times, both branch outcomes remain possible, and return/explicit
 failure terminate paths. Final wildcard and whole-value capture patterns always
-match. Return-kind inference and recursive-component annotation validation remain
-separate pending work.
+match. Finite result-kind inference and recursive-component validation are described below.
 
 Result-kind annotations now survive parsing, printing, native traversal and the
 public AST protocol. `: type` and `: typefn<...>` have explicit kind nodes; an empty
-constructor slot list differs from a missing annotation. Constructor-result syntax
-currently receives an explicit definition diagnostic until constructor values and
-kind checking land. It does not silently execute as an ordinary Type function.
+constructor slot list differs from a missing annotation. Factories may infer a constructor result kind or declare it explicitly. Constructor
+results remain separate from ordinary native Type results.
 
 Local named helpers now lower into separate programs with immutable capture
 snapshots. Captures may include earlier helpers; self-reference uses the current
@@ -370,8 +368,8 @@ and conservatively wait for symbolic captures. Module-level bound timing/scope
 remains separately tracked above.
 
 Editor tests cover native helper/capture definitions and rename, readonly capture
-hover, and declaration-ordered helper completion with self-reference. Constructor slots/results and constructor
-captures in native islands still diagnose explicitly until their integration lands.
+hover, and declaration-ordered helper completion with self-reference. Constructor
+slots and constructor captures in native islands still require integration.
 
 Eligible named helpers can now be bound as constructor values (`type F = Box;`)
 and applied through aliases. Constructor bindings may be reassigned only to the
@@ -390,7 +388,7 @@ snapshots, reassignment, native islands, blocked calls and expression replay.
 The parser/printer, binder, AST serializer/transformer and editor capture scope
 share this representation. An anonymous initializer cannot recursively refer to
 its own still-uninitialized binding; named local helpers supply explicit self
-recursion. Constructor-valued results and constructor parameters remain pending.
+recursion. Constructor parameters remain pending.
 
 Value kinds are now checked separately from helper code identity. A checker-local
 constraint graph infers Type results without execution, verifies all return kinds
@@ -398,6 +396,21 @@ constraint graph infers Type results without execution, verifies all return kind
 checking their callers. Unresolved recursive result kinds and named bodies with
 no value-returning path require annotations. Anonymous closures supply their
 Type-returning constructor context. Declaration-order tests prevent callers from
-silently repairing ambiguous callee signatures. Constructor-result execution is
-still explicitly rejected at this stage. Local-binding hover now distinguishes
+silently repairing ambiguous callee signatures. Local-binding hover now distinguishes
 `type` from `typefn<...>` using static kind information, without running a body.
+
+Named factories now return constructors within DSL computations, including named
+helpers, anonymous closures, captured local helpers and recursive factory calls.
+Bindings retain inferred arity, and factories cannot themselves become first-class
+constructors because their result kind is not Type. A constructor may capture
+symbolic Types, but unresolved selection, bounds or creation checks block its
+publication and defer the enclosing Type-producing call. No constructor enters a
+native Type operand list. Nongeneric native constructor aliases are still pending.
+
+Stored and passed Type results retain their reached checks as well as recording
+them in the caller journal. This matters when a ready native shape with pending
+checks is later passed to a factory: constructor creation must still wait. Tests
+cover checks through local bindings, ignored factory results, input bounds,
+recursive closures returned after their creation frame ends, two-stage native
+substitution and distinct imported consumer/operation diagnostics. Factory and
+constructor-binding hover use inferred static kinds without evaluating bodies.

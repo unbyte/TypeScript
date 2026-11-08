@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-constructor-result-unimplemented.ts"
+    "main.ts": "error-factory-cycle.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "constructor results are not implemented yet"
+      "message": "recursive evaluation cycle"
     }
   ]
 }

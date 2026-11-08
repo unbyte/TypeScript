@@ -33,20 +33,21 @@ func (c *Checker) TypeFunctionSignature(symbol *ast.Symbol) string {
 	for _, parameter := range declaration.TypeParameters() {
 		parameters = append(parameters, scanner.GetTextOfNode(parameter))
 	}
-	resultKind := "type"
-	if annotation := declaration.AsTypeFunctionDeclaration().ResultKind; annotation != nil {
-		kind := annotation.AsTypeFunctionKind()
-		if kind.KindToken.Kind == ast.KindIdentifier {
-			var slots []string
-			if kind.Slots != nil {
-				for range kind.Slots.Nodes {
-					slots = append(slots, "_")
-				}
-			}
-			resultKind = "typefn<" + strings.Join(slots, ", ") + ">"
+	signature := "typefn " + declaration.Name().Text() + "<" + strings.Join(parameters, ", ") + ">"
+	var resultKind *typefnKind
+	if annotation := ast.TypeFunctionResultKind(declaration); annotation != nil {
+		if slots := annotation.AsTypeFunctionKind().Slots; slots != nil {
+			resultKind = typefnConstructorKind(len(slots.Nodes))
+		}
+	} else {
+		resultKind = c.compileTypefn(declaration).resultKind
+		// Incomplete source is not lowered. Keep parameter help available, but
+		// do not claim a Type result for a factory whose kind is not known yet.
+		if resultKind.resolved() < 0 {
+			return signature
 		}
 	}
-	return "typefn " + declaration.Name().Text() + "<" + strings.Join(parameters, ", ") + ">: " + resultKind
+	return signature + ": " + typefnKindDisplay(resultKind)
 }
 
 // Queries evaluate only native applications, never an arbitrary generic body or

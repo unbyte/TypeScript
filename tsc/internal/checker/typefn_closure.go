@@ -126,19 +126,19 @@ func (c *Checker) instantiateTypefnClosure(root *typefnClosure, mapper *TypeMapp
 	return mapped[root]
 }
 
-func (v *typefnVM) callHelper(e *typefnExpression, slots []typefnValue) *Type {
+func (v *typefnVM) callHelper(e *typefnExpression, slots []typefnValue) typefnValue {
 	closure := slots[e.slot].closure
 	if closure == nil {
-		return v.error(e.node, "application requires a constructor value")
+		return typefnValue{native: v.error(e.node, "application requires a constructor value")}
 	}
 	args := make([]*Type, len(e.args))
 	for i, argument := range e.args {
-		args[i] = v.expression(argument, slots)
+		args[i] = v.typeArgument(argument, slots)
 		if v.failed || v.blocked {
-			return v.c.errorType
+			return typefnValue{native: v.c.errorType}
 		}
 	}
-	return v.callWithClosure(e.node, closure.program.declaration, args, closure)
+	return v.callValue(e.node, closure.program.declaration, args, closure)
 }
 
 func (c *Checker) instantiateTypefnValues(values []typefnValue, mapper *TypeMapper) []typefnValue {

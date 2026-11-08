@@ -261,7 +261,11 @@ func TestTypefnSignatureWhileTyping(t *testing.T) {
 				t.Fatal(err)
 			}
 			help := result.SignatureHelp
-			if help == nil || help.Signatures[0].Label != "typefn F<A, B>: type" || help.ActiveParameter == nil || help.ActiveParameter.Uinteger == nil || *help.ActiveParameter.Uinteger != test.active {
+			label := "typefn F<A, B>: type"
+			if len(l.program.GetSourceFile("/main.ts").Diagnostics()) != 0 {
+				label = "typefn F<A, B>"
+			}
+			if help == nil || help.Signatures[0].Label != label || help.ActiveParameter == nil || help.ActiveParameter.Uinteger == nil || *help.ActiveParameter.Uinteger != test.active {
 				t.Fatalf("signature: %#v", help)
 			}
 		})
@@ -581,6 +585,20 @@ func TestTypefnConstructorBindingHover(t *testing.T) {
 		result, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(marker)})
 		if err != nil || result.Hover == nil || !strings.Contains(result.Hover.Contents.MarkupContent.Value, "type Constructor: typefn<_>") {
 			t.Fatalf("constructor binding hover: %#v %v", result, err)
+		}
+	}
+	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {
+		t.Fatal(ds)
+	}
+}
+
+func TestTypefnFactoryKindHover(t *testing.T) {
+	source := `typefn /*factory*/Factory<T> {return typefn<U> {return [T,U];};} typefn Use<T> {type /*binding*/F=Factory<T>; return F<1>;} type Result=Use<123>;`
+	l, ctx, pos := typefnService(t, source)
+	for _, test := range []struct{ marker, want string }{{"/*factory*/", "typefn Factory<T>: typefn<_>"}, {"/*binding*/", "type F: typefn<_>"}} {
+		result, err := l.ProvideHover(ctx, &lsproto.HoverParams{TextDocument: lsproto.TextDocumentIdentifier{Uri: "file:///main.ts"}, Position: pos(test.marker)})
+		if err != nil || result.Hover == nil || !strings.Contains(result.Hover.Contents.MarkupContent.Value, test.want) {
+			t.Fatalf("factory hover: %#v %v", result, err)
 		}
 	}
 	if ds := l.program.GetSemanticDiagnostics(ctx, nil); len(ds) != 0 {

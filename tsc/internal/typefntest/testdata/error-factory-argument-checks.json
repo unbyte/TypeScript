@@ -1,0 +1,45 @@
+{
+  "files": {
+    "main.ts": "error-factory-argument-checks.ts",
+    "library.ts": "factory-checks-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Pending<\"invalid input\">",
+      "message": "numeric",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.ts",
+          "at": "T+1",
+          "message": "typefn operation failed here"
+        }
+      ]
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "at": "Pending<1>",
+      "message": "numeric",
+      "related": [
+        {
+          "phase": "semantic",
+          "code": -1,
+          "file": "library.ts",
+          "at": "U+1",
+          "message": "typefn operation failed here"
+        }
+      ]
+    }
+  ]
+}

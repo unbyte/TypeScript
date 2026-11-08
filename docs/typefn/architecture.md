@@ -78,13 +78,14 @@ retained-cache accounting/eviction remains pending.
 Pending Type results retain call recipes with closure identities and ordinary Type
 arguments. Deferred expressions retain immutable VM-value snapshots. Their keys,
 substitution and diagnostics include captured values; constructors never travel in
-native `[]*Type` operand lists. This supports named local helper calls, including
-symbolic replay. Native generic constructor values, anonymous closures and
-first-class constructor bindings/slots/results are not enabled yet.
+native `[]*Type` operand lists. This supports named and anonymous closures, constructor bindings and factory
+results, including symbolic replay. Native generic constructor values and
+constructor input slots remain pending.
 
-Definition checking will assign parameter/binding/result kinds independently of
-execution, propagate constructor arities through applications, and solve recursive
-result dependencies using explicit annotations. Native Type positions reject
+Definition checking assigns binding/result kinds independently of execution,
+propagates constructor arities through applications, and solves recursive result
+dependencies with finite kind constraints and explicit annotations. Dependency
+components finalize before callers can constrain their application results. Native Type positions reject
 constructor values. The separate native alias bridge is restricted to nongeneric
 aliases whose constructor identity and creation checks are ready, as required by
 the specification. This bridge also remains necessary for helper-constructor captures in native
@@ -132,3 +133,9 @@ snapshot as a deferred expression. This is conservative and costs shape informat
 stable symbolic native shape publication is still an acceptance item. Executions
 also allocate fresh native subtrees rather than reusing completed environment keys.
 Neither strategy is presented as the finished performance architecture.
+
+Factory calls use the VM-value boundary and may return a constructor. A factory
+with pending creation checks blocks its enclosing Type computation; it does not
+publish a constructor with hidden requirements or encode one as a native Type.
+Type-valued bindings and arguments retain their own checks in addition to the
+frame journal, so a native shape cannot bypass factory readiness after storage.

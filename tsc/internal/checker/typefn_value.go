@@ -29,3 +29,33 @@ func (v *typefnVM) replayExpression(e *typefnExpression, slots []typefnValue) *T
 	}
 	return value
 }
+
+// Store and pass a Type result with the checks reached while computing it.
+// The caller journal still keeps those checks if the value is later discarded.
+// A factory argument must not lose them merely because its native shape is ready.
+func (v *typefnVM) resultExpression(e *typefnExpression, slots []typefnValue) typefnValue {
+	saved, savedSet := v.checks, v.checkSet
+	v.checks, v.checkSet = nil, nil
+	value := v.valueExpression(e, slots)
+	reached := v.checks
+	if value.native != nil {
+		value.native = v.c.guardTypefn(value.native, reached)
+	}
+	v.checks, v.checkSet = saved, savedSet
+	for _, check := range reached {
+		v.observe(check)
+	}
+	if !v.failed && value.closure != nil && len(reached) != 0 {
+		v.blocked = true
+		return typefnValue{}
+	}
+	return value
+}
+
+func (v *typefnVM) typeArgument(e *typefnExpression, slots []typefnValue) *Type {
+	value := v.resultExpression(e, slots)
+	if v.failed || v.blocked {
+		return v.c.errorType
+	}
+	return v.nativeValue(e.node, value)
+}

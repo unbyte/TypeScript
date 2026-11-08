@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-factory-return-arity.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "return kinds must agree with the function result kind"
+    }
+  ]
+}

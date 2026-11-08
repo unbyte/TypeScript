@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-factory-creation-check.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "numeric"
+    }
+  ]
+}

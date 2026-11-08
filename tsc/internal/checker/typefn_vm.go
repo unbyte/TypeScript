@@ -142,23 +142,54 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) *Type {
 	return v.callWithClosure(node, declaration, args, nil)
 }
 
-func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, closure *typefnClosure) (result *Type) {
+// Native Type consumers and deferred Type recipes use this boundary. Factories
+// stay in the value evaluator; they never enter a native Type operand vector.
+func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, closure *typefnClosure) *Type {
+	p := v.c.compileTypefn(declaration)
+	if closure != nil {
+		p = closure.program
+	}
+	if p.valid && p.resultKind.resolved() > 0 {
+		return v.error(node, "constructor value cannot be used as a Type")
+	}
+	value := v.callValue(node, declaration, args, closure)
+	if v.failed || v.blocked {
+		return v.c.errorType
+	}
+	return v.nativeValue(node, value)
+}
+
+func (v *typefnVM) callValue(node, declaration *ast.Node, args []*Type, closure *typefnClosure) (result typefnValue) {
 	// Module helpers have no captured environment. Canonicalize direct and
 	// constructor-valued applications to the same call recipe and cycle identity.
 	if closure != nil && !closure.program.local {
 		closure = nil
 	}
+	var p *typefnProgram
+	if closure != nil {
+		p = closure.program
+	} else {
+		p = v.c.compileTypefn(declaration)
+	}
 	originalArgs := args
 	savedChecks, savedSet, savedBlocked := v.checks, v.checkSet, v.blocked
 	v.checks, v.checkSet, v.blocked = nil, nil, false
 	defer func() {
-		if v.blocked && !v.failed {
-			result = v.c.newTypefnTerm(&typefnTerm{kind: typefnCallTerm, node: node, declaration: declaration, args: originalArgs, closure: closure})
-		} else {
-			result = v.c.guardTypefn(result, v.checks)
+		// A factory may publish only a known constructor whose creation checks
+		// completed. It cannot hide pending checks in a fake native Type. Block
+		// the enclosing Type computation so its immutable call recipe can replay.
+		blockConstructor := !v.failed && p.resultKind.resolved() > 0 && (v.blocked || len(v.checks) != 0)
+		if blockConstructor {
+			result = typefnValue{}
+		} else if v.blocked && !v.failed {
+			result = typefnValue{native: v.c.newTypefnTerm(&typefnTerm{kind: typefnCallTerm, node: node, declaration: declaration, args: originalArgs, closure: closure})}
+		} else if result.native != nil {
+			result.native = v.c.guardTypefn(result.native, v.checks)
 		}
-		v.checks, v.checkSet, v.blocked = savedChecks, savedSet, savedBlocked
-		v.observe(result)
+		v.checks, v.checkSet, v.blocked = savedChecks, savedSet, savedBlocked || blockConstructor
+		if result.native != nil {
+			v.observe(result.native)
+		}
 	}()
 	args = slices.Clone(args)
 	for i, arg := range args {
@@ -168,15 +199,15 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 	for _, arg := range args {
 		if v.c.isErrorType(arg) {
 			v.failed = true
-			return v.c.errorType
+			return typefnValue{native: v.c.errorType}
 		}
 	}
 	if len(ast.GetSourceFileOfNode(declaration).Diagnostics()) != 0 {
 		v.failed = true
-		return v.c.errorType
+		return typefnValue{native: v.c.errorType}
 	}
 	if v.depth >= v.limits.CallDepth {
-		return v.error(node, "call depth limit exceeded")
+		return typefnValue{native: v.error(node, "call depth limit exceeded")}
 	}
 	for _, active := range v.active {
 		if active.declaration != declaration || active.closure != closure || len(active.args) != len(args) {
@@ -190,32 +221,26 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 			}
 		}
 		if same {
-			return v.error(node, "recursive evaluation cycle")
+			return typefnValue{native: v.error(node, "recursive evaluation cycle")}
 		}
 	}
 	v.active = append(v.active, typefnActiveCall{declaration: declaration, args: args, closure: closure})
 	v.depth++
 	defer func() { v.depth--; v.active = v.active[:len(v.active)-1] }()
-	var p *typefnProgram
-	if closure != nil {
-		p = closure.program
-	} else {
-		p = v.c.compileTypefn(declaration)
-	}
 	if !p.valid {
 		v.failed = true
-		return v.c.errorType
+		return typefnValue{native: v.c.errorType}
 	}
 	if len(args) != len(declaration.TypeParameters()) {
-		return v.error(node, "wrong number of Type arguments")
+		return typefnValue{native: v.error(node, "wrong number of Type arguments")}
 	}
 	if closure == nil {
 		if p.local {
-			return v.error(node, "local helper requires its captured environment")
+			return typefnValue{native: v.error(node, "local helper requires its captured environment")}
 		}
 		parameters := v.c.appendTypeParameters(nil, declaration.TypeParameters())
 		if !v.constraints(node, parameters, args) {
-			return v.c.errorType
+			return typefnValue{native: v.c.errorType}
 		}
 	}
 	// Charge register/argument backing storage and iterator slots, in addition to
@@ -223,7 +248,7 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 	// for programs that do not iterate.
 	frameBytes := p.slots*int(unsafe.Sizeof(typefnValue{})) + len(args)*int(unsafe.Sizeof((*Type)(nil))) + p.iterators*int(unsafe.Sizeof(typefnIterator{})) + 128
 	if frameBytes > v.limits.LiveBytes-v.liveBytes {
-		return v.error(node, "live VM allocation limit exceeded")
+		return typefnValue{native: v.error(node, "live VM allocation limit exceeded")}
 	}
 	v.liveBytes += frameBytes
 	defer func() { v.liveBytes -= frameBytes }()
@@ -239,7 +264,7 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 			registers[capture.target] = closure.captures[i]
 		}
 		if !v.helperConstraints(node, p, registers, args) {
-			return v.c.errorType
+			return typefnValue{native: v.c.errorType}
 		}
 	}
 	iterators := make([]typefnIterator, p.iterators)
@@ -247,33 +272,33 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 		i := &p.code[pc]
 		pc++
 		if !v.step(i.node) {
-			return v.c.errorType
+			return typefnValue{native: v.c.errorType}
 		}
 		var value typefnValue
 		if i.expr != nil {
-			if i.op == tfStore || i.op == tfReturn {
-				value = v.valueExpression(i.expr, registers)
+			if i.op == tfStore || i.op == tfReturn || i.op == tfDiscard {
+				value = v.resultExpression(i.expr, registers)
 			} else {
 				value = typefnValue{native: v.expression(i.expr, registers)}
 			}
 			if v.failed || v.blocked {
-				return v.c.errorType
+				return typefnValue{native: v.c.errorType}
 			}
 		}
 		switch i.op {
 		case tfHelper:
 			registers[i.slot] = typefnValue{closure: v.captureHelper(i.helper, registers)}
 			if v.failed {
-				return v.c.errorType
+				return typefnValue{native: v.c.errorType}
 			}
 		case tfStore:
 			registers[i.slot] = value
 		case tfReturn:
-			return v.nativeValue(i.node, value)
+			return value
 		case tfBranch:
 			truth, ok := v.boolean(i.node, value.native)
 			if !ok {
-				return v.c.errorType
+				return typefnValue{native: v.c.errorType}
 			}
 			if !truth {
 				pc = i.target
@@ -281,7 +306,7 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 		case tfMatch:
 			matched := v.pattern(i.pattern, v.nativeValue(i.node, registers[i.slot]), registers)
 			if v.failed || v.blocked {
-				return v.c.errorType
+				return typefnValue{native: v.c.errorType}
 			}
 			if !matched {
 				pc = i.target
@@ -291,7 +316,7 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 		case tfIterStart:
 			values := v.elements(i.node, value.native, i.node.Kind == ast.KindTypeFunctionForIn)
 			if v.failed || v.blocked {
-				return v.c.errorType
+				return typefnValue{native: v.c.errorType}
 			}
 			iterators[i.iterator] = typefnIterator{values: values}
 		case tfIterNext:
@@ -305,5 +330,5 @@ func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, cl
 			}
 		}
 	}
-	return v.error(node, "execution reached the end without returning a Type")
+	return typefnValue{native: v.error(node, "execution reached the end without returning a Type")}
 }
