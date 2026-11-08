@@ -267,14 +267,15 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 }
 
 func (c *Checker) compileTypefn(node *ast.Node) *typefnProgram {
-	if c.typefnPrograms == nil {
-		c.typefnPrograms = make(map[*ast.Node]*typefnProgram)
+	state := c.getTypefnState()
+	if state.programs == nil {
+		state.programs = make(map[*ast.Node]*typefnProgram)
 	}
-	if p := c.typefnPrograms[node]; p != nil {
+	if p := state.programs[node]; p != nil {
 		return p
 	}
 	p := &typefnProgram{declaration: node, valid: true}
-	c.typefnPrograms[node] = p
+	state.programs[node] = p
 	// Semantic diagnostics are also requested on incomplete editor snapshots.
 	// Recovery nodes are for syntax services; never lower them to executable code.
 	if len(ast.GetSourceFileOfNode(node).Diagnostics()) != 0 {

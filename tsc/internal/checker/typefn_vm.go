@@ -31,7 +31,8 @@ func (c *Checker) evaluateTypefn(node, declaration *ast.Node, args []*Type) *Typ
 }
 
 func (c *Checker) runTypefn(node *ast.Node, run func(*typefnVM) *Type) *Type {
-	root := c.typefnVM == nil
+	state := c.getTypefnState()
+	root := state.vm == nil
 	if root {
 		limits := core.TypefnLimits{VMInstructions: 1000000, CallDepth: 256, NativeNodes: 250000, BigintBits: 1048576, LiveBytes: 64 << 20}
 		if c.compilerOptions.Typefn != nil {
@@ -56,10 +57,10 @@ func (c *Checker) runTypefn(node *ast.Node, run func(*typefnVM) *Type) *Type {
 				limits.NativeNodes = configured.NativeNodes
 			}
 		}
-		c.typefnVM = &typefnVM{c: c, limits: limits}
-		defer func() { c.typefnVM = nil }()
+		state.vm = &typefnVM{c: c, limits: limits}
+		defer func() { state.vm = nil }()
 	}
-	v := c.typefnVM
+	v := state.vm
 	saved, savedSet := v.checks, v.checkSet
 	v.checks, v.checkSet = nil, nil
 	defer func() { v.checks, v.checkSet = saved, savedSet }()

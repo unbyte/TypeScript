@@ -8,6 +8,7 @@ import (
 )
 
 func (c *Checker) newTypefnTerm(d *typefnTerm) *Type {
+	state := c.getTypefnState()
 	var key keyBuilder
 	key.writeInt(len(d.args))
 	for _, arg := range d.args {
@@ -18,19 +19,19 @@ func (c *Checker) newTypefnTerm(d *typefnTerm) *Type {
 		}
 	}
 	k := typefnTermKey{d.kind, d.declaration, d.symbol, d.expression, d.operator, key.hash(), d.shape}
-	if c.typefnTerms == nil {
-		c.typefnTerms = make(map[typefnTermKey]*Type)
+	if state.terms == nil {
+		state.terms = make(map[typefnTermKey]*Type)
 	}
-	if t := c.typefnTerms[k]; t != nil {
+	if t := state.terms[k]; t != nil {
 		return t
 	}
 	// Charge retained operands as well as the node before allocating the copy.
-	if v := c.typefnVM; v != nil && !v.allocate(d.node, len(d.args)+1) {
+	if v := state.vm; v != nil && !v.allocate(d.node, len(d.args)+1) {
 		return c.errorType
 	}
 	d.args = slices.Clone(d.args)
 	t := c.newType(TypeFlagsTypefn, ObjectFlagsNone, d.AsType(), typeKindTypefn)
-	c.typefnTerms[k] = t
+	state.terms[k] = t
 	return t
 }
 
@@ -219,11 +220,12 @@ func (v *typefnVM) deferExpression(e *typefnExpression, slots []*Type) *Type {
 // DSL-created anonymous objects have no source declaration/symbol for the native
 // object instantiator. Instantiate their immutable property table explicitly.
 func (c *Checker) newTypefnObject(members ast.SymbolTable) *Type {
+	state := c.getTypefnState()
 	t := c.newAnonymousType(nil, members, nil, nil, nil)
-	if c.typefnObjects == nil {
-		c.typefnObjects = make(map[*Type]bool)
+	if state.objects == nil {
+		state.objects = make(map[*Type]bool)
 	}
-	c.typefnObjects[t] = true
+	state.objects[t] = true
 	return t
 }
 
@@ -254,7 +256,8 @@ func (c *Checker) typefnSyntaxHasCalculations(node *ast.Node) bool {
 	if c.compilerOptions.GetTypefnVersion() != 1 {
 		return false
 	}
-	if result, ok := c.typefnSyntaxChecks[node]; ok {
+	state := c.getTypefnState()
+	if result, ok := state.syntaxChecks[node]; ok {
 		return result
 	}
 	seen := make(map[*ast.Symbol]bool)
@@ -289,10 +292,10 @@ func (c *Checker) typefnSyntaxHasCalculations(node *ast.Node) bool {
 		return n.ForEachChild(visit)
 	}
 	result := visit(node)
-	if c.typefnSyntaxChecks == nil {
-		c.typefnSyntaxChecks = make(map[*ast.Node]bool)
+	if state.syntaxChecks == nil {
+		state.syntaxChecks = make(map[*ast.Node]bool)
 	}
-	c.typefnSyntaxChecks[node] = result
+	state.syntaxChecks[node] = result
 	return result
 }
 
