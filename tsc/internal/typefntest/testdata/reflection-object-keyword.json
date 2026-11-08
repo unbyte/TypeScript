@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "reflection-object-keyword.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 210 fixtures covering native calibration, execution,
+The compiler-project harness has 211 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -332,3 +332,7 @@ ordinary optional parameters/defaults retain their native undefined acceptance.
 Tests cover Parameters/ConstructorParameters, prefixed rest tuples, generic replay,
 reverse mappings, destructuring defaults and exact-optional array holes. Exhaustive
 producer combinations and cross-declaration serialization remain acceptance work.
+
+Public property, indexer and signature enumeration accepts the native `object`
+keyword and returns its empty public surface, consistent with reflect.kind.
+This does not treat a public structural projection as identity reconstruction.

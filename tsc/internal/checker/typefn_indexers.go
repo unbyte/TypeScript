@@ -104,7 +104,7 @@ func (v *typefnVM) reflectIndexers(node *ast.Node, value *Type) *Type {
 		v.blocked = true
 		return v.c.errorType
 	}
-	if value.flags&(TypeFlagsObject|TypeFlagsIntersection) == 0 {
+	if value.flags&(TypeFlagsObject|TypeFlagsIntersection|TypeFlagsNonPrimitive) == 0 {
 		return v.error(node, "reflect.indexers requires one object Type")
 	}
 	infos := v.c.getIndexInfosOfType(value)

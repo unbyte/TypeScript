@@ -14,7 +14,7 @@ func (v *typefnVM) signatureObject(node *ast.Node, value *Type) bool {
 		v.blocked = true
 		return false
 	}
-	if value.flags&(TypeFlagsObject|TypeFlagsIntersection) == 0 {
+	if value.flags&(TypeFlagsObject|TypeFlagsIntersection|TypeFlagsNonPrimitive) == 0 {
 		v.error(node, "signature query requires one object Type")
 		return false
 	}

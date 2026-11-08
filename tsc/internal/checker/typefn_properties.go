@@ -109,7 +109,7 @@ func (v *typefnVM) reflectProperties(node *ast.Node, value *Type) *Type {
 		v.blocked = true
 		return v.c.errorType
 	}
-	if value.flags&(TypeFlagsObject|TypeFlagsIntersection) == 0 {
+	if value.flags&(TypeFlagsObject|TypeFlagsIntersection|TypeFlagsNonPrimitive) == 0 {
 		return v.error(node, "reflect.properties requires one object Type")
 	}
 	properties := v.c.getPropertiesOfType(value)
