@@ -593,11 +593,7 @@ type Host interface {
 var nextCheckerID atomic.Uint32
 
 type Checker struct {
-	typefnPrograms                              map[*ast.Node]*typefnProgram
-	typefnVM                                    *typefnVM
-	typefnTerms                                 map[typefnTermKey]*Type
-	typefnSyntaxChecks                          map[*ast.Node]bool
-	typefnObjects                               map[*Type]bool
+	typefn                                      *typefnState
 	id                                          uint32
 	program                                     Program
 	compilerOptions                             *core.CompilerOptions
@@ -22919,7 +22915,7 @@ func (c *Checker) clearActiveMapperCaches() {
 // we perform type inference (i.e. a type parameter of a generic function). We cache
 // results for union and intersection types for performance reasons.
 func (c *Checker) couldContainTypeVariablesWorker(t *Type) bool {
-	if c.typefnObjects[t] {
+	if c.typefn != nil && c.typefn.objects[t] {
 		return true
 	}
 	if t.flags&TypeFlagsStructuredOrInstantiable == 0 {
@@ -22961,7 +22957,7 @@ func (c *Checker) instantiateTypeWorker(t *Type, m *TypeMapper, alias *TypeAlias
 	if t.flags&TypeFlagsTypefn != 0 {
 		return c.instantiateTypefn(t, m)
 	}
-	if c.typefnObjects[t] {
+	if c.typefn != nil && c.typefn.objects[t] {
 		return c.instantiateTypefnObject(t, m)
 	}
 	flags := t.flags
