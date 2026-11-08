@@ -136,6 +136,21 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		return leafReference(index, plan.leafIndex[t])
 	}
 	statements := []*ast.Node{}
+	keyBindings := map[*Type]*ast.Node{}
+	keyName := func(key *Type) *ast.Node {
+		if binding := keyBindings[key]; binding != nil {
+			return f.NewIdentifier(binding.Name().Text())
+		}
+		if !v.allocate(node, 6) {
+			return f.NewIdentifier("__typefnError")
+		}
+		name := fmt.Sprintf("__TypefnKey%d", len(keyBindings))
+		declaration := f.NewVariableDeclaration(f.NewIdentifier(name), nil, f.NewKeywordTypeNode(ast.KindUnknownKeyword), nil)
+		statement := f.NewVariableStatement(f.NewModifierList([]*ast.Node{f.NewToken(ast.KindDeclareKeyword)}), f.NewVariableDeclarationList(f.NewNodeList([]*ast.Node{declaration}), ast.NodeFlagsConst))
+		keyBindings[key] = declaration
+		statements = append(statements, statement)
+		return f.NewIdentifier(name)
+	}
 	aliases := map[int]*ast.Node{}
 	for _, index := range reachable {
 		if !v.step(node) {
@@ -194,8 +209,12 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 		case ast.KindTypeLiteral:
 			members := make([]*ast.Node, len(graph.properties))
 			for i, p := range graph.properties {
+				name := f.NewStringLiteral(p.name, ast.TokenFlagsNone)
 				if p.key != nil {
-					return v.error(node, "symbol-keyed recursive construction is not implemented yet")
+					name = f.NewComputedPropertyName(keyName(p.key))
+					if v.failed {
+						return v.c.errorType
+					}
 				}
 				var modifiers *ast.ModifierList
 				if p.readonly {
@@ -205,7 +224,7 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 				if p.optional {
 					optional = f.NewToken(ast.KindQuestionToken)
 				}
-				members[i] = f.NewPropertySignatureDeclaration(modifiers, f.NewStringLiteral(p.name, ast.TokenFlagsNone), optional, inputs[i], nil)
+				members[i] = f.NewPropertySignatureDeclaration(modifiers, name, optional, inputs[i], nil)
 			}
 			body = f.NewTypeLiteralNode(f.NewNodeList(members))
 		default:
@@ -226,6 +245,9 @@ func (v *typefnVM) sealConstruction(node *ast.Node, arena *typefnConstructionAre
 	ast.SetParentInChildren(file.AsNode())
 	binder.BindSourceFile(file)
 	scope.Parent = source.AsNode()
+	for key, binding := range keyBindings {
+		v.c.valueSymbolLinks.Get(binding.Symbol()).resolvedType = key
+	}
 	// All edges are now native syntax and all leaf arguments are ordinary Types.
 	// Release the private construction context before native evaluation/replay.
 	v.construction = nil

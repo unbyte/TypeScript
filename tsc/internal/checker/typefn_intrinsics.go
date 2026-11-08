@@ -109,7 +109,7 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args []*Type, slots []typefnVa
 		}
 	}()
 	switch e.intrinsic {
-	case "types.array", "types.function", "types.constructor", "types.tuple":
+	case "types.array", "types.function", "types.constructor", "types.tuple", "types.object":
 	case "tuple.length", "tuple.slice":
 		if constructionOf(args[0]) != nil {
 			return v.constructionTupleIntrinsic(e.node, e.intrinsic, args)

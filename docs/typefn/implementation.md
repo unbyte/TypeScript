@@ -531,8 +531,8 @@ environment, preserving native generic substitution through lazy recursive membe
 Self-free definitions retain their ordinary native result. Tests assert native
 indexing, bidirectional assignability, distinct substitutions, group iteration,
 invalid cycles, forbidden observations, finite kinds and allocation failures.
-Full builder descriptors, signature descriptors, unique-symbol keys and broader native constructor
-adapters remain follow-up work; unsupported observations diagnose.
+Object indexer/signature descriptors and broader native constructor adapters remain
+follow-up work; unsupported observations diagnose.
 
 Recursive construction also supports `types.function`/`types.constructor`, including
 recursive parameter/result Types, abstract constructors and mixed recursive groups.
@@ -582,3 +582,9 @@ entire group's leaf list at every alias and recursive edge. Both 256 independent
 roots and a 256-root mutual cycle fit a 100,000-node budget; the independent case
 previously exceeded it. Tests also verify distinct substitutions across projected
 child environments and a generic-body assertion for a child with no dependencies.
+
+Recursive object descriptors now preserve required/optional and readonly properties,
+including unique-symbol keys. Synthetic key bindings retain the original native
+symbol identity; string/number effective-key duplicates still diagnose. Both
+exact-optional modes verify declared values separately from read values, distinct
+symbol keys, generic replay and the ignored derived `read` descriptor field.

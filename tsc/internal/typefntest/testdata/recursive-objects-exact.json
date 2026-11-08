@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "recursive-objects.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": true
+  },
+  "diagnostics": []
+}

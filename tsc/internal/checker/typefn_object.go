@@ -12,13 +12,19 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 	if !ok {
 		return v.c.errorType
 	}
-	members := ast.NewSymbolTable()
+	fieldsPlan := []typefnConstructionProperty{}
+	values := []*Type{}
+	names := map[string]bool{}
+	private := false
 	for _, property := range properties {
 		fields, ok := v.descriptor(node, property, []string{"key", "value", "optional", "readonly"}, []string{"read"})
 		if !ok {
 			return v.c.errorType
 		}
 		key, value := fields[0], fields[1]
+		if v.rejectConstruction(node, key) {
+			return v.c.errorType
+		}
 		if typefnUnresolved(key) {
 			v.blocked = true
 			return v.c.errorType
@@ -33,7 +39,7 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 			}
 		}
 		name := getPropertyNameFromType(key)
-		if members.Get(name) != nil {
+		if names[name] {
 			return v.error(node, "duplicate effective property key")
 		}
 		optional, ok := v.boolean(node, fields[2])
@@ -44,28 +50,21 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 		if !ok {
 			return v.c.errorType
 		}
-		if !v.allocate(node, 1) {
-			return v.c.errorType
-		}
-		flags := ast.SymbolFlagsProperty
-		if optional {
-			flags |= ast.SymbolFlagsOptional
-		}
-		checkFlags := ast.CheckFlagsNone
-		if readonly {
-			checkFlags |= ast.CheckFlagsReadonly
-		}
-		symbol := v.c.newSymbolEx(flags, name, checkFlags)
-		links := v.c.valueSymbolLinks.Get(symbol)
-		links.resolvedType = v.c.addOptionalityEx(value, true, optional)
-		if optional {
-			v.c.rememberTypefnProperty(symbol, value)
-		}
+		var nameType *Type
 		if key.flags == TypeFlagsUniqueESSymbol {
-			links.setNameType(v.c, key)
+			nameType = key
 		}
-		members.Set(name, symbol)
+		fieldsPlan = append(fieldsPlan, typefnConstructionProperty{name: name, key: nameType, optional: optional, readonly: readonly})
+		values = append(values, value)
+		names[name] = true
+		private = private || constructionOf(value) != nil
 	}
+	// Indexer/signature construction needs its own sealed member adapter. Do
+	// not let a private payload reach the existing native builder meanwhile.
+	if v.rejectConstruction(node, args[1:]...) {
+		return v.c.errorType
+	}
+
 	var indexInfos []*IndexInfo
 	if len(args) > 1 {
 		var ok bool
@@ -89,10 +88,16 @@ func (v *typefnVM) objectType(node *ast.Node, args []*Type) *Type {
 			return v.c.errorType
 		}
 	}
-	if !v.allocate(node, 1) {
+	if private {
+		if len(indexInfos)+len(calls)+len(constructs) != 0 {
+			return v.error(node, "recursive object indexer and signature adapters are not implemented yet")
+		}
+		return v.construct(node, &typefnConstruction{kind: ast.KindTypeLiteral, inputs: values, properties: fieldsPlan})
+	}
+	if !v.allocate(node, len(fieldsPlan)+1) {
 		return v.c.errorType
 	}
-	result := v.c.newTypefnObjectEx(members, calls, constructs, indexInfos)
+	result := v.c.newTypefnObjectEx(v.c.typefnPropertyMembers(fieldsPlan, values), calls, constructs, indexInfos)
 	v.validateObjectIndexers(node, result, indexInfos)
 	if v.failed {
 		return v.c.errorType

@@ -105,6 +105,10 @@ func (v *typefnVM) constructionObject(node *ast.Node, properties []typefnConstru
 	if !v.allocate(node, len(properties)+1) {
 		return v.c.errorType
 	}
+	return v.c.newTypefnObject(v.c.typefnPropertyMembers(properties, values))
+}
+
+func (c *Checker) typefnPropertyMembers(properties []typefnConstructionProperty, values []*Type) ast.SymbolTable {
 	members := ast.NewSymbolTable()
 	for i, p := range properties {
 		flags := ast.SymbolFlagsProperty
@@ -115,17 +119,18 @@ func (v *typefnVM) constructionObject(node *ast.Node, properties []typefnConstru
 		if p.readonly {
 			checks |= ast.CheckFlagsReadonly
 		}
-		symbol := v.c.newSymbolEx(flags, p.name, checks)
-		links := v.c.valueSymbolLinks.Get(symbol)
-		links.resolvedType = v.c.addOptionalityEx(values[i], true, p.optional)
+		symbol := c.newSymbolEx(flags, p.name, checks)
+		links := c.valueSymbolLinks.Get(symbol)
+		links.resolvedType = c.addOptionalityEx(values[i], true, p.optional)
 		if p.optional {
-			v.c.rememberTypefnProperty(symbol, values[i])
+			c.rememberTypefnProperty(symbol, values[i])
 		}
-		links.setNameType(v.c, p.key)
+		links.setNameType(c, p.key)
 		members.Set(p.name, symbol)
 	}
-	return v.c.newTypefnObject(members)
+	return members
 }
+
 func requiredConstructionTuple(graph *typefnConstruction) bool {
 	if graph == nil || graph.kind != ast.KindTupleType {
 		return false
