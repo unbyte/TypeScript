@@ -9,6 +9,9 @@ type SourceFileParseOptions struct {
 	FileName                       tspath.RootedFilePath
 	PathKey                        tspath.PathKey
 	ExternalModuleIndicatorOptions ExternalModuleIndicatorOptions
+	TypefnVersion                  int
+	TypefnSyntaxDepth              int
+	TypefnParserWork               int
 }
 
 type ExternalModuleIndicatorOptions struct {
