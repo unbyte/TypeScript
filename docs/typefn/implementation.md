@@ -161,7 +161,7 @@ remain part of the outstanding island bridge.
 
 ## Validation
 
-The compiler-project harness has 160 fixtures covering native calibration, execution,
+The compiler-project harness has 162 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -242,8 +242,7 @@ method variance and abstract flags. Queries expose public signatures;
 native signature provenance without evaluating latent generic return computations.
 Tests exercise actual overload calls, generic inference, outer-Type specialization,
 generic default constructors, method/function variance, abstract/private
-constructors and category errors. Fresh signature construction and descriptor
-reflection remain separate unfinished contracts.
+constructors and category errors.
 
 `types.function` and `types.constructor` now build ordinary native signatures
 from parameter tuples, preserving native labels, optional/rest/variadic tails and
@@ -252,4 +251,13 @@ arity; fresh signatures have ordinary function variance. Generic parameter/resul
 leaves and the abstract flag replay independently. Tests include actual calls/new,
 Parameters/ConstructorParameters, outer-Type specialization, native primitive
 constructor results, and negative arity/variance/abstract cases. General
-`types.signature`/`reflect.signature` descriptors are still pending.
+`types.signature` validation/construction is still pending.
+
+`reflect.signature` now returns the nongeneric descriptor schema. It preserves
+original parameter boundaries (including whole rest-tuple Types), names,
+optional/rest modes, explicit this, returns, abstractness and all four native
+predicate forms. Generic signatures diagnose rather than erasing their binders.
+Tests cover symbolic outer-Type replay, initialized/optional/void parameters,
+construct signatures, parameter/this predicates, assertions and generic rejection.
+Parameter values use native parameter Types, including optional-read undefined;
+the separate property/tuple declared-value contract remains unfinished.
