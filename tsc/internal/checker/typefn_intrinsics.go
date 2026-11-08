@@ -18,6 +18,8 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"types.recursive":       {1, 1, false, "Build<_>"},
+	"types.recursiveGroup":  {2, 2, false, "Count, Build<_>"},
 	"types.tuple":           {1, 1, false, "Descriptor"},
 	"reflect.tuple":         {1, 1, false, "Tuple"},
 	"reflect.properties":    {1, 1, false, "Object"},
@@ -89,7 +91,7 @@ func (b *typefnCompiler) intrinsic(e *typefnExpression) bool {
 		count = len(operands.Nodes)
 	}
 	if e.node.Kind != ast.KindTypeFunctionCall || count < info.minimum || count > info.maximum {
-		b.error(e.node, fmt.Sprintf("%s requires %d..%d Type arguments", name, info.minimum, info.maximum))
+		b.error(e.node, fmt.Sprintf("%s requires %d..%d arguments", name, info.minimum, info.maximum))
 	}
 	if info.aborts && (e.node.Parent == nil || e.node.Parent.Kind != ast.KindTypeFunctionExpressionStatement) {
 		b.error(e.node, name+" is only permitted as an application statement")
@@ -106,6 +108,9 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args []*Type, slots []typefnVa
 			result = v.deferExpression(e, slots)
 		}
 	}()
+	if e.intrinsic != "types.array" && v.rejectConstruction(e.node, args...) {
+		return v.c.errorType
+	}
 	// Constructors can publish structure containing symbolic Type leaves. Only
 	// their control/metadata operands need concrete observations.
 	switch e.intrinsic {

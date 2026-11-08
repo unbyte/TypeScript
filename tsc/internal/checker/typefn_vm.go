@@ -40,6 +40,7 @@ type typefnVM struct {
 	replaySite          *ast.Node
 	nativeIslandSite    *ast.Node
 	nativeMapper        *TypeMapper
+	construction        *typefnConstructionArena
 }
 
 func (c *Checker) evaluateTypefn(node, declaration *ast.Node, args []*Type) *Type {
@@ -184,7 +185,10 @@ func (v *typefnVM) callValue(node, declaration *ast.Node, args []typefnValue, cl
 		// A factory may publish only a known constructor whose creation checks
 		// completed. It cannot hide pending checks in a fake native Type. Block
 		// the enclosing Type computation so its immutable call recipe can replay.
-		blockConstructor := !v.failed && p.resultKind.resolved() > 0 && (v.blocked || len(v.checks) != 0)
+		blockConstructor := !v.failed && (p.resultKind.resolved() > 0 || v.construction != nil) && (v.blocked || len(v.checks) != 0)
+		if blockConstructor && v.construction != nil {
+			v.construction.blocked = true
+		}
 		if blockConstructor {
 			result = typefnValue{}
 		} else if v.blocked && !v.failed {

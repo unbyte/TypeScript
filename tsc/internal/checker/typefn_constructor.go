@@ -91,6 +91,9 @@ func (b *typefnCompiler) expressionInKind(node *ast.Node, expected *typefnKind) 
 
 func (v *typefnVM) applyNativeConstructor(node *ast.Node, closure *typefnClosure, original []*Type) *Type {
 	code := closure.native
+	if v.rejectConstruction(node, original...) {
+		return v.c.errorType
+	}
 	if len(original) != len(code.parameters) {
 		return v.error(node, "constructor application must supply every declared slot")
 	}

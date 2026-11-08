@@ -133,8 +133,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   and union traversal use native dependency summaries; exhaustive native forms
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
-* Exhaustive tuple/property provenance,
-  recursive structural sealing
+* Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
 * Declaration source recipes, advanced refactorings/auto-import completion, complete
@@ -165,7 +164,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 307 fixtures covering native calibration, execution,
+The compiler-project harness has 325 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -519,4 +518,18 @@ finding a guarded edge in each strongly connected component would accept invalid
 subcycles. Traversal is iterative, checks every root and edge, and shares the
 caller's cancellation/work gate. Tests include a 100,000-node chain, mixed guarded
 and unguarded cycles, unreachable scratch nodes and cancellation in both passes.
-The public recursive intrinsics are not connected by this infrastructure change.
+This validator is used by the recursive intrinsic integration below.
+
+`types.recursive` and `types.recursiveGroup` now invoke one-slot constructors in a
+private arena. Object and tuple expressions, `types.array`, union/intersection
+assembly, groups, nested builders and frozen helper captures participate. Native
+normalization never receives an unsealed handle; scratch closures bypass the
+ordinary constructor cache. Failed or blocked construction discards the arena and
+replays the original builder expression, including implicit lambda capture reads.
+After guard validation, generated native recursive aliases carry explicit leaf
+parameters, preserving native generic substitution through lazy recursive members.
+Self-free definitions retain their ordinary native result. Tests assert native
+indexing, bidirectional assignability, distinct substitutions, group iteration,
+invalid cycles, forbidden observations, finite kinds and allocation failures.
+Full builder descriptors, signatures, unique-symbol keys and native constructor
+adapters remain follow-up work; unsupported observations diagnose.

@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "error-recursive-live-budget.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "liveBytes": 4096
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "live VM allocation limit exceeded"
+    }
+  ]
+}

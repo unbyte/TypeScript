@@ -7,6 +7,9 @@ import (
 // A false result is a definite non-match only when neither blocked nor failed
 // was set. Registers for captures are arm-private and cannot leak to later arms.
 func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []typefnValue) bool {
+	if v.rejectConstruction(p.node, subject) {
+		return false
+	}
 	node := p.node
 	if !v.step(node) {
 		return false
@@ -23,6 +26,9 @@ func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []typefnValue)
 	case ast.KindTypeFunctionLiteralPattern:
 		value := v.expression(p.expr, slots)
 		if v.failed || v.blocked {
+			return false
+		}
+		if v.rejectConstruction(node, value) {
 			return false
 		}
 		if typefnUnresolved(subject) {

@@ -54,7 +54,8 @@ func (c *Checker) internTypefnConstructor(p *typefnProgram, native *typefnNative
 	} else {
 		node = native.declaration
 	}
-	if value := state.closures[key]; value != nil {
+	private := state.vm != nil && state.vm.construction != nil
+	if value := state.closures[key]; value != nil && !private {
 		return value
 	}
 	if state.vm != nil {
@@ -67,7 +68,9 @@ func (c *Checker) internTypefnConstructor(p *typefnProgram, native *typefnNative
 	}
 	state.nextClosureID++
 	value := &typefnClosure{id: state.nextClosureID, program: p, native: native, captures: slices.Clone(captures)}
-	state.closures[key] = value
+	if !private {
+		state.closures[key] = value
+	}
 	return value
 }
 
@@ -200,6 +203,9 @@ func (v *typefnVM) inputConstraints(node *ast.Node, p *typefnProgram, registers 
 			return false
 		}
 		if !v.step(bound.node) {
+			return false
+		}
+		if v.rejectConstruction(bound.node, args[i].native, constraint) {
 			return false
 		}
 		if v.c.isTypeAssignableTo(args[i].native, constraint) {

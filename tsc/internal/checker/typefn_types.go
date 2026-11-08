@@ -14,20 +14,22 @@ const (
 	typefnExpressionTerm
 	typefnNativeCallTerm
 	typefnGuardTerm
+	typefnConstructionTerm
 )
 
 type typefnTerm struct {
 	ConstrainedType
-	kind        typefnTermKind
-	node        *ast.Node
-	declaration *ast.Node
-	symbol      *ast.Symbol
-	expression  *typefnExpression
-	operator    ast.Kind
-	args        []*Type
-	values      []typefnValue
-	closure     *typefnClosure
-	shape       *Type // Only guards have an already-known result shape.
+	kind         typefnTermKind
+	node         *ast.Node
+	declaration  *ast.Node
+	symbol       *ast.Symbol
+	expression   *typefnExpression
+	operator     ast.Kind
+	args         []*Type
+	values       []typefnValue
+	closure      *typefnClosure
+	construction *typefnConstruction
+	shape        *Type // Only guards have an already-known result shape.
 }
 
 type typefnTermKey struct {

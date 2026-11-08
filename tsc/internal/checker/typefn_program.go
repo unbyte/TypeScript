@@ -379,6 +379,21 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 			}
 		}
 		if b.intrinsic(e) {
+			if e.intrinsic == "types.recursive" || e.intrinsic == "types.recursiveGroup" {
+				if data.Operands == nil {
+					return e
+				}
+				for i, operand := range data.Operands.Nodes {
+					var expected *typefnKind
+					if i == len(data.Operands.Nodes)-1 {
+						expected = typefnConstructorKind(1)
+					}
+					arg := b.expressionInKind(operand, expected)
+					b.sameKind(operand, arg.kind, expected, "recursive builder requires a one-slot Type constructor")
+					e.args = append(e.args, arg)
+				}
+				return e
+			}
 			break
 		}
 		e.symbol = b.c.resolveEntityName(name, ast.SymbolFlagsType, false, false, nil)

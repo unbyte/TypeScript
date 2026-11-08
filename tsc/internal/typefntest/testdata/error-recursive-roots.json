@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-recursive-roots.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "recursive group must return one root per reference"
+    }
+  ]
+}

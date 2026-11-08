@@ -13,6 +13,9 @@ func (v *typefnVM) boolType(value bool) *Type {
 
 func (v *typefnVM) boolean(node *ast.Node, value *Type) (bool, bool) {
 	value = v.observe(value)
+	if v.rejectConstruction(node, value) {
+		return false, false
+	}
 	if typefnUnresolved(value) {
 		v.blocked = true
 		return false, false
@@ -26,6 +29,13 @@ func (v *typefnVM) boolean(node *ast.Node, value *Type) (bool, bool) {
 
 func (v *typefnVM) elements(node *ast.Node, value *Type, union bool) []*Type {
 	value = v.observe(value)
+	if graph := constructionOf(value); graph != nil {
+		if !union && requiredConstructionTuple(graph) {
+			return graph.inputs
+		}
+		v.error(node, "cannot observe an unsealed recursive reference")
+		return nil
+	}
 	if typefnUnresolved(value) {
 		v.blocked = true
 		return nil

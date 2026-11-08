@@ -7,6 +7,9 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 // referenced lexical binders and mapper. Only VM-built objects need a member walk:
 // their members were already evaluated when the object was constructed.
 func (v *typefnVM) unresolvedGraph(node *ast.Node, root *Type) bool {
+	if v.rejectConstruction(node, root) {
+		return true
+	}
 	// Scalar-heavy parsers should not allocate a graph traversal for each digit
 	// comparison. Their complete dependency check is already the outer-Type check.
 	if root.flags&(TypeFlagsObject|TypeFlagsUnionOrIntersection) == 0 {

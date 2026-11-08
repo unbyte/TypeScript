@@ -25,6 +25,14 @@ func (v *typefnVM) tupleExpression(e *typefnExpression, slots []typefnValue) *Ty
 		}
 		flags := ElementFlagsRequired
 		if spread {
+			if graph := constructionOf(value); graph != nil {
+				if !requiredConstructionTuple(graph) {
+					return v.error(element.node, "cannot observe an unsealed recursive reference")
+				}
+				values = append(values, graph.inputs...)
+				infos = append(infos, graph.elements...)
+				continue
+			}
 			if typefnUnresolved(value) || v.c.isGenericTupleType(value) || v.c.isGenericObjectType(value) {
 				return v.deferExpression(e, slots)
 			}
@@ -45,6 +53,22 @@ func (v *typefnVM) tupleExpression(e *typefnExpression, slots []typefnValue) *Ty
 		}
 		values = append(values, value)
 		infos = append(infos, TupleElementInfo{flags: flags})
+	}
+	for _, value := range values {
+		if constructionOf(value) != nil {
+			expanded := []*Type{}
+			metadata := []TupleElementInfo{}
+			for i, part := range values {
+				if infos[i].flags == ElementFlagsVariadic && isTupleType(part) && part.TargetTupleType().combinedFlags & ^ElementFlagsRequired == 0 {
+					expanded = append(expanded, v.c.getTypeArguments(part)...)
+					metadata = append(metadata, part.TargetTupleType().elementInfos...)
+				} else {
+					expanded = append(expanded, part)
+					metadata = append(metadata, infos[i])
+				}
+			}
+			return v.construct(e.node, &typefnConstruction{kind: ast.KindTupleType, inputs: expanded, elements: metadata})
+		}
 	}
 	return v.c.createTupleTypeEx(values, infos, false)
 }

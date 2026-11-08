@@ -14,6 +14,9 @@ func (v *typefnVM) arrayType(node *ast.Node, args []*Type) *Type {
 	if !v.allocate(node, 1) {
 		return v.c.errorType
 	}
+	if constructionOf(args[0]) != nil {
+		return v.construct(node, &typefnConstruction{kind: ast.KindArrayType, inputs: []*Type{args[0]}, readonly: readonly})
+	}
 	return v.c.createArrayTypeEx(args[0], readonly)
 }
 

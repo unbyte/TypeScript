@@ -11,6 +11,12 @@ import (
 
 func (v *typefnVM) binary(node *ast.Node, op ast.Kind, a, b *Type) *Type {
 	a, b = v.observe(a), v.observe(b)
+	if constructionOf(a) != nil || constructionOf(b) != nil {
+		if op == ast.KindBarToken || op == ast.KindAmpersandToken {
+			return v.construct(node, &typefnConstruction{kind: op, inputs: []*Type{a, b}})
+		}
+		return v.error(node, "cannot observe an unsealed recursive reference")
+	}
 	if op != ast.KindBarToken && op != ast.KindAmpersandToken &&
 		!(a == b && (op == ast.KindEqualsEqualsToken || op == ast.KindExclamationEqualsToken)) &&
 		(typefnUnresolved(a) || typefnUnresolved(b)) {
@@ -141,6 +147,9 @@ func (v *typefnVM) binary(node *ast.Node, op ast.Kind, a, b *Type) *Type {
 
 func (v *typefnVM) unary(node *ast.Node, op ast.Kind, value *Type) *Type {
 	value = v.observe(value)
+	if v.rejectConstruction(node, value) {
+		return v.c.errorType
+	}
 	if op != ast.KindKeyOfKeyword && typefnUnresolved(value) {
 		return v.c.newTypefnTerm(&typefnTerm{kind: typefnUnaryTerm, node: node, operator: op, args: []*Type{value}})
 	}

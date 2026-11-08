@@ -5,18 +5,19 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 307 isolated compiler-project fixtures in the full harness run. The harness checks complete
+* Passed: 325 isolated compiler-project fixtures in the full harness run. The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
   creation-check readiness, computed bounds, mixed constructor arguments, native
   constructor identity, dependent bounds, lexical capture substitution, constructor
   aliases, forward chains, imports, creation cycles, native island constructors and
+  recursive builders and groups, guard rejection and scratch-cache isolation,
   native lexical replay with query-order isolation, ambient island alias defaults,
   `typeof` queries, mapped generic constraints and Type/value namespace separation.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
-  after ambient native island environment support.
+  after initial recursive builder integration.
 * Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
   template literal and generic-signature Types, including native emit and type/symbol
   baselines, rerun after native constructor aliases.

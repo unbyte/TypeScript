@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "error-recursive-native-budget.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "nativeNodes": 100
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "native construction limit exceeded"
+    }
+  ]
+}

@@ -16,6 +16,9 @@ func (b *NodeBuilderImpl) typefnTypeToTypeNode(t *Type) *ast.Node {
 	}
 	d := t.asTypefnTerm()
 	switch d.kind {
+	case typefnConstructionTerm:
+		// Only internal tracing may encounter an arena handle. It is never a published result.
+		return b.f.NewTypeReferenceNode(b.f.NewIdentifier("unsealed recursive reference"), nil)
 	case typefnCallTerm:
 		arguments := core.Map(d.values, b.typefnValueToNode)
 		if ast.IsTypeFunctionLambda(d.declaration) {

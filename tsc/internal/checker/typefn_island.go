@@ -28,6 +28,9 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 		if v.failed {
 			return v.c.errorType
 		}
+		if values[i].native != nil && v.rejectConstruction(e.node, values[i].native) {
+			return v.c.errorType
+		}
 		// Until native cache contexts can retain symbolic capture dependencies,
 		// conservatively keep the original island and frozen locals for replay.
 		if v.unresolvedValue(e.node, values[i]) {

@@ -9,6 +9,11 @@ import (
 
 func (c *Checker) newTypefnTerm(d *typefnTerm) *Type {
 	state := c.getTypefnState()
+	if state.vm != nil && state.vm.construction != nil {
+		state.vm.construction.blocked = true
+		state.vm.blocked = true
+		return c.errorType
+	}
 	var key keyBuilder
 	key.writeInt(len(d.args))
 	for _, arg := range d.args {
@@ -43,6 +48,9 @@ func splitTypefn(t *Type) (*Type, []*Type) {
 		return t, nil
 	}
 	d := t.asTypefnTerm()
+	if d.kind == typefnConstructionTerm {
+		return t, nil
+	}
 	if d.kind == typefnGuardTerm {
 		return d.shape, d.args
 	}
@@ -211,6 +219,11 @@ func (v *typefnVM) observe(t *Type) *Type {
 }
 
 func (v *typefnVM) deferExpression(e *typefnExpression, slots []typefnValue) *Type {
+	if v.construction != nil {
+		v.construction.blocked = true
+		v.blocked = true
+		return v.c.errorType
+	}
 	frozen := make([]typefnValue, len(slots))
 	// Native names are implicit reads through the lexical mapper, so their
 	// environment slots are dependencies even without an explicit slot operand.
@@ -226,6 +239,15 @@ func (v *typefnVM) deferExpression(e *typefnExpression, slots []typefnValue) *Ty
 		}
 		if e.slot >= 0 {
 			frozen[e.slot] = slots[e.slot]
+		}
+		// Constructor expressions read their lexical capture slots even though
+		// those reads are not explicit child expressions (notably lambdas).
+		if e.helper != nil && e.helper.local {
+			for _, capture := range e.helper.captures {
+				if capture.native == nil {
+					frozen[capture.source] = slots[capture.source]
+				}
+			}
 		}
 		for _, a := range e.args {
 			capture(a)

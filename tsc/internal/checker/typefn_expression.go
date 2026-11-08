@@ -144,7 +144,9 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []typefnValue) *T
 	case ast.KindTypeFunctionTuple:
 		return v.tupleExpression(e, slots)
 	case ast.KindTypeFunctionObject:
-		members := ast.NewSymbolTable()
+		properties := []typefnConstructionProperty{}
+		values := []*Type{}
+		names := map[string]bool{}
 		for index, field := range data.Operands.Nodes {
 			fieldData := field.AsTypeFunctionExpression()
 			name := ""
@@ -165,6 +167,9 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []typefnValue) *T
 				if v.failed {
 					return v.c.errorType
 				}
+				if v.rejectConstruction(field, key) {
+					return v.c.errorType
+				}
 				if typefnUnresolved(key) {
 					return v.deferExpression(e, slots)
 				}
@@ -182,7 +187,7 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []typefnValue) *T
 					return v.error(field, "computed key requires one string/number literal or unique symbol")
 				}
 			}
-			if members.Get(name) != nil {
+			if names[name] {
 				if nameType != nil {
 					return v.error(field, "duplicate object field for the same unique symbol")
 				}
@@ -192,30 +197,16 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []typefnValue) *T
 			if v.failed || v.blocked {
 				return v.c.errorType
 			}
-			if !v.allocate(field, 1) {
-				return v.c.errorType
-			}
-			flags := ast.SymbolFlagsProperty
-			if fieldData.Optional {
-				flags |= ast.SymbolFlagsOptional
-			}
-			checkFlags := ast.CheckFlagsNone
-			if fieldData.Readonly {
-				checkFlags |= ast.CheckFlagsReadonly
-			}
-			symbol := v.c.newSymbolEx(flags, name, checkFlags)
-			v.c.valueSymbolLinks.Get(symbol).resolvedType = v.c.addOptionalityEx(value, true, fieldData.Optional)
-			if fieldData.Optional {
-				v.c.rememberTypefnProperty(symbol, value)
-			}
-			v.c.valueSymbolLinks.Get(symbol).setNameType(v.c, nameType)
-			members.Set(name, symbol)
+			properties = append(properties, typefnConstructionProperty{name: name, key: nameType, optional: fieldData.Optional, readonly: fieldData.Readonly})
+			values = append(values, value)
+			names[name] = true
 		}
-		if !v.allocate(node, 1) {
-			return v.c.errorType
-		}
-		return v.c.newTypefnObject(members)
+		return v.constructionObject(node, properties, values)
+
 	case ast.KindTypeFunctionCall, ast.KindTypeFunctionIndex:
+		if e.intrinsic == "types.recursive" || e.intrinsic == "types.recursiveGroup" {
+			return v.recursiveConstruction(e, slots)
+		}
 		args := make([]*Type, len(e.args))
 		for i, arg := range e.args {
 			args[i] = v.expression(arg, slots)
@@ -224,6 +215,12 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []typefnValue) *T
 			}
 		}
 		if node.Kind == ast.KindTypeFunctionIndex {
+			if constructionOf(args[0]) != nil {
+				return v.constructionIndex(node, args[0], args[1])
+			}
+			if v.rejectConstruction(node, args[1]) {
+				return v.c.errorType
+			}
 			return v.c.getIndexedAccessTypeEx(args[0], args[1], AccessFlagsNone, node, nil)
 		}
 		if e.intrinsic != "" {

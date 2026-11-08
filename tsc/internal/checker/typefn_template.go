@@ -14,6 +14,9 @@ func (v *typefnVM) templateExpression(e *typefnExpression, slots []typefnValue) 
 		if v.failed || v.blocked {
 			return v.c.errorType
 		}
+		if v.rejectConstruction(arg.node, values[i]) {
+			return v.c.errorType
+		}
 		pending = pending || typefnUnresolved(values[i])
 		if !v.c.isTypeAssignableTo(values[i], v.c.templateConstraintType) {
 			if typefnUnresolved(values[i]) {
