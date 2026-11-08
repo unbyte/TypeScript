@@ -85,41 +85,7 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 		}
 		return v.unary(node, data.OperatorToken.Kind, value)
 	case ast.KindTypeFunctionTuple:
-		var values []*Type
-		for _, element := range e.args {
-			item := element
-			spread := element.node.Kind == ast.KindTypeFunctionSpread
-			if spread {
-				item = element.args[0]
-			}
-			value := v.expression(item, slots)
-			if v.failed || v.blocked {
-				return v.c.errorType
-			}
-			if spread {
-				if value.flags == TypeFlagsStringLiteral {
-					return v.error(node, "tuple spread requires a tuple")
-				}
-				elements := v.elements(node, value, false)
-				if v.blocked && !v.failed {
-					v.blocked = false
-					return v.deferExpression(e, slots)
-				}
-				if v.failed {
-					return v.c.errorType
-				}
-				values = append(values, elements...)
-			} else {
-				values = append(values, value)
-			}
-			if !v.allocate(node, 1) {
-				return v.c.errorType
-			}
-		}
-		if !v.allocate(node, len(values)+1) {
-			return v.c.errorType
-		}
-		return v.c.createTupleType(values)
+		return v.tupleExpression(e, slots)
 	case ast.KindTypeFunctionObject:
 		members := ast.NewSymbolTable()
 		for index, field := range data.Operands.Nodes {

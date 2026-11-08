@@ -21,7 +21,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Native islands | partial | Frozen native capture scopes and whole-island symbolic replay implemented; stable symbolic shape publication, environment reuse and full dependency coverage remain |
 | Union and structural predicates | partial | Native object/function/mapped/recursive cases now tested; exhaustive dependency summaries, ordinary cast/assignment boundaries and native relation fidelity remain |
 | Reflection | partial | Classification, arrays, indexers and ordered signature handles implemented/tested; nongeneric signature descriptors implemented; properties, tuple metadata and nominal boundaries remain |
-| Structural builders | partial | Property/indexer descriptors, symbol keys, arrays and native signature forwarding implemented; tuple-based functions/constructors implemented; full signature descriptors implemented; general tuple metadata/spreads remain |
+| Structural builders | partial | Property/indexer descriptors, symbol keys, arrays and native signature forwarding implemented; tuple-based functions/constructors implemented; full signature descriptors and native tuple spreads implemented; tuple metadata descriptors remain |
 | Recursive structural graphs | pending | Single/group sealing, guarded edges, invalid cycles and cancellation |
 | Generic deferral/inference | partial | Latent member dependencies, generic-body requirements and exhaustive substitution boundaries |
 | Constraints/result kinds | partial | Resolve documented scope/timing discrepancies; retain and check result kinds |

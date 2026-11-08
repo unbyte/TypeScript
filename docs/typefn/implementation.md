@@ -129,7 +129,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   and union traversal use native dependency summaries; exhaustive native forms
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
-* Property/tuple/signature reflection, general tuple metadata/spreads,
+* Property/tuple reflection, general tuple metadata,
   recursive structural sealing
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
@@ -160,7 +160,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 187 fixtures covering native calibration, execution,
+The compiler-project harness has 191 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -283,3 +283,10 @@ Native-island reference names and generic arities are checked during lowering,
 including unexecuted branches. Captured Types cannot be applied as constructors;
 native typefn references require explicit applications. Tests cover missing value
 names in typeof, missing native generic arguments and unapplied typefn names.
+
+Tuple expression spreads use native variadic normalization. They preserve source
+labels/optional/rest modes, support arrays and native union expansion, and recheck
+unknown spread shapes after substitution. Tests compare results with ordinary
+native tuple aliases and check multiple-rest/domain errors, including a deferred
+failure whose value is absorbed by unknown. General tuple descriptor reflection
+and construction remain pending.
