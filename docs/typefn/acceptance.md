@@ -15,11 +15,11 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Strings and string iteration | partial | All text intrinsics/iteration implemented; tests cover UTF-16, bounds, symbolic replay and budgets; declaration-only coverage awaits recipes |
 | Numeric and tuple library | partial | Numeric and finite-tuple library implemented with conversion/bounds/symbolic tests; declaration-only coverage awaits recipes |
 | Explicit failure | partial | fail/failAt, statement-only use, deferred operands and producer/consumer spans tested; declaration-only cases await recipes |
-| Templates and match | partial | Template AST/parser/printer/API and evaluation implemented; match scopes, captures/guards, tuple/object and template/pin execution added; native-island patterns and general structural relations remain |
+| Templates and match | partial | Template AST/parser/printer/API and evaluation implemented; match scopes, captures/guards, tuple/object and template/pin execution added; native-island patterns and exhaustive native shape/dependency cases remain |
 | Local helpers and closures | pending | Lexical capture snapshots, constructor identity, recursive captures and scope diagnostics |
 | Restricted constructors/HKT | pending | Fixed-arity slots, passing/returning constructors and kind errors |
 | Native islands | partial | Executable native Types using frozen local environments; binding and replay |
-| Union and structural predicates | partial | Object/discriminated unions, graph readiness and native relation fidelity |
+| Union and structural predicates | partial | Native object/function/mapped/recursive cases now tested; exhaustive dependency summaries, ordinary cast/assignment boundaries and native relation fidelity remain |
 | Reflection | pending | Classification, properties/indexers, tuple/array/signature metadata and nominal boundaries |
 | Structural builders | partial | Descriptors, symbol keys, general tuple spreads, callable/constructable Types and overload order |
 | Recursive structural graphs | pending | Single/group sealing, guarded edges, invalid cycles and cancellation |

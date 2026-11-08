@@ -46,7 +46,7 @@ func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []*Type) bool 
 		truth, ok := v.boolean(node, result)
 		return ok && truth
 	case ast.KindTypeFunctionTuplePattern, ast.KindTypeFunctionObjectPattern:
-		if typefnUnresolved(subject) {
+		if typefnUnresolved(subject) || v.c.isGenericObjectType(subject) {
 			v.blocked = true
 			return false
 		}
@@ -93,7 +93,7 @@ func (v *typefnVM) pattern(p *typefnPattern, subject *Type, slots []*Type) bool 
 			if !v.step(field.node) {
 				return false
 			}
-			property := v.c.getPropertyOfType(subject, field.key)
+			property := v.c.getPropertyOfTypeEx(subject, field.key, true, false)
 			if property == nil || property.Flags()&ast.SymbolFlagsOptional != 0 || getDeclarationModifierFlagsFromSymbol(property)&ast.ModifierFlagsNonPublicAccessibilityModifier != 0 {
 				return false
 			}

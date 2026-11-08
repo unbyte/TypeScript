@@ -22,8 +22,11 @@ func (v *typefnVM) binary(node *ast.Node, op ast.Kind, a, b *Type) *Type {
 	case ast.KindAmpersandToken:
 		return v.c.getIntersectionType([]*Type{a, b})
 	case ast.KindEqualsEqualsToken, ast.KindExclamationEqualsToken, ast.KindIsKeyword:
-		if a != b && (!typefnClosedScalar(a) || !typefnClosedScalar(b)) {
-			return v.error(node, "non-scalar predicates require the deferred-readiness implementation")
+		if a != b && (v.unresolvedGraph(node, a) || v.unresolvedGraph(node, b)) {
+			if v.failed {
+				return v.c.errorType
+			}
+			return v.c.newTypefnTerm(&typefnTerm{kind: typefnBinaryTerm, node: node, operator: op, args: []*Type{a, b}})
 		}
 		result := a == b
 		if !result {

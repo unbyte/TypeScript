@@ -86,12 +86,12 @@ implemented before executable definitions can be published safely in `.d.ts` fil
 
 Module-level named functions with ordinary Type parameters; mutable `type` locals;
 lexical block scopes; return, if/else, while, break/continue; required finite tuple and UTF-16 string
-iteration; conservative closed-scalar union iteration; tuple construction and finite
+iteration; dependency-aware union iteration; tuple construction and finite
 tuple spreads; object construction with string/number keys and optional/readonly
 properties; native indexing and `keyof`; native union/intersection construction;
 number/bigint arithmetic and comparisons; literal boolean short-circuit operators;
 statement-only `fail`/`failAt` with deferred messages and validated UTF-16 offsets;
-native scalar identity/assignability predicates; calls to other named typefns and
+native identity/assignability predicates with dependency summaries; calls to other named typefns and
 ordinary native aliases/interfaces/classes, including native defaults and bounds.
 
 Definitions reject missing names, wrong arity, duplicate/reserved bindings,
@@ -154,7 +154,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 117 fixtures covering native calibration, execution,
+The compiler-project harness has 119 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -182,5 +182,11 @@ outer bindings and are validated before literal chunks are attempted. Native
 opaque template holes remain opaque; final captures preserve a remaining symbolic
 suffix. Free binders that must be inspected block and replay at specialization.
 Tests cover header splitting, surrogate pairs, opaque holes, pin scope/errors,
-anchoring and resource exhaustion. Native-island patterns and general structural
-relation readiness remain pending.
+anchoring and resource exhaustion. Native-island patterns remain pending. Structural predicates and union iteration
+now inspect native argument/lexical-dependency summaries, retaining generic replay
+without eagerly expanding recursive native properties. Tests cover recursive
+interfaces, functions with local generic binders, inferred generic results, mapped
+objects and failures reached through latent properties. Object patterns wait for
+unknown mapped keys and exclude implicit Object/Function prototype augmentation.
+Exhaustive native dependency and boundary conformance remains in the acceptance
+tracker; these cases do not complete the full generic-evaluation contract.

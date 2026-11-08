@@ -33,6 +33,8 @@ All modules below are private to `tsc/internal/checker`:
 | `typefn_expression.go` | Expression evaluation and structural construction |
 | `typefn_native.go` | Native applications, defaults and parameter bounds |
 | `typefn_values.go`, `typefn_operators.go` | Scalar observation, iteration domains and operators |
+| `typefn_readiness.go` | Cycle-aware native argument/lexical-dependency summaries for structural observation |
+| `typefn_pattern_compile.go`, `typefn_pattern.go`, `typefn_pattern_template.go` | Arm lowering, structural matching and bounded UTF-16 decomposition |
 | `typefn_types.go`, `typefn_deferred.go` | Immutable pending terms, retained checks and substitution |
 | `typefn_state.go` | Lazy checker-owned tables and active root VM |
 | `typefn_display.go`, `typefn_services.go` | Pending display, signatures and cancelable result queries |

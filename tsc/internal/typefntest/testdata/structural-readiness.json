@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "structural-readiness.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

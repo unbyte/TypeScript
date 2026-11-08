@@ -20,7 +20,7 @@ func (v *typefnVM) boolean(node *ast.Node, value *Type) (bool, bool) {
 	if value.flags == TypeFlagsBooleanLiteral {
 		return value.AsLiteralType().value.(bool), true
 	}
-	v.error(node, "condition requires one boolean literal; deferred control flow is not implemented yet")
+	v.error(node, "condition requires one boolean literal")
 	return false, false
 }
 
@@ -31,9 +31,12 @@ func (v *typefnVM) elements(node *ast.Node, value *Type, union bool) []*Type {
 		return nil
 	}
 	if union {
-		// Conservative until the full graph-readiness protocol is implemented.
-		if !typefnClosedScalar(value) {
-			v.error(node, "union iteration currently requires closed scalar members")
+		// R2 waits for reachable free dependencies even when the outer partition
+		// is already known. The summary avoids forcing recursive native members.
+		if v.unresolvedGraph(node, value) {
+			if !v.failed {
+				v.blocked = true
+			}
 			return nil
 		}
 		if value.flags&TypeFlagsNever != 0 {
@@ -66,16 +69,4 @@ func (v *typefnVM) elements(node *ast.Node, value *Type, union bool) []*Type {
 		return nil
 	}
 	return v.c.getTypeArguments(value)
-}
-
-func typefnClosedScalar(t *Type) bool {
-	if t.flags&TypeFlagsUnion != 0 {
-		for _, part := range t.Types() {
-			if !typefnClosedScalar(part) {
-				return false
-			}
-		}
-		return true
-	}
-	return t.flags & ^(TypeFlagsAny|TypeFlagsUnknown|TypeFlagsNever|TypeFlagsString|TypeFlagsNumber|TypeFlagsBigInt|TypeFlagsBoolean|TypeFlagsStringLiteral|TypeFlagsNumberLiteral|TypeFlagsBigIntLiteral|TypeFlagsBooleanLiteral|TypeFlagsNull|TypeFlagsUndefined|TypeFlagsVoid) == 0
 }
