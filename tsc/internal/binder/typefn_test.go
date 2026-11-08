@@ -1,0 +1,45 @@
+package binder_test
+
+import (
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/binder"
+	"github.com/microsoft/TypeScript/tsc/internal/core"
+	"github.com/microsoft/TypeScript/tsc/internal/parser"
+	"testing"
+)
+
+func TestTypefnLexicalScopes(t *testing.T) {
+	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}, `
+ export typefn F<T> {
+   type value = T;
+   if (true) { type value = 1; }
+   for (type item of [value]) { type copy = item; }
+   return value;
+ }`, core.ScriptKindTS)
+	if len(file.Diagnostics()) != 0 {
+		t.Fatal(file.Diagnostics())
+	}
+	binder.BindSourceFile(file)
+	declaration := file.Statements.Nodes[0]
+	body := declaration.AsTypeFunctionDeclaration().Body
+	statements := body.AsTypeFunctionBlock().Statements.Nodes
+	outer := ast.GetLocals(declaration)
+	if declaration.Symbol() == nil || outer.Get("T") == nil || outer.Get("value") == nil {
+		t.Fatal("missing declaration or lexical symbols")
+	}
+	if outer.Get("item") != nil || outer.Get("copy") != nil {
+		t.Fatal("iteration locals leaked into enclosing scope")
+	}
+	inner := statements[1].AsTypeFunctionStatement().Body
+	if ast.GetLocals(inner).Get("value") == nil || ast.GetLocals(inner).Get("value") == outer.Get("value") {
+		t.Fatal("shadowed local must have its own identity")
+	}
+	loop := statements[2]
+	loopLocals := ast.GetLocals(loop.AsTypeFunctionStatement().Body)
+	if loopLocals.Get("item") != loop.Symbol() || loopLocals.Get("copy") == nil {
+		t.Fatal("iteration binding must belong to body scope")
+	}
+	if outer.Get("value") != statements[0].Symbol() {
+		t.Fatal("binding identity does not match scope table")
+	}
+}

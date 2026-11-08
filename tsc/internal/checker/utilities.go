@@ -182,6 +182,9 @@ func IsInTypeQuery(node *ast.Node) bool {
 
 func canHaveLocals(node *ast.Node) bool {
 	switch node.Kind {
+	case ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBlock:
+		return true
+
 	case ast.KindArrowFunction, ast.KindBlock, ast.KindCallSignature, ast.KindCaseBlock, ast.KindCatchClause,
 		ast.KindClassStaticBlockDeclaration, ast.KindConditionalType, ast.KindConstructor, ast.KindConstructorType,
 		ast.KindConstructSignature, ast.KindForStatement, ast.KindForInStatement, ast.KindForOfStatement, ast.KindFunctionDeclaration,
