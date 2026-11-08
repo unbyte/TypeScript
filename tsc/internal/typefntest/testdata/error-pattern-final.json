@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-pattern-final.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "match requires a final unguarded wildcard arm"
+    }
+  ]
+}

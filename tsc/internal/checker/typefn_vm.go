@@ -235,6 +235,14 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) (result *Type
 			if !truth {
 				pc = i.target
 			}
+		case tfMatch:
+			matched := v.pattern(i.pattern, registers[i.slot], registers)
+			if v.failed || v.blocked {
+				return v.c.errorType
+			}
+			if !matched {
+				pc = i.target
+			}
 		case tfJump:
 			pc = i.target
 		case tfIterStart:

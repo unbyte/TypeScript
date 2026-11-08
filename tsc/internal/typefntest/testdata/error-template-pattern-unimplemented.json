@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-match-unimplemented.ts"
+    "main.ts": "error-template-pattern-unimplemented.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "match evaluation is not implemented yet"
+      "message": "template pattern evaluation is not implemented yet"
     }
   ]
 }

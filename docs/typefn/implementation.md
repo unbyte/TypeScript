@@ -154,18 +154,27 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 103 fixtures covering native calibration, execution,
+The compiler-project harness has 110 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
 community workload ports remain outstanding. See [testing](testing.md) for commands,
 coverage and the limits of the validation evidence.
 
-### Match syntax foundation
+### Pattern matching
 
-Native AST, parser, printer and public API nodes now preserve match arms, guards,
-all pattern forms, and template capture/pin boundaries. Parser tests cover source
-spans, malformed arms, rest placement and nesting limits; printer and API tests
-check round trips. Captures now bind in native arm scopes, with pins and pattern Type expressions
-using the outer scope. Definition, rename, completion and hover tests cover that
-boundary. Evaluation is still explicitly rejected in this intermediate commit; syntax acceptance alone is not match support.
+Native AST, parser, printer and public API nodes preserve match arms, guards, all
+pattern forms, and template capture/pin boundaries. Captures bind in native arm
+scopes; pins and pattern Type expressions use the outer environment, and the body
+has its own nested block scope. Definition, rename, completion and hover tests
+cover those boundaries.
+
+Execution now supports ordered arms and guards, literals, scalar `is` patterns,
+immutable whole-value captures, required finite tuples with metadata-preserving
+rest captures, and required public object properties. An undecidable earlier arm
+blocks the call and replays at specialization. Arm-private registers cannot leak
+captures to a later arm; reached checks survive a failed guard. Tests cover
+continuation after an arm, loop control, symbolic specialization, private/optional
+properties, static wildcard/key/capture errors and union-domain rejection.
+Template patterns and native-island patterns still diagnose as unimplemented;
+general structural relation readiness is also pending.

@@ -21,12 +21,14 @@ const (
 	tfIterStart
 	tfIterNext
 	tfDiscard
+	tfMatch
 )
 
 type typefnInstruction struct {
 	op           typefnOp
 	node         *ast.Node
 	expr         *typefnExpression
+	pattern      *typefnPattern
 	slot, target int
 	iterator     int
 }
@@ -135,7 +137,7 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		return
 	}
 	if node.Kind == ast.KindTypeFunctionMatch {
-		b.error(node, "match evaluation is not implemented yet")
+		b.match(node)
 		return
 	}
 	if node.Kind == ast.KindTypeFunctionDeclaration {

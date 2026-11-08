@@ -1,0 +1,30 @@
+{
+  "files": {
+    "main.ts": "error-pattern-capture.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2300,
+      "file": "main.ts",
+      "message": "Duplicate identifier 'item'."
+    },
+    {
+      "phase": "semantic",
+      "code": 2300,
+      "file": "main.ts",
+      "message": "Duplicate identifier 'item'."
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "duplicate or reserved binding item"
+    }
+  ]
+}
