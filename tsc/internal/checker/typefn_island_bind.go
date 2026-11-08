@@ -32,15 +32,47 @@ func (b *typefnCompiler) island(e *typefnExpression) {
 		expression.environment = b.p
 		e.args = append(e.args, expression)
 	}
+	addContext := func(node *ast.Node, value bool) {
+		state := b.c.getTypefnState()
+		previous := state.definitionCheck
+		state.definitionCheck = b.p
+		defer func() { state.definitionCheck = previous }()
+		var native *Type
+		if value {
+			native = b.c.checkThisExpression(node)
+		} else {
+			native = b.c.getThisType(node)
+		}
+		if !b.p.valid || b.c.isErrorType(native) {
+			b.p.valid = false
+			return
+		}
+		if plan.contexts == nil {
+			plan.contexts = map[*ast.Node]int{}
+		}
+		index := len(plan.captures)
+		plan.contexts[node] = index
+		// Parentheses make the synthetic name unspellable by source identifiers.
+		plan.captures = append(plan.captures, typefnIslandCapture{name: fmt.Sprintf("(typefn this %d)", index), context: true, value: value})
+		e.args = append(e.args, &typefnExpression{node: node, slot: -1, environment: b.p, nativeContext: native})
+	}
 	var visit func(*ast.Node, *typefnKind)
 	visit = func(node *ast.Node, expected *typefnKind) {
 		if node.Kind == ast.KindParenthesizedType {
 			visit(node.AsParenthesizedTypeNode().Type, expected)
 			return
 		}
+		if node.Kind == ast.KindThisType {
+			// A predicate's `this is` target is syntax, not a captured Type operand.
+			if node.Parent == nil || node.Parent.Kind != ast.KindTypePredicate || node.Parent.AsTypePredicateNode().ParameterName != node {
+				addContext(node, false)
+			}
+		}
 		if ast.IsTypeQueryNode(node) {
 			name := ast.GetFirstIdentifier(node.AsTypeQueryNode().ExprName)
-			if !ast.IsThisIdentifier(name) {
+			if ast.IsThisIdentifier(name) {
+				addContext(name, true)
+			} else {
 				symbol := b.c.resolveEntityName(name, ast.SymbolFlagsValue, false, false, nil)
 				if symbol == nil || symbol == b.c.unknownSymbol {
 					b.p.valid = false

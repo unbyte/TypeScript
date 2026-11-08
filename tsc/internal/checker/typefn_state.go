@@ -6,6 +6,10 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 // not allocate it. The VM is scoped to a root evaluation; programs, immutable
 // terms and syntax-dependency tables live for the owning checker lifetime.
 type typefnState struct {
+	// Native frontend checks may return recovery Types after reporting an error.
+	// A scoped definition check must reject that program before VM execution.
+	definitionCheck *typefnProgram
+
 	constructionMembers map[*ast.Symbol]*typefnConstructionMembers
 	programs            map[*ast.Node]*typefnProgram
 	kindStack           []*typefnProgram

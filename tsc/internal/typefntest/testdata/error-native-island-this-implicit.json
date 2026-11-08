@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-native-island-this-implicit.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2683,
+      "file": "main.ts",
+      "message": "'this' implicitly has type 'any' because it does not have a type annotation."
+    }
+  ]
+}

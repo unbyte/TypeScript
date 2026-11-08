@@ -12,9 +12,11 @@ type typefnIslandCapture struct {
 	helper       *typefnProgram
 	nativeDirect bool
 	value        bool
+	context      bool
 }
 type typefnIsland struct {
 	captures []typefnIslandCapture
+	contexts map[*ast.Node]int
 	nodes    int
 }
 
@@ -43,6 +45,9 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 	plan := e.island
 	captureNodes := 0
 	for _, capture := range plan.captures {
+		if capture.context && !capture.value {
+			continue
+		}
 		if capture.value {
 			captureNodes += 6
 		} else {
@@ -53,11 +58,24 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 		return v.c.errorType
 	}
 	source := ast.GetSourceFileOfNode(e.node)
-	factory := ast.NewNodeFactory(ast.NodeFactoryHooks{})
+	factory := ast.NewNodeFactory(ast.NodeFactoryHooks{OnClone: func(clone, original *ast.Node) {
+		if i, ok := plan.contexts[original]; ok {
+			if plan.captures[i].value {
+				// Only the cloned this-root is renamed; member lookup and native query
+				// type arguments still run in the frozen capture scope.
+				clone.AsIdentifier().Text = plan.captures[i].name
+			} else {
+				v.c.typeNodeLinks.Get(clone).resolvedType = values[i].native
+			}
+		}
+	}})
 	body := factory.DeepCloneReparse(e.node.AsTypeFunctionExpression().NativeType)
 	statements := make([]*ast.Node, 0, len(values)+1)
 	declarations := make([]*ast.Node, len(values))
 	for i, capture := range plan.captures {
+		if capture.context && !capture.value {
+			continue
+		}
 		name := factory.NewIdentifier(capture.name)
 		name.Loc = e.node.Loc
 		var declaration, statement *ast.Node
@@ -88,8 +106,11 @@ func (v *typefnVM) nativeIsland(e *typefnExpression, slots []typefnValue) *Type 
 	// the original source scope and source spans after its local binders are installed.
 	scope.Parent = e.node
 	for i, value := range values {
-		symbol := declarations[i].Symbol()
 		capture := plan.captures[i]
+		if capture.context && !capture.value {
+			continue
+		}
+		symbol := declarations[i].Symbol()
 		if capture.value {
 			v.c.valueSymbolLinks.Get(symbol).resolvedType = value.native
 		} else if value.native != nil {

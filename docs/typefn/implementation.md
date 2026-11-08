@@ -623,3 +623,13 @@ abstract construction and control-flow predicates. Both exact-optional modes tes
 reflection, `this`/parameter predicates, truthiness assertions, native narrowing,
 generic replay and recursive results. Negative cases cover private metadata,
 illegal rest/result/narrowing Types and discarded/symbolic failed checks.
+
+Native islands now capture ambient `this` Types and `typeof this` roots in their
+original native scope. Cloned Type nodes carry the mapped receiver; query roots
+use private value bindings so member lookup and generic query arguments remain
+native. Predicate `this is` targets remain syntax. Native definition diagnostics
+invalidate the compiled program even when the host returns recovery `any`.
+Regressions cover generic and derived classes, explicit function receivers, static
+value queries, generic member instantiation, native-invalid contexts and editor
+hovers. The original positive fixture produced nine spurious namespace/receiver
+diagnostics; the recovery regression previously executed an invalid definition.

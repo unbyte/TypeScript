@@ -32,6 +32,8 @@ func (v *typefnVM) valueExpression(e *typefnExpression, slots []typefnValue) typ
 			}
 		}
 		value = v.callValue(e.node, e.callee.declaration, args, nil)
+	} else if e.nativeContext != nil {
+		value.native = v.mapNative(e.nativeContext)
 	} else if e.valueSymbol != nil {
 		value.native = v.mapNative(v.c.getTypeOfSymbol(e.valueSymbol))
 	} else if e.constructorAlias != nil {
