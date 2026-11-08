@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-signature-builder-variance.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2322,
+      "file": "main.ts",
+      "message": "is not assignable to type"
+    }
+  ]
+}

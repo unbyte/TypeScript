@@ -18,6 +18,7 @@ type typefnIntrinsic struct {
 }
 
 var typefnIntrinsics = map[string]typefnIntrinsic{
+	"types.signature":       {1, 1, false, "Descriptor"},
 	"reflect.signature":     {1, 1, false, "Signature"},
 	"types.function":        {2, 2, false, "Parameters, Result"},
 	"types.constructor":     {2, 3, false, "Parameters, Result, Abstract = false"},
@@ -113,8 +114,13 @@ func (v *typefnVM) intrinsic(e *typefnExpression, args, slots []*Type) (result *
 		return v.overloadType(e.node, args)
 	case "types.array":
 		return v.arrayType(e.node, args)
-	case "types.object":
-		result := v.objectType(e.node, args)
+	case "types.object", "types.signature":
+		var result *Type
+		if e.intrinsic == "types.object" {
+			result = v.objectType(e.node, args)
+		} else {
+			result = v.signatureType(e.node, args[0])
+		}
 		if v.blocked && !v.failed && !v.c.isErrorType(result) {
 			v.blocked = false
 			return v.c.guardTypefn(result, []*Type{v.deferExpression(e, slots)})

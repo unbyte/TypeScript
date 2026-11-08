@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-signature-builder-predicate-index.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "predicate target is outside the parameter list"
+    }
+  ]
+}

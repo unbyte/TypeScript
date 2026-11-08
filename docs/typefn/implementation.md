@@ -131,7 +131,7 @@ remain part of the outstanding island bridge.
   and ordinary cast/assignment boundaries still need coverage. No constraint is
   enumerated as a value.
 * Property/tuple/signature reflection, general tuple metadata/spreads,
-  full signature descriptors, and recursive structural sealing
+  recursive structural sealing
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
 * Declaration source recipes, advanced refactorings/auto-import completion, complete
@@ -161,7 +161,7 @@ remain part of the outstanding island bridge.
 
 ## Validation
 
-The compiler-project harness has 162 fixtures covering native calibration, execution,
+The compiler-project harness has 178 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -250,8 +250,7 @@ readonly input tuples. Native tuple-rest expansion controls call inference and
 arity; fresh signatures have ordinary function variance. Generic parameter/result
 leaves and the abstract flag replay independently. Tests include actual calls/new,
 Parameters/ConstructorParameters, outer-Type specialization, native primitive
-constructor results, and negative arity/variance/abstract cases. General
-`types.signature` validation/construction is still pending.
+constructor results, and negative arity/variance/abstract cases.
 
 `reflect.signature` now returns the nongeneric descriptor schema. It preserves
 original parameter boundaries (including whole rest-tuple Types), names,
@@ -261,3 +260,13 @@ Tests cover symbolic outer-Type replay, initialized/optional/void parameters,
 construct signatures, parameter/this predicates, assertions and generic rejection.
 Parameter values use native parameter Types, including optional-read undefined;
 the separate property/tuple declared-value contract remains unfinished.
+
+`types.signature` now validates and builds the nongeneric descriptor schema.
+Required/optional/rest ordering, identifier names, duplicate names, array-compatible
+rest Types, call/construct fields, predicate targets and narrowed-Type compatibility
+are checked. Predicate results use the host's boolean (`is`) or void (`asserts`)
+Type. Native this-predicate rules are preserved. Symbolic compatibility checks
+remain attached to the constructed callable shape and survive absorption.
+Executable tests cover native call/new inference, this receivers, actual control-flow
+narrowing/assertions, ordinary variance after rebuilding a method, deferred rest and
+predicate validation, and invalid descriptor cases.

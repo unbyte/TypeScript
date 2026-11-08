@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "signature-builders.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

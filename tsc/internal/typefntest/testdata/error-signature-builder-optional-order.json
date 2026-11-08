@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-signature-builder-optional-order.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "required parameter cannot follow an optional parameter"
+    }
+  ]
+}

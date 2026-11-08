@@ -1,0 +1,18 @@
+{
+  "files": {
+    "main.ts": "error-signature-builder-name.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "parameter name must be a native-valid identifier"
+    }
+  ]
+}

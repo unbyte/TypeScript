@@ -45,7 +45,7 @@ func (v *typefnVM) indexDescriptors(node *ast.Node, value *Type) ([]*IndexInfo, 
 
 // Positive native proofs establish legality even for symbolic field Types. A
 // failed symbolic proof is a retained requirement, never a concrete rejection.
-func (v *typefnVM) indexCompatibility(node *ast.Node, source, target *Type, message string) {
+func (v *typefnVM) requireAssignable(node *ast.Node, source, target *Type, message string) {
 	if !v.step(node) {
 		return
 	}
@@ -77,7 +77,7 @@ func (v *typefnVM) validateObjectIndexers(node *ast.Node, result *Type, infos []
 				return
 			}
 			if v.c.isApplicableIndexType(key, info.keyType) {
-				v.indexCompatibility(node, value, info.valueType, "property Type is incompatible with an applicable indexer")
+				v.requireAssignable(node, value, info.valueType, "property Type is incompatible with an applicable indexer")
 				if v.failed {
 					return
 				}
@@ -90,7 +90,7 @@ func (v *typefnVM) validateObjectIndexers(node *ast.Node, result *Type, infos []
 				return
 			}
 			if source != target && v.c.isApplicableIndexType(source.keyType, target.keyType) {
-				v.indexCompatibility(node, source.valueType, target.valueType, "indexer value Type is incompatible with an overlapping index domain")
+				v.requireAssignable(node, source.valueType, target.valueType, "indexer value Type is incompatible with an overlapping index domain")
 				if v.failed {
 					return
 				}
