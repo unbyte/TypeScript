@@ -164,7 +164,7 @@ func main() {
 			"Conditional":                     toInt32(checker.TypeFlagsConditional),
 			"Union":                           toInt32(checker.TypeFlagsUnion),
 			"Intersection":                    toInt32(checker.TypeFlagsIntersection),
-			"Reserved1":                       toInt32(checker.TypeFlagsReserved1),
+			"Typefn":                          toInt32(checker.TypeFlagsTypefn),
 			"Reserved2":                       toInt32(checker.TypeFlagsReserved2),
 			"Reserved3":                       toInt32(checker.TypeFlagsReserved3),
 			"AnyOrUnknown":                    toInt32(checker.TypeFlagsAnyOrUnknown),
