@@ -95,6 +95,7 @@ type EmitResolver interface {
 	SetReferencedImportDeclaration(node *ast.IdentifierNode, ref *ast.Declaration) // for overriding the reference resolver behavior for generated identifiers
 
 	// declaration emit checker functionality projections
+	GetTypefnDeclarationDependencies(node *ast.Node) []SymbolAccessibilityResult
 	PrecalculateDeclarationEmitVisibility(file *ast.SourceFile)
 	IsSymbolAccessible(symbol *ast.Symbol, enclosingDeclaration *ast.Node, meaning ast.SymbolFlags, shouldComputeAliasToMarkVisible bool) SymbolAccessibilityResult
 	IsEntityNameVisible(entityName *ast.Node, enclosingDeclaration *ast.Node) SymbolAccessibilityResult // previously SymbolVisibilityResult in strada - ErrorModuleName never set
