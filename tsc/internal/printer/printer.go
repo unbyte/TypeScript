@@ -5263,7 +5263,7 @@ func (p *Printer) Write(node *ast.Node, sourceFile *ast.SourceFile, writer EmitT
 
 	default:
 		switch {
-		case node.Kind >= ast.KindTypeFunctionDeclaration && node.Kind <= ast.KindTypeFunctionSpread:
+		case ast.IsTypeFunctionNode(node):
 			p.emitTypefn(node)
 		case ast.IsTypeNode(node):
 			p.emitTypeNodeOutsideExtends(node)

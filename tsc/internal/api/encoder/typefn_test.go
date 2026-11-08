@@ -18,6 +18,7 @@ func TestTypefnEncodeDecode(t *testing.T) {
  if (T is number) { x = T * 2; } else { x = 0; }
  return { readonly data?: [x, ...T]; ["key"]: F<x> };
  }`
+	source += "\ntypefn Text<T> { return `a${T + 1}b${T}c`; }"
 	file := parser.ParseSourceFile(ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}, source, core.ScriptKindTS)
 	if ds := file.Diagnostics(); len(ds) != 0 {
 		t.Fatalf("parse: %v", ds)

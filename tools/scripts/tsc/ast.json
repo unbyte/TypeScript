@@ -472,7 +472,9 @@
             "TypeFunctionField",
             "TypeFunctionIndex",
             "TypeFunctionNativeType",
-            "TypeFunctionSpread"
+            "TypeFunctionSpread",
+            "TypeFunctionTemplate",
+            "TypeFunctionTemplateSpan"
         ],
         "markers": [
             {
@@ -5359,6 +5361,41 @@
                         "default": "TypeFunctionExpressionKind"
                     }
                 ]
+            },
+            "TypeFunctionTemplate": {
+                "extends": [
+                    "NodeBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Head",
+                        "type": "TemplateHead"
+                    },
+                    {
+                        "name": "Spans",
+                        "type": "TypeFunctionTemplateSpan",
+                        "list": "NodeList"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionTemplateSpan": {
+                "extends": [
+                    "NodeBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "Expression",
+                        "type": "Node"
+                    },
+                    {
+                        "name": "Literal",
+                        "type": "TemplateMiddleOrTail"
+                    }
+                ],
+                "arena": true
             }
         },
         "aliases": {

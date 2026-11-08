@@ -412,6 +412,8 @@ const (
 	KindTypeFunctionIndex
 	KindTypeFunctionNativeType
 	KindTypeFunctionSpread
+	KindTypeFunctionTemplate
+	KindTypeFunctionTemplateSpan
 	KindCount
 	KindFirstAssignment         = KindEqualsToken
 	KindLastAssignment          = KindCaretEqualsToken

@@ -315,6 +315,8 @@ import type {
     TypeFunctionExpressionKind,
     TypeFunctionStatement,
     TypeFunctionStatementKind,
+    TypeFunctionTemplate,
+    TypeFunctionTemplateSpan,
     TypeLiteralNode,
     TypeOfExpression,
     TypeOperatorNode,
@@ -2095,6 +2097,24 @@ export declare namespace isTypeFunctionExpression {
     function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionExpression>;
 }
 isTypeFunctionExpression.Handle = isTypeFunctionExpression as any;
+
+export function isTypeFunctionTemplate(node: Node): node is TypeFunctionTemplate {
+    return node.kind === SyntaxKind.TypeFunctionTemplate;
+}
+
+export declare namespace isTypeFunctionTemplate {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionTemplate>;
+}
+isTypeFunctionTemplate.Handle = isTypeFunctionTemplate as any;
+
+export function isTypeFunctionTemplateSpan(node: Node): node is TypeFunctionTemplateSpan {
+    return node.kind === SyntaxKind.TypeFunctionTemplateSpan;
+}
+
+export declare namespace isTypeFunctionTemplateSpan {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionTemplateSpan>;
+}
+isTypeFunctionTemplateSpan.Handle = isTypeFunctionTemplateSpan as any;
 
 export function isForInStatement(node: Node): node is ForInStatement {
     return node.kind === SyntaxKind.ForInStatement;

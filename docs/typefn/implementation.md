@@ -113,7 +113,8 @@ is bounded by call depth. Runtime fallthrough diagnoses.
   preservation and a shared string-work budget. Searches use linear prefix-table
   matching; split/replacement reserve output storage before constructing Types. The numeric library executes explicit exact conversions, rounding, integer
   parsing/checks and formatting. `tuple.length` and `tuple.slice` preserve finite tuple shape, labels and readonly.
-  Interpolation and structural pattern matching are not implemented.
+  Interpolation has native AST/parser/printer/API support but execution is not
+  enabled yet. Structural pattern matching is not implemented.
   The calculator and numeric examples are executable and tested from their actual
   documentation sources. The HTTP-route example still requires templates/matching.
 * Constructor slots, closures/local typefns and restricted HKT support are pending.
@@ -152,7 +153,7 @@ is bounded by call depth. Runtime fallthrough diagnoses.
 
 ## Validation
 
-The compiler-project harness has 98 fixtures covering native calibration, execution,
+The compiler-project harness has 99 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad

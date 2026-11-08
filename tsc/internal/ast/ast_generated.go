@@ -64,6 +64,8 @@ type NodeFactory struct {
 	typeFunctionDeclarationArena       core.Arena[TypeFunctionDeclaration]
 	typeFunctionExpressionArena        core.Arena[TypeFunctionExpression]
 	typeFunctionStatementArena         core.Arena[TypeFunctionStatement]
+	typeFunctionTemplateArena          core.Arena[TypeFunctionTemplate]
+	typeFunctionTemplateSpanArena      core.Arena[TypeFunctionTemplateSpan]
 	typeLiteralNodeArena               core.Arena[TypeLiteralNode]
 	typeOperatorNodeArena              core.Arena[TypeOperatorNode]
 	typeParameterDeclarationArena      core.Arena[TypeParameterDeclaration]
@@ -456,6 +458,8 @@ type (
 	TypeFunctionBlockNode             = Node
 	TypeFunctionStatementNode         = Node
 	TypeFunctionExpressionNode        = Node
+	TypeFunctionTemplateNode          = Node
+	TypeFunctionTemplateSpanNode      = Node
 	EndOfFile                         = Node
 	DotToken                          = Node
 	DotDotDotToken                    = Node
@@ -9033,6 +9037,88 @@ func IsTypeFunctionExpression(node *Node) bool {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// TypeFunctionTemplate
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionTemplate struct {
+	TypeSyntaxBase
+	NodeBase
+	Head  *TemplateHeadNode
+	Spans *NodeList
+}
+
+func (f *NodeFactory) NewTypeFunctionTemplate(head *TemplateHeadNode, spans *NodeList) *Node {
+	data := f.typeFunctionTemplateArena.New()
+	data.Head = head
+	data.Spans = spans
+	return f.newNode(KindTypeFunctionTemplate, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionTemplate(node *TypeFunctionTemplate, head *TemplateHeadNode, spans *NodeList) *Node {
+	if head != node.Head || spans != node.Spans {
+		return updateNode(f.NewTypeFunctionTemplate(head, spans), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionTemplate) ForEachChild(v Visitor) bool {
+	return visit(v, node.Head) || visitNodeList(v, node.Spans)
+}
+
+func (node *TypeFunctionTemplate) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionTemplate(node, v.visitNode(node.Head), v.visitNodes(node.Spans))
+}
+
+func (node *TypeFunctionTemplate) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionTemplate(node.Head, node.Spans), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionTemplate(node *Node) bool {
+	return node.Kind == KindTypeFunctionTemplate
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionTemplateSpan
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionTemplateSpan struct {
+	TypeSyntaxBase
+	NodeBase
+	Expression *Node
+	Literal    *TemplateMiddleOrTail
+}
+
+func (f *NodeFactory) NewTypeFunctionTemplateSpan(expression *Node, literal *TemplateMiddleOrTail) *Node {
+	data := f.typeFunctionTemplateSpanArena.New()
+	data.Expression = expression
+	data.Literal = literal
+	return f.newNode(KindTypeFunctionTemplateSpan, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionTemplateSpan(node *TypeFunctionTemplateSpan, expression *Node, literal *TemplateMiddleOrTail) *Node {
+	if expression != node.Expression || literal != node.Literal {
+		return updateNode(f.NewTypeFunctionTemplateSpan(expression, literal), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionTemplateSpan) ForEachChild(v Visitor) bool {
+	return visit(v, node.Expression) || visit(v, node.Literal)
+}
+
+func (node *TypeFunctionTemplateSpan) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionTemplateSpan(node, v.visitNode(node.Expression), v.visitNode(node.Literal))
+}
+
+func (node *TypeFunctionTemplateSpan) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionTemplateSpan(node.Expression, node.Literal), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionTemplateSpan(node *Node) bool {
+	return node.Kind == KindTypeFunctionTemplateSpan
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // ForEachChild dispatch
 // ──────────────────────────────────────────────────────────────────────
 
@@ -9554,6 +9640,12 @@ func (n *Node) ForEachChild(v Visitor) bool {
 	case KindTypeFunctionName, KindTypeFunctionLiteral, KindTypeFunctionCall, KindTypeFunctionUnary, KindTypeFunctionBinary, KindTypeFunctionTuple, KindTypeFunctionObject, KindTypeFunctionField, KindTypeFunctionIndex, KindTypeFunctionNativeType, KindTypeFunctionSpread:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 		return (*TypeFunctionExpression)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionTemplate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplate, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplate)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionTemplateSpan:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).ForEachChild(v)
 	default:
 		return false
 	}
@@ -10081,6 +10173,12 @@ func (n *Node) VisitEachChild(v *NodeVisitor) *Node {
 	case KindTypeFunctionName, KindTypeFunctionLiteral, KindTypeFunctionCall, KindTypeFunctionUnary, KindTypeFunctionBinary, KindTypeFunctionTuple, KindTypeFunctionObject, KindTypeFunctionField, KindTypeFunctionIndex, KindTypeFunctionNativeType, KindTypeFunctionSpread:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 		return (*TypeFunctionExpression)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionTemplate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplate, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplate)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionTemplateSpan:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).VisitEachChild(v)
 	default:
 		return n
 	}
@@ -10685,6 +10783,12 @@ func (n *Node) Clone(f NodeFactoryCoercible) *Node {
 	case KindTypeFunctionName, KindTypeFunctionLiteral, KindTypeFunctionCall, KindTypeFunctionUnary, KindTypeFunctionBinary, KindTypeFunctionTuple, KindTypeFunctionObject, KindTypeFunctionField, KindTypeFunctionIndex, KindTypeFunctionNativeType, KindTypeFunctionSpread:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 		return (*TypeFunctionExpression)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionTemplate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplate, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplate)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionTemplateSpan:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).Clone(f)
 	default:
 		return nil
 	}
@@ -11164,6 +11268,10 @@ func (n *Node) SubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionBinding, KindTypeFunctionAssignment, KindTypeFunctionReturn, KindTypeFunctionIf, KindTypeFunctionWhile, KindTypeFunctionForOf, KindTypeFunctionForIn, KindTypeFunctionBreak, KindTypeFunctionContinue, KindTypeFunctionExpressionStatement:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionName, KindTypeFunctionLiteral, KindTypeFunctionCall, KindTypeFunctionUnary, KindTypeFunctionBinary, KindTypeFunctionTuple, KindTypeFunctionObject, KindTypeFunctionField, KindTypeFunctionIndex, KindTypeFunctionNativeType, KindTypeFunctionSpread:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionTemplate:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionTemplateSpan:
 		return n.computeSubtreeFacts()
 	default:
 		return SubtreeFactsNone
@@ -11763,6 +11871,12 @@ func (n *Node) computeSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionName, KindTypeFunctionLiteral, KindTypeFunctionCall, KindTypeFunctionUnary, KindTypeFunctionBinary, KindTypeFunctionTuple, KindTypeFunctionObject, KindTypeFunctionField, KindTypeFunctionIndex, KindTypeFunctionNativeType, KindTypeFunctionSpread:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 		return (*TypeFunctionExpression)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionTemplate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplate, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplate)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionTemplateSpan:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).computeSubtreeFacts()
 	default:
 		return SubtreeFactsNone
 	}
@@ -12361,6 +12475,12 @@ func (n *Node) propagateSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionName, KindTypeFunctionLiteral, KindTypeFunctionCall, KindTypeFunctionUnary, KindTypeFunctionBinary, KindTypeFunctionTuple, KindTypeFunctionObject, KindTypeFunctionField, KindTypeFunctionIndex, KindTypeFunctionNativeType, KindTypeFunctionSpread:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 		return (*TypeFunctionExpression)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionTemplate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplate, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplate)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionTemplateSpan:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
+		return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n)).propagateSubtreeFacts()
 	default:
 		return SubtreeFactsNone
 	}
@@ -13874,6 +13994,8 @@ var (
 	_ [0 - unsafe.Offsetof(TypeFunctionBlock{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionStatement{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionExpression{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionTemplate{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionTemplateSpan{}.Node)]byte
 )
 
 func (n *Node) AsToken() *Token {
@@ -15470,6 +15592,22 @@ func (n *Node) AsTypeFunctionExpression() *TypeFunctionExpression {
 	}
 	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionExpression, which embeds its Node header at offset zero.
 	return (*TypeFunctionExpression)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionTemplate() *TypeFunctionTemplate {
+	if n.Kind != KindTypeFunctionTemplate {
+		panic("Invalid node cast to TypeFunctionTemplate")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionTemplate, which embeds its Node header at offset zero.
+	return (*TypeFunctionTemplate)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionTemplateSpan() *TypeFunctionTemplateSpan {
+	if n.Kind != KindTypeFunctionTemplateSpan {
+		panic("Invalid node cast to TypeFunctionTemplateSpan")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionTemplateSpan, which embeds its Node header at offset zero.
+	return (*TypeFunctionTemplateSpan)(unsafe.Pointer(n))
 }
 
 // ──────────────────────────────────────────────────────────────────────

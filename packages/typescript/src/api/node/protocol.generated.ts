@@ -199,6 +199,8 @@ export const childProperties: Readonly<Partial<Record<SyntaxKind, readonly (stri
     [SyntaxKind.TypeFunctionIndex]: ["name", "operands", "operatorToken", "nativeType"],
     [SyntaxKind.TypeFunctionNativeType]: ["name", "operands", "operatorToken", "nativeType"],
     [SyntaxKind.TypeFunctionSpread]: ["name", "operands", "operatorToken", "nativeType"],
+    [SyntaxKind.TypeFunctionTemplate]: ["head", "spans"],
+    [SyntaxKind.TypeFunctionTemplateSpan]: ["expression", "literal"],
 };
 
 export const singleChildNodePropertyNames: Readonly<Partial<Record<SyntaxKind, string>>> = {

@@ -1,17 +1,22 @@
 import {
     isTypeFunctionExpression,
     SyntaxKind,
+    TokenFlags,
     visitEachChild,
 } from "@typescript/typescript/ast";
 import {
     createIdentifier,
     createKeywordTypeNode,
     createSourceFile,
+    createTemplateHead,
+    createTemplateTail,
     createToken,
     createTypeFunctionBlock,
     createTypeFunctionDeclaration,
     createTypeFunctionExpression,
     createTypeFunctionStatement,
+    createTypeFunctionTemplate,
+    createTypeFunctionTemplateSpan,
     updateTypeFunctionExpression,
 } from "@typescript/typescript/ast/factory";
 import {
@@ -136,4 +141,19 @@ test("DSL child iterators preserve source order and early termination locally an
             assert.deepEqual(iterator.next("stop"), { done: true, value: "stop" });
         }
     }
+});
+
+test("DSL template children preserve interpolation and literal order", () => {
+    const value = binary();
+    const span = createTypeFunctionTemplateSpan(value, createTemplateTail("tail", "tail", TokenFlags.None));
+    const template = createTypeFunctionTemplate(createTemplateHead("head", "head", TokenFlags.None), [span]);
+    const order: SyntaxKind[] = [];
+    template.forEachChild(child => {
+        order.push(child.kind);
+    });
+    assert.deepEqual(order, [SyntaxKind.TemplateHead, SyntaxKind.TypeFunctionTemplateSpan]);
+    const changed = visitEachChild(span, child => child === value ? binary() : child);
+    assert.notEqual(changed, span);
+    assert.equal(changed.literal, span.literal);
+    assert.equal(changed.expression.kind, SyntaxKind.TypeFunctionBinary);
 });

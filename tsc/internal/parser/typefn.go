@@ -290,6 +290,8 @@ func (p *Parser) parseTypefnPrimary() *ast.Node {
 		native := p.parseType()
 		p.parseExpected(ast.KindCloseParenToken)
 		return p.typefnExpression(ast.KindTypeFunctionNativeType, pos, nil, nil, nil, native)
+	case ast.KindTemplateHead:
+		return p.parseTypefnTemplate()
 	case ast.KindStringLiteral, ast.KindNumericLiteral, ast.KindBigIntLiteral, ast.KindTrueKeyword, ast.KindFalseKeyword, ast.KindNullKeyword, ast.KindNoSubstitutionTemplateLiteral:
 		native := p.parseLiteralTypeNode(false)
 		return p.typefnExpression(ast.KindTypeFunctionLiteral, pos, nil, nil, nil, native)
@@ -429,4 +431,26 @@ func typefnCallFollower(kind ast.Kind) bool {
 		return true
 	}
 	return false
+}
+
+// Only the literal scanner is shared with native templates; substitutions use
+// the DSL expression grammar, including angle applications and arithmetic.
+func (p *Parser) parseTypefnTemplate() *ast.Node {
+	pos := p.nodePos()
+	head := p.parseTemplateHead(false)
+	start := p.nodePos()
+	var spans []*ast.Node
+	for {
+		if !p.typefnStep() {
+			break
+		}
+		spanPos := p.nodePos()
+		expression := p.parseTypefnExpression(1)
+		literal := p.parseLiteralOfTemplateSpan(false)
+		spans = append(spans, p.finishNode(p.factory.NewTypeFunctionTemplateSpan(expression, literal), spanPos))
+		if literal.Kind != ast.KindTemplateMiddle {
+			break
+		}
+	}
+	return p.finishNode(p.factory.NewTypeFunctionTemplate(head, p.newNodeList(core.NewTextRange(start, p.nodePos()), spans)), pos)
 }

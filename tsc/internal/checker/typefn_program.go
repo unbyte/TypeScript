@@ -213,6 +213,10 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 
 func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 	e := &typefnExpression{node: node, slot: -1}
+	if node.Kind == ast.KindTypeFunctionTemplate {
+		b.error(node, "template evaluation is not implemented yet")
+		return e
+	}
 	data := node.AsTypeFunctionExpression()
 	switch node.Kind {
 	case ast.KindTypeFunctionName, ast.KindTypeFunctionCall:

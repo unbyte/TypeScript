@@ -1168,6 +1168,16 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		operatorToken := d.nodeAt(it.nextIf(mask, 2))
 		nativeType := d.nodeAt(it.nextIf(mask, 3))
 		return d.factory.NewTypeFunctionExpression(kind, name, operands, operatorToken, nativeType, readonly, optional), nil
+	case ast.KindTypeFunctionTemplate:
+		it := newChildIter(childIndices)
+		head := d.nodeAt(it.nextIf(mask, 0))
+		spans := d.nodeListAt(it.nextIf(mask, 1))
+		return d.factory.NewTypeFunctionTemplate(head, spans), nil
+	case ast.KindTypeFunctionTemplateSpan:
+		it := newChildIter(childIndices)
+		expression := d.nodeAt(it.nextIf(mask, 0))
+		literal := d.nodeAt(it.nextIf(mask, 1))
+		return d.factory.NewTypeFunctionTemplateSpan(expression, literal), nil
 	default:
 		return nil, fmt.Errorf("unhandled node kind %v with %d children", kind, len(childIndices))
 	}

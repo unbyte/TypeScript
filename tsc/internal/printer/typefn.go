@@ -26,6 +26,16 @@ func (p *Printer) emitTypefn(node *ast.Node) {
 		p.writePunctuation(">")
 		p.writeSpace()
 		p.emitTypefn(d.Body)
+	case ast.KindTypeFunctionTemplate:
+		d := node.AsTypeFunctionTemplate()
+		p.emitTemplateHead(d.Head.AsTemplateHead())
+		for _, span := range d.Spans.Nodes {
+			p.emitTypefn(span)
+		}
+	case ast.KindTypeFunctionTemplateSpan:
+		d := node.AsTypeFunctionTemplateSpan()
+		p.emitTypefn(d.Expression)
+		p.emitTemplateMiddleTail(d.Literal)
 	case ast.KindTypeFunctionBlock:
 		p.writePunctuation("{")
 		p.writeLine()

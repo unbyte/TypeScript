@@ -1376,6 +1376,16 @@ export interface TypeFunctionExpression<TKind extends TypeFunctionExpressionKind
     readonly readonly: boolean;
     readonly optional: boolean;
 }
+export interface TypeFunctionTemplate extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionTemplate;
+    readonly head: TemplateHead;
+    readonly spans: NodeArray<TypeFunctionTemplateSpan>;
+}
+export interface TypeFunctionTemplateSpan extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionTemplateSpan;
+    readonly expression: Node;
+    readonly literal: TemplateMiddleOrTail;
+}
 
 export type Expression = ExpressionBase;
 export type Statement = StatementBase;

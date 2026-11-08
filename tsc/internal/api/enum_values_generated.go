@@ -707,6 +707,8 @@ func main() {
 			"TypeFunctionIndex":                            toInt32(ast.KindTypeFunctionIndex),
 			"TypeFunctionNativeType":                       toInt32(ast.KindTypeFunctionNativeType),
 			"TypeFunctionSpread":                           toInt32(ast.KindTypeFunctionSpread),
+			"TypeFunctionTemplate":                         toInt32(ast.KindTypeFunctionTemplate),
+			"TypeFunctionTemplateSpan":                     toInt32(ast.KindTypeFunctionTemplateSpan),
 			"Count":                                        toInt32(ast.KindCount),
 			"FirstAssignment":                              toInt32(ast.KindFirstAssignment),
 			"LastAssignment":                               toInt32(ast.KindLastAssignment),

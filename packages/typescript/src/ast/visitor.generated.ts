@@ -164,6 +164,8 @@ import type {
     TypeFunctionDeclaration,
     TypeFunctionExpression,
     TypeFunctionStatement,
+    TypeFunctionTemplate,
+    TypeFunctionTemplateSpan,
     TypeLiteralNode,
     TypeOfExpression,
     TypeOperatorNode,
@@ -339,6 +341,8 @@ import {
     updateTypeFunctionBlock,
     updateTypeFunctionDeclaration,
     updateTypeFunctionStatement,
+    updateTypeFunctionTemplate,
+    updateTypeFunctionTemplateSpan,
     updateTypeLiteralNode,
     updateTypeOfExpression,
     updateTypeOperatorNode,
@@ -1517,6 +1521,16 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
     [SyntaxKind.TypeFunctionIndex]: visitEachChildOfTypeFunctionExpression,
     [SyntaxKind.TypeFunctionNativeType]: visitEachChildOfTypeFunctionExpression,
     [SyntaxKind.TypeFunctionSpread]: visitEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionTemplate]: (node: TypeFunctionTemplate, visitor: Visitor): TypeFunctionTemplate => {
+        const _head = visitNode(node.head, visitor, isTemplateHead);
+        const _spans = visitNodes(node.spans, visitor);
+        return updateTypeFunctionTemplate(node, _head, _spans);
+    },
+    [SyntaxKind.TypeFunctionTemplateSpan]: (node: TypeFunctionTemplateSpan, visitor: Visitor): TypeFunctionTemplateSpan => {
+        const _expression = visitNode(node.expression, visitor);
+        const _literal = visitNode(node.literal, visitor, isTemplateMiddleOrTail);
+        return updateTypeFunctionTemplateSpan(node, _expression, _literal);
+    },
     [SyntaxKind.ForInStatement]: (node: ForInStatement, visitor: Visitor): ForInStatement => {
         const _awaitModifier = visitNode(node.awaitModifier, visitor, isAwaitKeyword);
         const _initializer = visitNode(node.initializer, visitor, isForInitializer);

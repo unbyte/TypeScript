@@ -248,6 +248,8 @@ import type {
     TypeFunctionExpressionKind,
     TypeFunctionStatement,
     TypeFunctionStatementKind,
+    TypeFunctionTemplate,
+    TypeFunctionTemplateSpan,
     TypeLiteralNode,
     TypeNode,
     TypeOfExpression,
@@ -620,6 +622,9 @@ export class NodeObject {
     }
     get spanMap(): any {
         return this._data?.spanMap;
+    }
+    get spans(): any {
+        return this._data?.spans;
     }
     get statement(): any {
         return this._data?.statement;
@@ -1199,6 +1204,10 @@ function cloneNodeData(node: Node): any {
         case SyntaxKind.TypeFunctionNativeType:
         case SyntaxKind.TypeFunctionSpread:
             return { name: n.name, operands: n.operands, operatorToken: n.operatorToken, nativeType: n.nativeType, readonly: n.readonly, optional: n.optional };
+        case SyntaxKind.TypeFunctionTemplate:
+            return { head: n.head, spans: n.spans };
+        case SyntaxKind.TypeFunctionTemplateSpan:
+            return { expression: n.expression, literal: n.literal };
         case SyntaxKind.ForInStatement:
             return { awaitModifier: n.awaitModifier, initializer: n.initializer, expression: n.expression, statement: n.statement };
         case SyntaxKind.ForOfStatement:
@@ -1806,6 +1815,12 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
     [SyntaxKind.TypeFunctionIndex]: forEachChildOfTypeFunctionExpression,
     [SyntaxKind.TypeFunctionNativeType]: forEachChildOfTypeFunctionExpression,
     [SyntaxKind.TypeFunctionSpread]: forEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionTemplate]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.head) ||
+        visitNodes(cbNode, cbNodes, data.spans),
+    [SyntaxKind.TypeFunctionTemplateSpan]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.expression) ||
+        visitNode(cbNode, data.literal),
     [SyntaxKind.ForInStatement]: (data, cbNode, cbNodes) =>
         visitNode(cbNode, data.awaitModifier) ||
         visitNode(cbNode, data.initializer) ||
@@ -4203,6 +4218,26 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
     [SyntaxKind.TypeFunctionIndex]: yieldEachChildOfTypeFunctionExpression,
     [SyntaxKind.TypeFunctionNativeType]: yieldEachChildOfTypeFunctionExpression,
     [SyntaxKind.TypeFunctionSpread]: yieldEachChildOfTypeFunctionExpression,
+    [SyntaxKind.TypeFunctionTemplate]: function* (data) {
+        if (data.head) {
+            const res = yield data.head;
+            if (res) return res;
+        }
+        for (const n of data.spans) {
+            const res = yield n;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionTemplateSpan]: function* (data) {
+        if (data.expression) {
+            const res = yield data.expression;
+            if (res) return res;
+        }
+        if (data.literal) {
+            const res = yield data.literal;
+            if (res) return res;
+        }
+    },
     [SyntaxKind.ForInStatement]: function* (data) {
         if (data.awaitModifier) {
             const res = yield data.awaitModifier;
@@ -5708,6 +5743,20 @@ export function createTypeFunctionExpression<TKind extends TypeFunctionExpressio
     }) as unknown as TypeFunctionExpression<TKind>;
 }
 
+export function createTypeFunctionTemplate(head: TemplateHead, spans: readonly TypeFunctionTemplateSpan[]): TypeFunctionTemplate {
+    return new NodeObject(SyntaxKind.TypeFunctionTemplate, {
+        head,
+        spans: createNodeArray(spans),
+    }) as unknown as TypeFunctionTemplate;
+}
+
+export function createTypeFunctionTemplateSpan(expression: Node, literal: TemplateMiddleOrTail): TypeFunctionTemplateSpan {
+    return new NodeObject(SyntaxKind.TypeFunctionTemplateSpan, {
+        expression,
+        literal,
+    }) as unknown as TypeFunctionTemplateSpan;
+}
+
 export function createForInStatement(awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {
     return new NodeObject(SyntaxKind.ForInStatement, {
         awaitModifier,
@@ -6430,6 +6479,14 @@ export function updateTypeFunctionStatement<TKind extends TypeFunctionStatementK
 
 export function updateTypeFunctionExpression<TKind extends TypeFunctionExpressionKind>(node: TypeFunctionExpression<TKind>, name?: Node, operands?: readonly Node[], operatorToken?: Token, nativeType?: TypeNode): TypeFunctionExpression<TKind> {
     return node.name !== name || node.operands !== operands || node.operatorToken !== operatorToken || node.nativeType !== nativeType ? createTypeFunctionExpression(node.kind, name, operands, operatorToken, nativeType, node.readonly, node.optional) : node;
+}
+
+export function updateTypeFunctionTemplate(node: TypeFunctionTemplate, head: TemplateHead, spans: readonly TypeFunctionTemplateSpan[]): TypeFunctionTemplate {
+    return node.head !== head || node.spans !== spans ? createTypeFunctionTemplate(head, spans) : node;
+}
+
+export function updateTypeFunctionTemplateSpan(node: TypeFunctionTemplateSpan, expression: Node, literal: TemplateMiddleOrTail): TypeFunctionTemplateSpan {
+    return node.expression !== expression || node.literal !== literal ? createTypeFunctionTemplateSpan(expression, literal) : node;
 }
 
 export function updateForInStatement(node: ForInStatement, awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {

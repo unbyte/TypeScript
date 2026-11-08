@@ -19,6 +19,7 @@ func TestTypefnRoundTrip(t *testing.T) {
  return [-(1 + 2) * 3, !false, type((v: T) => T), x["value"]];
  }
  typefn Empty<> { return []; }`
+	source += "\ntypefn Text<T> { return `head${T + 1} middle${`nested${T}`} tail\\`${T}`; }"
 	opts := ast.SourceFileParseOptions{FileName: "/test.ts", PathKey: "/test.ts", TypefnVersion: 1}
 	file := parser.ParseSourceFile(opts, source, core.ScriptKindTS)
 	if ds := file.Diagnostics(); len(ds) > 0 {

@@ -33,6 +33,8 @@ func TestTypefnExpressions(t *testing.T) {
 		{"{ readonly: true; readonly value?: T }", ast.KindTypeFunctionObject, ast.KindUnknown},
 		{"type((value: T) => Promise<T>)", ast.KindTypeFunctionNativeType, ast.KindUnknown},
 		{"F<T>[0]", ast.KindTypeFunctionIndex, ast.KindUnknown},
+		{"`head${F<T + 1>}tail${T}`", ast.KindTypeFunctionTemplate, ast.KindUnknown},
+		{"`outer${`inner${T}`}end`", ast.KindTypeFunctionTemplate, ast.KindUnknown},
 	} {
 		t.Run(test.source, func(t *testing.T) {
 			file := parseTypefn(t, "typefn Example<A, B, C, D, T> { return "+test.source+"; }", ast.SourceFileParseOptions{TypefnVersion: 1})
@@ -189,5 +191,14 @@ func TestTypefnContextualIdentifiers(t *testing.T) {
 			t.Fatalf("contextual identifier %s: %v", name, ds)
 		}
 		checkTypefnTree(t, file.AsNode())
+	}
+}
+
+func TestTypefnTemplateRecovery(t *testing.T) {
+	for _, source := range []string{"typefn F<T> { return `a${T + }b`; }", "typefn F<T> { return `a${() => T}b`; }", "typefn F<T> { return `a${T"} {
+		file := parseTypefn(t, source, ast.SourceFileParseOptions{TypefnVersion: 1})
+		if len(file.Diagnostics()) == 0 {
+			t.Fatalf("accepted malformed template: %s", source)
+		}
 	}
 }
