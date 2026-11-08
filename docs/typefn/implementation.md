@@ -121,7 +121,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 * The calculator, numeric and HTTP-route examples execute directly from their
   documentation sources. They are milestones, not full conformance coverage.
 * Local named Type-returning helpers now execute with frozen captures. Anonymous
-  closures, first-class constructor bindings/slots/results and restricted HKT
+  closures, constructor slots/results and restricted HKT
   composition remain pending.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
@@ -163,7 +163,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 
 ## Validation
 
-The compiler-project harness has 235 fixtures covering native calibration, execution,
+The compiler-project harness has 243 fixtures covering native calibration, execution,
 definition errors, deferred checks, resource limits, imports and exact output.
 Successful `Assert<...>` uses must resolve to literal `true`; negative fixtures check
 complete diagnostic sets. The specification's full 141-case target matrix and broad
@@ -370,6 +370,14 @@ and conservatively wait for symbolic captures. Module-level bound timing/scope
 remains separately tracked above.
 
 Editor tests cover native helper/capture definitions and rename, readonly capture
-hover, and declaration-ordered helper completion with self-reference. First-class
-helper values, anonymous closures, constructor slots/results and constructor
+hover, and declaration-ordered helper completion with self-reference. Anonymous closures, constructor slots/results and constructor
 captures in native islands still diagnose explicitly until their integration lands.
+
+Eligible named helpers can now be bound as constructor values (`type F = Box;`)
+and applied through aliases. Constructor bindings may be reassigned only to the
+same arity; Type/constructor kind changes and constructor operands in native Type
+positions diagnose during definition checking, including dead branches. Captures
+freeze the selected constructor, and generic substitution maps captured Types.
+Module helper aliases retain native input constraints and share deferred-call
+identity with direct calls. Native generic names still require explicit constructor
+context; a bare defaulted native alias retains its ordinary Type meaning.

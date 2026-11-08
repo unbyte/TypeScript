@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.ts": "error-helper-value-kind.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "assignment cannot change a binding's value kind"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "assignment cannot change a binding's value kind"
+    }
+  ]
+}

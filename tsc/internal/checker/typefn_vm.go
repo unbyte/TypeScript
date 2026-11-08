@@ -143,6 +143,11 @@ func (v *typefnVM) call(node, declaration *ast.Node, args []*Type) *Type {
 }
 
 func (v *typefnVM) callWithClosure(node, declaration *ast.Node, args []*Type, closure *typefnClosure) (result *Type) {
+	// Module helpers have no captured environment. Canonicalize direct and
+	// constructor-valued applications to the same call recipe and cycle identity.
+	if closure != nil && closure.program.selfSlot < 0 {
+		closure = nil
+	}
 	originalArgs := args
 	savedChecks, savedSet, savedBlocked := v.checks, v.checkSet, v.blocked
 	v.checks, v.checkSet, v.blocked = nil, nil, false

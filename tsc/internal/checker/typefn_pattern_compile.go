@@ -16,7 +16,7 @@ func (b *typefnCompiler) match(node *ast.Node) {
 	d := node.AsTypeFunctionMatch()
 	slot := b.p.slots
 	b.p.slots++
-	b.emit(typefnInstruction{op: tfStore, node: node, expr: b.expression(d.Expression), slot: slot})
+	b.emit(typefnInstruction{op: tfStore, node: node, expr: b.typeExpression(d.Expression), slot: slot})
 	var ends []int
 	for index, armNode := range d.Arms.Nodes {
 		arm := armNode.AsTypeFunctionMatchArm()
@@ -35,7 +35,7 @@ func (b *typefnCompiler) match(node *ast.Node) {
 		attempt := b.emit(typefnInstruction{op: tfMatch, node: armNode, slot: slot, pattern: pattern})
 		guard := -1
 		if arm.Guard != nil {
-			guard = b.emit(typefnInstruction{op: tfBranch, node: arm.Guard, expr: b.expression(arm.Guard)})
+			guard = b.emit(typefnInstruction{op: tfBranch, node: arm.Guard, expr: b.typeExpression(arm.Guard)})
 		}
 		b.block(arm.Body, true)
 		ends = append(ends, b.emit(typefnInstruction{op: tfJump, node: armNode}))
@@ -56,7 +56,7 @@ func (b *typefnCompiler) pattern(node *ast.Node) *typefnPattern {
 	d := node.AsTypeFunctionPattern()
 	switch node.Kind {
 	case ast.KindTypeFunctionLiteralPattern, ast.KindTypeFunctionIsPattern, ast.KindTypeFunctionNativePattern, ast.KindTypeFunctionPinPattern:
-		p.expr = b.expression(d.Expression)
+		p.expr = b.typeExpression(d.Expression)
 	case ast.KindTypeFunctionFieldPattern:
 		p.key = node.Name().Text()
 		p.children = append(p.children, b.pattern(d.Expression))

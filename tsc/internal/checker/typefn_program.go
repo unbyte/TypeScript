@@ -40,6 +40,7 @@ type typefnExpression struct {
 	symbol    *ast.Symbol
 	intrinsic string
 	island    *typefnIsland
+	helper    *typefnProgram // Constructor-valued result, not the called function.
 	args      []*typefnExpression
 	keys      []*typefnExpression
 }
@@ -189,19 +190,34 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 	case ast.KindTypeFunctionBinding:
 		expr := b.expression(s.Expression)
 		slot := b.bind(node.Name(), true)
+		binding := b.scopes[len(b.scopes)-1][node.Name().Text()]
+		binding.helper = expr.helper
+		b.scopes[len(b.scopes)-1][node.Name().Text()] = binding
 		b.emit(typefnInstruction{op: tfStore, node: node, expr: expr, slot: slot})
 	case ast.KindTypeFunctionAssignment:
 		value, ok := b.lookup(node.Name().Text())
 		if !ok || !value.mutable || value.slot < 0 {
 			b.error(node.Name(), "assignment requires a mutable local binding")
 		}
-		b.emit(typefnInstruction{op: tfStore, node: node, expr: b.expression(s.Expression), slot: value.slot})
+		expr := b.expression(s.Expression)
+		if ok && value.mutable && value.slot >= 0 {
+			if (value.helper == nil) != (expr.helper == nil) {
+				b.error(node, "assignment cannot change a binding's value kind")
+			} else if value.helper != nil && len(value.helper.declaration.TypeParameters()) != len(expr.helper.declaration.TypeParameters()) {
+				b.error(node, "assignment cannot change constructor arity")
+			}
+		}
+		b.emit(typefnInstruction{op: tfStore, node: node, expr: expr, slot: value.slot})
 	case ast.KindTypeFunctionReturn:
-		b.emit(typefnInstruction{op: tfReturn, node: node, expr: b.expression(s.Expression)})
+		expr := b.expression(s.Expression)
+		if expr.helper != nil {
+			b.error(node, "constructor results are not implemented yet")
+		}
+		b.emit(typefnInstruction{op: tfReturn, node: node, expr: expr})
 	case ast.KindTypeFunctionExpressionStatement:
 		b.emit(typefnInstruction{op: tfDiscard, node: node, expr: b.expression(s.Expression)})
 	case ast.KindTypeFunctionIf:
-		branch := b.emit(typefnInstruction{op: tfBranch, node: node, expr: b.expression(s.Expression)})
+		branch := b.emit(typefnInstruction{op: tfBranch, node: node, expr: b.typeExpression(s.Expression)})
 		b.block(s.Body, true)
 		jump := b.emit(typefnInstruction{op: tfJump, node: node})
 		b.p.code[branch].target = len(b.p.code)
@@ -210,7 +226,7 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 		}
 		b.p.code[jump].target = len(b.p.code)
 	case ast.KindTypeFunctionWhile, ast.KindTypeFunctionForOf, ast.KindTypeFunctionForIn:
-		expr := b.expression(s.Expression)
+		expr := b.typeExpression(s.Expression)
 		loop := &typefnLoop{}
 		b.loops = append(b.loops, loop)
 		start := len(b.p.code)
@@ -261,7 +277,7 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 	e := &typefnExpression{node: node, slot: -1}
 	if node.Kind == ast.KindTypeFunctionTemplate {
 		for _, span := range node.AsTypeFunctionTemplate().Spans.Nodes {
-			e.args = append(e.args, b.expression(span.AsTypeFunctionTemplateSpan().Expression))
+			e.args = append(e.args, b.typeExpression(span.AsTypeFunctionTemplateSpan().Expression))
 		}
 		return e
 	}
@@ -281,10 +297,10 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 						b.error(node, "wrong number of helper Type arguments")
 					}
 					for _, argument := range data.Operands.Nodes {
-						e.args = append(e.args, b.expression(argument))
+						e.args = append(e.args, b.typeExpression(argument))
 					}
-				} else if binding.helper != nil {
-					b.error(node, "first-class helper values are not implemented yet")
+				} else {
+					e.helper = binding.helper
 				}
 				e.slot = binding.slot
 				e.symbol = binding.symbol
@@ -310,7 +326,12 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 			if data.Operands != nil {
 				actual = len(data.Operands.Nodes)
 			}
-			if actual < minimum || actual > count || declaration != nil && node.Kind != ast.KindTypeFunctionCall {
+			if declaration != nil && node.Kind == ast.KindTypeFunctionName {
+				e.helper = b.c.compileTypefn(declaration)
+				if !e.helper.valid {
+					b.p.valid = false
+				}
+			} else if actual < minimum || actual > count {
 				b.error(node, fmt.Sprintf("application requires %d..%d Type arguments", minimum, count))
 			}
 		}
@@ -322,16 +343,16 @@ func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 			name := field.Name()
 			var key *typefnExpression
 			if !ast.IsIdentifier(name) && !ast.IsStringLiteral(name) && !ast.IsNumericLiteral(name) {
-				key = b.expression(name)
+				key = b.typeExpression(name)
 			}
 			e.keys = append(e.keys, key)
-			e.args = append(e.args, b.expression(field.AsTypeFunctionExpression().Operands.Nodes[0]))
+			e.args = append(e.args, b.typeExpression(field.AsTypeFunctionExpression().Operands.Nodes[0]))
 		}
 		return e
 	}
 	if data.Operands != nil {
 		for _, operand := range data.Operands.Nodes {
-			e.args = append(e.args, b.expression(operand))
+			e.args = append(e.args, b.typeExpression(operand))
 		}
 	}
 	return e
@@ -405,4 +426,12 @@ func (c *Checker) compileTypefnWithParent(node *ast.Node, parent *typefnCompiler
 		b.error(node.Name(), "a control-flow path reaches the end without returning a value")
 	}
 	return p
+}
+
+func (b *typefnCompiler) typeExpression(node *ast.Node) *typefnExpression {
+	expression := b.expression(node)
+	if expression.helper != nil {
+		b.error(node, "constructor value cannot be used as a Type")
+	}
+	return expression
 }

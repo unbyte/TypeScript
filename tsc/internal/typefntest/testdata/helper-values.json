@@ -1,0 +1,11 @@
+{
+  "files": {
+    "main.ts": "helper-values.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}
