@@ -44,6 +44,14 @@ func (b *NodeBuilderImpl) typefnExpressionToNode(e *typefnExpression, slots []*T
 	if e.slot >= 0 {
 		return b.typefnDisplayLiteral(slots[e.slot])
 	}
+	if e.node.Kind == ast.KindTypeFunctionTemplate {
+		template := e.node.AsTypeFunctionTemplate()
+		spans := make([]*ast.Node, len(e.args))
+		for i, arg := range e.args {
+			spans[i] = b.f.NewTypeFunctionTemplateSpan(b.typefnExpressionToNode(arg, slots), template.Spans.Nodes[i].AsTypeFunctionTemplateSpan().Literal)
+		}
+		return b.f.NewTypeFunctionTemplate(template.Head, b.f.NewNodeList(spans))
+	}
 	data := e.node.AsTypeFunctionExpression()
 	var operands []*ast.Node
 	if e.node.Kind == ast.KindTypeFunctionObject {

@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.ts": "error-template-pending.ts"
+    "main.ts": "error-template-domain.ts"
   },
   "options": {
     "typefn": {
@@ -12,7 +12,7 @@
       "phase": "semantic",
       "code": -1,
       "file": "main.ts",
-      "message": "template evaluation is not implemented yet"
+      "message": "template interpolation requires string, number, bigint, boolean, null or undefined"
     }
   ]
 }

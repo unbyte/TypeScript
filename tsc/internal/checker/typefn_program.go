@@ -214,7 +214,9 @@ func (b *typefnCompiler) statement(node *ast.Node) {
 func (b *typefnCompiler) expression(node *ast.Node) *typefnExpression {
 	e := &typefnExpression{node: node, slot: -1}
 	if node.Kind == ast.KindTypeFunctionTemplate {
-		b.error(node, "template evaluation is not implemented yet")
+		for _, span := range node.AsTypeFunctionTemplate().Spans.Nodes {
+			e.args = append(e.args, b.expression(span.AsTypeFunctionTemplateSpan().Expression))
+		}
 		return e
 	}
 	data := node.AsTypeFunctionExpression()

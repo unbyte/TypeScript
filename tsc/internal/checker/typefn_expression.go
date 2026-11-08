@@ -26,6 +26,9 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []*Type) *Type {
 	if e.slot >= 0 {
 		return slots[e.slot]
 	}
+	if node.Kind == ast.KindTypeFunctionTemplate {
+		return v.templateExpression(e, slots)
+	}
 	data := node.AsTypeFunctionExpression()
 	switch node.Kind {
 	case ast.KindTypeFunctionLiteral:
