@@ -1,0 +1,175 @@
+{
+  "binaries": {
+    "baseline": {
+      "sha256": "ecebf7f91d9c5e5d5a7b922ff3806c57c2afccc11178fbfae4dc4265397d71f1",
+      "source_revision": "c45dcc0678add7b34564e4509d7721fc3714cdf1"
+    },
+    "candidate": {
+      "sha256": "c21af94c5b079259c6993123e66223802fccf4d712cf665f6c397dc6be284588",
+      "source_revision": "957af002a7cf4b3f3df5735e1d3677592c29eb9d"
+    }
+  },
+  "iterations_per_sample": 3,
+  "gomaxprocs": 4,
+  "samples": [
+    {
+      "pair": 1,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1452016556,
+        "bytes_per_op": 114443837,
+        "allocs_per_op": 933919
+      },
+      "candidate": {
+        "ns_per_op": 1396367584,
+        "bytes_per_op": 114401080,
+        "allocs_per_op": 933913
+      }
+    },
+    {
+      "pair": 2,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1442579860,
+        "bytes_per_op": 114433789,
+        "allocs_per_op": 933918
+      },
+      "baseline": {
+        "ns_per_op": 1404399527,
+        "bytes_per_op": 114500066,
+        "allocs_per_op": 933923
+      }
+    },
+    {
+      "pair": 3,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1401059233,
+        "bytes_per_op": 114425698,
+        "allocs_per_op": 933916
+      },
+      "candidate": {
+        "ns_per_op": 1426053220,
+        "bytes_per_op": 114387138,
+        "allocs_per_op": 933909
+      }
+    },
+    {
+      "pair": 4,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1443555965,
+        "bytes_per_op": 114417880,
+        "allocs_per_op": 933910
+      },
+      "baseline": {
+        "ns_per_op": 1449298306,
+        "bytes_per_op": 114437240,
+        "allocs_per_op": 933915
+      }
+    },
+    {
+      "pair": 5,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1488877678,
+        "bytes_per_op": 114383640,
+        "allocs_per_op": 933912
+      },
+      "candidate": {
+        "ns_per_op": 1452216744,
+        "bytes_per_op": 114320781,
+        "allocs_per_op": 933904
+      }
+    },
+    {
+      "pair": 6,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1407134205,
+        "bytes_per_op": 114394834,
+        "allocs_per_op": 933911
+      },
+      "baseline": {
+        "ns_per_op": 1425813615,
+        "bytes_per_op": 114365357,
+        "allocs_per_op": 933911
+      }
+    },
+    {
+      "pair": 7,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1480136623,
+        "bytes_per_op": 114467794,
+        "allocs_per_op": 933917
+      },
+      "candidate": {
+        "ns_per_op": 1501261762,
+        "bytes_per_op": 114401848,
+        "allocs_per_op": 933917
+      }
+    },
+    {
+      "pair": 8,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1555557217,
+        "bytes_per_op": 114381048,
+        "allocs_per_op": 933909
+      },
+      "baseline": {
+        "ns_per_op": 1587767242,
+        "bytes_per_op": 114369421,
+        "allocs_per_op": 933907
+      }
+    }
+  ],
+  "summary": {
+    "baseline": {
+      "ns_per_op": 1450657431.0,
+      "bytes_per_op": 114431469.0,
+      "allocs_per_op": 933915.5
+    },
+    "candidate": {
+      "ns_per_op": 1443067912.5,
+      "bytes_per_op": 114397957.0,
+      "allocs_per_op": 933910.5
+    },
+    "paired_median_change_percent": -0.8531515204855622,
+    "paired_bootstrap_95_percent": [
+      -2.462320077848601,
+      1.783935069360476
+    ]
+  },
+  "recorded_date": "2026-11-09",
+  "benchmark": "BenchmarkCheck",
+  "toolchain": "Go 1.27.0 linux/amd64",
+  "cpu": "AMD EPYC 9V74",
+  "typefn_profile": 0,
+  "fixture_tree": "9ad06622f8f25e5e12280538ea42084e00e9a3b2"
+}

@@ -388,6 +388,21 @@ including the candidate's pre-commit build provenance. Full harness/checker/LS
 and the 751 selected native configurations pass for this refactor. Enabled-profile
 and broader project performance remain unverified by these measurements.
 
+Native-only comparison after the subsequent conformance/integration fixes, using
+that same protocol (eight alternating pairs, three iterations each):
+
+| Revision | Median time/op | Median bytes/op | Median allocations/op |
+| --- | ---: | ---: | ---: |
+| `c45dcc067`, before native polling | 1.451 s | 114,431,469 | 933,915.5 |
+| `957af002a`, through explicit unknown assertions | 1.443 s | 114,397,957 | 933,910.5 |
+
+The median paired change is −0.85%, with a descriptive bootstrap interval of
+−2.46% to +1.78%. These samples show no clear regression or improvement on this
+fixture. The comparison measures the accumulated changes since the earlier fork
+revision, not total fork overhead against upstream or enabled-profile performance.
+[Raw samples, source revisions and binary hashes](probes/native-conformance-benchmark.json)
+are retained. No other compiler workload ran concurrently with the measurements.
+
 To repeat, create separate checkouts at the two revisions and compile each test
 binary with `go test -c -o /absolute/path/checker.test ./tsc/internal/checker`.
 Keep both checkouts available: the binaries read their compiler-fixture sources.
