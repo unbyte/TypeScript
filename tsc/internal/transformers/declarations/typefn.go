@@ -32,16 +32,23 @@ func (tx *DeclarationTransformer) checkTypefnDeclaration(node *ast.Node) bool {
 			continue
 		}
 		tx.tracker.handleSymbolAccessibilityError(dependency.SymbolAccessibilityResult)
-		if failed, message := tx.typefnDependencyFailure(dependency.Declarations); failed != nil {
-			tx.typefnError(dependency.Reference, message)
-			diagnostic := tx.state.diagnostics[len(tx.state.diagnostics)-1]
-			if ast.GetSourceFileOfNode(failed) != ast.GetSourceFileOfNode(dependency.Reference) {
-				diagnostic.AddRelatedInfo(createDiagnosticForNode(failed, diagnostics.NewAdHocMessage("typefn: dependency declared here")))
-			}
+		if !tx.checkTypefnDependencyClosure(dependency.Reference, dependency.Declarations) {
 			valid = false
 		}
 	}
 	return valid
+}
+
+func (tx *DeclarationTransformer) checkTypefnDependencyClosure(reference *ast.Node, roots []*ast.Node) bool {
+	if failed, message := tx.typefnDependencyFailure(roots); failed != nil {
+		tx.typefnError(reference, message)
+		diagnostic := tx.state.diagnostics[len(tx.state.diagnostics)-1]
+		if ast.GetSourceFileOfNode(failed) != ast.GetSourceFileOfNode(reference) {
+			diagnostic.AddRelatedInfo(createDiagnosticForNode(failed, diagnostics.NewAdHocMessage("typefn: dependency declared here")))
+		}
+		return false
+	}
+	return true
 }
 
 // Dependency cycles are legal. Visit each declaration once per root and validate

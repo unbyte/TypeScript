@@ -8,8 +8,9 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 type typefnState struct {
 	// Native frontend checks may return recovery Types after reporting an error.
 	// A scoped definition check must reject that program before VM execution.
-	definitionCheck *typefnProgram
-	declarationABI  map[*ast.SourceFile]*ast.Diagnostic
+	definitionCheck        *typefnProgram
+	declarationABI         map[*ast.SourceFile]*ast.Diagnostic
+	emitRecipeReachability map[*ast.Node]bool
 
 	constructionMembers map[*ast.Symbol]*typefnConstructionMembers
 	programs            map[*ast.Node]*typefnProgram

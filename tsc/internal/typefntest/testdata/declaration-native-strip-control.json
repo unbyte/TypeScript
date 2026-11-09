@@ -1,0 +1,17 @@
+{
+  "files": {
+    "library.ts": "declaration-native-strip-control.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "outputs": {
+    "out/library.d.ts": "export type Result = Hidden;\n"
+  },
+  "diagnostics": []
+}

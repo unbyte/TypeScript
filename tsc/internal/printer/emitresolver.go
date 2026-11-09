@@ -104,6 +104,7 @@ type EmitResolver interface {
 	SetReferencedImportDeclaration(node *ast.IdentifierNode, ref *ast.Declaration) // for overriding the reference resolver behavior for generated identifiers
 
 	// declaration emit checker functionality projections
+	GetTypefnReferenceDependencies(node *ast.Node) []*ast.Node
 	TypefnDeclarationStatus(node *ast.Node) (needsABI, valid bool)
 	GetTypefnDeclarationDependencies(node *ast.Node, makeVisible bool) []TypefnDeclarationDependency
 	PrecalculateDeclarationEmitVisibility(file *ast.SourceFile)

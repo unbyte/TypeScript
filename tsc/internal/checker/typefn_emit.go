@@ -14,7 +14,10 @@ import (
 func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node, makeVisible bool) []printer.TypefnDeclarationDependency {
 	r.checkerMu.Lock()
 	defer r.checkerMu.Unlock()
-	c := r.checker
+	return r.checker.typefnDeclarationDependencies(node, makeVisible)
+}
+
+func (c *Checker) typefnDeclarationDependencies(node *ast.Node, makeVisible bool) []printer.TypefnDeclarationDependency {
 	var results []printer.TypefnDeclarationDependency
 	type referenceKey struct{ root, target *ast.Symbol }
 	seen := map[referenceKey]bool{}
@@ -126,4 +129,88 @@ func (r *EmitResolver) TypefnDeclarationStatus(node *ast.Node) (needsABI, valid 
 		}
 	}
 	return false, true
+}
+
+// GetTypefnReferenceDependencies keeps ordinary native aliases/annotations in the
+// recipe failure boundary, without changing native-only declaration emit policy.
+func (r *EmitResolver) GetTypefnReferenceDependencies(node *ast.Node) []*ast.Node {
+	r.checkerMu.Lock()
+	defer r.checkerMu.Unlock()
+	c := r.checker
+	if c.compilerOptions.GetTypefnVersion() != 1 || !ast.IsTypeReferenceNode(node) || !ast.IsParseTreeNode(node) {
+		return nil
+	}
+	symbol := c.resolveEntityName(node.AsTypeReferenceNode().TypeName, ast.SymbolFlagsType, true, false, nil)
+	if symbol == nil || symbol == c.unknownSymbol || symbol.Flags()&ast.SymbolFlagsTypeParameter != 0 {
+		return nil
+	}
+	roots := symbol.Declarations()
+	if c.typefnDeclarationsHaveRecipe(roots) {
+		return roots
+	}
+	return nil
+}
+
+// Reachability is syntax/symbol based, not inferred from an evaluated result:
+// a completed literal Type may still have an executable source recipe. Cache
+// negatives only after closing the entire reachable graph, so cycles cannot hide
+// a positive edge discovered later. Positive results propagate along a proven path.
+func (c *Checker) typefnDeclarationsHaveRecipe(roots []*ast.Node) bool {
+	if len(roots) == 0 {
+		return false
+	}
+	state := c.getTypefnState()
+	if state.emitRecipeReachability == nil {
+		state.emitRecipeReachability = map[*ast.Node]bool{}
+	}
+	known := state.emitRecipeReachability
+	allKnown := true
+	for _, root := range roots {
+		value, cached := known[root]
+		if cached && value {
+			return true
+		}
+		allKnown = allKnown && cached
+	}
+	if allKnown {
+		return false
+	}
+	queue := make([]*ast.Node, 0, len(roots))
+	parents := map[*ast.Node]*ast.Node{}
+	for _, root := range roots {
+		if _, seen := parents[root]; !seen {
+			parents[root] = nil
+			queue = append(queue, root)
+		}
+	}
+	for index := 0; index < len(queue); index++ {
+		declaration := queue[index]
+		value, cached := known[declaration]
+		if ast.IsTypeFunctionDeclaration(declaration) || cached && value {
+			for current := declaration; current != nil; current = parents[current] {
+				known[current] = true
+			}
+			return true
+		}
+		if cached {
+			continue
+		}
+		// The bundled native libraries contain no executable DSL. Merged user
+		// augmentations have their own declarations and remain in the worklist.
+		if c.program.IsSourceFileDefaultLibrary(ast.GetSourceFileOfNode(declaration).PathKey()) {
+			continue
+		}
+		for _, dependency := range c.typefnDeclarationDependencies(declaration, false) {
+			for _, target := range dependency.Declarations {
+				if _, seen := parents[target]; !seen {
+					parents[target] = declaration
+					queue = append(queue, target)
+				}
+			}
+		}
+	}
+	for declaration := range parents {
+		known[declaration] = false
+	}
+	return false
 }

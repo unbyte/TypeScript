@@ -23,6 +23,14 @@ declare const key: unique symbol;
 declare const value: { value: true };
 typefn Private<T> { return T; }
 type Shadow = never;
+type CycleA<T> = { peer: CycleB<T>; value: Public<T> };
+type CycleB<T> = { peer: CycleA<T> };
+type NativeCycleA = { peer: NativeCycleB };
+type NativeCycleB = { peer: NativeCycleA };
+type ProbeCycleA = CycleA<1>;
+type ProbeCycleB = CycleB<1>;
+type ProbeNativeA = NativeCycleA;
+type ProbeNativeB = NativeCycleB;
 function outer<Capture>() {
  type Hidden = Capture;
  typefn Escapes<T> { return [Hidden, Capture, T]; }
@@ -105,6 +113,30 @@ export typefn Public<T> {
 	for _, dependency := range dependencies {
 		if dependency.Accessibility != printer.SymbolAccessibilityNotAccessible {
 			t.Fatalf("local dependency incorrectly nameable: %+v", dependency)
+		}
+	}
+
+	// A cycle must not cache a premature negative before discovering a DSL edge.
+	// Repeated positive/negative queries also exercise the completed-result cache.
+	for _, query := range []struct {
+		name   string
+		recipe bool
+	}{
+		{"ProbeNativeB", false}, {"ProbeCycleA", true}, {"ProbeNativeA", false},
+		{"ProbeCycleB", true}, {"ProbeCycleA", true}, {"ProbeNativeB", false},
+	} {
+		found := false
+		for _, statement := range file.Statements.Nodes {
+			if statement.Name() != nil && statement.Name().Text() == query.name {
+				found = true
+				hasRecipe := len(resolver.GetTypefnReferenceDependencies(statement.Type())) != 0
+				if hasRecipe != query.recipe {
+					t.Fatalf("%s recipe=%v, want %v", query.name, hasRecipe, query.recipe)
+				}
+			}
+		}
+		if !found {
+			t.Fatalf("missing query %s", query.name)
 		}
 	}
 

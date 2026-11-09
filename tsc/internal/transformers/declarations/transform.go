@@ -818,6 +818,11 @@ func (tx *DeclarationTransformer) transformConditionalTypeNode(input *ast.Condit
 }
 
 func (tx *DeclarationTransformer) transformTypeReference(input *ast.TypeReferenceNode) *ast.Node {
+	if tx.compilerOptions.GetTypefnVersion() == 1 {
+		if roots := tx.resolver.GetTypefnReferenceDependencies(input.AsNode()); len(roots) != 0 {
+			tx.checkTypefnDependencyClosure(input.AsNode(), roots)
+		}
+	}
 	tx.checkEntityNameVisibility(input.TypeName, tx.enclosingDeclaration)
 	return tx.Visitor().VisitEachChild(input.AsNode())
 }

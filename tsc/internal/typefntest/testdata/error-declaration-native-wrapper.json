@@ -1,0 +1,30 @@
+{
+  "files": {
+    "library.ts": "error-declaration-native-wrapper-consumer.ts",
+    "provider.ts": "error-declaration-native-wrapper-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "outputs": {},
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "stripped declaration dependency"
+    },
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "provider.ts",
+      "message": "stripped declaration dependency"
+    }
+  ]
+}
