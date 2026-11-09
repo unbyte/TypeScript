@@ -26651,8 +26651,15 @@ func (c *Checker) getUnionType(types []*Type) *Type {
 // circularly reference themselves and therefore cannot be subtype reduced during their declaration.
 // For example, "type Item = string | (() => Item" is a named type that circularly references itself.
 func (c *Checker) getUnionTypeEx(types []*Type, unionReduction UnionReduction, alias *TypeAlias, origin *Type) *Type {
+	if c.typefnNativeCanceled() {
+		return c.errorType
+	}
 	values, checks := c.splitTypefnOperands(types)
-	return c.guardTypefn(c.getUnionTypeExWorker(values, unionReduction, alias, origin), checks)
+	result := c.getUnionTypeExWorker(values, unionReduction, alias, origin)
+	if c.typefnNativeCanceled() {
+		return c.errorType
+	}
+	return c.guardTypefn(result, checks)
 }
 
 func (c *Checker) getUnionTypeExWorker(types []*Type, unionReduction UnionReduction, alias *TypeAlias, origin *Type) *Type {
@@ -26673,7 +26680,9 @@ func (c *Checker) getUnionTypeExWorker(types []*Type, unionReduction UnionReduct
 		t := c.unionOfUnionTypes[key]
 		if t == nil {
 			t = c.getUnionTypeWorker(types, unionReduction, alias, nil /*origin*/)
-			c.unionOfUnionTypes[key] = t
+			if !c.typefnNativeCanceled() {
+				c.unionOfUnionTypes[key] = t
+			}
 		}
 		return t
 	}
@@ -26685,6 +26694,9 @@ func (c *Checker) getUnionTypeWorker(types []*Type, unionReduction UnionReductio
 	defer c.releaseTemporaryTypeSet(set)
 	typeSet, includes := c.addTypesToUnion(types, set.values[:0])
 	set.values = typeSet
+	if c.typefnNativeCanceled() {
+		return c.errorType
+	}
 	if unionReduction != UnionReductionNone {
 		if includes&TypeFlagsAnyOrUnknown != 0 {
 			if includes&TypeFlagsAny != 0 {
@@ -26767,6 +26779,9 @@ func (c *Checker) getUnionTypeWorker(types []*Type, unionReduction UnionReductio
 
 // This function assumes the constituent type list is sorted and deduplicated.
 func (c *Checker) getUnionTypeFromSortedList(types []*Type, precomputedObjectFlags ObjectFlags, alias *TypeAlias, origin *Type) *Type {
+	if c.typefnNativeCanceled() {
+		return c.errorType
+	}
 	if len(types) == 0 {
 		return c.neverType
 	}
@@ -26822,6 +26837,9 @@ func (c *Checker) addTypesToUnion(sourceTypes []*Type, types []*Type) ([]*Type, 
 	}
 	var lastType *Type
 	for _, t := range sourceTypes {
+		if c.typefn != nil && !c.pollTypefnNativeWork() {
+			return types, includes
+		}
 		if t != lastType {
 			if t.flags&TypeFlagsUnion != 0 {
 				u := t.AsUnionType()
@@ -26829,6 +26847,9 @@ func (c *Checker) addTypesToUnion(sourceTypes []*Type, types []*Type) ([]*Type, 
 					includes |= TypeFlagsUnion
 				}
 				for _, s := range u.types {
+					if c.typefn != nil && !c.pollTypefnNativeWork() {
+						return types, includes
+					}
 					addType(s)
 				}
 			} else {
@@ -26839,9 +26860,18 @@ func (c *Checker) addTypesToUnion(sourceTypes []*Type, types []*Type) ([]*Type, 
 	}
 	if len(types) >= 2 {
 		// Sort and deduplicate types
-		slices.SortStableFunc(types, CompareTypes)
+		if c.typefn != nil && c.typefn.vm != nil {
+			if !c.sortTypefnUnion(types) {
+				return types, includes
+			}
+		} else {
+			slices.SortStableFunc(types, CompareTypes)
+		}
 		unique := 1
 		for _, t := range types[1:] {
+			if c.typefn != nil && !c.pollTypefnNativeWork() {
+				return types, includes
+			}
 			if t != types[unique-1] {
 				types[unique] = t
 				unique++
@@ -27087,14 +27117,24 @@ func (c *Checker) getIntersectionType(types []*Type) *Type {
 }
 
 func (c *Checker) getIntersectionTypeEx(types []*Type, flags IntersectionFlags, alias *TypeAlias) *Type {
+	if c.typefnNativeCanceled() {
+		return c.errorType
+	}
 	values, checks := c.splitTypefnOperands(types)
-	return c.guardTypefn(c.getIntersectionTypeExWorker(values, flags, alias), checks)
+	result := c.getIntersectionTypeExWorker(values, flags, alias)
+	if c.typefnNativeCanceled() {
+		return c.errorType
+	}
+	return c.guardTypefn(result, checks)
 }
 
 func (c *Checker) getIntersectionTypeExWorker(types []*Type, flags IntersectionFlags, alias *TypeAlias) *Type {
 	set := c.getTemporaryTypeSet()
 	defer c.releaseTemporaryTypeSet(set)
 	includes := c.addTypesToIntersection(&set.orderedSet, 0, types)
+	if c.typefnNativeCanceled() {
+		return c.errorType
+	}
 	typeSet := set.values
 	objectFlags := ObjectFlagsNone
 	// An intersection type is considered empty if it contains
@@ -27255,6 +27295,9 @@ func (c *Checker) getIntersectionTypeExWorker(types []*Type, flags IntersectionF
 			result = c.newIntersectionType(objectFlags|c.getPropagatingFlagsOfTypes(types /*excludeKinds*/, TypeFlagsNullable), typeSet)
 			result.alias = alias
 		}
+		if c.typefnNativeCanceled() {
+			return c.errorType
+		}
 		c.intersectionTypes[key] = result
 	}
 	return result
@@ -27288,6 +27331,9 @@ func isNotNullType(t *Type) bool {
 // types, duplicates are removed, and nested types of the given kind are flattened into the set.
 func (c *Checker) addTypesToIntersection(typeSet *orderedSet[*Type], includes TypeFlags, types []*Type) TypeFlags {
 	for _, t := range types {
+		if c.typefn != nil && !c.pollTypefnNativeWork() {
+			return includes
+		}
 		includes = c.addTypeToIntersection(typeSet, includes, c.getRegularTypeOfLiteralType(t))
 	}
 	return includes

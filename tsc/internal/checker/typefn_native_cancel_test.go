@@ -150,3 +150,34 @@ func TestTypefnCancellationInsideNativeInstantiation(t *testing.T) {
 		testTypefnNativeCancellation(t, source.String(), ".(*Checker).getConditionalType")
 	})
 }
+
+func TestTypefnCancellationInsideNativeNormalization(t *testing.T) {
+	var union strings.Builder
+	union.WriteString("type Input = never")
+	for i := range 4000 {
+		fmt.Fprintf(&union, " | \"v%d\"", i)
+	}
+	union.WriteString(`;
+	 typefn Normalize<T> { return reflect.kind<type(T | "tail")>; }
+	 type Result = Normalize<Input>;
+	 type Expected = "union";
+	`)
+	for _, frame := range []string{".(*Checker).addTypesToUnion", ".(*Checker).sortTypefnUnion"} {
+		t.Run(frame, func(t *testing.T) {
+			testTypefnNativeCancellation(t, union.String(), frame)
+		})
+	}
+	t.Run("intersection members", func(t *testing.T) {
+		var source strings.Builder
+		source.WriteString("type Input = unknown")
+		for i := range 4000 {
+			fmt.Fprintf(&source, " & { p%d: number }", i)
+		}
+		source.WriteString(`;
+		 typefn Normalize<T> { return reflect.kind<type(T & {tail: true})>; }
+		 type Result = Normalize<Input>;
+		 type Expected = "intersection";
+		`)
+		testTypefnNativeCancellation(t, source.String(), ".(*Checker).addTypesToIntersection")
+	})
+}

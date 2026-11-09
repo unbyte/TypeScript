@@ -60,14 +60,12 @@ against the language specification; these checks establish the boundaries below.
   comparisons and unary operations, preflight rejection of long decimal operands,
   signed/zero boundary values and declaration consumers with skipLibCheck. The full
   harness, checker and language-service suites pass after the shared operand checks.
-  Deterministic cancellation tests stop inside 4,000-property native comparisons,
-  suppress the computed query result and mark the checker snapshot canceled. Fresh
-  checkers then compute the exact true/false Types. Full harness/checker/LS suites
-  pass with native relation polling; other native operation families remain pending.
-  Mapped-property substitution and distributive conditional cancellation are tested
-  on 4,000-member inputs through result queries and semantic diagnostics. Both paths
-  suppress publication; fresh checkers compute the expected native Types. The relation
-  cases also run through both paths. Full harness/checker/LS suites pass after these hooks.
+  Deterministic cancellation tests stop inside native comparisons, mapped-property
+  substitution, distributive conditionals, union collection/sorting and intersection
+  collection on 4,000-member inputs. Result-query and semantic-diagnostic paths
+  suppress publication and invalidate the checker; fresh checkers produce the exact
+  expected native Types. Full harness/checker/LS suites pass with these hooks. Other
+  native-operation families and complete quota accounting remain pending.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A
@@ -86,7 +84,7 @@ against the language specification; these checks establish the boundaries below.
 * Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
   calls, contextual typing, type-parameter defaults and the type-system selection below,
   including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after native substitution/conditional cancellation polling.
+  through its existing filters. Rerun after native union/intersection cancellation polling.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
