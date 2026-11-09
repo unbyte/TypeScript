@@ -262,6 +262,22 @@ at `0f61c1dcb` added a defer to the general type-node resolver. The subsequent
 refactor confines that cleanup to a helper used by profile-1 queries; the earlier
 measurement remains attached to its source revision.
 
+Two further eight-pair comparisons measured the helper refactor at `5a2c07abd`
+with the same fixture and protocol:
+
+| Baseline → helper refactor | Median paired time change | Descriptive bootstrap interval |
+| --- | ---: | ---: |
+| `0f61c1dcb` → `5a2c07abd` | −3.07% | −5.26% to +2.50% |
+| `a75816d92` → `5a2c07abd` | −1.62% | −4.50% to +3.51% |
+
+These samples do not distinguish a clear improvement or regression. The first
+comparison isolates the refactor; the second measures all intervening replay
+fixes against the earlier baseline. Both [refactor samples](probes/query-scope-fast-benchmark.json)
+and [combined samples](probes/native-replay-fast-benchmark.json) are retained,
+including the candidate's pre-commit build provenance. Full harness/checker/LS
+and the 751 selected native configurations pass for this refactor. Enabled-profile
+and broader project performance remain unverified by these measurements.
+
 To repeat, create separate checkouts at the two revisions and compile each test
 binary with `go test -c -o /absolute/path/checker.test ./tsc/internal/checker`.
 Keep both checkouts available: the binaries read their compiler-fixture sources.

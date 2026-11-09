@@ -1,0 +1,176 @@
+{
+  "binaries": {
+    "baseline": {
+      "sha256": "c77bf8cbe9bbfa94222562bc601c2de0fc99fcaf7b1a3c9e7ac3ed52569b7140",
+      "source_revision": "a75816d923bdddf1df366b28a422f52fda46e446"
+    },
+    "candidate": {
+      "sha256": "aa1fea70f549924cace50bf33e436bc82b24dc4d74c1cc32a8230f4a221099a5",
+      "source_revision": "5a2c07abd2aaad2189f9efa8eb159ce472e65316",
+      "build_note": "Measured from the working tree; Go sources were then committed unchanged at source_revision."
+    }
+  },
+  "iterations_per_sample": 3,
+  "gomaxprocs": 4,
+  "samples": [
+    {
+      "pair": 1,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1448262920,
+        "bytes_per_op": 114503906,
+        "allocs_per_op": 933921
+      },
+      "candidate": {
+        "ns_per_op": 1464186723,
+        "bytes_per_op": 114502557,
+        "allocs_per_op": 933919
+      }
+    },
+    {
+      "pair": 2,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1349550577,
+        "bytes_per_op": 114400645,
+        "allocs_per_op": 933911
+      },
+      "baseline": {
+        "ns_per_op": 1295715270,
+        "bytes_per_op": 114442269,
+        "allocs_per_op": 933914
+      }
+    },
+    {
+      "pair": 3,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1372628899,
+        "bytes_per_op": 114430136,
+        "allocs_per_op": 933914
+      },
+      "candidate": {
+        "ns_per_op": 1353099968,
+        "bytes_per_op": 114317208,
+        "allocs_per_op": 933908
+      }
+    },
+    {
+      "pair": 4,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1405219646,
+        "bytes_per_op": 114289528,
+        "allocs_per_op": 933901
+      },
+      "baseline": {
+        "ns_per_op": 1504589099,
+        "bytes_per_op": 114328978,
+        "allocs_per_op": 933909
+      }
+    },
+    {
+      "pair": 5,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1508053308,
+        "bytes_per_op": 114414482,
+        "allocs_per_op": 933916
+      },
+      "candidate": {
+        "ns_per_op": 1444805502,
+        "bytes_per_op": 114328978,
+        "allocs_per_op": 933906
+      }
+    },
+    {
+      "pair": 6,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1419485307,
+        "bytes_per_op": 114304925,
+        "allocs_per_op": 933907
+      },
+      "baseline": {
+        "ns_per_op": 1445701657,
+        "bytes_per_op": 114478856,
+        "allocs_per_op": 933918
+      }
+    },
+    {
+      "pair": 7,
+      "order": [
+        "baseline",
+        "candidate"
+      ],
+      "baseline": {
+        "ns_per_op": 1342343903,
+        "bytes_per_op": 114551074,
+        "allocs_per_op": 933922
+      },
+      "candidate": {
+        "ns_per_op": 1389452339,
+        "bytes_per_op": 114429816,
+        "allocs_per_op": 933911
+      }
+    },
+    {
+      "pair": 8,
+      "order": [
+        "candidate",
+        "baseline"
+      ],
+      "candidate": {
+        "ns_per_op": 1345260256,
+        "bytes_per_op": 114468653,
+        "allocs_per_op": 933918
+      },
+      "baseline": {
+        "ns_per_op": 1408610390,
+        "bytes_per_op": 114283794,
+        "allocs_per_op": 933900
+      }
+    }
+  ],
+  "summary": {
+    "baseline": {
+      "ns_per_op": 1427156023.5,
+      "bytes_per_op": 114436202.5,
+      "allocs_per_op": 933915.0
+    },
+    "candidate": {
+      "ns_per_op": 1397335992.5,
+      "bytes_per_op": 114364811.5,
+      "allocs_per_op": 933909.5
+    },
+    "paired_median_change_percent": -1.6180695245921084,
+    "paired_bootstrap_95_percent": [
+      -4.497349618442048,
+      3.5094163198206907
+    ]
+  },
+  "recorded_date": "2026-11-09",
+  "benchmark": "BenchmarkCheck",
+  "toolchain": "Go 1.27.0 linux/amd64",
+  "cpu": "AMD EPYC 9V74",
+  "typefn_profile": 0,
+  "fixture_tree": "9ad06622f8f25e5e12280538ea42084e00e9a3b2"
+}
