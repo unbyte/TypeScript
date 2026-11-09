@@ -108,6 +108,17 @@ against the language specification; these checks establish the boundaries below.
   after some properties have already been built. Repeated reflection, a successful
   sibling, fresh declaration consumers and application/native API queries in both
   orders pass. Full harness/checker/LS suites pass after the publication guard.
+* Passed: generated calculator conformance (S20). A deterministic corpus contains
+  144 expression trees, each rendered with minimal parentheses and again with
+  redundant groups and ASCII whitespace. An independent Go `math/big` tree evaluator
+  supplies exact results or the first division failure; rendering records the
+  expected UTF-16 operator offset. Tests cover signed operands/divisors, leading
+  zeroes, large integers, precedence and associativity, plus `Calc` conversion for
+  safe integers. The 288 expressions run from source and from freshly emitted
+  declarations with skipLibCheck both off and on. Generated success assertions must
+  resolve to literal true; failure cases require exact counts and application spans.
+  This supplements the fixed malformed-input and Unicode string tests; it is not
+  an exhaustive parser proof or a performance measurement.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A

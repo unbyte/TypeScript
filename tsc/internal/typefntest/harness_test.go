@@ -34,6 +34,7 @@ type fixture struct {
 	emitOptions compiler.EmitOptions // API-only modes exercised by declaration tests
 	beforeCheck func(testing.TB, *compiler.Program)
 	beforeEmit  func(testing.TB, *compiler.Program)
+	sourceText  map[string]string // Go-generated contents for entries in Files
 }
 
 type wantDiagnostic struct {
@@ -87,11 +88,15 @@ func loadFixtureFiles(t testing.TB, f fixture) (map[string]string, []string) {
 		if strings.Contains(name, "..") || strings.HasPrefix(name, "/") {
 			t.Fatalf("fixture filename must be relative: %q", name)
 		}
-		data, err := os.ReadFile(filepath.Join("testdata", source))
-		if err != nil {
-			t.Fatal(err)
+		text, generated := f.sourceText[name]
+		if !generated {
+			data, err := os.ReadFile(filepath.Join("testdata", source))
+			if err != nil {
+				t.Fatal(err)
+			}
+			text = string(data)
 		}
-		files["/project/"+name] = string(data)
+		files["/project/"+name] = text
 		roots = append(roots, name)
 	}
 	return files, roots
