@@ -55,9 +55,16 @@ func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceReci
 	recipe := &typefnSourceRecipe{node: annotation, mapper: signature.mapper}
 	hasRecipe := c.typefnNodeHasRecipe(annotation)
 	arguments := expression.TypeArguments()
-	if len(arguments) != 0 {
+	defaults := c.typefnCallDefaultOrigin(expression)
+	if defaults != nil && defaults.signature != signature {
+		defaults = nil
+	}
+	if len(arguments) != 0 || defaults != nil {
 		recipe.arguments = map[*Type]typefnRecipeArgument{}
 		for i, parameter := range signature.declaration.TypeParameters() {
+			if len(arguments) == 0 && (i >= len(defaults.used) || !defaults.used[i]) {
+				continue
+			}
 			argument := parameter.AsTypeParameterDeclaration().DefaultType
 			defaulted := i >= len(arguments)
 			if !defaulted {

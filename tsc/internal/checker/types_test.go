@@ -463,11 +463,13 @@ func TestInferenceContextMappers(t *testing.T) { //nolint:paralleltest
 	c.errorType = types[0]
 	info := newInferenceInfo(types[0])
 	info.inferredType = types[1]
+	info.fromDefault = true
 	info.candidates = []*Type{types[1]}
 	context := c.newInferenceContextWorker([]*InferenceInfo{info}, nil, InferenceFlagsNone, nil)
 	assert.Equal(t, context.nonFixingMapper.Map(types[0]), types[1])
 	assert.Assert(t, !info.isFixed)
 	clone := c.cloneInferenceContext(context, InferenceFlagsNone)
+	assert.Assert(t, clone.inferences[0].fromDefault)
 	clone.inferences[0].candidates[0] = types[2]
 	assert.Equal(t, info.candidates[0], types[1])
 	assert.Equal(t, context.mapper.Map(types[0]), types[0])

@@ -298,6 +298,7 @@ type InferenceInfo struct {
 	priority         InferencePriority // Priority of current inference set
 	topLevel         bool              // True if all inferences are to top level occurrences
 	isFixed          bool              // True if inferences are fixed
+	fromDefault      bool              // True if the final inference uses the parameter's default
 	impliedArity     int               // Implied arity (or -1)
 }
 
@@ -8689,6 +8690,11 @@ func (c *Checker) getResolvedSignature(node *ast.Node, candidatesOutArray *[]*Si
 	if cached != nil && cached != c.resolvingSignature && candidatesOutArray == nil {
 		return cached
 	}
+	typefnResolution := -1
+	if c.compilerOptions.GetTypefnVersion() == 1 {
+		typefnResolution = c.beginTypefnCallResolution(node)
+		defer c.endTypefnCallResolution(typefnResolution)
+	}
 	saveResolutionStart := c.resolutionStart
 	if cached == nil {
 		// If we haven't already done so, temporarily reset the resolution stack. This allows us to
@@ -8710,7 +8716,8 @@ func (c *Checker) getResolvedSignature(node *ast.Node, candidatesOutArray *[]*Si
 		// since resolving such signature leads to resolving the potential outer signature, its arguments and thus the very same signature
 		// it's possible that this inner resolution sets the resolvedSignature first.
 		// In such a case we ignore the local result and reuse the correct one that was cached.
-		if links.resolvedSignature != c.resolvingSignature {
+		resolvedElsewhere := links.resolvedSignature != c.resolvingSignature
+		if resolvedElsewhere {
 			result = links.resolvedSignature
 		}
 		// If signature resolution originated in control flow type analysis (for example to compute the
@@ -8718,6 +8725,7 @@ func (c *Checker) getResolvedSignature(node *ast.Node, candidatesOutArray *[]*Si
 		// types from the control flow analysis.
 		if len(c.flowLoopStack) == 0 {
 			links.resolvedSignature = result
+			c.publishTypefnCallResolution(typefnResolution, result, resolvedElsewhere)
 		} else {
 			links.resolvedSignature = cached
 		}
@@ -9392,6 +9400,7 @@ func (c *Checker) chooseOverload(s *CallState, relation *Relation) *Signature {
 			}
 		}
 		s.candidates[candidateIndex] = checkCandidate
+		c.recordTypefnCallDefaults(s.node, checkCandidate, inferenceContext)
 		return checkCandidate
 	}
 	return nil

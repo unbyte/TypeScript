@@ -1347,11 +1347,13 @@ func (c *Checker) inferFromIntraExpressionSites(n *InferenceContext) {
 func (c *Checker) getInferredType(n *InferenceContext, index int) *Type {
 	inference := n.inferences[index]
 	if inference.inferredType == nil {
+		inference.fromDefault = false
 		if inference.typeParameter == c.errorType {
 			return inference.typeParameter
 		}
 		var inferredType *Type
 		var fallbackType *Type
+		var defaultInference *Type
 		if n.signature != nil {
 			var inferredCovariantType *Type
 			if len(inference.candidates) != 0 {
@@ -1396,6 +1398,7 @@ func (c *Checker) getInferredType(n *InferenceContext, index int) *Type {
 					// Instantiate the default type. Any forward reference to a type
 					// parameter should be instantiated to the empty object type.
 					inferredType = c.instantiateType(defaultType, mergeTypeMappers(c.newBackreferenceMapper(n, index), n.nonFixingMapper))
+					defaultInference = inferredType
 				}
 			}
 		} else {
@@ -1429,6 +1432,7 @@ func (c *Checker) getInferredType(n *InferenceContext, index int) *Type {
 			}
 			inference.inferredType = inferredType
 		}
+		inference.fromDefault = defaultInference != nil && inference.inferredType == defaultInference
 		c.clearActiveMapperCaches()
 	}
 	return inference.inferredType
@@ -1667,6 +1671,7 @@ func cloneInferenceInfo(info *InferenceInfo) *InferenceInfo {
 		priority:         info.priority,
 		topLevel:         info.topLevel,
 		isFixed:          info.isFixed,
+		fromDefault:      info.fromDefault,
 		impliedArity:     info.impliedArity,
 	}
 }
@@ -1675,6 +1680,7 @@ func clearCachedInferences(inferences []*InferenceInfo) {
 	for _, inference := range inferences {
 		if !inference.isFixed {
 			inference.inferredType = nil
+			inference.fromDefault = false
 		}
 	}
 }

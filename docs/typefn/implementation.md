@@ -713,8 +713,8 @@ property count. Tests cover concrete and generic calls, mapped binders, generic 
 fields, nested object properties and public cross-module helpers. They also retain
 unrelated literal/native annotations unchanged and withhold stripped or unnameable
 recipes in ordinary, forced and builder emit. Remaining inferred-recipe work includes
-arbitrary value/return flow, inferred argument origins and defaults selected by native
-inference, native call requirements beyond the return annotation, and hygienic lifting of local helpers
+arbitrary value/return flow, inferred value-argument origins, native call requirements
+beyond the return annotation, and hygienic lifting of local helpers
 or inaccessible cross-module recipes. This is not complete inferred declaration emit.
 
 Explicit native type arguments now carry their original syntax into inferred recipes,
@@ -729,5 +729,20 @@ Native Type-identity serialization caching is disabled inside strict recipe copy
 two argument recipes can have identical current results and distinct consumer behavior.
 Tests cover repeated equal-result calls, dependent/chained defaults, generic class
 binders and augmentation. A value inferred to the same Type as its parameter's default
-is deliberately not treated as use of that default. Tracking defaults actually chosen
-by native inference is a separate remaining integration step.
+is deliberately not treated as use of that default.
+
+Native inference now records whether its final argument came from the parameter's
+default, including constraint fallback and inference-context cloning/reset. Only the
+successful overload's facts are collected. They are published per call alongside the
+cached native signature, not attached to the shared instantiated signature. Nested
+resolutions retain ownership of their published facts; transient or failed resolutions
+cannot overwrite them. Editor cache-reset scopes restore provenance with native
+signatures and value Types. Disabled-profile calls allocate no DSL provenance state.
+
+The recipe copier uses those facts to retain defaults actually selected by inference.
+Tests deliberately share one native signature between a defaulted call and a call
+with an inferred value of the same Type. Fresh consumers with augmentation distinguish
+their output; completion and signature-help queries before/after semantic checking
+preserve that distinction. Separate publication tests cover nested stack growth,
+abandoned resolution, early error caching and restoration. This retains default
+origins; it does not yet replay all native call constraints or inferred value origins.

@@ -367,10 +367,29 @@ func (c *Checker) runWithoutResolvedSignatureCaching[T any](node *ast.Node, fn f
 	if ancestorNode != nil {
 		cachedResolvedSignatures := make(map[*SignatureLinks]*Signature)
 		cachedTypes := make(map[*ValueSymbolLinks]*Type)
+		var typefnOrigins map[*ast.Node]*typefnCallDefaults
+		if c.compilerOptions.GetTypefnVersion() == 1 {
+			typefnOrigins = map[*ast.Node]*typefnCallDefaults{}
+		}
+		defer func() {
+			for signatureLinks, resolvedSignature := range cachedResolvedSignatures {
+				signatureLinks.resolvedSignature = resolvedSignature
+			}
+			for symbolLinks, resolvedType := range cachedTypes {
+				symbolLinks.resolvedType = resolvedType
+			}
+			for node, origin := range typefnOrigins {
+				c.restoreTypefnCallDefaultOrigin(node, origin)
+			}
+		}()
 		for ancestorNode != nil {
 			signatureLinks := c.signatureLinks.Get(ancestorNode)
 			cachedResolvedSignatures[signatureLinks] = signatureLinks.resolvedSignature
 			signatureLinks.resolvedSignature = nil
+			if typefnOrigins != nil {
+				typefnOrigins[ancestorNode] = c.typefnCallDefaultOrigin(ancestorNode)
+				c.restoreTypefnCallDefaultOrigin(ancestorNode, nil)
+			}
 			if ast.IsFunctionExpressionOrArrowFunction(ancestorNode) {
 				symbolLinks := c.valueSymbolLinks.Get(c.getSymbolOfDeclaration(ancestorNode))
 				resolvedType := symbolLinks.resolvedType
@@ -379,14 +398,7 @@ func (c *Checker) runWithoutResolvedSignatureCaching[T any](node *ast.Node, fn f
 			}
 			ancestorNode = ast.FindAncestor(ancestorNode.Parent, ast.IsCallLikeOrFunctionLikeExpression)
 		}
-		result := fn()
-		for signatureLinks, resolvedSignature := range cachedResolvedSignatures {
-			signatureLinks.resolvedSignature = resolvedSignature
-		}
-		for symbolLinks, resolvedType := range cachedTypes {
-			symbolLinks.resolvedType = resolvedType
-		}
-		return result
+		return fn()
 	}
 	return fn()
 }

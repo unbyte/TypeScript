@@ -11,6 +11,8 @@ type typefnState struct {
 	definitionCheck        *typefnProgram
 	declarationABI         map[*ast.SourceFile]*ast.Diagnostic
 	emitRecipeReachability map[*ast.Node]bool
+	callResolutions        []typefnCallResolution
+	callDefaults           map[*ast.Node]*typefnCallDefaults
 
 	constructionMembers map[*ast.Symbol]*typefnConstructionMembers
 	programs            map[*ast.Node]*typefnProgram

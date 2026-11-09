@@ -32,6 +32,8 @@ type fixture struct {
 	EmitSkipped bool                 `json:"emitSkipped"`
 	Consumer    *fixture             `json:"consumer"` // fresh checker with emitted declarations and consumer files only
 	emitOptions compiler.EmitOptions // API-only modes exercised by declaration tests
+	beforeCheck func(testing.TB, *compiler.Program)
+	beforeEmit  func(testing.TB, *compiler.Program)
 }
 
 type wantDiagnostic struct {
@@ -123,6 +125,9 @@ func runFixtureSources(t testing.TB, f fixture, files map[string]string, roots [
 	}
 	if len(got) == 0 {
 		p := compiler.NewProgram(compiler.ProgramOptions{ProgramConfig: compiler.ProgramConfig{Config: parsed}, ProgramHosts: compiler.ProgramHosts{Host: host}})
+		if f.beforeCheck != nil {
+			f.beforeCheck(t, p)
+		}
 		add("syntax", p.GetSyntacticDiagnostics(t.Context(), nil))
 		add("program", p.GetProgramDiagnostics())
 		// Malformed source must never be evaluated by the harness.
@@ -153,6 +158,9 @@ func runFixtureSources(t testing.TB, f fixture, files map[string]string, roots [
 			done()
 		}
 		if f.Outputs != nil || f.Consumer != nil {
+			if f.beforeEmit != nil {
+				f.beforeEmit(t, p)
+			}
 			outputs := map[string]string{}
 			var outputMu sync.Mutex
 			emitOptions := f.emitOptions

@@ -1,0 +1,24 @@
+{
+  "files": {
+    "library.ts": "declaration-inferred-defaults.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-inferred-defaults-augmented.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

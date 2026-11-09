@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 417 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 419 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -38,17 +38,20 @@ against the language specification; these checks establish the boundaries below.
   annotations retain their native behavior. Explicit computed arguments and chained
   defaults after a partial explicit argument list preserve their source syntax;
   identical producer results, generic class binders and an inferred-value/default
-  collision are checked in fresh augmented and non-augmented consumers.
+  collision are checked in fresh augmented and non-augmented consumers. Native
+  inference-selected defaults preserve their provenance separately from shared
+  signatures; completion/signature-help queries run before and after semantic
+  checking, and nested/abandoned resolution publication is tested.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.
   Parser/binder/printer/checker/LS suites also pass at written-recipe emission; optional-provenance assertions pass
   in both exact-optional modes, and the added generic-body dependency assertion passes.
   Full checker, harness and language-service suites rerun after inferred call recipes.
-* Passed: 327 upstream compiler configurations selected by `declarationEmit*` and
-  the conditional/mapped/union/template/generic-signature baseline selection below,
-  including native emit and type/symbol baselines. The runner skipped 22 configurations
-  through its existing filters. Rerun after inferred call-recipe serialization.
+* Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
+  calls, contextual typing, type-parameter defaults and the type-system selection below,
+  including native emit and type/symbol baselines. The runner skipped 23 configurations
+  through its existing filters. Rerun after native inference-default provenance integration.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
@@ -79,7 +82,7 @@ than the latest seven-package run):
 ```sh
 go test ./tsc/internal/typefntest ./tsc/internal/tsoptions ./tsc/internal/parser ./tsc/internal/printer ./tsc/internal/ast ./tsc/internal/astnav ./tsc/internal/api/encoder ./tsc/internal/binder ./tsc/internal/checker ./tsc/internal/compiler ./tsc/internal/ls ./tsc/internal/format ./tsc/internal/ls/lsutil ./tsc/internal/project ./tsc/internal/lsp ./tsc/internal/core ./tools/gen-proto -count=1
 go test -race ./tsc/internal/typefntest ./tsc/internal/parser ./tsc/internal/ls ./tsc/internal/project ./tsc/internal/lsp -run 'TestIntegration|Typefn' -count=1
-go test ./tsc/internal/testrunner -run '^TestLocal/(conditionalTypes[12]|mappedTypes[12]|unionTypeReduction2?|templateLiteralTypes[12]|genericCallWithGenericSignatureArguments[23]?)\.ts' -count=1
+go test ./tsc/internal/testrunner -run '^TestLocal/(declarationEmit.*|generic.*|contextual.*|typeParameterDefault.*|conditionalTypes[12]|mappedTypes[12]|unionTypeReduction2?|templateLiteralTypes[12])\.ts' -count=1
 go build -o built/local/tsc ./tsc/cmd/tsc
 built/local/tsc --project docs/typefn/examples/editor/tsconfig.json
 python3 docs/typefn/probes/check-where-native.py built/local/tsc
