@@ -1,0 +1,13 @@
+import { direct, nested, forwarded, specialized, stored, immediate, local } from "./out/library";
+import type { Open } from "./out/provider";
+type Assert<T extends true> = T;
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type directResult = Assert<Equal<typeof direct, 1>>;
+type nestedResult = Assert<Equal<typeof nested, 1>>;
+type storedResult = Assert<Equal<typeof stored, 1>>;
+type immediateResult = Assert<Equal<typeof immediate, 1>>;
+const again = forwarded<Open>();
+const againSpecialized = specialized();
+type Forwarded = Assert<Equal<typeof again, 1>>;
+type Specialized = Assert<Equal<typeof againSpecialized, 1>>;
+type Local = Assert<Equal<typeof local, 1>>;

@@ -852,8 +852,16 @@ heritage Type references.
 Consumer tests cover direct and stored specializations, defaults, generic class
 fields, private imported return helpers and an argument bound invalidated by interface
 augmentation. A separate specialization with the same current native Type but a
-fixed argument remains fixed. Overloaded/non-identifier callee projection and
+fixed argument remains fixed. Overload/object-receiver callee projection and
 arbitrary inferred value origins remain incomplete.
+
+Namespace-qualified value references, single-signature calls and specialization
+expressions use native entity-name visibility and declaration serialization.
+This includes imported/nested namespaces and private local namespace helpers.
+Consumer augmentation replays the original helper and computed generic bounds;
+stripped namespace helpers suppress ordinary, forced and builder output. Ordinary
+object members do not resolve as namespace exports, and explicit receiver
+obligations are not added to this projection path.
 
 
 Call-return recipes no longer require a written return annotation. A single native

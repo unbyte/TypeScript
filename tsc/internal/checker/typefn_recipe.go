@@ -41,19 +41,33 @@ func (c *Checker) typefnNodeHasRecipe(node *ast.Node) bool {
 	return false
 }
 
+// Native entity-name serialization preserves namespace/import visibility. An
+// ordinary object member needs a receiver-relative recipe instead; it must not
+// be mistaken for a namespace export just because it uses dotted syntax.
+func (c *Checker) typefnRecipeValueName(name *ast.Node) bool {
+	if !ast.IsEntityNameExpression(name) || ast.IsOptionalChain(name) {
+		return false
+	}
+	if ast.IsIdentifier(name) {
+		return true
+	}
+	symbol := c.resolveEntityName(name, ast.SymbolFlagsValue, true, false, nil)
+	return symbol != nil && symbol != c.unknownSymbol
+}
+
 func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceRecipe {
 	if expression == nil || c.compilerOptions.GetTypefnVersion() != 1 {
 		return nil
 	}
 	expression = ast.SkipParentheses(expression)
-	if ast.IsIdentifier(expression) {
+	if c.typefnRecipeValueName(expression) {
 		symbol := c.resolveEntityName(expression, ast.SymbolFlagsValue, true, false, nil)
 		if len(c.typefnSymbolDependencies(symbol)) != 0 {
 			return &typefnSourceRecipe{reference: expression}
 		}
 		return nil
 	}
-	if ast.IsExpressionWithTypeArguments(expression) && ast.IsIdentifier(ast.SkipParentheses(expression.Expression())) {
+	if ast.IsExpressionWithTypeArguments(expression) && c.typefnRecipeValueName(ast.SkipParentheses(expression.Expression())) {
 		if c.typefnNodeHasRecipe(expression) {
 			return &typefnSourceRecipe{reference: expression}
 		}
@@ -276,7 +290,16 @@ func (b *NodeBuilderImpl) tryTypefnReturnRecipe(signature *Signature, inferred *
 // requires one signature with the same declaration as the selected call.
 func (b *NodeBuilderImpl) typefnCallRecipeNode(recipe *typefnSourceRecipe) *ast.Node {
 	name := ast.SkipParentheses(recipe.call.Expression())
-	if !ast.IsIdentifier(name) && !(ast.IsExpressionWithTypeArguments(name) && ast.IsIdentifier(ast.SkipParentheses(name.Expression()))) {
+	valueName := name
+	if ast.IsExpressionWithTypeArguments(name) {
+		valueName = ast.SkipParentheses(name.Expression())
+	}
+	if !b.ch.typefnRecipeValueName(valueName) {
+		return nil
+	}
+	if !ast.IsIdentifier(valueName) && recipe.signature.ThisParameter() != nil {
+		// Explicit receiver obligations need a call recipe that validates the
+		// receiver as well as the callable's generic and parameter bounds.
 		return nil
 	}
 	signatures := b.ch.getSignaturesOfType(b.ch.getTypeOfExpression(name), SignatureKindCall)
