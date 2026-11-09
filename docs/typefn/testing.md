@@ -211,3 +211,31 @@ go test ./tsc/internal/typefntest -run '^TestIntegration/(community-paths|error-
 168.9 ms/op, 48,379,653 bytes/op, 276,568 allocations/op. This includes cold compiler
 setup, both path algorithms, assertions and native generic call checking. It is not
 an isolated VM or comparative speed measurement.
+
+Native-only polling comparison (Go 1.27.0, Linux/amd64, EPYC 9V74, GOMAXPROCS=4):
+
+| Revision | Median time/op | Median bytes/op | Median allocations/op |
+| --- | ---: | ---: | ---: |
+| `c45dcc067`, before native polling | 1.445 s | 114,342,888 | 933,908 |
+| `a75816d92`, with native polling | 1.434 s | 114,415,512 | 933,914.5 |
+
+Eight alternating pairs, three iterations per sample, use the upstream
+`BenchmarkCheck` compiler fixture with profile 0. Each iteration creates a fresh
+checker over an already bound program. The median paired time change is -0.87%;
+the descriptive paired bootstrap interval is -4.90% to +1.77%. These samples show
+no clear regression or improvement on this fixture. They do not establish zero
+overhead, enabled-profile performance, or performance across native projects.
+[Raw samples and binary/source hashes](probes/native-polling-benchmark.json) are retained.
+
+To repeat, create separate checkouts at the two revisions and compile each test
+binary with `go test -c -o /absolute/path/checker.test ./tsc/internal/checker`.
+Keep both checkouts available: the binaries read their compiler-fixture sources.
+Then run the [paired runner](probes/compare-native-checker.py):
+
+```sh
+python3 docs/typefn/probes/compare-native-checker.py /absolute/path/baseline.test /absolute/path/candidate.test > comparison.json
+```
+
+The runner executes sequentially, alternates ordering, sets GOMAXPROCS for both
+binaries and records raw metrics and hashes. Build before measuring and avoid
+concurrent compiler workloads during the comparison.
