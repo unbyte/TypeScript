@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 552 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 559 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -135,6 +135,12 @@ against the language specification; these checks establish the boundaries below.
   producer result of never. Any/unknown/never controls retain native meanings. An
   inaccessible local operand suppresses ordinary/forced/builder output. Full
   harness/checker/LS suites pass for these operator recipes.
+* Passed: explicit unknown casts involving opaque deferred results and guarded
+  Types, including native aliases, both assertion syntaxes and double casts. Seven
+  fixtures cover source and fresh declaration consumers with skipLibCheck on/off.
+  Invalid concrete targets, computed return/input checks, ordinary assignments,
+  satisfies expressions and unrelated native cast errors remain diagnostic.
+  Full harness/checker/LS suites pass.
 * Passed: generated calculator conformance (S20). A deterministic corpus contains
   144 expression trees, each rendered with minimal parentheses and again with
   redundant groups and ASCII whitespace. An independent Go `math/big` tree evaluator
@@ -174,8 +180,9 @@ against the language specification; these checks establish the boundaries below.
   Full checker, harness and language-service suites rerun after inferred call recipes.
 * Passed: the full native compiler baseline suite (`TestLocal`): 13,811 configurations,
   including diagnostics, emit, type/symbol and source-map checks. The runner skipped
-  1,721 configurations through its existing filters. This full run follows optional
-  parameter recipe support. Earlier focused selections passed 751 configurations
+  1,721 configurations through its existing filters. The full run passed after optional
+  parameter recipe support and again after non-null recipes and explicit unknown
+  assertion handling. Earlier focused selections passed 751 configurations
   with 23 skipped; their narrower command remains useful for individual changes.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests

@@ -1,0 +1,17 @@
+import {fromUnknown,toUnknown,fromAlias,toAlias,guarded,eraseGuard,doubleCast} from "./library";
+type Assert<T extends true> = T;
+type Equal<A,B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+const a = fromUnknown<1>(null);
+const b = fromAlias<2>(null);
+const c = toUnknown<1>(2);
+const d = toAlias<2>(3);
+const e = guarded<1>(null);
+const f = eraseGuard<1>("ok");
+const g = doubleCast<3>("unsafe");
+type A = Assert<Equal<typeof a,2>>;
+type B = Assert<Equal<typeof b,3>>;
+type C = Assert<Equal<typeof c,unknown>>;
+type D = Assert<Equal<typeof d,unknown>>;
+type E = Assert<Equal<typeof e,string>>;
+type F = Assert<Equal<typeof f,unknown>>;
+type G = Assert<Equal<typeof g,4>>;

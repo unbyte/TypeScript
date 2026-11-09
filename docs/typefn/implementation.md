@@ -136,7 +136,11 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   dependencies, and exhaustive inference/replay laws remain pending. Guarded
   relations currently require the same canonical check set. Structural predicates
   and union traversal use native dependency summaries; exhaustive native forms
-  and ordinary cast/assignment boundaries still need coverage. No constraint is
+  and ordinary cast/assignment boundaries still need coverage. Explicit assertions
+  to/from native unknown now retain the native escape hatch. The target is resolved
+  first, so concrete DSL failures still diagnose and pending checks stay on the
+  target Type. This does not prove an assignment or satisfy a validation journal;
+  ordinary assignments and satisfies expressions retain their checks. No constraint is
   enumerated as a value. Native base-constraint resolution treats opaque deferred
   computations as unconstrained, preventing contextual literal checking from
   recursively following the same term. A guard exposes its known shape for

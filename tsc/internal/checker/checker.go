@@ -12639,7 +12639,10 @@ func (c *Checker) checkAssertionDeferred(node *ast.Node) {
 	targetType := c.getTypeFromTypeNode(typeNode)
 	if !c.isErrorType(targetType) {
 		widenedType := c.getWidenedType(exprType)
-		if !c.isTypeComparableTo(targetType, widenedType) {
+		// An explicit unknown assertion is an escape hatch, not a proof of a
+		// deferred calculation's requirements. The target is still resolved
+		// above: concrete failures diagnose and pending checks remain on it.
+		if (targetType.flags|widenedType.flags)&TypeFlagsUnknown == 0 && !c.isTypeComparableTo(targetType, widenedType) {
 			errNode := node
 			if typeNode.Flags&ast.NodeFlagsReparsed != 0 {
 				errNode = typeNode

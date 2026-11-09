@@ -1,0 +1,12 @@
+{
+  "files": {
+    "library.ts": "unknown-cast-library.ts",
+    "consumer.ts": "unknown-cast-consumer.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}

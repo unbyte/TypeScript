@@ -1,0 +1,45 @@
+{
+  "files": {
+    "library.ts": "unknown-cast-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/consumer.ts": "error-unknown-cast-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true,
+      "rootDir": "."
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "out/consumer.ts",
+        "message": "scalar operator requires single unbranded literals"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "out/consumer.ts",
+        "message": "scalar operator requires single unbranded literals"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "out/consumer.ts",
+        "message": "scalar operator requires single unbranded literals"
+      }
+    ]
+  }
+}

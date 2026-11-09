@@ -1,0 +1,36 @@
+{
+  "files": {
+    "main.ts": "error-unknown-cast-controls.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "scalar operator requires single unbranded literals"
+    },
+    {
+      "phase": "semantic",
+      "code": 2322,
+      "file": "main.ts",
+      "message": "not assignable"
+    },
+    {
+      "phase": "semantic",
+      "code": 1360,
+      "file": "main.ts",
+      "message": "does not satisfy"
+    },
+    {
+      "phase": "semantic",
+      "code": 2352,
+      "file": "main.ts",
+      "message": "may be a mistake"
+    }
+  ]
+}
