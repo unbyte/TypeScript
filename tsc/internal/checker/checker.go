@@ -3504,10 +3504,14 @@ func (c *Checker) checkMappedType(node *ast.Node) {
 	t := c.getTypeFromMappedTypeNode(node)
 	nameType := c.getNameTypeFromMappedType(t)
 	if nameType != nil {
-		c.checkTypeAssignableTo(nameType, c.stringNumberSymbolType, mappedTypeNode.NameType, nil)
+		// This checks key eligibility, not completion of pending computations.
+		// Keep the guarded Type in the mapped metadata for actual key resolution.
+		shape, _ := splitTypefn(nameType)
+		c.checkTypeAssignableTo(shape, c.stringNumberSymbolType, mappedTypeNode.NameType, nil)
 	} else {
 		constraintType := c.getConstraintTypeFromMappedType(t)
-		c.checkTypeAssignableTo(constraintType, c.stringNumberSymbolType, mappedTypeNode.TypeParameter.AsTypeParameterDeclaration().Constraint, nil)
+		shape, _ := splitTypefn(constraintType)
+		c.checkTypeAssignableTo(shape, c.stringNumberSymbolType, mappedTypeNode.TypeParameter.AsTypeParameterDeclaration().Constraint, nil)
 	}
 }
 

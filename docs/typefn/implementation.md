@@ -170,6 +170,11 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   VM failures attach operation provenance before diagnostic insertion. Repeated
   queries deduplicate complete reports while preserving different messages and
   different originating operations at the same application site.
+  Native mapped-key definition checks use a guard's known shape to prove key
+  eligibility while retaining its checks in the mapped name/constraint metadata.
+  Closed key resolution still executes those checks. Opaque results need a native
+  key-domain proof, such as an explicit intersection with PropertyKey; known
+  non-key shapes and unbounded opaque results remain native definition errors.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.

@@ -1,0 +1,55 @@
+{
+  "files": {
+    "main.ts": "error-mapped-key-eligibility.ts",
+    "library.ts": "mapped-key-eligibility-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Mapped key failure",
+      "at": "Read<Bad /* first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Mapped key failure",
+      "at": "Read<Bad /* second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Mapped key failure",
+      "at": "ReadKeys<\"bad\" /* first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Mapped key failure",
+      "at": "ReadKeys<\"bad\" /* second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Mapped key failure",
+      "at": "ReadComputed<Bad /* first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Mapped key failure",
+      "at": "ReadComputed<Bad /* second */>"
+    }
+  ]
+}

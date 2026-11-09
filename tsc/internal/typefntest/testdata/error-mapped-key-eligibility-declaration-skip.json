@@ -1,0 +1,68 @@
+{
+  "files": {
+    "library.ts": "mapped-key-eligibility-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-mapped-key-eligibility-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "Read<Bad /* first */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "Read<Bad /* second */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "ReadKeys<\"bad\" /* first */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "ReadKeys<\"bad\" /* second */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "ReadComputed<Bad /* first */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "ReadComputed<Bad /* second */>"
+      }
+    ]
+  }
+}

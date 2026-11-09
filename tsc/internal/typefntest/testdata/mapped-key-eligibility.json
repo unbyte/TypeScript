@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.ts": "mapped-key-eligibility.ts",
+    "library.ts": "mapped-key-eligibility-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": false
+  },
+  "diagnostics": []
+}

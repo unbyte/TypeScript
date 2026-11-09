@@ -295,6 +295,17 @@ This is a native **Type** island, not JavaScript execution. Native type expressi
 can use current bindings. Compute arithmetic in a local first if it is needed
 inside a native generic argument.
 
+Native mapped keys must still be provably assignable to `PropertyKey`. A deferred
+calculation with a known key shape supplies that proof. If branching leaves its
+result opaque, you can bound it explicitly:
+
+```ts
+type Remap<T> = { [K in keyof T as ComputeKey<K> & PropertyKey]: T[K] };
+```
+
+Here `ComputeKey` is your key calculation. The intersection bounds the result;
+it does not suppress failures when the calculation runs for a concrete key.
+
 For calculated field names/modifiers, build property descriptors:
 
 ```ts
