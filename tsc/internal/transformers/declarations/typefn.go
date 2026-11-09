@@ -64,10 +64,12 @@ func (tx *DeclarationTransformer) typefnDependencyFailure(roots []*ast.Node) (*a
 		}
 		seen[declaration] = true
 		source := ast.GetSourceFileOfNode(declaration)
-		if source.IsDeclarationFile || !tx.host.SourceFileMayBeEmitted(source, false) {
-			continue
+		if len(source.Diagnostics()) != 0 {
+			return declaration, "declaration recipe dependency has invalid syntax"
 		}
-		if tx.state.stripInternal {
+		// Existing declarations and referenced-project inputs are not stripped
+		// again, but may bridge to invalid or stripped source in this build.
+		if tx.state.stripInternal && !source.IsDeclarationFile && tx.host.SourceFileMayBeEmitted(source, false) {
 			for parent := declaration; parent != nil && !ast.IsSourceFile(parent); parent = parent.Parent {
 				if tx.isInternalDeclaration(parent, source) {
 					name := declaration.Name()

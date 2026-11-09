@@ -15,6 +15,9 @@ func TestTypefnDeclarationAtomicEmit(t *testing.T) {
 		"error-declaration-invalid-recipe",
 		"error-declaration-malformed-recipe",
 		"error-declaration-native-wrapper",
+		"error-declaration-authored-bridge",
+		"error-declaration-malformed-dependency",
+		"error-declaration-malformed-authored-dependency",
 	} {
 		for _, mode := range []struct {
 			name    string

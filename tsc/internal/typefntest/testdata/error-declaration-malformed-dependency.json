@@ -1,0 +1,31 @@
+{
+  "files": {
+    "library.ts": "error-declaration-malformed-dependency-library.ts",
+    "provider.ts": "error-declaration-malformed-dependency-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "outputs": {
+    "out/provider.d.ts": "export type Broken = ;\n"
+  },
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "syntax",
+      "code": 1110,
+      "file": "provider.ts",
+      "message": "Type expected"
+    },
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "declaration recipe dependency has invalid syntax"
+    }
+  ]
+}

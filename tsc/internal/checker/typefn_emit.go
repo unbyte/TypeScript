@@ -18,6 +18,11 @@ func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node, makeVisi
 }
 
 func (c *Checker) typefnDeclarationDependencies(node *ast.Node, makeVisible bool) []printer.TypefnDeclarationDependency {
+	// Bundled native library declarations are terminal dependencies. User
+	// augmentations have separate declarations and are still traversed.
+	if c.program.IsSourceFileDefaultLibrary(ast.GetSourceFileOfNode(node).PathKey()) {
+		return nil
+	}
 	var results []printer.TypefnDeclarationDependency
 	type referenceKey struct{ root, target *ast.Symbol }
 	seen := map[referenceKey]bool{}

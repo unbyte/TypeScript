@@ -1,0 +1,25 @@
+{
+  "files": {
+    "library.ts": "error-declaration-stripped-import.ts",
+    "provider.d.ts": "error-declaration-authored-invalid-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true,
+    "skipLibCheck": true
+  },
+  "outputs": {},
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "cannot emit an invalid declaration recipe"
+    }
+  ]
+}

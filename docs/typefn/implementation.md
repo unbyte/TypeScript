@@ -682,8 +682,12 @@ contribute their type surface rather than their runtime bodies/default initializ
 Tests cover alias factories, indirect aliases, cross-module failures, recursive
 native alias graphs and this native/DSL boundary. Ordinary native references now
 validate reachable recipes too, with cycle-safe positive/negative reachability caches
-and a native-only stripInternal control. Inferred exports and dependencies reached
-through existing declarations still need complete failure guarantees.
+and a native-only stripInternal control. Existing declaration files and referenced
+inputs are traversed without treating them as newly stripped source. Malformed
+dependency files are rejected before inspecting their recovery trees, and authored
+invalid recipes cannot escape validation through skipLibCheck. Bundled native-library
+declarations terminate the walk; separate user augmentations remain dependencies.
+Inferred exports still need complete failure guarantees.
 
 The harness exercises ordinary emission, forced declaration emission and incremental
 builder signatures against invalid definitions, malformed DSL syntax and transitive
