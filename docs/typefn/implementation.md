@@ -781,3 +781,19 @@ inferred predicates retain native handling. Unrelated literal values
 and explicit widened annotations remain native. A stripped forwarded value is
 rejected in ordinary, forced and builder output. Arbitrary expression/value flow,
 local lifting and inference-origin reconstruction remain separate obligations.
+
+
+Native specialization expressions (`read<Open>` without a call) now retain their
+written type arguments in a native value query. Strict source copying keeps computed
+arguments and partial-list defaults executable in the consumer, including generic
+class fields. Calls through those already-specialized values project their existing
+callable Type; they do not apply the original generic parameter list a second time.
+A direct parenthesized specialization uses the caller's mapper/scope when copying
+its arguments. Dependency tracking distinguishes native value specializations from
+heritage Type references.
+
+Consumer tests cover direct and stored specializations, defaults, generic class
+fields, private imported return helpers and an argument bound invalidated by interface
+augmentation. A separate specialization with the same current native Type but a
+fixed argument remains fixed. Overloaded/non-identifier callee projection and
+arbitrary inferred value origins remain incomplete.

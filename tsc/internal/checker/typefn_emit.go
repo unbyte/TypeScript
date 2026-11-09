@@ -57,6 +57,9 @@ func (c *Checker) typefnDeclarationDependencies(node *ast.Node, makeVisible bool
 		case ast.KindExpressionWithTypeArguments:
 			if ast.IsEntityName(n.Expression()) || ast.IsEntityNameExpression(n.Expression()) {
 				name = n.Expression()
+				if !ast.IsPartOfTypeNode(n) {
+					meaning = ast.SymbolFlagsValue | ast.SymbolFlagsExportValue
+				}
 			}
 		case ast.KindTypeQuery:
 			name = n.AsTypeQueryNode().ExprName
