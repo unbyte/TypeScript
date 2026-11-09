@@ -126,10 +126,14 @@ func (c *Checker) splitTypefnOperands(types []*Type) ([]*Type, []*Type) {
 
 func (c *Checker) instantiateTypefn(t *Type, m *TypeMapper) *Type {
 	d := t.asTypefnTerm()
+	root := c.typefn == nil || c.typefn.vm == nil
 	return c.runTypefn(d.node, func(v *typefnVM) *Type {
-		saved := v.replaySite
-		v.replaySite = c.currentNode
-		defer func() { v.replaySite = saved }()
+		// Only an outer native instantiation selects the replay application.
+		// Nested native aliases execute at that application's site; replacing it
+		// with their shared syntax would merge distinct failures in diagnostics.
+		if root {
+			v.replaySite = c.currentNode
+		}
 		if !v.step(d.node) {
 			return c.errorType
 		}

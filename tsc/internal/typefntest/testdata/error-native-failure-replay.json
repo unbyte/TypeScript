@@ -1,0 +1,55 @@
+{
+  "files": {
+    "main.ts": "error-native-failure-replay.ts",
+    "library.ts": "native-failure-replay-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native replay failure",
+      "at": "ThroughAlias<0 /* first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native replay failure",
+      "at": "ThroughAlias<0 /* second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native replay failure",
+      "at": "Alias<0 /* direct first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native replay failure",
+      "at": "Alias<0 /* direct second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native replay failure",
+      "at": "Nested<0 /* nested first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native replay failure",
+      "at": "Nested<0 /* nested second */>"
+    }
+  ]
+}

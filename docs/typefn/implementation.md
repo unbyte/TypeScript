@@ -141,6 +141,11 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   recursively following the same term. A guard exposes its known shape for
   contextual typing while retaining its validation journal for relations and
   specialization; this does not reverse-infer opaque computations.
+  Nested native instantiation retains the root application's diagnostic site;
+  it does not replace that site with shared alias syntax. Repeated direct and
+  alias-mediated failures therefore remain distinct, including across imports
+  and fresh declaration consumers. Native cache failure retention still needs
+  coverage beyond these direct deferred terms.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
