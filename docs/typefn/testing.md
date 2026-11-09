@@ -247,6 +247,20 @@ no clear regression or improvement on this fixture. They do not establish zero
 overhead, enabled-profile performance, or performance across native projects.
 [Raw samples and binary/source hashes](probes/native-polling-benchmark.json) are retained.
 
+Native-only failure-replay comparison, using the same protocol:
+
+| Revision | Median time/op | Median bytes/op | Median allocations/op |
+| --- | ---: | ---: | ---: |
+| `a75816d92`, before failure-replay fixes | 1.380 s | 114,407,597 | 933,913.5 |
+| `0f61c1dcb`, with failure replay and query sites | 1.397 s | 114,410,095.5 | 933,914 |
+
+The median paired change is +0.90%, with a descriptive bootstrap interval of
++0.26% to +3.03%. This indicates a small regression on this native fixture;
+it is not evidence of zero overhead. [Raw samples](probes/native-replay-benchmark.json)
+retain the separate binary hashes and source revisions. Native query-scope cleanup
+currently adds a defer to the general type-node resolver; moving it off the native
+path requires another measurement, rather than assuming a speedup.
+
 To repeat, create separate checkouts at the two revisions and compile each test
 binary with `go test -c -o /absolute/path/checker.test ./tsc/internal/checker`.
 Keep both checkouts available: the binaries read their compiler-fixture sources.
