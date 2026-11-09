@@ -1,0 +1,35 @@
+{
+  "files": {
+    "library.ts": "bigint-budget-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-bigint-input-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1,
+        "limits": {
+          "bigintBits": 8
+        }
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "bigint magnitude limit exceeded"
+      }
+    ]
+  }
+}

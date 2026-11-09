@@ -2,7 +2,6 @@ package checker
 
 import (
 	"math"
-	"math/big"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
@@ -101,9 +100,8 @@ func (v *typefnVM) expressionWorker(e *typefnExpression, slots []typefnValue) *T
 			}
 		}
 		if value.flags == TypeFlagsBigIntLiteral {
-			n, _ := new(big.Int).SetString(value.AsLiteralType().value.(jsnum.PseudoBigInt).String(), 10)
-			if n.BitLen() > v.limits.BigintBits {
-				return v.error(node, "bigint magnitude limit exceeded")
+			if v.bigintOperand(node, value) == nil {
+				return v.c.errorType
 			}
 		}
 		return value

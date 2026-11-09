@@ -3,7 +3,6 @@ package checker
 import (
 	"math"
 	"math/big"
-	"strings"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
@@ -104,10 +103,13 @@ func (v *typefnVM) binary(node *ast.Node, op ast.Kind, a, b *Type) *Type {
 		return v.c.getNumberLiteralType(jsnum.Number(result))
 	}
 	if a.flags == TypeFlagsBigIntLiteral && b.flags == TypeFlagsBigIntLiteral {
-		left, _ := new(big.Int).SetString(a.AsLiteralType().value.(jsnum.PseudoBigInt).String(), 10)
-		right, _ := new(big.Int).SetString(b.AsLiteralType().value.(jsnum.PseudoBigInt).String(), 10)
-		if left.BitLen() > v.limits.BigintBits || right.BitLen() > v.limits.BigintBits {
-			return v.error(node, "bigint magnitude limit exceeded")
+		left := v.bigintOperand(node, a)
+		if left == nil {
+			return v.c.errorType
+		}
+		right := v.bigintOperand(node, b)
+		if right == nil {
+			return v.c.errorType
 		}
 		if op == ast.KindAsteriskToken && left.Sign() != 0 && right.Sign() != 0 && left.BitLen()-1 > v.limits.BigintBits-right.BitLen() {
 			return v.error(node, "bigint magnitude limit exceeded")
@@ -136,11 +138,7 @@ func (v *typefnVM) binary(node *ast.Node, op ast.Kind, a, b *Type) *Type {
 		default:
 			return v.error(node, "unsupported bigint operator")
 		}
-		if result.BitLen() > v.limits.BigintBits {
-			return v.error(node, "bigint magnitude limit exceeded")
-		}
-		text := result.String()
-		return v.c.getBigIntLiteralType(jsnum.NewPseudoBigInt(strings.TrimPrefix(text, "-"), result.Sign() < 0))
+		return v.bigintResult(node, result)
 	}
 	return v.error(node, "scalar operator requires single unbranded literals of the same numeric family")
 }

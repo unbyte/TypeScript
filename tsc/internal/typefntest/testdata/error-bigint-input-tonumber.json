@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.ts": "error-bigint-input-tonumber.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "bigintBits": 8
+      }
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "bigint magnitude limit exceeded"
+    }
+  ]
+}

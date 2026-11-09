@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 460 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 467 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -56,6 +56,10 @@ against the language specification; these checks establish the boundaries below.
   Deferred contextual literal regression tests cover generic input inference and
   forwarding. Checker tests verify that opaque terms supply no constraint, guarded
   shapes retain their checks, and cached constraints do not prevent specialization.
+  Bigint input-budget cases cover native arguments to conversion/formatting,
+  comparisons and unary operations, preflight rejection of long decimal operands,
+  signed/zero boundary values and declaration consumers with skipLibCheck. The full
+  harness, checker and language-service suites pass after the shared operand checks.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A

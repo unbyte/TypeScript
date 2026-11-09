@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.ts": "bigint-budget-boundaries.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "bigintBits": 8
+      }
+    }
+  },
+  "diagnostics": []
+}

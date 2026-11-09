@@ -9,6 +9,49 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
 )
 
+// Native aliases and parameters can supply bigint literals without executing a
+// DSL literal expression. Every numeric consumer must therefore validate its
+// input here, before allocating an arbitrary-precision representation.
+func (v *typefnVM) bigintOperand(node *ast.Node, value *Type) *big.Int {
+	return v.bigintDecimal(node, value.AsLiteralType().value.(jsnum.PseudoBigInt).String())
+}
+
+// The decimal-length check bounds SetString's input allocation even when the
+// exact bit count is not known yet. The final bit check handles the boundary
+// decimal digit, including values such as 255 and 256 under an eight-bit limit.
+func (v *typefnVM) bigintDecimal(node *ast.Node, text string) *big.Int {
+	if v.failed || v.c.isCanceled() {
+		v.failed = true
+		return nil
+	}
+	negative := strings.HasPrefix(text, "-")
+	digits := strings.TrimLeft(strings.TrimPrefix(strings.TrimPrefix(text, "-"), "+"), "0")
+	if float64(len(digits)) > math.Floor(float64(v.limits.BigintBits)*math.Log10(2))+1 {
+		v.error(node, "bigint magnitude limit exceeded")
+		return nil
+	}
+	if digits == "" {
+		digits = "0"
+	}
+	n, ok := new(big.Int).SetString(digits, 10)
+	if !ok {
+		v.error(node, "invalid integer")
+		return nil
+	}
+	if v.c.isCanceled() {
+		v.failed = true
+		return nil
+	}
+	if n.BitLen() > v.limits.BigintBits {
+		v.error(node, "bigint magnitude limit exceeded")
+		return nil
+	}
+	if negative {
+		n.Neg(n)
+	}
+	return n
+}
+
 func (v *typefnVM) bigintResult(node *ast.Node, n *big.Int) *Type {
 	if n.BitLen() > v.limits.BigintBits {
 		return v.error(node, "bigint magnitude limit exceeded")
@@ -40,26 +83,17 @@ func (v *typefnVM) numericIntrinsic(node *ast.Node, name string, arg *Type) *Typ
 				return v.error(node, "parseInteger requires [+-]?[0-9]+")
 			}
 		}
-		significant := strings.TrimLeft(digits, "0")
-		// A bit-count-sized integer cannot require more than this many decimal
-		// digits. Check before the big.Int allocation; check its exact bits afterward.
-		if float64(len(significant)) > math.Floor(float64(v.limits.BigintBits)*math.Log10(2))+1 {
-			return v.error(node, "bigint magnitude limit exceeded")
-		}
-		if significant == "" {
-			significant = "0"
-		}
-		n, ok := new(big.Int).SetString(significant, 10)
-		if !ok {
-			return v.error(node, "invalid integer")
-		}
-		if len(s) > 0 && s[0] == '-' {
-			n.Neg(n)
+		n := v.bigintDecimal(node, s)
+		if n == nil {
+			return v.c.errorType
 		}
 		return v.bigintResult(node, n)
 	}
 	if arg.flags == TypeFlagsBigIntLiteral {
-		n, _ := new(big.Int).SetString(arg.AsLiteralType().value.(jsnum.PseudoBigInt).String(), 10)
+		n := v.bigintOperand(node, arg)
+		if n == nil {
+			return v.c.errorType
+		}
 		switch name {
 		case "numeric.toNumber":
 			f, accuracy := new(big.Float).SetInt(n).Float64()

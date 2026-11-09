@@ -154,7 +154,11 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   transforming visitors and preservation of expression/statement kinds by updates.
 * Resource accounting is preliminary: instruction dispatch, DSL call depth, explicit
   tuple/property construction, frame allocation and arithmetic bigint magnitude are
-  checked. This is **not** complete accounting for all live buffers, native graph
+  checked. Bigint operand conversion shares a decimal-length preflight and exact
+  magnitude check across literals, arithmetic, formatting and numeric conversion,
+  including values supplied by native aliases/parameters. Arithmetic results now
+  use the same native-node allocation check as numeric intrinsics. This is **not**
+  complete accounting for all live buffers, native graph
   visits, native allocations, literal parsing or retained compilation caches.
   Explicit `nativeWork` or `cacheBytes` overrides diagnose on DSL
   execution until their accounting is implemented. Full native-operation
