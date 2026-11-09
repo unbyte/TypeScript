@@ -23656,6 +23656,13 @@ func (c *Checker) tryGetTypeFromTypeNode(node *ast.Node) *Type {
 }
 
 func (c *Checker) getTypeFromTypeNode(node *ast.Node) *Type {
+	if c.currentNode == nil && c.compilerOptions.GetTypefnVersion() == 1 {
+		// Editor/native API queries may resolve a Type without checking its source
+		// element first. Keep the outer use while nested aliases instantiate DSL
+		// requirements, just as semantic checking does through checkSourceElement.
+		c.currentNode = node
+		defer func() { c.currentNode = nil }()
+	}
 	return c.getConditionalFlowTypeOfType(c.getTypeFromTypeNodeWorker(node), node)
 }
 

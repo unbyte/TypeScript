@@ -157,6 +157,10 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   Types, so repeated indexed reads and assignments replay at their own uses. Other
   native cache publishers still need equivalent coverage; this is not a complete
   cache transaction mechanism.
+  Native type-node resolution establishes an outer source site when an editor or
+  API query starts without a source-checking context. Nested alias/member replay
+  retains that site. Query-order tests cover indexed access and generic aliases
+  through type-expression, alias-name, declaration and symbol queries.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
