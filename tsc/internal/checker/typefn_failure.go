@@ -1,5 +1,16 @@
 package checker
 
+import "github.com/microsoft/TypeScript/tsc/internal/ast"
+
+// Editor/native API queries may resolve a Type without checking its source
+// element first. Keep the outer use while nested aliases instantiate DSL
+// requirements. Scope cleanup stays off the ordinary native resolver path.
+func (c *Checker) getTypeFromTypeNodeAtTypefnSite(node *ast.Node) *Type {
+	c.currentNode = node
+	defer func() { c.currentNode = nil }()
+	return c.getConditionalFlowTypeOfType(c.getTypeFromTypeNodeWorker(node), node)
+}
+
 func (c *Checker) typefnFailureEpoch() uint64 {
 	if c.typefn == nil {
 		return 0

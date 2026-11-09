@@ -161,6 +161,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   API query starts without a source-checking context. Nested alias/member replay
   retains that site. Query-order tests cover indexed access and generic aliases
   through type-expression, alias-name, declaration and symbol queries.
+  Scope cleanup lives in a helper used by these DSL-enabled queries.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.

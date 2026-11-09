@@ -85,7 +85,7 @@ against the language specification; these checks establish the boundaries below.
   pass for this scope. Native queries before semantic checking now preserve the
   outer application span: tests query indexed-access and generic-alias Types by
   expression, name, declaration and symbol, in both use orders, then check exact
-  diagnostic positions. Full harness/checker/LS suites pass after this query fix.
+  diagnostic positions. Full harness/checker/LS suites pass with the scoped query helper.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A
@@ -104,7 +104,7 @@ against the language specification; these checks establish the boundaries below.
 * Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
   calls, contextual typing, type-parameter defaults and the type-system selection below,
   including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after native query-site attribution.
+  through its existing filters. Rerun after isolating native query-site cleanup.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
@@ -258,8 +258,9 @@ The median paired change is +0.90%, with a descriptive bootstrap interval of
 +0.26% to +3.03%. This indicates a small regression on this native fixture;
 it is not evidence of zero overhead. [Raw samples](probes/native-replay-benchmark.json)
 retain the separate binary hashes and source revisions. Native query-scope cleanup
-currently adds a defer to the general type-node resolver; moving it off the native
-path requires another measurement, rather than assuming a speedup.
+at `0f61c1dcb` added a defer to the general type-node resolver. The subsequent
+refactor confines that cleanup to a helper used by profile-1 queries; the earlier
+measurement remains attached to its source revision.
 
 To repeat, create separate checkouts at the two revisions and compile each test
 binary with `go test -c -o /absolute/path/checker.test ./tsc/internal/checker`.
