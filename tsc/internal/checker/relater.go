@@ -168,7 +168,7 @@ func (c *Checker) areTypesComparable(type1 *Type, type2 *Type) bool {
 }
 
 func (c *Checker) isTypeRelatedTo(source *Type, target *Type, relation *Relation) bool {
-	if c.typefn != nil && !c.pollTypefnNativeRelation() {
+	if c.typefn != nil && !c.pollTypefnNativeWork() {
 		return false
 	}
 	if source != target && (source.flags|target.flags)&TypeFlagsTypefn != 0 {
@@ -2650,7 +2650,7 @@ func (r *Relater) isRelatedTo(source *Type, target *Type, recursionFlags Recursi
 }
 
 func (r *Relater) isRelatedToEx(originalSource *Type, originalTarget *Type, recursionFlags RecursionFlags, reportErrors bool, headMessage *diagnostics.Message, intersectionState IntersectionState) Ternary {
-	if r.c.typefn != nil && !r.c.pollTypefnNativeRelation() {
+	if r.c.typefn != nil && !r.c.pollTypefnNativeWork() {
 		return TernaryFalse
 	}
 	if originalSource != originalTarget && (originalSource.flags|originalTarget.flags)&TypeFlagsTypefn != 0 {
@@ -4342,7 +4342,7 @@ func (r *Relater) propertiesRelatedTo(source *Type, target *Type, reportErrors b
 	properties := r.c.getPropertiesOfType(target)
 	numericNamesOnly := isTupleType(source) && isTupleType(target)
 	for _, targetProp := range excludeProperties(properties, excludedProperties) {
-		if r.c.typefn != nil && !r.c.pollTypefnNativeRelation() {
+		if r.c.typefn != nil && !r.c.pollTypefnNativeWork() {
 			return TernaryFalse
 		}
 		name := targetProp.Name()

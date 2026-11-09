@@ -164,8 +164,10 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   execution until their accounting is implemented. Native relation entry/recursive
   steps and property comparisons now poll cancellation within the VM operation,
   suppress interrupted relation-cache publication and invalidate the canceled
-  query snapshot. This covers relation traversal, not every normalization,
-  instantiation or bigint primitive. Full native-operation
+  query snapshot. Substitution and conditional-type evaluation also poll internally;
+  interrupted substitution unwinds its mapper stack and skips active-mapper and
+  conditional-instantiation cache publication. This covers these traversals, not
+  every normalization or bigint primitive. Full native-operation
   cancellation and budget instrumentation remain required before calling this a hardened service boundary.
 * Definition checking validates conservative return paths, finite value kinds and
   recursive result-kind dependencies. Module functions, local helpers and lambdas

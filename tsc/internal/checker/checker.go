@@ -22864,6 +22864,9 @@ func (c *Checker) instantiateType(t *Type, m *TypeMapper) *Type {
 }
 
 func (c *Checker) instantiateTypeWithAlias(t *Type, m *TypeMapper, alias *TypeAlias) *Type {
+	if t != nil && m != nil && c.typefn != nil && !c.pollTypefnNativeWork() {
+		return c.errorType
+	}
 	// Check for type variables in the alias, so things like `type Brand<T> = number & {}` can potentially be copied with new alias type args, despite them being unreferenced.
 	// This is the behavior most people using aliases expect, and prevents the cache from leaking type parameters outside their scope of validity.
 	// tests/cases/compiler/declarationEmitArrowFunctionNoRenaming.ts contains an example of this, which previously only worked in strada via some input node reuse logic instead.
@@ -22903,9 +22906,12 @@ func (c *Checker) instantiateTypeWithAlias(t *Type, m *TypeMapper, alias *TypeAl
 	c.instantiationCount++
 	c.instantiationStack = append(c.instantiationStack, t)
 	result := c.instantiateTypeWorker(t, m, alias)
+	if c.typefnNativeCanceled() {
+		result = c.errorType
+	}
 	if index == -1 {
 		c.popActiveMapper()
-	} else {
+	} else if !c.typefnNativeCanceled() {
 		c.activeTypeMappersCaches[index].set(key, result)
 	}
 	c.instantiationStack[len(c.instantiationStack)-1] = nil
@@ -23324,7 +23330,9 @@ func (c *Checker) getConditionalTypeInstantiation(t *Type, mapper *TypeMapper, f
 			} else {
 				result = c.getConditionalType(root, newMapper, forConstraint, alias)
 			}
-			root.instantiations[key] = result
+			if !c.typefnNativeCanceled() {
+				root.instantiations[key] = result
+			}
 		}
 		return result
 	}
@@ -25282,6 +25290,9 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 	// another (or, through recursion, possibly the same) conditional type. In the potentially tail-recursive
 	// cases we increment the tail recursion counter and stop after 1000 iterations.
 	for {
+		if c.typefn != nil && !c.pollTypefnNativeWork() {
+			return c.errorType
+		}
 		if tailCount == 1000 {
 			c.error(c.currentNode, diagnostics.Type_instantiation_is_excessively_deep_and_possibly_infinite)
 			return c.errorType

@@ -32,7 +32,7 @@ type typefnVM struct {
 	liveBytes           int
 	failed              bool
 	nativeCanceled      bool
-	nativeRelationSteps int
+	nativeSteps         int
 	blocked             bool
 	checks              []*Type
 	checkSet            map[*Type]bool
