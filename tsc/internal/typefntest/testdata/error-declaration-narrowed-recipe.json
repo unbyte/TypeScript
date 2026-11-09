@@ -1,0 +1,22 @@
+{
+  "files": {
+    "library.ts": "error-declaration-narrowed-recipe.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "outputs": {},
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "inferred recipe requires an exportable annotation or helper"
+    }
+  ]
+}

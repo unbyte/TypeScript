@@ -158,7 +158,8 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 	}
 	if recipe.reference != nil {
 		// A value query denotes the declared Type, not a control-flow-narrowed
-		// use. Keep native widening/narrowing when those Types differ.
+		// use. Without a recipe for the narrowing, publishing the current flow
+		// Type would freeze the producer's evaluation in consumer declarations.
 		reference := recipe.reference
 		name := reference
 		if ast.IsExpressionWithTypeArguments(reference) {
@@ -166,10 +167,10 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 		}
 		symbol := b.ch.resolveEntityName(name, ast.SymbolFlagsValue, true, false, nil)
 		t := b.ch.getTypeOfSymbol(symbol)
+		if !b.ch.isTypeIdenticalTo(b.ch.instantiateType(t, b.ctx.mapper), b.ch.instantiateType(b.ch.getTypeOfExpression(name), b.ctx.mapper)) {
+			return b.typefnRecipeError()
+		}
 		if reference != name {
-			if !b.ch.isTypeIdenticalTo(t, b.ch.getTypeOfExpression(name)) {
-				return nil
-			}
 			t = b.ch.getTypeOfExpression(reference)
 		}
 		t = b.ch.instantiateType(t, b.ctx.mapper)
@@ -184,9 +185,7 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 		if result := b.typefnValueRecipeNode(reference); result != nil {
 			return result
 		}
-		b.ctx.tracker.ReportTypefnRecipeError()
-		b.ctx.encounteredError = true
-		return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)
+		return b.typefnRecipeError()
 	}
 	oldMapper, oldFlags := b.ctx.mapper, b.ctx.internalFlags
 	oldEnvironment := b.ctx.typefnRecipeEnvironment
@@ -222,6 +221,10 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 		}
 	}
 	// Failure to name a known recipe must not silently publish its current value.
+	return b.typefnRecipeError()
+}
+
+func (b *NodeBuilderImpl) typefnRecipeError() *ast.Node {
 	b.ctx.tracker.ReportTypefnRecipeError()
 	b.ctx.encounteredError = true
 	return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)

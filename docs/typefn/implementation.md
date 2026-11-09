@@ -854,7 +854,11 @@ typefn dependencies still suppress ordinary, forced and builder emission, even
 when the current result is a literal. Optional parameters retain their implicit
 undefined read, including from a non-strict producer to a strict consumer;
 defaulted parameters remain defined. This does not reconstruct flow narrowing or
-lift arbitrary local definitions.
+lift arbitrary local definitions. A DSL-bearing value reference whose flow Type
+differs from its declared Type now diagnoses during declaration emission instead
+of serializing the producer's narrowed value. This conservative boundary requires
+a written exportable return annotation until the narrowing has its own recipe;
+it does not change checking or flow analysis of the source program.
 
 
 Native specialization expressions (`read<Open>` without a call) now retain their
