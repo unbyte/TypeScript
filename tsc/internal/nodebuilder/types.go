@@ -78,4 +78,6 @@ const (
 	InternalFlagsAllowUnresolvedNames    InternalFlags = 1 << 3
 	InternalFlagsRewriteModuleSpecifiers InternalFlags = 1 << 4
 	InternalFlagsTypefnDeclaration       InternalFlags = 1 << 5
+	// Strict source-recipe copying must have its own serialization cache context.
+	InternalFlagsTypefnRecipe InternalFlags = 1 << 6
 )

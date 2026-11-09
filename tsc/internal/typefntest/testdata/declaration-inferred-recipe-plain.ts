@@ -1,0 +1,12 @@
+import {count, specialized, Box, nested, unrelated, widened, GenericBox, mappedCount, Open} from "./out/library";
+type Assert<T extends true> = T;
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type A = Assert<Equal<typeof count, 1>>;
+type B = Assert<Equal<typeof specialized, 1>>;
+type C = Assert<Equal<Box["count"], 1>>;
+type D = Assert<Equal<Box["specialized"], 1>>;
+type E = Assert<Equal<typeof nested.count, 1>>;
+type F = Assert<Equal<typeof unrelated, 1>>;
+type G = Assert<Equal<typeof widened, number>>;
+type H = Assert<Equal<GenericBox<Open>["value"], 1>>;
+type I = Assert<Equal<typeof mappedCount, 1>>;

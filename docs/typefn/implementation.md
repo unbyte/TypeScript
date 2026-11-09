@@ -657,8 +657,8 @@ calculator and HTTP-route modules directly, generic replay, private-helper visib
 comment removal and aliases emitted in a separate module from their factory.
 Invalid compiled recipes suppress the affected declaration output while independent
 native files can emit. Pending display-only Types cannot be serialized as invented
-declaration syntax: inferred escaping recipes currently require a nameable source
-annotation/helper. Complete inferred-recipe lifting, dependency closure validation
+declaration syntax. Recoverable call-return recipes now reuse their source annotation;
+other escaping pending terms still require a nameable source annotation/helper. Complete inferred-recipe lifting, dependency closure validation
 (including stripInternal), source maps, redirects and cancellation remain open.
 
 DSL printing now enters the native source-map/comment pipeline for each node.
@@ -692,10 +692,27 @@ referenced symbols and source locations while node building holds the checker lo
 the transformer validates their closures after serialization releases that lock.
 Per-file deduplication preserves deterministic first-reference diagnostics. Tests cover
 inferred variable, property, return and default exports, forced/builder suppression
-and an unchanged native-only consumer. This does not yet retain source provenance
-when evaluation has reduced a recipe to a concrete Type.
+and an unchanged native-only consumer.
 
 The harness exercises ordinary emission, forced declaration emission and incremental
 builder signatures against invalid definitions, malformed DSL syntax and transitive
 stripped dependencies. Even modes that bypass native noEmitOnError gates preserve
 the per-file DSL failure boundary; independent native declarations still emit.
+
+Inferred variables and properties initialized by native calls now recover a DSL-bearing
+return annotation and the resolved signature's generic mapper before native value
+serialization. The recipe belongs to the source expression, never to a shared literal
+Type. Native node copying substitutes binder identities, retains accessible names and
+imports, and schedules private helpers through the existing visibility tracker. A
+strict-copy internal flag participates in node-builder cache keys and prevents native
+recovery from silently materializing an inaccessible recipe. Native widening/type
+compatibility is checked before source reuse; explicit user annotations retain priority.
+
+Fresh declaration consumers augment an open interface and observe the recalculated
+property count. Tests cover concrete and generic calls, mapped binders, generic class
+fields, nested object properties and public cross-module helpers. They also retain
+unrelated literal/native annotations unchanged and withhold stripped or unnameable
+recipes in ordinary, forced and builder emit. Remaining inferred-recipe work includes
+arbitrary value/return flow, originating recipes within substituted arguments, native
+call requirements beyond the return annotation, and hygienic lifting of local helpers
+or inaccessible cross-module recipes. This is not complete inferred declaration emit.

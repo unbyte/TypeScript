@@ -1,0 +1,25 @@
+{
+  "files": {
+    "library.ts": "declaration-inferred-import-library.ts",
+    "provider.ts": "declaration-inferred-import-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-inferred-import-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

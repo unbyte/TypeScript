@@ -428,6 +428,9 @@ func getExistingNodeTreeVisitor(b *NodeBuilderImpl, bound *recoveryBoundary) *as
 		if s.Flags()&ast.SymbolFlagsTypeParameter != 0 {
 			declaredType := b.ch.getDeclaredTypeOfSymbol(s)
 			if b.ctx.mapper != nil && getMappedType(declaredType, b.ctx.mapper) != declaredType {
+				if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnRecipe != 0 {
+					return b.typeToTypeNode(b.getTypeFromTypeNode(node, false))
+				}
 				return nil // refers to type parameter remapped by context (TODO improvement: just return the remapped param name?)
 			}
 		}
@@ -868,7 +871,9 @@ func getExistingNodeTreeVisitor(b *NodeBuilderImpl, bound *recoveryBoundary) *as
 		result = b.setTextRange(result, node)
 
 		if bound.hadError {
-			if ast.IsTypeNode(node) && !ast.IsTypePredicateNode(node) {
+			// Recipe copying cannot recover by freezing an unnameable dependency
+			// into its currently evaluated Type. Let the outer boundary diagnose.
+			if ast.IsTypeNode(node) && !ast.IsTypePredicateNode(node) && b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnRecipe == 0 {
 				bound.endRecoveryScope(recover_)
 				// TODO: this fallback matches strada behavior, but it lacks any verification that the type from `node` actually matches
 				// the type we'd expect at this traversal position within the parent type.

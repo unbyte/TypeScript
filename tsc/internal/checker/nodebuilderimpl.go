@@ -1826,6 +1826,9 @@ func (b *NodeBuilderImpl) cloneBindingName(node *ast.Node) *ast.Node {
 func (b *NodeBuilderImpl) serializeTypeForExpression(expr *ast.Node) *ast.Node {
 	// !!! TODO: shim, add node reuse
 	t := b.ch.instantiateType(b.ch.getWidenedType(b.ch.getRegularTypeOfExpression(expr)), b.ctx.mapper)
+	if recipe := b.tryTypefnExpressionRecipe(expr, t); recipe != nil {
+		return recipe
+	}
 	return b.typeToTypeNode(t)
 }
 
@@ -2298,6 +2301,12 @@ func (b *NodeBuilderImpl) serializeTypeForDeclaration(declaration *ast.Declarati
 		}
 	}
 
+	if declaration != nil && declaration.Type() == nil &&
+		(ast.IsVariableDeclaration(declaration) || ast.IsPropertyDeclaration(declaration) || ast.IsPropertyAssignment(declaration)) && !isOptionalDeclaration(declaration) {
+		if recipe := b.tryTypefnExpressionRecipe(declaration.Initializer(), t); recipe != nil {
+			return recipe
+		}
+	}
 	requiresAddingUndefined := declaration != nil && (ast.IsParameterDeclaration(declaration) || ast.IsPropertySignatureDeclaration(declaration) || ast.IsPropertyDeclaration(declaration)) && b.ch.requiresAddingImplicitUndefined(declaration, symbol, b.ctx.enclosingDeclaration)
 	addUndefinedForParameter := requiresAddingUndefined && (ast.IsParameterDeclaration(declaration) /*|| ast.IsJSDocParameterTag(declaration)*/)
 	if addUndefinedForParameter {

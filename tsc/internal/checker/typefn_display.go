@@ -7,7 +7,8 @@ import (
 )
 
 // Render deferred calculations as DSL expressions, rather than invented native
-// generic names. This is display-only; declaration recipes are still unsupported.
+// generic names. Declaration building preserves source recipes separately; these
+// display-only pending terms cannot serve as executable declaration syntax.
 func (b *NodeBuilderImpl) typefnTypeToTypeNode(t *Type) *ast.Node {
 	if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnDeclaration != 0 {
 		b.ctx.tracker.ReportTypefnRecipeError()

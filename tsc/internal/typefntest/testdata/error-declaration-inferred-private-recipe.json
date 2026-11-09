@@ -1,0 +1,25 @@
+{
+  "files": {
+    "library.ts": "declaration-inferred-import-library.ts",
+    "provider.ts": "error-declaration-inferred-private-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "outputs": {
+    "out/provider.d.ts": "// @typefn-abi: 1\nexport interface Open {\n    first: string;\n}\ntypefn Count<T extends object> {\n    return tuple.length<reflect.properties<T>>;\n}\nexport declare function read<T extends object>(): Count<T>;\nexport {};\n"
+  },
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "inferred recipe requires an exportable annotation or helper"
+    }
+  ]
+}

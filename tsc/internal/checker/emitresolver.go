@@ -341,7 +341,7 @@ func (r *EmitResolver) IsLiteralConstDeclaration(node *ast.Node) bool {
 		if s == nil {
 			return false
 		}
-		return isFreshLiteralType(r.checker.getTypeOfSymbol(s))
+		return isFreshLiteralType(r.checker.getTypeOfSymbol(s)) && r.checker.typefnExpressionRecipe(node.Initializer()) == nil
 	}
 	return false
 }

@@ -1,0 +1,24 @@
+{
+  "files": {
+    "library.ts": "declaration-inferred-recipe.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-inferred-recipe-plain.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

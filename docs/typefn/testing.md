@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 410 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 415 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -31,14 +31,21 @@ against the language specification; these checks establish the boundaries below.
   before recovery-tree inspection, and skipLibCheck cannot hide invalid recipes.
   Inferred variable/property/return/default-export references validate generated
   dependencies too; a native-only consumer verifies the non-DSL control.
+  Inferred call recipes are consumed with and without interface augmentation,
+  including generic substitutions, mapped binders, generic class fields, nested
+  object properties and public imports. Stripped and inaccessible helpers suppress
+  output, including forced/builder modes; unrelated literals and explicit native
+  annotations retain their native behavior.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.
   Parser/binder/printer/checker/LS suites also pass at written-recipe emission; optional-provenance assertions pass
   in both exact-optional modes, and the added generic-body dependency assertion passes.
-* Passed: 11 selected upstream compiler baselines for conditional, mapped, union,
-  template literal and generic-signature Types, including native emit and type/symbol
-  baselines, rerun after enabling written-recipe declaration emission.
+  Full checker, harness and language-service suites rerun after inferred call recipes.
+* Passed: 327 upstream compiler configurations selected by `declarationEmit*` and
+  the conditional/mapped/union/template/generic-signature baseline selection below,
+  including native emit and type/symbol baselines. The runner skipped 22 configurations
+  through its existing filters. Rerun after inferred call-recipe serialization.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
