@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 446 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 447 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -53,6 +53,9 @@ against the language specification; these checks establish the boundaries below.
   Inferred native returns and constructed callable signatures now retain consumer
   recipes, with generic function/arrow/class cases and concrete declaration failure
   checks under normal and skipLibCheck policies.
+  Deferred contextual literal regression tests cover generic input inference and
+  forwarding. Checker tests verify that opaque terms supply no constraint, guarded
+  shapes retain their checks, and cached constraints do not prevent specialization.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A
@@ -67,7 +70,7 @@ against the language specification; these checks establish the boundaries below.
 * Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
   calls, contextual typing, type-parameter defaults and the type-system selection below,
   including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after inferred/constructed callable return recipes.
+  through its existing filters. Rerun after deferred contextual base-constraint handling.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.

@@ -28534,6 +28534,15 @@ func (c *Checker) getResolvedBaseConstraint(t *Type, stack []RecursionId) *Type 
 
 func (c *Checker) computeBaseConstraint(t *Type, stack []RecursionId) *Type {
 	switch {
+	case t.flags&TypeFlagsTypefn != 0:
+		// An unresolved computation has no known result constraint. Returning the
+		// term itself would make contextual literal checking recurse indefinitely.
+		// Guards may expose their known shape for contextual typing; the original
+		// term still carries the requirements used by substitution and relations.
+		if d := t.asTypefnTerm(); d.kind == typefnGuardTerm {
+			return c.getNextBaseConstraint(d.shape, stack)
+		}
+		return nil
 	case t.flags&TypeFlagsTypeParameter != 0:
 		constraint := c.getConstraintFromTypeParameter(t)
 		if t.AsTypeParameter().isThisType {

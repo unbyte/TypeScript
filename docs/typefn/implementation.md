@@ -133,7 +133,11 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   relations currently require the same canonical check set. Structural predicates
   and union traversal use native dependency summaries; exhaustive native forms
   and ordinary cast/assignment boundaries still need coverage. No constraint is
-  enumerated as a value.
+  enumerated as a value. Native base-constraint resolution treats opaque deferred
+  computations as unconstrained, preventing contextual literal checking from
+  recursively following the same term. A guard exposes its known shape for
+  contextual typing while retaining its validation journal for relations and
+  specialization; this does not reverse-infer opaque computations.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.
