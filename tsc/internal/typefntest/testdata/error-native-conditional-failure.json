@@ -1,0 +1,40 @@
+{
+  "files": {
+    "main.ts": "error-native-conditional-failure.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Conditional replay failure",
+      "at": "Conditional<0 /* first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Conditional replay failure",
+      "at": "Conditional<0 /* second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Conditional replay failure",
+      "at": "ThroughConditional<0 /* wrapped first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Conditional replay failure",
+      "at": "ThroughConditional<0 /* wrapped second */>"
+    }
+  ]
+}

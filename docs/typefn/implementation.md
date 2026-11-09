@@ -144,8 +144,12 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   Nested native instantiation retains the root application's diagnostic site;
   it does not replace that site with shared alias syntax. Repeated direct and
   alias-mediated failures therefore remain distinct, including across imports
-  and fresh declaration consumers. Native cache failure retention still needs
-  coverage beyond these direct deferred terms.
+  and fresh declaration consumers. Mapped-property resolution now discards failed
+  results after unwinding the native resolution stack. A checker-local failure
+  generation retains this information when the nested root VM has already ended;
+  active roots also expose their failed status. This prevents a cached recovery
+  Type from hiding later applications. Other native cache publishers still need
+  equivalent coverage; this is not a complete cache transaction mechanism.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.

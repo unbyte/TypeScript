@@ -67,7 +67,7 @@ func TestTypefnCancellationInsideNativeRelation(t *testing.T) {
 	}
 }
 
-func newTypefnCancellationProgram(t testing.TB, source string) *compiler.Program {
+func newTypefnNativeTestProgram(t testing.TB, source string) *compiler.Program {
 	t.Helper()
 	fs := bundled.WrapFS(vfstest.FromMap(map[string]string{
 		"/main.ts":       source,
@@ -89,7 +89,7 @@ func testTypefnNativeCancellation(t *testing.T, source, frame string) {
 	t.Helper()
 	for _, diagnostics := range []bool{false, true} {
 		t.Run(fmt.Sprintf("diagnostics=%v", diagnostics), func(t *testing.T) {
-			p := newTypefnCancellationProgram(t, source)
+			p := newTypefnNativeTestProgram(t, source)
 			c, done := p.GetTypeChecker(t.Context())
 			ctx, cancel := context.WithCancel(t.Context())
 			defer cancel()
@@ -108,7 +108,7 @@ func testTypefnNativeCancellation(t *testing.T, source, frame string) {
 			}
 			done()
 			// Discard canceled snapshots; complete results come from a fresh checker.
-			fresh := newTypefnCancellationProgram(t, source)
+			fresh := newTypefnNativeTestProgram(t, source)
 			clean, release := fresh.GetTypeChecker(t.Context())
 			defer release()
 			nodes = fresh.GetSourceFile("/main.ts").Statements.Nodes

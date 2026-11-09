@@ -21702,6 +21702,7 @@ func (c *Checker) resolveMappedTypeMembers(t *Type) {
 func (c *Checker) getTypeOfMappedSymbol(symbol *ast.Symbol) *Type {
 	links := c.valueSymbolLinks.Get(symbol)
 	if links.resolvedType == nil {
+		failureEpoch := c.typefnFailureEpoch()
 		mappedType := links.getContainingType()
 		if !c.pushTypeResolution(symbol, TypeSystemPropertyNameType) {
 			mappedType.AsMappedType().containsError = true
@@ -21719,7 +21720,12 @@ func (c *Checker) getTypeOfMappedSymbol(symbol *ast.Symbol) *Type {
 		case symbol.CheckFlags()&ast.CheckFlagsStripOptional != 0:
 			propType = c.removeMissingOrUndefinedType(propType)
 		}
-		if c.popTypeResolution() {
+		resolved := c.popTypeResolution()
+		if c.typefnFailedSince(failureEpoch) {
+			links.resolvedType = nil
+			return c.errorType
+		}
+		if resolved {
 			if links.resolvedType == nil {
 				links.resolvedType = propType
 			}

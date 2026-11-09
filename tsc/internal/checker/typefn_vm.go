@@ -58,6 +58,7 @@ func (c *Checker) runTypefn(node *ast.Node, run func(*typefnVM) *Type) *Type {
 			configured := c.compilerOptions.Typefn.Limits
 			if configured.NativeWork != 0 || configured.CacheBytes != 0 {
 				c.typefnError(node, "requested nativeWork or cacheBytes limit is not implemented yet")
+				state.failureEpoch++
 				return c.errorType
 			}
 			if configured.StringUnits != 0 {
@@ -80,7 +81,12 @@ func (c *Checker) runTypefn(node *ast.Node, run func(*typefnVM) *Type) *Type {
 			}
 		}
 		state.vm = &typefnVM{c: c, limits: limits, rootSite: node}
-		defer func() { state.vm = nil }()
+		defer func() {
+			if state.vm.failed {
+				state.failureEpoch++
+			}
+			state.vm = nil
+		}()
 	}
 	v := state.vm
 	saved, savedSet := v.checks, v.checkSet

@@ -6,6 +6,10 @@ import "github.com/microsoft/TypeScript/tsc/internal/ast"
 // not allocate it. The VM is scoped to a root evaluation; programs, immutable
 // terms and syntax-dependency tables live for the owning checker lifetime.
 type typefnState struct {
+	// Native resolution can outlive the root VM that reported a failure. Cache
+	// publishers compare this generation to avoid retaining its recovery Type.
+	failureEpoch uint64
+
 	// Native frontend checks may return recovery Types after reporting an error.
 	// A scoped definition check must reject that program before VM execution.
 	definitionCheck        *typefnProgram

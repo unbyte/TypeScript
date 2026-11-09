@@ -1,0 +1,54 @@
+{
+  "files": {
+    "library.ts": "native-member-failure-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-native-member-failure-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Member replay failure",
+        "at": "Read<Input /* first */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Member replay failure",
+        "at": "Read<Input /* second */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Member replay failure",
+        "at": "Mapped<Input /* direct first */>[\"value\"]"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Member replay failure",
+        "at": "Mapped<Input /* direct second */>[\"value\"]"
+      }
+    ]
+  }
+}
