@@ -764,3 +764,20 @@ output. Multiple overloads cannot use this conditional projection (native condit
 inference would select the last overload); cases requiring call validation fail
 rather than silently publishing an unchecked result. Full overload/receiver handling,
 value-origin tracking and hygienic local lifting remain incomplete.
+
+
+Native identifier forwarding now retains a value query when the referenced
+variable's declared Type matches the inferred export. Recipe reachability follows
+value references in unannotated native initializers/bodies, using the value namespace;
+explicit annotations still terminate inference dependencies. The existing cycle-safe
+reachability cache and visibility tracker retain alias chains and imports. This does
+not store provenance on shared literal Types or reinterpret control-flow narrowing
+as a declaration Type.
+
+Fresh consumers cover local alias chains, imported annotated/inferred values,
+object properties, class fields, getters, arrows and single-return functions. Native
+pseudotype/checker fallbacks preserve the recipe after verifying the inferred Type;
+inferred predicates retain native handling. Unrelated literal values
+and explicit widened annotations remain native. A stripped forwarded value is
+rejected in ordinary, forced and builder output. Arbitrary expression/value flow,
+local lifting and inference-origin reconstruction remain separate obligations.

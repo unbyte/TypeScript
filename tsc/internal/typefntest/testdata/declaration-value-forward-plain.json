@@ -1,0 +1,25 @@
+{
+  "files": {
+    "library.ts": "declaration-value-forward-library.ts",
+    "provider.ts": "declaration-value-forward-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-value-forward-consumer-plain.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

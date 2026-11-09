@@ -3,6 +3,7 @@ package checker
 import (
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/nodebuilder"
+	"github.com/microsoft/TypeScript/tsc/internal/pseudochecker"
 )
 
 // A source recipe belongs to an expression and its lexical instantiation, not to
@@ -14,6 +15,7 @@ type typefnSourceRecipe struct {
 	call                *ast.Node
 	signature           *Signature
 	applicationRequired bool
+	reference           *ast.Node
 }
 
 type typefnRecipeArgument struct {
@@ -44,6 +46,13 @@ func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceReci
 		return nil
 	}
 	expression = ast.SkipParentheses(expression)
+	if ast.IsIdentifier(expression) {
+		symbol := c.resolveEntityName(expression, ast.SymbolFlagsValue, true, false, nil)
+		if len(c.typefnSymbolDependencies(symbol)) != 0 {
+			return &typefnSourceRecipe{reference: expression}
+		}
+		return nil
+	}
 	if !ast.IsCallExpression(expression) {
 		return nil
 	}
@@ -119,6 +128,21 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 	if recipe == nil {
 		return nil
 	}
+	if recipe.reference != nil {
+		// A value query denotes the declared Type, not a control-flow-narrowed
+		// use. Keep native widening/narrowing when those Types differ.
+		symbol := b.ch.resolveEntityName(recipe.reference, ast.SymbolFlagsValue, true, false, nil)
+		t := b.ch.instantiateType(b.ch.getTypeOfSymbol(symbol), b.ctx.mapper)
+		if !b.ch.isTypeIdenticalTo(t, inferred) {
+			return nil
+		}
+		if result := b.serializeTypeName(recipe.reference, true, nil); result != nil {
+			return result
+		}
+		b.ctx.tracker.ReportTypefnRecipeError()
+		b.ctx.encounteredError = true
+		return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)
+	}
 	oldMapper, oldFlags := b.ctx.mapper, b.ctx.internalFlags
 	oldEnvironment := b.ctx.typefnRecipeEnvironment
 	b.ctx.mapper = recipe.mapper
@@ -148,6 +172,23 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 	b.ctx.tracker.ReportTypefnRecipeError()
 	b.ctx.encounteredError = true
 	return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)
+}
+
+func (b *NodeBuilderImpl) tryTypefnReturnRecipe(signature *Signature, inferred *Type) *ast.Node {
+	if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnDeclaration == 0 ||
+		b.ch.compilerOptions.GetTypefnVersion() != 1 || signature.declaration == nil || signature.declaration.Type() != nil {
+		return nil
+	}
+	// Use the native single-return analysis; multiple returns, generators and
+	// async transformations require their own source-equivalent recipes.
+	pt := b.pc.GetReturnTypeOfSignature(signature.declaration)
+	if pt.Kind == pseudochecker.PseudoTypeKindInferred {
+		expression := pt.AsPseudoTypeInferred()
+		if !expression.IsSignatureReturn {
+			return b.tryTypefnExpressionRecipe(expression.Expression, inferred)
+		}
+	}
+	return nil
 }
 
 // Reusing the callable's instantiated Type retains native bounds and inaccessible

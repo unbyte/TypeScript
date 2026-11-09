@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 426 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 429 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -44,6 +44,9 @@ against the language specification; these checks establish the boundaries below.
   checking, and nested/abandoned resolution publication is tested. Single-signature call
   projections retain native argument bounds, DSL-computed bounds and parameter-only
   calculations; augmented consumers exercise normal and skipLibCheck policies.
+  Value forwarding covers local alias chains, imported annotated/inferred values,
+  properties, single-return functions, arrows and getters. A same-name Type/value
+  pair checks namespace resolution; stripped forwarded values suppress all emit modes.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.
@@ -53,7 +56,7 @@ against the language specification; these checks establish the boundaries below.
 * Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
   calls, contextual typing, type-parameter defaults and the type-system selection below,
   including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after inferred call constraint integration.
+  through its existing filters. Rerun after inferred value/return forwarding.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.

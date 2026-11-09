@@ -14,6 +14,12 @@ import (
 // original declaration expression in an instantiated context.
 func (b *NodeBuilderImpl) pseudoTypeToNodeWithCheckerFallback(t *pseudochecker.PseudoType, checkerType *Type) *ast.Node {
 	if t.Kind == pseudochecker.PseudoTypeKindInferred {
+		inferred := t.AsPseudoTypeInferred()
+		if !inferred.IsSignatureReturn {
+			if recipe := b.tryTypefnExpressionRecipe(inferred.Expression, checkerType); recipe != nil {
+				return recipe
+			}
+		}
 		if !b.ctx.suppressReportInferenceFallback {
 			if errorNodes := t.AsPseudoTypeInferred().ErrorNodes; len(errorNodes) > 0 {
 				for _, n := range errorNodes {

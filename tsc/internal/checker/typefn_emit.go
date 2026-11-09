@@ -39,6 +39,14 @@ func (c *Checker) typefnDeclarationDependencies(node *ast.Node, makeVisible bool
 		var name *ast.Node
 		meaning := ast.SymbolFlagsType
 		switch n.Kind {
+		case ast.KindIdentifier:
+			// Unannotated native value surfaces can forward a recipe through
+			// variables or calls. Declaration/property names are not references.
+			if ast.IsInExpressionContext(n) && !ast.IsDeclarationName(n) &&
+				!(ast.IsPropertyAccessExpression(n.Parent) && n.Parent.Name() == n) {
+				name = n
+				meaning = ast.SymbolFlagsValue | ast.SymbolFlagsExportValue
+			}
 		case ast.KindTypeFunctionName, ast.KindTypeFunctionCall, ast.KindTypeFunctionAssignment:
 			name = n.Name()
 			if typefnReserved(ast.GetFirstIdentifier(name).Text()) {
@@ -61,7 +69,11 @@ func (c *Checker) typefnDeclarationDependencies(node *ast.Node, makeVisible bool
 		}
 		if name != nil {
 			first := ast.GetFirstIdentifier(name)
-			root := c.resolveName(first, first.Text(), getMeaningOfEntityNameReference(name), nil, false, false)
+			rootMeaning := getMeaningOfEntityNameReference(name)
+			if n.Kind == ast.KindIdentifier {
+				rootMeaning = meaning
+			}
+			root := c.resolveName(first, first.Text(), rootMeaning, nil, false, false)
 			target := c.resolveEntityName(name, meaning, true, false, nil)
 			key := referenceKey{root, target}
 			if !seen[key] {

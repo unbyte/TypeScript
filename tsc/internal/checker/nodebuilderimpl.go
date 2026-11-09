@@ -1847,7 +1847,10 @@ func (b *NodeBuilderImpl) serializeInferredReturnTypeForSignature(signature *Sig
 		}
 		returnTypeNode = b.typePredicateToTypePredicateNodeHelper(predicate)
 	} else {
-		returnTypeNode = b.typeToTypeNode(returnType)
+		returnTypeNode = b.tryTypefnReturnRecipe(signature, returnType)
+		if returnTypeNode == nil {
+			returnTypeNode = b.typeToTypeNode(returnType)
+		}
 	}
 	b.ctx.suppressReportInferenceFallback = oldSuppressReportInferenceFallback
 	return returnTypeNode
