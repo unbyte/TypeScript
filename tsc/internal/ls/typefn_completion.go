@@ -270,12 +270,17 @@ func (l *LanguageService) typefnSignatureHelp(ctx context.Context, file *ast.Sou
 				label := scanner.GetTextOfNode(parameter)
 				parameters = append(parameters, &lsproto.ParameterInformation{Label: lsproto.StringOrTuple{String: &label}})
 			}
-		} else if alias, arity := c.GetTypeFunctionConstructorAlias(symbol); alias != nil {
+		} else {
+			constructor, arity := c.GetTypeFunctionConstructorAlias(symbol)
+			if constructor == nil {
+				constructor, arity = c.GetTypeFunctionConstructorBinding(symbol)
+			}
+			if constructor == nil {
+				continue
+			}
 			for range arity {
 				parameters = append(parameters, &lsproto.ParameterInformation{Label: lsproto.StringOrTuple{String: new("_")}})
 			}
-		} else {
-			continue
 		}
 		return &lsproto.SignatureHelp{Signatures: []*lsproto.SignatureInformation{{Label: c.TypeFunctionSignature(symbol), Parameters: &parameters}}, ActiveSignature: new(uint32(0)), ActiveParameter: &lsproto.UintegerOrNull{Uinteger: &entry.argument}}
 	}

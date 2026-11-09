@@ -920,3 +920,13 @@ concatenation: a 512-character word passes a 4,096-unit string-work limit that t
 concatenating port exceeded. The benchmark includes both algorithms and project
 setup; it does not isolate VM speed. Public Words normalization and the other
 community families remain incomplete; [workload scope](workloads.md) records that boundary.
+
+### Constructor binding signature help
+
+Calls through constructor parameters and local constructor bindings expose their
+static kind and arity in signature help. The checker supplies the same binding
+kind used for hover; the language service reports `_` slots rather than inventing
+parameter names or a runtime binding value. This includes zero-arity constructors,
+captured/shadowed bindings and native-island references. Declared parameter slots
+remain available when an unfinished body cannot be lowered. Kind inspection does
+not execute the constructor body or publish an application result.

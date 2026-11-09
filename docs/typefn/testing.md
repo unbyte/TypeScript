@@ -194,6 +194,10 @@ against the language specification; these checks establish the boundaries below.
   malformed DSL bodies and transitive stripped dependencies. Forced/builder cases
   explicitly enable noEmitOnError; the DSL failure boundary still withholds affected
   output, while independent native output is preserved. Full integration harness rerun.
+* Passed: constructor-binding signature help: nine parameter/local/capture/shadow,
+  native-island, zero-arity, reassignment and no-execution cases, repeated before
+  and after semantic checking. Two negative controls reject ordinary Type bindings.
+  Full checker and language-service suites pass.
 * Passed: desktop and web extension bundles rebuilt at `e1fad7459`. This is a build
   check, not a graphical Extension Host session.
 * Passed: changed Go source formatting and `git diff --check`.

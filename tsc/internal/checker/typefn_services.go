@@ -30,6 +30,9 @@ func (c *Checker) TypeFunctionSignature(symbol *ast.Symbol) string {
 		if alias, arity := c.GetTypeFunctionConstructorAlias(symbol); alias != nil {
 			return "type " + alias.Name().Text() + ": " + typefnKindDisplay(typefnConstructorKind(arity))
 		}
+		if binding, arity := c.GetTypeFunctionConstructorBinding(symbol); binding != nil {
+			return "type " + binding.Name().Text() + ": " + typefnKindDisplay(typefnConstructorKind(arity))
+		}
 		return ""
 	}
 	parameters := make([]string, 0, len(declaration.TypeParameters()))
@@ -94,21 +97,39 @@ func (c *Checker) GetTypeFunctionApplicationResult(ctx context.Context, node *as
 }
 
 func (c *Checker) TypeFunctionBindingKind(declaration *ast.Node) string {
+	return typefnKindDisplay(c.typefnBindingKind(declaration))
+}
+
+func (c *Checker) typefnBindingKind(declaration *ast.Node) *typefnKind {
 	if declaration == nil {
-		return "type"
+		return nil
 	}
 	if declaration.Kind == ast.KindTypeFunctionParameter {
 		if slots := declaration.AsTypeFunctionParameter().Slots; slots != nil {
-			return typefnKindDisplay(typefnConstructorKind(len(slots.Nodes)))
+			return typefnConstructorKind(len(slots.Nodes))
 		}
-		return "type"
+		return nil
 	}
 	fn := ast.FindAncestor(declaration.Parent, ast.IsTypeFunctionLike)
 	if fn == nil {
-		return "type"
+		return nil
 	}
 	p := c.compileTypefn(fn)
-	return typefnKindDisplay(p.bindings[declaration.Symbol()])
+	return p.bindings[declaration.Symbol()]
+}
+
+// A parameter or local constructor has a statically fixed arity. Expose that
+// kind without evaluating a body or guessing the value of a mutable binding.
+// Parameters remain available while an incomplete body cannot be lowered.
+func (c *Checker) GetTypeFunctionConstructorBinding(symbol *ast.Symbol) (*ast.Node, int) {
+	if symbol == nil {
+		return nil, 0
+	}
+	declaration := core.Find(symbol.Declarations(), ast.IsTypeFunctionLocalDeclaration)
+	if kind := c.typefnBindingKind(declaration).resolved(); declaration != nil && kind > 0 {
+		return declaration, kind - 1
+	}
+	return nil, 0
 }
 
 // Expose only declaration/kind metadata; constructor values stay checker-private.
