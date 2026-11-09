@@ -1,0 +1,34 @@
+{
+  "files": {
+    "main.ts": "error-native-relation-mismatch.ts",
+    "library.ts": "native-member-failure-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Member replay failure",
+      "at": "first: Target"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Member replay failure",
+      "at": "second: Target"
+    },
+    {
+      "phase": "semantic",
+      "code": 2322,
+      "file": "main.ts",
+      "message": "not assignable",
+      "at": "unrelated: number"
+    }
+  ]
+}

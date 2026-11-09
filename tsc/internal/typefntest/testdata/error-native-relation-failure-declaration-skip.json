@@ -1,0 +1,47 @@
+{
+  "files": {
+    "library.ts": "native-member-failure-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-native-relation-failure-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Member replay failure",
+        "at": "first: Target"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Member replay failure",
+        "at": "second: Target"
+      },
+      {
+        "phase": "semantic",
+        "code": 2322,
+        "file": "consumer.ts",
+        "message": "not assignable",
+        "at": "unrelated: number"
+      }
+    ]
+  }
+}

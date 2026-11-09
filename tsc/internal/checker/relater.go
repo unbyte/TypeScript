@@ -375,12 +375,13 @@ func (c *Checker) checkTypeRelatedToEx(
 	headMessage *diagnostics.Message,
 	diagnosticOutput *[]*ast.Diagnostic,
 ) bool {
+	failureEpoch := c.typefnFailureEpoch()
 	r := c.getRelater()
 	r.relation = relation
 	r.errorNode = errorNode
 	r.relationCount = (16_000_000 - relation.size()) / 8
 	result := r.isRelatedToEx(source, target, RecursionFlagsBoth, errorNode != nil /*reportErrors*/, headMessage, IntersectionStateNone)
-	if c.typefnNativeCanceled() {
+	if c.typefnFailedSince(failureEpoch) {
 		c.putRelater(r)
 		return false
 	}
@@ -3145,6 +3146,7 @@ func (r *Relater) eachTypeRelatedToSomeType(source *Type, target *Type) Ternary 
 // equal and infinitely expanding. Fourth, if we have reached a depth of 100 nested comparisons, assume we have runaway recursion
 // and issue an error. Otherwise, actually compare the structure of the two types.
 func (r *Relater) recursiveTypeRelatedTo(source *Type, target *Type, reportErrors bool, intersectionState IntersectionState, recursionFlags RecursionFlags) Ternary {
+	failureEpoch := r.c.typefnFailureEpoch()
 	if r.overflow {
 		// Note that stack depth overflows can cause _any_ relation involving structured types to become false, so it is
 		// important to have well-defined behavior even in cases that shouldn't normally occur.
@@ -3228,7 +3230,7 @@ func (r *Relater) recursiveTypeRelatedTo(source *Type, target *Type, reportError
 		r.targetStack = r.targetStack[:len(r.targetStack)-1]
 	}
 	r.expandingFlags = saveExpandingFlags
-	if r.c.typefnNativeCanceled() {
+	if r.c.typefnFailedSince(failureEpoch) {
 		r.resetMaybeStack(maybeStart, propagatingVarianceFlags, false)
 		return TernaryFalse
 	}
