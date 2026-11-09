@@ -170,12 +170,13 @@ against the language specification; these checks establish the boundaries below.
   with 23 skipped; their narrower command remains useful for individual changes.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
-  and 28 API encoder tests.
+  and 28 API encoder tests. The API/test project type check, AST tests, unsigned
+  flag test and encoder tests were rerun at `e1fad7459`.
 * Passed: async and generated sync RPC profile tests against the compiler rebuilt
-  at `2b1368aec`.
+  at `e1fad7459`.
   Both read parameter, bound, lambda and result-kind nodes from the Go-encoded AST,
   preserve computed native results and reject the disabled profile.
-* Passed: CLI rebuilt at `2b1368aec` against the editor example project and the constraint probe
+* Passed: CLI rebuilt at `e1fad7459` against the editor example project and the constraint probe
   script (13 fork cases and the native baseline). Unused bounds no longer execute,
   and later-parameter references diagnose. This does not add `where` syntax.
 * Passed: decoded declaration mappings for DSL statement starts after the ABI header;
@@ -184,7 +185,7 @@ against the language specification; these checks establish the boundaries below.
   malformed DSL bodies and transitive stripped dependencies. Forced/builder cases
   explicitly enable noEmitOnError; the DSL failure boundary still withholds affected
   output, while independent native output is preserved. Full integration harness rerun.
-* Passed: desktop and web extension bundles rebuilt at `2b1368aec`. This is a build
+* Passed: desktop and web extension bundles rebuilt at `e1fad7459`. This is a build
   check, not a graphical Extension Host session.
 * Passed: changed Go source formatting and `git diff --check`.
 
