@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 408 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 410 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -29,6 +29,8 @@ against the language specification; these checks establish the boundaries below.
   and DSL-bearing cycles to verify that negative cache entries cannot hide recipes.
   Authored declaration bridges are traversed, malformed native dependencies diagnose
   before recovery-tree inspection, and skipLibCheck cannot hide invalid recipes.
+  Inferred variable/property/return/default-export references validate generated
+  dependencies too; a native-only consumer verifies the non-DSL control.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.

@@ -105,6 +105,7 @@ type EmitResolver interface {
 
 	// declaration emit checker functionality projections
 	GetTypefnReferenceDependencies(node *ast.Node) []*ast.Node
+	GetTypefnSymbolDependencies(symbol *ast.Symbol) []*ast.Node
 	TypefnDeclarationStatus(node *ast.Node) (needsABI, valid bool)
 	GetTypefnDeclarationDependencies(node *ast.Node, makeVisible bool) []TypefnDeclarationDependency
 	PrecalculateDeclarationEmitVisibility(file *ast.SourceFile)

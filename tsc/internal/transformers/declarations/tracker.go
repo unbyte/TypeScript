@@ -197,6 +197,21 @@ func (s *SymbolTrackerImpl) TrackSymbol(symbol *ast.Symbol, enclosingDeclaration
 		s.classSymbolTracked = true
 		return false
 	}
+	if s.state.typefnEnabled {
+		// Tracker callbacks run under the node builder's checker lock. Record
+		// references here and validate them after serialization has completed.
+		if s.state.typefnTrackedSymbols == nil {
+			s.state.typefnTrackedSymbols = map[*ast.Symbol]bool{}
+		}
+		if !s.state.typefnTrackedSymbols[symbol] {
+			s.state.typefnTrackedSymbols[symbol] = true
+			location := s.errorLocation()
+			if location == nil {
+				location = enclosingDeclaration
+			}
+			s.state.typefnInferredDependencies = append(s.state.typefnInferredDependencies, typefnInferredDependency{symbol, location})
+		}
+	}
 	issuedDiagnostic := s.handleSymbolAccessibilityError(s.resolver.IsSymbolAccessible(symbol, enclosingDeclaration, meaning /*shouldComputeAliasToMarkVisible*/, true))
 	return issuedDiagnostic
 }
@@ -237,6 +252,9 @@ func createDiagnosticForNode(node *ast.Node, message *diagnostics.Message, args 
 }
 
 type SymbolTrackerSharedState struct {
+	typefnEnabled                    bool
+	typefnTrackedSymbols             map[*ast.Symbol]bool
+	typefnInferredDependencies       []typefnInferredDependency
 	invalidTypefnRecipe              bool
 	lateMarkedStatements             []*ast.Node
 	diagnostics                      []*ast.Diagnostic

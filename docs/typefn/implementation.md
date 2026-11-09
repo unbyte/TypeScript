@@ -687,7 +687,13 @@ inputs are traversed without treating them as newly stripped source. Malformed
 dependency files are rejected before inspecting their recovery trees, and authored
 invalid recipes cannot escape validation through skipLibCheck. Bundled native-library
 declarations terminate the walk; separate user augmentations remain dependencies.
-Inferred exports still need complete failure guarantees.
+Generated references now participate through the native symbol tracker. It records
+referenced symbols and source locations while node building holds the checker lock;
+the transformer validates their closures after serialization releases that lock.
+Per-file deduplication preserves deterministic first-reference diagnostics. Tests cover
+inferred variable, property, return and default exports, forced/builder suppression
+and an unchanged native-only consumer. This does not yet retain source provenance
+when evaluation has reduced a recipe to a concrete Type.
 
 The harness exercises ordinary emission, forced declaration emission and incremental
 builder signatures against invalid definitions, malformed DSL syntax and transitive

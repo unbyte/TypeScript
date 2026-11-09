@@ -1,0 +1,21 @@
+{
+  "files": {
+    "library.ts": "error-declaration-inferred-dependency-library.ts",
+    "provider.ts": "declaration-inferred-native-provider.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-inferred-native-consumer.ts"
+    },
+    "diagnostics": []
+  }
+}

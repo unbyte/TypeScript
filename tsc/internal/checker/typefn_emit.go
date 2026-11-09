@@ -146,6 +146,21 @@ func (r *EmitResolver) GetTypefnReferenceDependencies(node *ast.Node) []*ast.Nod
 		return nil
 	}
 	symbol := c.resolveEntityName(node.AsTypeReferenceNode().TypeName, ast.SymbolFlagsType, true, false, nil)
+	return c.typefnSymbolDependencies(symbol)
+}
+
+// GetTypefnSymbolDependencies is called after node building has released the
+// checker lock. Generated references need the same closure validation as syntax.
+func (r *EmitResolver) GetTypefnSymbolDependencies(symbol *ast.Symbol) []*ast.Node {
+	r.checkerMu.Lock()
+	defer r.checkerMu.Unlock()
+	if r.checker.compilerOptions.GetTypefnVersion() != 1 {
+		return nil
+	}
+	return r.checker.typefnSymbolDependencies(r.checker.resolveSymbol(symbol))
+}
+
+func (c *Checker) typefnSymbolDependencies(symbol *ast.Symbol) []*ast.Node {
 	if symbol == nil || symbol == c.unknownSymbol || symbol.Flags()&ast.SymbolFlagsTypeParameter != 0 {
 		return nil
 	}

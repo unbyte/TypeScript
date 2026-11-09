@@ -104,6 +104,7 @@ func NewDeclarationTransformer(host DeclarationEmitHost, resolver printer.EmitRe
 	}
 	context := resolver.EmitContext()
 	state := &SymbolTrackerSharedState{isolatedDeclarations: compilerOptions.IsolatedDeclarations.IsTrue(), stripInternal: compilerOptions.StripInternal.IsTrue(), resolver: resolver}
+	state.typefnEnabled = compilerOptions.GetTypefnVersion() == 1
 	tracker := NewSymbolTracker(host, resolver, state)
 	// TODO: Use new host GetOutputPathsFor method instead of passing in entrypoint paths (which will also better support bundled emit)
 	tx := &DeclarationTransformer{
@@ -342,6 +343,8 @@ func (tx *DeclarationTransformer) appendCjsExports(combinedStatements *ast.State
 func (tx *DeclarationTransformer) transformSourceFile(node *ast.SourceFile) *ast.Node {
 	tx.needsTypefnABI = false
 	tx.state.invalidTypefnRecipe = false
+	tx.state.typefnTrackedSymbols = nil
+	tx.state.typefnInferredDependencies = nil
 	tx.cjsExportAssignment = nil
 	tx.cjsExportAssignmentName = nil
 	tx.cjsExportMembers = nil
@@ -374,6 +377,7 @@ func (tx *DeclarationTransformer) transformSourceFile(node *ast.SourceFile) *ast
 		}
 	}
 	result := tx.Factory().UpdateSourceFile(node, combinedStatements, node.EndOfFileToken)
+	tx.checkTypefnInferredDependencies()
 	result.AsSourceFile().LibReferenceDirectives = tx.getLibReferences()
 	result.AsSourceFile().TypeReferenceDirectives = tx.getTypeReferences()
 	result.AsSourceFile().IsDeclarationFile = true

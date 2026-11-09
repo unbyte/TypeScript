@@ -7,6 +7,23 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 )
 
+type typefnInferredDependency struct {
+	symbol    *ast.Symbol
+	reference *ast.Node
+}
+
+func (tx *DeclarationTransformer) checkTypefnInferredDependencies() {
+	for _, dependency := range tx.state.typefnInferredDependencies {
+		if roots := tx.resolver.GetTypefnSymbolDependencies(dependency.symbol); len(roots) != 0 {
+			reference := dependency.reference
+			if reference == nil {
+				reference = tx.state.currentSourceFile.AsNode()
+			}
+			tx.checkTypefnDependencyClosure(reference, roots)
+		}
+	}
+}
+
 func (tx *DeclarationTransformer) typefnError(node *ast.Node, message string) {
 	tx.state.invalidTypefnRecipe = true
 	tx.state.addDiagnostic(createDiagnosticForNode(node, diagnostics.NewAdHocMessage("typefn: "+message)))
