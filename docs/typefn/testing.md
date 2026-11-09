@@ -196,10 +196,10 @@ against the language specification; these checks establish the boundaries below.
   and 28 API encoder tests. The API/test project type check, AST tests, unsigned
   flag test and encoder tests were rerun at `e1fad7459`.
 * Passed: async and generated sync RPC profile tests against the compiler rebuilt
-  at `e1fad7459`.
+  at `957af002a`.
   Both read parameter, bound, lambda and result-kind nodes from the Go-encoded AST,
   preserve computed native results and reject the disabled profile.
-* Passed: CLI rebuilt at `e1fad7459` against the editor example project and the constraint probe
+* Passed: CLI rebuilt at `957af002a` against the editor example project and the constraint probe
   script (13 fork cases and the native baseline). Unused bounds no longer execute,
   and later-parameter references diagnose. This does not add `where` syntax.
 * Passed: decoded declaration mappings for DSL statement starts after the ABI header;
