@@ -8,9 +8,12 @@ import (
 // A source recipe belongs to an expression and its lexical instantiation, not to
 // the resulting Type. Literal Types are shared by unrelated native expressions.
 type typefnSourceRecipe struct {
-	node      *ast.Node
-	mapper    *TypeMapper
-	arguments map[*Type]typefnRecipeArgument
+	node                *ast.Node
+	mapper              *TypeMapper
+	arguments           map[*Type]typefnRecipeArgument
+	call                *ast.Node
+	signature           *Signature
+	applicationRequired bool
 }
 
 type typefnRecipeArgument struct {
@@ -52,8 +55,20 @@ func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceReci
 	if annotation == nil || ast.IsTypePredicateNode(annotation) {
 		return nil
 	}
-	recipe := &typefnSourceRecipe{node: annotation, mapper: signature.mapper}
+	recipe := &typefnSourceRecipe{node: annotation, mapper: signature.mapper, call: expression, signature: signature}
 	hasRecipe := c.typefnNodeHasRecipe(annotation)
+	for _, parameter := range signature.declaration.TypeParameters() {
+		if constraint := parameter.AsTypeParameterDeclaration().Constraint; constraint != nil {
+			recipe.applicationRequired = true
+			hasRecipe = hasRecipe || c.typefnNodeHasRecipe(constraint)
+		}
+	}
+	for _, parameter := range signature.declaration.Parameters() {
+		if parameter.Type() != nil && c.typefnParameterHasRecipe(parameter.Type()) {
+			recipe.applicationRequired = true
+			hasRecipe = true
+		}
+	}
 	arguments := expression.TypeArguments()
 	defaults := c.typefnCallDefaultOrigin(expression)
 	if defaults != nil && defaults.signature != signature {
@@ -83,6 +98,19 @@ func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceReci
 	return nil
 }
 
+func (c *Checker) typefnParameterHasRecipe(node *ast.Node) bool {
+	for _, dependency := range c.typefnDeclarationDependencies(node, false) {
+		for _, declaration := range dependency.Declarations {
+			// Referring to T does not execute T's unused default. Its selected
+			// argument and native constraint are tracked separately.
+			if !ast.IsTypeParameterDeclaration(declaration) && c.typefnDeclarationsHaveRecipe([]*ast.Node{declaration}) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferred *Type) *ast.Node {
 	if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnDeclaration == 0 {
 		return nil
@@ -108,13 +136,76 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 	if !b.ch.isTypeIdenticalTo(b.getTypeFromTypeNode(recipe.node, false), inferred) {
 		return nil
 	}
-	if result := b.tryReuseExistingNodeHelper(recipe.node); result != nil {
+	if result := b.typefnCallRecipeNode(recipe); result != nil {
 		return result
+	}
+	if !recipe.applicationRequired {
+		if result := b.tryReuseExistingNodeHelper(recipe.node); result != nil {
+			return result
+		}
 	}
 	// Failure to name a known recipe must not silently publish its current value.
 	b.ctx.tracker.ReportTypefnRecipeError()
 	b.ctx.encounteredError = true
 	return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)
+}
+
+// Reusing the callable's instantiated Type retains native bounds and inaccessible
+// private return helpers without copying their definitions into another module.
+// A conditional over multiple overloads would select the last one, so this path
+// requires one signature with the same declaration as the selected call.
+func (b *NodeBuilderImpl) typefnCallRecipeNode(recipe *typefnSourceRecipe) *ast.Node {
+	name := ast.SkipParentheses(recipe.call.Expression())
+	if !ast.IsIdentifier(name) {
+		return nil
+	}
+	signatures := b.ch.getSignaturesOfType(b.ch.getTypeOfExpression(name), SignatureKindCall)
+	if len(signatures) != 1 || signatures[0].declaration != recipe.signature.declaration ||
+		len(signatures[0].TypeParameters()) != len(recipe.signature.declaration.TypeParameters()) {
+		return nil
+	}
+	bound := b.createRecoveryBoundary()
+	var arguments []*ast.Node
+	for _, parameter := range recipe.signature.declaration.TypeParameters() {
+		t := b.ch.getDeclaredTypeOfTypeParameter(parameter.Symbol())
+		argument, found := b.typefnRecipeArgumentNode(t)
+		if !found {
+			argument = b.typeToTypeNode(b.ch.instantiateType(t, b.ctx.mapper))
+		}
+		if argument == nil {
+			bound.markError(nil)
+			break
+		}
+		arguments = append(arguments, argument)
+	}
+	var typeArguments *ast.NodeList
+	if len(arguments) != 0 {
+		typeArguments = b.f.NewNodeList(arguments)
+	}
+	callable := b.serializeTypeName(name, true, nil)
+	if callable == nil {
+		bound.markError(nil)
+	} else if typeArguments != nil {
+		switch callable.Kind {
+		case ast.KindTypeQuery:
+			callable = b.f.UpdateTypeQueryNode(callable.AsTypeQueryNode(), callable.AsTypeQueryNode().ExprName, typeArguments)
+		case ast.KindImportType:
+			d := callable.AsImportTypeNode()
+			callable = b.f.UpdateImportTypeNode(d, d.IsTypeOf, d.Argument, d.Attributes, d.Qualifier, typeArguments)
+		default:
+			bound.markError(nil)
+		}
+	}
+	if !b.finalizeBoundary(bound) {
+		return nil
+	}
+	infer := func(name string) *ast.Node {
+		return b.f.NewInferTypeNode(b.f.NewTypeParameterDeclaration(nil, b.f.NewIdentifier(name), nil, nil, nil))
+	}
+	parameters := b.f.NewNodeList([]*ast.Node{b.f.NewParameterDeclaration(nil, b.f.NewToken(ast.KindDotDotDotToken), b.f.NewIdentifier("__args"), nil, infer("__typefn_args"), nil)})
+	pattern := b.f.NewFunctionTypeNode(nil, parameters, infer("__typefn_result"))
+	result := b.f.NewTypeReferenceNode(b.f.NewIdentifier("__typefn_result"), nil)
+	return b.f.NewConditionalTypeNode(callable, pattern, result, b.f.NewKeywordTypeNode(ast.KindNeverKeyword))
 }
 
 func (b *NodeBuilderImpl) typefnRecipeArgumentNode(parameter *Type) (node *ast.Node, found bool) {

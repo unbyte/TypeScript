@@ -31,6 +31,12 @@
       "code": -1,
       "file": "provider.ts",
       "message": "stripped declaration dependency"
+    },
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "stripped declaration dependency"
     }
   ]
 }

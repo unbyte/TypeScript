@@ -1,0 +1,32 @@
+{
+  "files": {
+    "library.ts": "declaration-call-parameter.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-call-bound-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Expected one property"
+      }
+    ]
+  }
+}

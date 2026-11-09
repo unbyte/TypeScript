@@ -714,8 +714,7 @@ fields, nested object properties and public cross-module helpers. They also reta
 unrelated literal/native annotations unchanged and withhold stripped or unnameable
 recipes in ordinary, forced and builder emit. Remaining inferred-recipe work includes
 arbitrary value/return flow, inferred value-argument origins, native call requirements
-beyond the return annotation, and hygienic lifting of local helpers
-or inaccessible cross-module recipes. This is not complete inferred declaration emit.
+for overloaded/non-nameable callees, and hygienic lifting of local helpers. This is not complete inferred declaration emit.
 
 Explicit native type arguments now carry their original syntax into inferred recipes,
 including calls whose return annotation is only a native parameter or tuple. A scoped
@@ -746,3 +745,22 @@ their output; completion and signature-help queries before/after semantic checki
 preserve that distinction. Separate publication tests cover nested stack growth,
 abandoned resolution, early error caching and restoration. This retains default
 origins; it does not yet replay all native call constraints or inferred value origins.
+
+
+For a nameable single-signature native callee, inferred declarations now project the
+return Type from its instantiated value Type. The generated conditional infers both
+parameters and return, retaining generic constraints and parameter-only DSL checks.
+Source arguments/defaults still use the scoped recipe environment. Referencing the
+original callable also keeps private return helpers in their defining module, without
+exporting or cloning them. Native symbol tracking retains the callable/import and
+validates its recipe dependency closure.
+
+Fresh consumers augment native interfaces to invalidate an argument bound, a
+DSL-computed bound, or a generic parameter-only calculation. The latter reports at
+the consumer use even with skipLibCheck; ordinary native bound diagnostics follow
+native skipLibCheck policy. Private cross-module return helpers now have a positive
+consumer test. Inaccessible local helpers still suppress ordinary/forced/builder
+output. Multiple overloads cannot use this conditional projection (native conditional
+inference would select the last overload); cases requiring call validation fail
+rather than silently publishing an unchecked result. Full overload/receiver handling,
+value-origin tracking and hygienic local lifting remain incomplete.

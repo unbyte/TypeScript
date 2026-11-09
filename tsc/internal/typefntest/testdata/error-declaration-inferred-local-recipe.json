@@ -1,0 +1,23 @@
+{
+  "files": {
+    "library.ts": "error-declaration-inferred-local-recipe.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "outputs": {},
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "message": "inferred recipe requires an exportable annotation or helper",
+      "file": "library.ts"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "files": {
+    "library.ts": "declaration-call-bound-only.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-call-bound-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": []
+  }
+}

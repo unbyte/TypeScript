@@ -1,0 +1,31 @@
+{
+  "files": {
+    "library.ts": "declaration-call-bound-argument.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-call-bound-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": 2344,
+        "file": "out/library.d.ts",
+        "message": "does not satisfy the constraint"
+      }
+    ]
+  }
+}
