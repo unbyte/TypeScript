@@ -1,0 +1,27 @@
+{
+  "files": {
+    "words.ts": "community/typefest/words.ts",
+    "characters.ts": "community/typefest/characters.ts",
+    "reference.ts": "community/typefest/words-native.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/assertions.ts": "community-words.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "rootDir": "."
+    },
+    "diagnostics": []
+  }
+}

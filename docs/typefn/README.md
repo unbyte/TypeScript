@@ -17,6 +17,7 @@ The compiler implements an experimental subset of the target language. Start wit
 The manual and specification also describe features that are not implemented yet.
 
 * [Acceptance tracker](acceptance.md): remaining contracts and completion evidence.
+* [Executed community workloads](workloads.md): compared algorithms, evidence and limits.
 * [Manual](manual.md): language guide and target-language examples.
 * [Specification](spec/README.md): syntax, semantics, library, evaluation,
   TypeScript integration and required conformance cases.

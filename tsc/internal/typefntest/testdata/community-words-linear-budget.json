@@ -1,0 +1,16 @@
+{
+  "files": {
+    "words.ts": "community/typefest/words.ts",
+    "characters.ts": "community/typefest/characters.ts",
+    "consumer.ts": "community-words-linear-budget.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1,
+      "limits": {
+        "stringUnits": 4096
+      }
+    }
+  },
+  "diagnostics": []
+}

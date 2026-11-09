@@ -1,0 +1,20 @@
+{
+  "files": {
+    "words.ts": "community/typefest/words.ts",
+    "characters.ts": "community/typefest/characters.ts",
+    "consumer.ts": "error-community-words-brand.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "consumer.ts",
+      "message": "WordsLiteral requires one unbranded string literal"
+    }
+  ]
+}

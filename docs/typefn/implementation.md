@@ -814,3 +814,14 @@ diagnostic follows native skipLibCheck policy; the separate ABI/frontend executi
 safety checks remain mandatory. This differs from generic parameter checks instantiated
 at a consumer use, which diagnose there even with skipLibCheck. Multi-return/async
 flow, overload/receiver projection and local lifting remain incomplete.
+
+
+Community acceptance now includes an executable type-fest finite-literal word-scanner
+port and its original native conditional algorithm. Direct and fresh declaration-only
+programs compare 464 cases each, alongside fixed expectations, generic options,
+explicit union distribution, tuple metadata/reconstruction, domain failures and
+resource cases. The imperative scanner uses UTF-16 offsets to avoid growing-prefix
+concatenation: a 512-character word passes a 4,096-unit string-work limit that the
+concatenating port exceeded. The benchmark includes both algorithms and project
+setup; it does not isolate VM speed. Public Words normalization and the other
+community families remain incomplete; [workload scope](workloads.md) records that boundary.

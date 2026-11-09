@@ -1,0 +1,38 @@
+{
+  "files": {
+    "words.ts": "community/typefest/words.ts",
+    "characters.ts": "community/typefest/characters.ts",
+    "reference.ts": "community/typefest/words-native.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/consumer.ts": "error-community-words-budget.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1,
+        "limits": {
+          "vmInstructions": 128
+        }
+      },
+      "rootDir": ".",
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "out/consumer.ts",
+        "message": "VM instruction limit exceeded"
+      }
+    ]
+  }
+}

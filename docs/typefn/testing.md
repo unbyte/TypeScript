@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 437 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 446 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -53,6 +53,11 @@ against the language specification; these checks establish the boundaries below.
   Inferred native returns and constructed callable signatures now retain consumer
   recipes, with generic function/arrow/class cases and concrete declaration failure
   checks under normal and skipLibCheck policies.
+* Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
+  direct and declaration-only programs, fixed expected results, generic options,
+  explicit unions, tuple metadata, domain failures and resource diagnostics. A
+  512-character word passes a 4,096-unit string-work limit after replacing growing
+  prefix concatenation with cursor slices. See [workload scope](workloads.md).
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.
@@ -168,3 +173,14 @@ Three harness regressions verify generic/nominal declaration consumption, a fail
 import of the absent producer source, and native declaration consumption following
 an allowed emit-on-error. They establish the harness; they do not yet demonstrate
 DSL declaration recipes; generated-recipe fixtures now use the same isolated consumer path.
+
+
+Community word-scanner benchmark (same host/toolchain, three iterations):
+
+```sh
+go test ./tsc/internal/typefntest -run '^TestIntegration/(community-words|error-community-words)' -bench '^BenchmarkTypefnCommunityWords$' -benchtime=3x -count=1
+```
+
+250.0 ms/op, 120,239,165 bytes/op, 835,707 allocations/op. This includes cold compiler
+projects, the DSL scanner, its native comparison and all corpus assertions. It is
+neither isolated VM throughput nor a native-versus-DSL speed comparison.

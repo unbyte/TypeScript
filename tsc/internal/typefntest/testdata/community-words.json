@@ -1,0 +1,14 @@
+{
+  "files": {
+    "words.ts": "community/typefest/words.ts",
+    "characters.ts": "community/typefest/characters.ts",
+    "reference.ts": "community/typefest/words-native.ts",
+    "assertions.ts": "community-words.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}
