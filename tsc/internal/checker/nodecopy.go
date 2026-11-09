@@ -427,6 +427,9 @@ func getExistingNodeTreeVisitor(b *NodeBuilderImpl, bound *recoveryBoundary) *as
 		}
 		if s.Flags()&ast.SymbolFlagsTypeParameter != 0 {
 			declaredType := b.ch.getDeclaredTypeOfSymbol(s)
+			if argument, found := b.typefnRecipeArgumentNode(declaredType); found {
+				return argument
+			}
 			if b.ctx.mapper != nil && getMappedType(declaredType, b.ctx.mapper) != declaredType {
 				if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnRecipe != 0 {
 					return b.typeToTypeNode(b.getTypeFromTypeNode(node, false))

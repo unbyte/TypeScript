@@ -83,6 +83,7 @@ type NodeBuilderContext struct {
 	symbolDepth                     map[CompositeSymbolIdentity]int
 	trackedSymbols                  []*TrackedSymbolArgs
 	mapper                          *TypeMapper
+	typefnRecipeEnvironment         *typefnRecipeEnvironment
 	reverseMappedStack              []*ast.Symbol
 	enclosingSymbolTypes            map[ast.SymbolId]*Type
 	suppressReportInferenceFallback bool
@@ -3296,7 +3297,9 @@ func (b *NodeBuilderImpl) visitAndTransformType(t *Type, transform func(b *NodeB
 		key.inferTypeParameters = getTypeListKey(b.ctx.inferTypeParameters)
 	}
 	// Don't rely on type cache if we're expanding a type, because we need to compute `canIncreaseExpansionDepth`.
-	canUseCache := b.ctx.maxExpansionDepth < 0
+	// A source recipe can carry distinct argument syntax for the same resulting
+	// Type. Native Type-identity caching cannot represent that provenance.
+	canUseCache := b.ctx.maxExpansionDepth < 0 && b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnRecipe == 0
 	if canUseCache && b.ctx.enclosingDeclaration != nil && b.links.Has(b.ctx.enclosingDeclaration) {
 		links := b.links.Get(b.ctx.enclosingDeclaration)
 		cachedResult, ok := links.serializedTypes[key]

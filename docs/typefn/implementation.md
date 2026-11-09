@@ -713,6 +713,21 @@ property count. Tests cover concrete and generic calls, mapped binders, generic 
 fields, nested object properties and public cross-module helpers. They also retain
 unrelated literal/native annotations unchanged and withhold stripped or unnameable
 recipes in ordinary, forced and builder emit. Remaining inferred-recipe work includes
-arbitrary value/return flow, originating recipes within substituted arguments, native
-call requirements beyond the return annotation, and hygienic lifting of local helpers
+arbitrary value/return flow, inferred argument origins and defaults selected by native
+inference, native call requirements beyond the return annotation, and hygienic lifting of local helpers
 or inaccessible cross-module recipes. This is not complete inferred declaration emit.
+
+Explicit native type arguments now carry their original syntax into inferred recipes,
+including calls whose return annotation is only a native parameter or tuple. A scoped
+argument environment maps native parameter identities to caller syntax. Defaults
+selected by a partial explicit argument list remain in the callee's scope and can
+refer to preceding bindings; explicit arguments restore the caller's mapper and
+argument environment. Cycle protection prevents malformed defaults from recursing
+through source copying. No metadata is attached to shared native Types.
+
+Native Type-identity serialization caching is disabled inside strict recipe copying:
+two argument recipes can have identical current results and distinct consumer behavior.
+Tests cover repeated equal-result calls, dependent/chained defaults, generic class
+binders and augmentation. A value inferred to the same Type as its parameter's default
+is deliberately not treated as use of that default. Tracking defaults actually chosen
+by native inference is a separate remaining integration step.
