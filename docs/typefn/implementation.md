@@ -167,6 +167,9 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   retains that site. Query-order tests cover indexed access and generic aliases
   through type-expression, alias-name, declaration and symbol queries.
   Scope cleanup lives in a helper used by these DSL-enabled queries.
+  VM failures attach operation provenance before diagnostic insertion. Repeated
+  queries deduplicate complete reports while preserving different messages and
+  different originating operations at the same application site.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
   remain. Classification, arrays, symbol-key construction and property descriptors
   are implemented. Enum-specific support stays deferred.

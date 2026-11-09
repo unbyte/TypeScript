@@ -62,6 +62,111 @@ func TestTypefnConditionalFailureQueryOrder(t *testing.T) {
 	}
 }
 
+func TestTypefnCompositeReturnFailureQueryOrder(t *testing.T) {
+	const source = `typefn Guard<N> {
+  if (N == 0) { fail<"Return replay failure">; }
+  return N;
+}
+type Functions<N> = (() => Guard<N>) | (() => N);
+declare const bad: Functions<0>;
+const first = bad(/* first */);
+const second = bad(/* second */);
+`
+	for _, queryName := range []bool{false, true} {
+		for _, reverse := range []bool{false, true} {
+			name := "initializer"
+			if queryName {
+				name = "name"
+			}
+			if reverse {
+				name += "/reverse"
+			} else {
+				name += "/forward"
+			}
+			t.Run(name, func(t *testing.T) {
+				p := newTypefnNativeTestProgram(t, source)
+				c, release := p.GetTypeChecker(t.Context())
+				defer release()
+				file := p.GetSourceFile("/main.ts")
+				statements := file.Statements.Nodes[len(file.Statements.Nodes)-2:]
+				for range 2 {
+					for i := range statements {
+						if reverse {
+							i = len(statements) - 1 - i
+						}
+						declaration := statements[i].AsVariableStatement().DeclarationList.AsVariableDeclarationList().Declarations.Nodes[0]
+						query := declaration.Initializer()
+						if queryName {
+							query = declaration.Name()
+						}
+						c.GetTypeAtLocation(query)
+					}
+				}
+				diagnostics := c.GetDiagnostics(t.Context(), file)
+				if len(diagnostics) != 2 {
+					for _, diagnostic := range diagnostics {
+						t.Logf("%s; related: %v", diagnostic, diagnostic.RelatedInformation())
+					}
+					t.Fatalf("got %d diagnostics, want both calls", len(diagnostics))
+				}
+				for i, site := range []string{"bad(/* first */)", "bad(/* second */)"} {
+					if diagnostics[i].Code() != -1 || diagnostics[i].Loc().Pos() != strings.Index(source, site) {
+						t.Fatalf("diagnostic %d lost its call site", i)
+					}
+					related := diagnostics[i].RelatedInformation()
+					if len(related) != 1 || related[0].Loc().Pos() != strings.Index(source, `fail<"Return replay failure">`) {
+						t.Fatalf("diagnostic %d lost or duplicated its operation provenance", i)
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestTypefnDistinctFailureProvenance(t *testing.T) {
+	for _, sameMessage := range []bool{false, true} {
+		second := "second failure"
+		if sameMessage {
+			second = "first failure"
+		}
+		t.Run(second, func(t *testing.T) {
+			source := `typefn First<N> { if (N == 0) { fail<"first failure">; } return N; }
+typefn Second<N> { if (N == 0) { fail<"` + second + `">; } return N; }
+type Functions<N> = (() => First<N>) | (() => Second<N>);
+declare const bad: Functions<0>;
+const result = bad();
+`
+			p := newTypefnNativeTestProgram(t, source)
+			c, release := p.GetTypeChecker(t.Context())
+			defer release()
+			file := p.GetSourceFile("/main.ts")
+			statement := file.Statements.Nodes[len(file.Statements.Nodes)-1]
+			call := statement.AsVariableStatement().DeclarationList.AsVariableDeclarationList().Declarations.Nodes[0].Initializer()
+			for range 3 {
+				c.GetTypeAtLocation(call)
+			}
+			diagnostics := c.GetDiagnostics(t.Context(), file)
+			if len(diagnostics) != 2 {
+				t.Fatalf("got %d diagnostics, want both originating failures", len(diagnostics))
+			}
+			origins := map[int]bool{}
+			for _, diagnostic := range diagnostics {
+				if diagnostic.Code() != -1 || diagnostic.Loc().Pos() != strings.Index(source, "bad();") {
+					t.Fatal("failure lost its call site")
+				}
+				related := diagnostic.RelatedInformation()
+				if len(related) != 1 {
+					t.Fatal("failure lost or duplicated its operation provenance")
+				}
+				origins[related[0].Loc().Pos()] = true
+			}
+			if !origins[strings.Index(source, "fail<")] || !origins[strings.LastIndex(source, "fail<")] {
+				t.Fatal("distinct operations were collapsed")
+			}
+		})
+	}
+}
+
 func testTypefnMemberFailureQueryOrder(t *testing.T, source string, typefnQuery bool, sites []string) {
 	t.Helper()
 	modes := []string{"typefn"}

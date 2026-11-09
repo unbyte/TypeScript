@@ -94,8 +94,10 @@ against the language specification; these checks establish the boundaries below.
   Combined-return cache tests cover repeated calls, optional calls, constructor
   unions and overload selection, with successful siblings and fresh declaration
   consumers in both skipLibCheck modes. Full integration, checker and language-service
-  suites pass for this scope. Repeated early-query diagnostic deduplication remains
-  a separate open regression.
+  suites pass for this scope. Repeated initializer/name queries now deduplicate
+  failures after attaching operation provenance. Tests retain distinct messages
+  and distinct originating operations even when their error text is identical;
+  operation spans remain singular. Full AST/harness/checker/LS suites pass.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A

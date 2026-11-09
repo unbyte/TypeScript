@@ -117,10 +117,13 @@ func (v *typefnVM) error(node *ast.Node, message string) *Type {
 		if site == nil {
 			site = v.c.currentNode
 		}
-		diagnostic := v.c.error(site, diagnostics.NewAdHocMessage("typefn: "+message))
+		diagnostic := NewDiagnosticForNode(site, diagnostics.NewAdHocMessage("typefn: "+message))
 		if node != nil && node != site {
 			diagnostic.AddRelatedInfo(NewDiagnosticForNode(node, diagnostics.NewAdHocMessage("typefn operation failed here")))
 		}
+		// Diagnostic identity includes related information. Publish the complete
+		// report so repeated queries can deduplicate it without mutating entries.
+		v.c.addDiagnostic(diagnostic)
 	}
 	v.failed = true
 	return v.c.errorType
