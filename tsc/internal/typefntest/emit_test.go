@@ -20,6 +20,7 @@ func TestTypefnDeclarationAtomicEmit(t *testing.T) {
 		"error-declaration-inferred-dependency",
 		"error-declaration-inferred-recipe-stripped",
 		"error-declaration-inferred-local-recipe",
+		"error-declaration-local-annotation",
 		"error-declaration-value-stripped",
 		"error-declaration-qualified-stripped",
 		"error-declaration-authored-bridge",

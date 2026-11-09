@@ -1,0 +1,18 @@
+import {count, optionalCount, literal, local, optional, parameter, Box} from "./out/library";
+import type {Open} from "./out/library";
+type Assert<T extends true> = T;
+type Equal<A,B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+type Count = Assert<Equal<typeof count,1>>;
+type Maybe = Assert<Equal<typeof optionalCount,1|undefined>>;
+type Unrelated = Assert<Equal<typeof literal,1>>;
+const first = local<Open>();
+const second = optional<Open>();
+const third = parameter<Open>(1);
+const box = new Box<Open>();
+const fourth = box.method();
+const fifth = box.count;
+type First = Assert<Equal<typeof first,1>>;
+type Second = Assert<Equal<typeof second,1|undefined>>;
+type Third = Assert<Equal<typeof third,1>>;
+type Fourth = Assert<Equal<typeof fourth,1>>;
+type Fifth = Assert<Equal<typeof fifth,1>>;

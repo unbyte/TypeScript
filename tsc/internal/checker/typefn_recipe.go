@@ -176,6 +176,11 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 		if !b.ch.isTypeIdenticalTo(t, inferred) {
 			return nil
 		}
+		if reference == name {
+			if result := b.typefnLocalAnnotationRecipe(symbol, inferred); result != nil {
+				return result
+			}
+		}
 		if result := b.typefnValueRecipeNode(reference); result != nil {
 			return result
 		}
@@ -220,6 +225,25 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 	b.ctx.tracker.ReportTypefnRecipeError()
 	b.ctx.encounteredError = true
 	return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)
+}
+
+// A local value's written annotation is already a source recipe. Reuse it in
+// the enclosing signature instead of exporting a query to a body-local name.
+// The equivalence check excludes optionality, flow narrowing and specialization
+// changes; strict copying must still prove every referenced name is available.
+func (b *NodeBuilderImpl) typefnLocalAnnotationRecipe(symbol *ast.Symbol, inferred *Type) *ast.Node {
+	declaration := symbol.ValueDeclaration()
+	if declaration == nil || !(ast.IsVariableDeclaration(declaration) || ast.IsParameterDeclaration(declaration)) || ast.GetContainingFunction(declaration) == nil {
+		return nil
+	}
+	annotation := declaration.Type()
+	if annotation == nil || !b.ch.isTypeIdenticalTo(b.getTypeFromTypeNode(annotation, false), inferred) {
+		return nil
+	}
+	oldFlags := b.ctx.internalFlags
+	b.ctx.internalFlags |= nodebuilder.InternalFlagsTypefnRecipe
+	defer func() { b.ctx.internalFlags = oldFlags }()
+	return b.tryReuseExistingNodeHelper(annotation)
 }
 
 func (b *NodeBuilderImpl) typefnValueRecipeNode(expression *ast.Node) *ast.Node {
