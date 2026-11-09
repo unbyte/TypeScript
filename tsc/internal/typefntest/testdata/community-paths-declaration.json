@@ -1,0 +1,27 @@
+{
+  "files": {
+    "paths.ts": "community/rhf/paths.ts",
+    "contracts.ts": "community/rhf/contracts.ts",
+    "reference.ts": "community/rhf/paths-native.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/assertions.ts": "community-paths.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "rootDir": "."
+    },
+    "diagnostics": []
+  }
+}

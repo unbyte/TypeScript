@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 447 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 460 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -61,6 +61,10 @@ against the language specification; these checks establish the boundaries below.
   explicit unions, tuple metadata, domain failures and resource diagnostics. A
   512-character word passes a 4,096-unit string-work limit after replacing growing
   prefix concatenation with cursor slices. See [workload scope](workloads.md).
+* Passed: React Hook Form field-path workload: 13 fixtures covering 25 native-Type
+  comparisons, fixed outputs, recursive/nominal/opaque Types, depth truncation,
+  generic inference and forwarding, fresh declaration consumers with augmentation,
+  optional/indexed-access options and negative/resource cases. See [workload scope](workloads.md).
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.
@@ -187,3 +191,13 @@ go test ./tsc/internal/typefntest -run '^TestIntegration/(community-words|error-
 250.0 ms/op, 120,239,165 bytes/op, 835,707 allocations/op. This includes cold compiler
 projects, the DSL scanner, its native comparison and all corpus assertions. It is
 neither isolated VM throughput nor a native-versus-DSL speed comparison.
+
+Community field-path benchmark (same host/toolchain, three iterations):
+
+```sh
+go test ./tsc/internal/typefntest -run '^TestIntegration/(community-paths|error-community-paths)' -bench '^BenchmarkTypefnCommunityPaths$' -benchtime=3x -count=1
+```
+
+168.9 ms/op, 48,379,653 bytes/op, 276,568 allocations/op. This includes cold compiler
+setup, both path algorithms, assertions and native generic call checking. It is not
+an isolated VM or comparative speed measurement.

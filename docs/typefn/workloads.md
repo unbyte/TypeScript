@@ -38,5 +38,42 @@ It includes both implementations and assertions, so it cannot establish a VM spe
 
 Still missing for public `Words` compatibility: brand/tag normalization, public option
 defaulting and broad/infinite string fallback. Enum-specific behavior remains outside
-the language profile. MergeDeep, Jsonify and the other community families still need
+the language profile. MergeDeep, Jsonify and the remaining community families still need
 their own ports and evidence; this scanner does not stand in for them.
+
+## React Hook Form: field paths
+
+[Imperative traversal](../../tsc/internal/typefntest/testdata/community/rhf/paths.ts)
+and [native comparison](../../tsc/internal/typefntest/testdata/community/rhf/paths-native.ts).
+The [origin record](../../tsc/internal/typefntest/testdata/community/rhf/ORIGIN.md)
+records the source snapshots, selected shared contracts and MIT license.
+
+`FieldPaths` ports `FieldPath` for object/form inputs. It explicitly distributes
+unions, traverses native keys and indexed Types, distinguishes tuples from arrays,
+and carries a visited-Type union through recursion. Native equality preserves
+recursive and nominal identity. Primitive, browser-native and registered opaque
+Types are leaves. The default cutoff is ten segments; `FieldPathsAt` exposes
+deliberate truncation for depths 0 through 9. Exhausting a VM budget diagnoses
+instead of returning that truncated algorithmic result.
+
+Evidence:
+
+* 25 native comparisons plus fixed expectations for nested and optional properties,
+  required/optional never, unknown/any, browser objects, self/mutual recursion,
+  readonly/optional/variadic tuples, arrays, string/number/symbol keys and indexers,
+  nominal classes, unions, dotted keys and callable properties.
+* Direct and fresh declaration-only programs, repeated with exact optional properties
+  and unchecked indexed access enabled. Explicit depth and final-segment assertions
+  check the cutoff independently of the native oracle.
+* Registered nominal leaves and their subclasses stop traversal; unrelated classes
+  with distinct private brands remain traversable, including declaration consumers.
+* Generic specialization, native input inference, generic forwarding and invalid
+  path arguments. This workload exposed and now guards against a compiler stack
+  overflow during contextual literal checking of a deferred computation.
+* Consumer interface augmentation recomputes aliases and inferred native-call
+  results. A non-augmented consumer checks their original output.
+* Invalid input/depth diagnostics and call-depth exhaustion in source and fresh
+  declaration-only consumers, including skipLibCheck.
+
+ArrayPath and PathValue are not included yet. This port does not claim compatibility
+for unrestricted primitive roots or the complete React Hook Form library.

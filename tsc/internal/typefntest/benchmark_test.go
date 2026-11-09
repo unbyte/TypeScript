@@ -27,7 +27,17 @@ func BenchmarkTypefnProject(b *testing.B) {
 // Includes both the DSL scanner and its native comparison, and all cold-project
 // setup. This measures a verified workload, not isolated VM throughput or speedup.
 func BenchmarkTypefnCommunityWords(b *testing.B) {
-	data, err := os.ReadFile("testdata/community-words.json")
+	benchmarkTypefnFixture(b, "community-words")
+}
+
+// Includes native comparison and generic call checking as well as DSL traversal.
+func BenchmarkTypefnCommunityPaths(b *testing.B) {
+	benchmarkTypefnFixture(b, "community-paths")
+}
+
+func benchmarkTypefnFixture(b *testing.B, name string) {
+	b.Helper()
+	data, err := os.ReadFile("testdata/" + name + ".json")
 	if err != nil {
 		b.Fatal(err)
 	}

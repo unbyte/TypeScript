@@ -1,0 +1,20 @@
+{
+  "files": {
+    "paths.ts": "community/rhf/paths.ts",
+    "contracts.ts": "community/rhf/contracts.ts",
+    "consumer.ts": "error-community-paths-depth.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "consumer.ts",
+      "message": "Path depth must be an integer"
+    }
+  ]
+}

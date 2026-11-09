@@ -29,7 +29,7 @@ Tests must assert actual native Types and complete diagnostics, not printed comm
 | Editor and public API | partial | Services for all syntax, prelude completion, refactorings, auto-imports and API compatibility |
 | Resources/cancellation | partial | All specified work/allocation/cache budgets and cancellation within expensive native work |
 | Caching/performance | partial | Component-local tuple environments now bound recursive alias growth; completed-call and blocked-result reuse, eviction/provenance, wider workload measurements and native overhead remain |
-| Community workloads | partial | type-fest finite-literal word scanner compared with its native algorithm, including symbolic/options, metadata, negative, declaration and resource cases. Public Words normalization and the other workload families remain; see [executed workloads](workloads.md) |
+| Community workloads | partial | type-fest finite-literal word scanner and React Hook Form field-path traversal compared with native algorithms, including symbolic/options, metadata/nominal, negative, declaration, augmentation and resource cases. Public Words normalization and the remaining workload families remain; see [executed workloads](workloads.md) |
 
 The detailed required cases are in [conformance](spec/conformance.md), with
 workload families in its community traceability matrix. The calculator and HTTP
