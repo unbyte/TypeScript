@@ -17032,7 +17032,12 @@ func (c *Checker) getNonMissingTypeOfSymbol(symbol *ast.Symbol) *Type {
 func (c *Checker) getTypeOfInstantiatedSymbol(symbol *ast.Symbol) *Type {
 	links := c.valueSymbolLinks.Get(symbol)
 	if links.resolvedType == nil {
-		links.resolvedType = c.instantiateType(c.getTypeOfSymbol(links.target), links.mapper)
+		failureEpoch := c.typefnFailureEpoch()
+		result := c.instantiateType(c.getTypeOfSymbol(links.target), links.mapper)
+		if c.typefnFailedSince(failureEpoch) {
+			return c.errorType
+		}
+		links.resolvedType = result
 	}
 	return links.resolvedType
 }
@@ -17040,7 +17045,12 @@ func (c *Checker) getTypeOfInstantiatedSymbol(symbol *ast.Symbol) *Type {
 func (c *Checker) getWriteTypeOfInstantiatedSymbol(symbol *ast.Symbol) *Type {
 	links := c.valueSymbolLinks.Get(symbol)
 	if links.getWriteType() == nil {
-		links.setWriteType(c, c.instantiateType(c.getWriteTypeOfSymbol(links.target), links.mapper))
+		failureEpoch := c.typefnFailureEpoch()
+		result := c.instantiateType(c.getWriteTypeOfSymbol(links.target), links.mapper)
+		if c.typefnFailedSince(failureEpoch) {
+			return c.errorType
+		}
+		links.setWriteType(c, result)
 	}
 	return links.getWriteType()
 }

@@ -1,0 +1,12 @@
+import type { Box, Read, WriteBox } from "./out/library";
+type First = Read<0 /* first */>;
+type Second = Read<0 /* second */>;
+type DirectFirst = Box<0 /* direct first */>["value"];
+type DirectSecond = Box<0 /* direct second */>["value"];
+declare const bad: WriteBox<0>;
+bad.value = 1;
+bad.value = 2;
+type Assert<T extends true> = T;
+type SuccessfulSibling = Assert<Read<1> extends 1 ? true : false>;
+declare const good: WriteBox<1>;
+good.value = 1;

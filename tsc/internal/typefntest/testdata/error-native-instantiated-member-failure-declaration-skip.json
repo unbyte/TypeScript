@@ -1,0 +1,68 @@
+{
+  "files": {
+    "library.ts": "native-instantiated-member-failure-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-native-instantiated-member-failure-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Instantiated member failure",
+        "at": "Read<0 /* first */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Instantiated member failure",
+        "at": "Read<0 /* second */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Instantiated member failure",
+        "at": "Box<0 /* direct first */>[\"value\"]"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Instantiated member failure",
+        "at": "Box<0 /* direct second */>[\"value\"]"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Instantiated member failure",
+        "at": "bad.value = 1"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Instantiated member failure",
+        "at": "bad.value = 2"
+      }
+    ]
+  }
+}

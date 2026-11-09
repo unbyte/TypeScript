@@ -152,7 +152,9 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   this generation before publishing either a positive or negative proof. A
   comparison that reaches a failed computation unwinds its assumptions without
   caching them or replacing the DSL diagnostic with a native assignability error.
-  Unrelated later native comparisons retain their normal diagnostics. Other
+  Unrelated later native comparisons retain their normal diagnostics. Instantiated
+  generic members also check failure before caching their read or setter-write
+  Types, so repeated indexed reads and assignments replay at their own uses. Other
   native cache publishers still need equivalent coverage; this is not a complete
   cache transaction mechanism.
 * Exhaustive tuple/property provenance and complete recursive builder adapters
