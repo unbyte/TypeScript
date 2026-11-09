@@ -1820,7 +1820,9 @@ func (tx *DeclarationTransformer) transformTopLevelDeclaration(input *ast.Node) 
 }
 
 func (tx *DeclarationTransformer) transformTypeAliasDeclaration(input *ast.TypeAliasDeclaration) *ast.Node {
-	tx.checkTypefnDeclaration(input.AsNode())
+	if !tx.checkTypefnDeclaration(input.AsNode()) {
+		return input.AsNode()
+	}
 	tx.needsDeclare = false
 	t := tx.Visitor().Visit(input.Type)
 	if t == nil {

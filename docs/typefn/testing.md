@@ -1,11 +1,11 @@
 # Testing and validation
 
-Latest verification recorded on 2026-11-08, including mixed constructor arguments, native
+Latest verification recorded on 2026-11-09, including mixed constructor arguments, native
 constructors, native island capture bridges and native lexical invocation environments. Toolchain: Go 1.27.0 and Node 24.22.1 on Linux/amd64;
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 393 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 398 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -22,6 +22,8 @@ against the language specification; these checks establish the boundaries below.
   namespace scope, native identities and the calculator/route source modules.
   Direct stripped-dependency failures cover private/exported helpers, imports and
   distinct namespace members, with authored declaration dependencies as a control.
+  Transitive cases cover constructor aliases, native aliases, module boundaries and
+  cycles; an explicitly typed native runtime body is not treated as an emitted recipe.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.

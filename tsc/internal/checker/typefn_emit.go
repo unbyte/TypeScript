@@ -5,11 +5,13 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/printer"
 )
 
-// GetTypefnDeclarationDependencies marks dependencies of a retained source recipe
+// GetTypefnDeclarationDependencies resolves dependencies of a retained source recipe
 // using native declaration visibility. Walk the lexical syntax, including dead
 // branches and nested helpers; executing the recipe cannot discover this closure.
 // Local DSL and native island binders are resolved in their original scopes.
-func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node) []printer.TypefnDeclarationDependency {
+// Transitive validation passes makeVisible=false: it must not schedule declarations
+// from a dependency module for emission into the current module.
+func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node, makeVisible bool) []printer.TypefnDeclarationDependency {
 	r.checkerMu.Lock()
 	defer r.checkerMu.Unlock()
 	c := r.checker
@@ -18,6 +20,14 @@ func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node) []printe
 	seen := map[referenceKey]bool{}
 	var visit func(*ast.Node) bool
 	visit = func(n *ast.Node) bool {
+		// An explicitly annotated native declaration exposes its written Type.
+		// Its implementation/default initializer is not part of that surface.
+		// DSL bodies have different node kinds and are always retained in full.
+		if parent := n.Parent; parent != nil && parent.Type() != nil &&
+			((ast.IsVariableDeclaration(parent) || ast.IsPropertyDeclaration(parent) || ast.IsParameterDeclaration(parent)) && parent.Initializer() == n ||
+				ast.IsFunctionLike(parent) && parent.Body() == n) {
+			return false
+		}
 		var name *ast.Node
 		meaning := ast.SymbolFlagsType
 		switch n.Kind {
@@ -28,6 +38,10 @@ func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node) []printe
 			}
 		case ast.KindTypeReference:
 			name = n.AsTypeReferenceNode().TypeName
+		case ast.KindExpressionWithTypeArguments:
+			if ast.IsEntityName(n.Expression()) || ast.IsEntityNameExpression(n.Expression()) {
+				name = n.Expression()
+			}
 		case ast.KindTypeQuery:
 			name = n.AsTypeQueryNode().ExprName
 			meaning = ast.SymbolFlagsValue | ast.SymbolFlagsExportValue
@@ -69,7 +83,7 @@ func (r *EmitResolver) GetTypefnDeclarationDependencies(node *ast.Node) []printe
 						// parameter is a free recipe capture and needs explicit lifting instead.
 						var visible *printer.SymbolAccessibilityResult
 						if root.Flags()&ast.SymbolFlagsTypeParameter == 0 {
-							visible = c.hasVisibleDeclarations(root, true)
+							visible = c.hasVisibleDeclarations(root, makeVisible)
 						}
 						if visible != nil {
 							dependency.SymbolAccessibilityResult = *visible

@@ -1,0 +1,23 @@
+{
+  "files": {
+    "library.ts": "error-declaration-stripped-alias.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "stripInternal": true
+  },
+  "outputs": {},
+  "emitSkipped": true,
+  "diagnostics": [
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "library.ts",
+      "message": "stripped declaration dependency"
+    }
+  ]
+}

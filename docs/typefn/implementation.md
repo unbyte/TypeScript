@@ -673,3 +673,13 @@ private/exported helpers and imports from another source module. Namespace impor
 track distinct target members; already-authored declaration dependencies remain
 available and are not treated as newly stripped source. Transitive native dependency
 validation and cross-file failure propagation still require further work.
+
+Validation for emitted definitions and constructor aliases now follows transitive
+source dependencies with an iterative, cycle-safe walk. A stripped helper behind a
+native alias or in another source module blocks the importing recipe too; cross-file
+failures include producer provenance. Inspection does not consume or enqueue the
+other module's native visibility work. Explicitly annotated native declarations
+contribute their type surface rather than their runtime bodies/default initializers.
+Tests cover alias factories, indirect aliases, cross-module failures, recursive
+native alias graphs and this native/DSL boundary. Ordinary native references and
+inferred exports still need the same complete dependency-failure guarantees.

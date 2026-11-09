@@ -55,7 +55,19 @@ export typefn Public<T> {
 	resolver := c.NewEmitResolver(printer.NewEmitContext())
 	file := program.GetSourceFile("/main.ts")
 	declaration := file.Statements.Nodes[len(file.Statements.Nodes)-1]
-	dependencies := resolver.GetTypefnDeclarationDependencies(declaration)
+	// Inspecting another module's dependency graph must not consume or schedule
+	// its native visibility work. The later emitting walk must still retain it.
+	for _, dependency := range resolver.GetTypefnDeclarationDependencies(declaration, false) {
+		if len(dependency.AliasesToMakeVisible) != 0 {
+			t.Fatalf("inspection queued visibility: %+v", dependency)
+		}
+	}
+	for _, statement := range file.Statements.Nodes {
+		if statement.Name() != nil && (statement.Name().Text() == "Dead" || statement.Name().Text() == "Private") && resolver.IsDeclarationVisible(statement) {
+			t.Fatalf("inspection published private declaration %s", statement.Name().Text())
+		}
+	}
+	dependencies := resolver.GetTypefnDeclarationDependencies(declaration, true)
 	var names []string
 	for _, dependency := range dependencies {
 		if dependency.Accessibility != printer.SymbolAccessibilityAccessible {
@@ -79,14 +91,14 @@ export typefn Public<T> {
 	}
 	// A second walk still resolves all lexical references, but native visibility
 	// already owns the retained declarations and must not queue them a second time.
-	for _, dependency := range resolver.GetTypefnDeclarationDependencies(declaration) {
+	for _, dependency := range resolver.GetTypefnDeclarationDependencies(declaration, true) {
 		if dependency.Accessibility != printer.SymbolAccessibilityAccessible || len(dependency.AliasesToMakeVisible) != 0 {
 			t.Fatalf("unstable dependency closure: %+v", dependency)
 		}
 	}
 	outer := file.Statements.Nodes[len(file.Statements.Nodes)-2]
 	escaped := outer.AsFunctionDeclaration().Body.AsBlock().Statements.Nodes[1]
-	dependencies = resolver.GetTypefnDeclarationDependencies(escaped)
+	dependencies = resolver.GetTypefnDeclarationDependencies(escaped, true)
 	if len(dependencies) != 2 {
 		t.Fatalf("escaped dependencies: %+v", dependencies)
 	}

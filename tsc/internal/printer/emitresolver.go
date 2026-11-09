@@ -105,7 +105,7 @@ type EmitResolver interface {
 
 	// declaration emit checker functionality projections
 	TypefnDeclarationStatus(node *ast.Node) (needsABI, valid bool)
-	GetTypefnDeclarationDependencies(node *ast.Node) []TypefnDeclarationDependency
+	GetTypefnDeclarationDependencies(node *ast.Node, makeVisible bool) []TypefnDeclarationDependency
 	PrecalculateDeclarationEmitVisibility(file *ast.SourceFile)
 	IsSymbolAccessible(symbol *ast.Symbol, enclosingDeclaration *ast.Node, meaning ast.SymbolFlags, shouldComputeAliasToMarkVisible bool) SymbolAccessibilityResult
 	IsEntityNameVisible(entityName *ast.Node, enclosingDeclaration *ast.Node) SymbolAccessibilityResult // previously SymbolVisibilityResult in strada - ErrorModuleName never set
