@@ -1,0 +1,25 @@
+{
+  "files": {
+    "library.ts": "declaration-non-null.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declaration-non-null-augmented.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": false
+    },
+    "diagnostics": []
+  }
+}

@@ -438,6 +438,11 @@ Loops and recursion share finite work/memory limits with native operations.
 Exhaustion reports a diagnostic; cancellation ends stale editor work. Neither
 means that the requested Type is never. Exported declarations retain executable
 typefn recipes and require this fork; stock TypeScript cannot consume the syntax.
+Inferred declarations preserve supported call/forwarding recipes and explicit
+non-null assertions (`value!`). Unsupported flow narrowing of a computed value
+requires an exportable return annotation/helper; declaration emission reports this
+instead of freezing the producer's narrowed result. See the current
+[implementation boundaries](implementation.md).
 
 ## 12. Syntax and API quick reference
 

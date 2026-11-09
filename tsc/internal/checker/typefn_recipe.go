@@ -149,7 +149,23 @@ func (c *Checker) typefnParameterHasRecipe(node *ast.Node) bool {
 }
 
 func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferred *Type) *ast.Node {
-	if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnDeclaration == 0 {
+	if b.ctx.internalFlags&nodebuilder.InternalFlagsTypefnDeclaration == 0 || b.ch.compilerOptions.GetTypefnVersion() != 1 || expression == nil {
+		return nil
+	}
+	expression = ast.SkipParentheses(expression)
+	if ast.IsNonNullExpression(expression) && !ast.IsOptionalChain(expression) {
+		operand := expression.Expression()
+		operandType := b.ch.instantiateType(b.ch.getTypeOfExpression(operand), b.ctx.mapper)
+		if !b.ch.isTypeIdenticalTo(b.ch.GetNonNullableType(operandType), inferred) {
+			return nil
+		}
+		if recipe := b.tryTypefnExpressionRecipe(operand, operandType); recipe != nil {
+			// Use the native structural operation, not a potentially shadowed
+			// NonNullable alias. Keep it even when the producer's result is never
+			// or its non-strict checker currently erases nullish constituents.
+			empty := b.f.NewTypeLiteralNode(b.f.NewNodeList([]*ast.Node{}))
+			return b.f.NewIntersectionTypeNode(b.f.NewNodeList([]*ast.Node{recipe, empty}))
+		}
 		return nil
 	}
 	recipe := b.ch.typefnExpressionRecipe(expression)

@@ -1,0 +1,22 @@
+import {direct, wrapped, local, parameter, twice, Box, initiallyNever, anyValue, unknownValue, neverValue} from "./out/library";
+import type {Open} from "./out/library";
+type Assert<T extends true> = T;
+type Equal<A,B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+declare module "./out/library" { interface Open { second:number } }
+const first = local<Open>();
+const second = parameter<Open>();
+const third = twice<Open>();
+const box = new Box<Open>();
+const fourth = box.value;
+const fifth = box.method();
+type Direct = Assert<Equal<typeof direct,2>>;
+type Wrapped = Assert<Equal<typeof wrapped.value,2>>;
+type First = Assert<Equal<typeof first,2>>;
+type Second = Assert<Equal<typeof second,2>>;
+type Third = Assert<Equal<typeof third,2>>;
+type Fourth = Assert<Equal<typeof fourth,2>>;
+type Fifth = Assert<Equal<typeof fifth,2>>;
+type InitiallyNever = Assert<Equal<typeof initiallyNever,2>>;
+type AnyValue = Assert<Equal<typeof anyValue,any>>;
+type UnknownValue = Assert<Equal<typeof unknownValue,{}>>;
+type NeverValue = Assert<Equal<typeof neverValue,never>>;

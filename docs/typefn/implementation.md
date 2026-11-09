@@ -860,6 +860,15 @@ of serializing the producer's narrowed value. This conservative boundary require
 a written exportable return annotation until the narrowing has its own recipe;
 it does not change checking or flow analysis of the source program.
 
+Explicit non-null assertions now compose the operand's source recipe with the
+native `& {}` operation. This avoids a generated reference to a shadowable
+`NonNullable` alias and retains recalculation even when the producer currently
+gets `never`. Written local/parameter annotations, direct calls, nested assertions,
+object properties, methods and getters use the same composition. A non-strict
+producer still emits the assertion operation for a strict consumer. Optional
+chains and arbitrary flow narrowing are not covered by this operator recipe;
+unnameable operands retain the ordinary/forced/builder emission failure boundary.
+
 
 Native specialization expressions (`read<Open>` without a call) now retain their
 written type arguments in a native value query. Strict source copying keeps computed
