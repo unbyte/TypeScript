@@ -154,7 +154,10 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   caching them or replacing the DSL diagnostic with a native assignability error.
   Unrelated later native comparisons retain their normal diagnostics. Instantiated
   generic members also check failure before caching their read or setter-write
-  Types, so repeated indexed reads and assignments replay at their own uses. Other
+  Types, so repeated indexed reads and assignments replay at their own uses.
+  Native substitution, conditional-root and generic-alias caches check the same
+  failure generation before publication. This covers failures inside tuple
+  branches, distributive conditionals and results absorbed by unknown. Other
   native cache publishers still need equivalent coverage; this is not a complete
   cache transaction mechanism.
   Native type-node resolution establishes an outer source site when an editor or

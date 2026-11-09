@@ -41,6 +41,27 @@ type Second = Index<0 /* second */>;
 	})
 }
 
+func TestTypefnConditionalFailureQueryOrder(t *testing.T) {
+	const header = `typefn Guard<N> {
+  if (N == 0) { fail<"Member replay failure">; }
+  return N;
+}
+`
+	for _, test := range []struct {
+		name, declaration, input string
+	}{
+		{"tuple", "type Container<N> = N extends number ? [Guard<N>] : [N];", "0"},
+		{"absorbed", "type Container<N> = N extends number ? Guard<N> | unknown : N;", "0"},
+		{"distributed", "type Container<N> = N extends number ? [Guard<N>] : [N];", "0 | 1"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			sites := []string{"Container<" + test.input + " /* first */>", "Container<" + test.input + " /* second */>"}
+			source := header + test.declaration + "\ntype First = " + sites[0] + ";\ntype Second = " + sites[1] + ";\n"
+			testTypefnMemberFailureQueryOrder(t, source, false, sites)
+		})
+	}
+}
+
 func testTypefnMemberFailureQueryOrder(t *testing.T, source string, typefnQuery bool, sites []string) {
 	t.Helper()
 	modes := []string{"typefn"}

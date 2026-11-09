@@ -22921,13 +22921,15 @@ func (c *Checker) instantiateTypeWithAlias(t *Type, m *TypeMapper, alias *TypeAl
 	c.TotalInstantiationCount++
 	c.instantiationCount++
 	c.instantiationStack = append(c.instantiationStack, t)
+	failureEpoch := c.typefnFailureEpoch()
 	result := c.instantiateTypeWorker(t, m, alias)
-	if c.typefnNativeCanceled() {
+	failed := c.typefnFailedSince(failureEpoch)
+	if failed {
 		result = c.errorType
 	}
 	if index == -1 {
 		c.popActiveMapper()
-	} else if !c.typefnNativeCanceled() {
+	} else if !failed {
 		c.activeTypeMappersCaches[index].set(key, result)
 	}
 	c.instantiationStack[len(c.instantiationStack)-1] = nil
@@ -23330,6 +23332,7 @@ func (c *Checker) getConditionalTypeInstantiation(t *Type, mapper *TypeMapper, f
 		key := getConditionalTypeKey(typeArguments, alias, forConstraint)
 		result := root.instantiations[key]
 		if result == nil {
+			failureEpoch := c.typefnFailureEpoch()
 			newMapper := newTypeMapper(root.outerTypeParameters, typeArguments)
 			checkType := root.checkType
 			var distributionType *Type
@@ -23346,9 +23349,10 @@ func (c *Checker) getConditionalTypeInstantiation(t *Type, mapper *TypeMapper, f
 			} else {
 				result = c.getConditionalType(root, newMapper, forConstraint, alias)
 			}
-			if !c.typefnNativeCanceled() {
-				root.instantiations[key] = result
+			if c.typefnFailedSince(failureEpoch) {
+				return c.errorType
 			}
+			root.instantiations[key] = result
 		}
 		return result
 	}
@@ -24616,8 +24620,12 @@ func (c *Checker) getTypeAliasInstantiationWorker(symbol *ast.Symbol, typeArgume
 	key := getTypeAliasInstantiationKey(typeArguments, alias)
 	instantiation := links.instantiations[key]
 	if instantiation == nil {
+		failureEpoch := c.typefnFailureEpoch()
 		mapper := newTypeMapper(typeParameters, c.fillMissingTypeArguments(typeArguments, typeParameters, c.getMinTypeArgumentCount(typeParameters), ast.IsInJSFile(symbol.ValueDeclaration())))
 		instantiation = c.instantiateTypeWithAlias(t, mapper, alias)
+		if c.typefnFailedSince(failureEpoch) {
+			return c.errorType
+		}
 		if t.flags&TypeFlagsTypefn == 0 || !c.isErrorType(instantiation) {
 			links.instantiations[key] = instantiation
 		}

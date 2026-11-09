@@ -1,0 +1,14 @@
+import type { Tuple, Conditional, Absorbed } from "./library";
+type First = Tuple<0 /* first */>[0];
+type Second = Tuple<0 /* second */>[0];
+type ConditionalFirst = Conditional<0 /* conditional first */>[0];
+type ConditionalSecond = Conditional<0 /* conditional second */>[0];
+type AbsorbedFirst = Absorbed<0 /* absorbed first */>;
+type AbsorbedSecond = Absorbed<0 /* absorbed second */>;
+type DistributedFirst = Conditional<0 | 1 /* distributed first */>;
+type DistributedSecond = Conditional<0 | 1 /* distributed second */>;
+type Assert<T extends true> = T;
+type Good = Assert<Tuple<1>[0] extends 1 ? true : false>;
+type Unselected = Assert<Conditional<"x">[0] extends "x" ? true : false>;
+type IsAny<T> = 0 extends 1 & T ? true : false;
+type UnknownShape = Assert<IsAny<Absorbed<1>> extends false ? true : false>;

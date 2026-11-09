@@ -1,0 +1,69 @@
+{
+  "files": {
+    "main.ts": "error-native-tuple-cache-failure.ts",
+    "library.ts": "native-conditional-container-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Tuple<0 /* first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Tuple<0 /* second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Conditional<0 /* conditional first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Conditional<0 /* conditional second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Absorbed<0 /* absorbed first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Absorbed<0 /* absorbed second */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Conditional<0 | 1 /* distributed first */>"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "Conditional<0 | 1 /* distributed second */>"
+    }
+  ]
+}
