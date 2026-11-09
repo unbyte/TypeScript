@@ -168,6 +168,9 @@ func (c *Checker) areTypesComparable(type1 *Type, type2 *Type) bool {
 }
 
 func (c *Checker) isTypeRelatedTo(source *Type, target *Type, relation *Relation) bool {
+	if c.typefn != nil && !c.pollTypefnNativeRelation() {
+		return false
+	}
 	if source != target && (source.flags|target.flags)&TypeFlagsTypefn != 0 {
 		a, ra := splitTypefn(source)
 		b, rb := splitTypefn(target)
@@ -377,6 +380,10 @@ func (c *Checker) checkTypeRelatedToEx(
 	r.errorNode = errorNode
 	r.relationCount = (16_000_000 - relation.size()) / 8
 	result := r.isRelatedToEx(source, target, RecursionFlagsBoth, errorNode != nil /*reportErrors*/, headMessage, IntersectionStateNone)
+	if c.typefnNativeCanceled() {
+		c.putRelater(r)
+		return false
+	}
 	if r.overflow {
 		// Record this relation as having failed such that we don't attempt the overflowing operation again.
 		id, _ := getRelationKey(source, target, IntersectionStateNone, relation == c.identityRelation, false /*ignoreConstraints*/)
@@ -2643,6 +2650,9 @@ func (r *Relater) isRelatedTo(source *Type, target *Type, recursionFlags Recursi
 }
 
 func (r *Relater) isRelatedToEx(originalSource *Type, originalTarget *Type, recursionFlags RecursionFlags, reportErrors bool, headMessage *diagnostics.Message, intersectionState IntersectionState) Ternary {
+	if r.c.typefn != nil && !r.c.pollTypefnNativeRelation() {
+		return TernaryFalse
+	}
 	if originalSource != originalTarget && (originalSource.flags|originalTarget.flags)&TypeFlagsTypefn != 0 {
 		a, ra := splitTypefn(originalSource)
 		b, rb := splitTypefn(originalTarget)
@@ -3218,6 +3228,10 @@ func (r *Relater) recursiveTypeRelatedTo(source *Type, target *Type, reportError
 		r.targetStack = r.targetStack[:len(r.targetStack)-1]
 	}
 	r.expandingFlags = saveExpandingFlags
+	if r.c.typefnNativeCanceled() {
+		r.resetMaybeStack(maybeStart, propagatingVarianceFlags, false)
+		return TernaryFalse
+	}
 	if result != TernaryFalse {
 		if result == TernaryTrue || (len(r.sourceStack) == 0 && len(r.targetStack) == 0) {
 			if result == TernaryTrue || result == TernaryMaybe {
@@ -3242,6 +3256,7 @@ func (r *Relater) recursiveTypeRelatedTo(source *Type, target *Type, reportError
 }
 
 func (r *Relater) resetMaybeStack(maybeStart int, propagatingVarianceFlags RelationComparisonResult, markAllAsSucceeded bool) {
+	markAllAsSucceeded = markAllAsSucceeded && !r.c.typefnNativeCanceled()
 	for i := maybeStart; i < len(r.maybeKeys); i++ {
 		r.maybeKeysSet.Delete(r.maybeKeys[i])
 		if markAllAsSucceeded {
@@ -4327,6 +4342,9 @@ func (r *Relater) propertiesRelatedTo(source *Type, target *Type, reportErrors b
 	properties := r.c.getPropertiesOfType(target)
 	numericNamesOnly := isTupleType(source) && isTupleType(target)
 	for _, targetProp := range excludeProperties(properties, excludedProperties) {
+		if r.c.typefn != nil && !r.c.pollTypefnNativeRelation() {
+			return TernaryFalse
+		}
 		name := targetProp.Name()
 		if targetProp.Flags()&ast.SymbolFlagsPrototype == 0 && (!numericNamesOnly || isNumericLiteralName(name) || name == "length") && (!optionalsOnly || targetProp.Flags()&ast.SymbolFlagsOptional != 0) {
 			sourceProp := r.c.getPropertyOfType(source, name)

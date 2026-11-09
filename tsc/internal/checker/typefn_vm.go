@@ -31,6 +31,8 @@ type typefnVM struct {
 	steps, depth, nodes int
 	liveBytes           int
 	failed              bool
+	nativeCanceled      bool
+	nativeRelationSteps int
 	blocked             bool
 	checks              []*Type
 	checkSet            map[*Type]bool
@@ -85,6 +87,9 @@ func (c *Checker) runTypefn(node *ast.Node, run func(*typefnVM) *Type) *Type {
 	v.checks, v.checkSet = nil, nil
 	defer func() { v.checks, v.checkSet = saved, savedSet }()
 	result := run(v)
+	if c.isCanceled() {
+		v.failed = true
+	}
 	if v.failed {
 		return c.errorType
 	}
