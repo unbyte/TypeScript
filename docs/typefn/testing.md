@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 541 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 544 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -123,6 +123,9 @@ against the language specification; these checks establish the boundaries below.
   declaration consumers pass in both skipLibCheck modes. A closed local helper
   whose current result is literal still suppresses ordinary/forced/builder output
   when its annotation cannot be named. Full harness/checker/LS suites pass.
+  Optional parameter recipes preserve implicit undefined while defaulted parameters
+  remain defined. Strict/non-strict producers and consumers, including a non-strict
+  producer with a strict augmented consumer, pass. Full harness/checker/LS pass.
 * Passed: generated calculator conformance (S20). A deterministic corpus contains
   144 expression trees, each rendered with minimal parentheses and again with
   redundant groups and ASCII whitespace. An independent Go `math/big` tree evaluator
@@ -160,10 +163,11 @@ against the language specification; these checks establish the boundaries below.
   Parser/binder/printer/checker/LS suites also pass at written-recipe emission; optional-provenance assertions pass
   in both exact-optional modes, and the added generic-body dependency assertion passes.
   Full checker, harness and language-service suites rerun after inferred call recipes.
-* Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
-  calls, contextual typing, type-parameter defaults and the type-system selection below,
-  including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after exact declared-constraint forwarding.
+* Passed: the full native compiler baseline suite (`TestLocal`): 13,811 configurations,
+  including diagnostics, emit, type/symbol and source-map checks. The runner skipped
+  1,721 configurations through its existing filters. This full run follows optional
+  parameter recipe support. Earlier focused selections passed 751 configurations
+  with 23 skipped; their narrower command remains useful for individual changes.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
@@ -197,6 +201,7 @@ than the latest seven-package run):
 go test ./tsc/internal/typefntest ./tsc/internal/tsoptions ./tsc/internal/parser ./tsc/internal/printer ./tsc/internal/ast ./tsc/internal/astnav ./tsc/internal/api/encoder ./tsc/internal/binder ./tsc/internal/checker ./tsc/internal/compiler ./tsc/internal/ls ./tsc/internal/format ./tsc/internal/ls/lsutil ./tsc/internal/project ./tsc/internal/lsp ./tsc/internal/core ./tools/gen-proto -count=1
 go test -race ./tsc/internal/typefntest ./tsc/internal/parser ./tsc/internal/ls ./tsc/internal/project ./tsc/internal/lsp -run 'TestIntegration|Typefn' -count=1
 go test ./tsc/internal/testrunner -run '^TestLocal/(declarationEmit.*|generic.*|contextual.*|typeParameterDefault.*|conditionalTypes[12]|mappedTypes[12]|unionTypeReduction2?|templateLiteralTypes[12])\.ts' -count=1
+go test ./tsc/internal/testrunner -run '^TestLocal$' -count=1 -timeout=20m
 go build -o built/local/tsc ./tsc/cmd/tsc
 built/local/tsc --project docs/typefn/examples/editor/tsconfig.json
 python3 docs/typefn/probes/check-where-native.py built/local/tsc

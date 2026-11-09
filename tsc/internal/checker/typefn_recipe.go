@@ -229,21 +229,35 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 
 // A local value's written annotation is already a source recipe. Reuse it in
 // the enclosing signature instead of exporting a query to a body-local name.
-// The equivalence check excludes optionality, flow narrowing and specialization
-// changes; strict copying must still prove every referenced name is available.
+// The equivalence check preserves optional parameters and excludes flow narrowing
+// and specialization changes. Strict copying still validates referenced names.
 func (b *NodeBuilderImpl) typefnLocalAnnotationRecipe(symbol *ast.Symbol, inferred *Type) *ast.Node {
 	declaration := symbol.ValueDeclaration()
 	if declaration == nil || !(ast.IsVariableDeclaration(declaration) || ast.IsParameterDeclaration(declaration)) || ast.GetContainingFunction(declaration) == nil {
 		return nil
 	}
 	annotation := declaration.Type()
-	if annotation == nil || !b.ch.isTypeIdenticalTo(b.getTypeFromTypeNode(annotation, false), inferred) {
+	if annotation == nil {
+		return nil
+	}
+	annotationType := b.getTypeFromTypeNode(annotation, false)
+	includeUndefined := ast.IsParameterDeclaration(declaration) && declaration.QuestionToken() != nil
+	if includeUndefined && b.ch.strictNullChecks {
+		annotationType = b.ch.getOptionalType(annotationType, false)
+	}
+	if !b.ch.isTypeIdenticalTo(annotationType, inferred) {
 		return nil
 	}
 	oldFlags := b.ctx.internalFlags
 	b.ctx.internalFlags |= nodebuilder.InternalFlagsTypefnRecipe
 	defer func() { b.ctx.internalFlags = oldFlags }()
-	return b.tryReuseExistingNodeHelper(annotation)
+	result := b.tryReuseExistingNodeHelper(annotation)
+	if result != nil && includeUndefined {
+		// Keep the written question mark even when the producer erases nullish
+		// Types. A strict declaration consumer must still see the optional read.
+		return b.f.NewUnionTypeNode(b.f.NewNodeList([]*ast.Node{result, b.f.NewKeywordTypeNode(ast.KindUndefinedKeyword)}))
+	}
+	return result
 }
 
 func (b *NodeBuilderImpl) typefnValueRecipeNode(expression *ast.Node) *ast.Node {

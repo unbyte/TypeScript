@@ -846,13 +846,15 @@ and explicit widened annotations remain native. A stripped forwarded value is
 rejected in ordinary, forced and builder output. Arbitrary expression/value flow,
 local lifting and inference-origin reconstruction remain separate obligations.
 
-Local variables and required parameters with written annotations can supply an
+Local variables and parameters with written annotations can supply an
 inferred return recipe directly when the annotation matches the inferred Type.
 Strict source copying retains native binders and nameability checks, including
 in methods/getters and explicitly written unions with undefined. Unnameable local
 typefn dependencies still suppress ordinary, forced and builder emission, even
-when the current result is a literal. This does not reconstruct flow-narrowed or
-implicitly optional annotations, or lift arbitrary local definitions.
+when the current result is a literal. Optional parameters retain their implicit
+undefined read, including from a non-strict producer to a strict consumer;
+defaulted parameters remain defined. This does not reconstruct flow narrowing or
+lift arbitrary local definitions.
 
 
 Native specialization expressions (`read<Open>` without a call) now retain their

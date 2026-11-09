@@ -1,4 +1,4 @@
-import {count, optionalCount, literal, local, optional, parameter, Box} from "./out/library";
+import {count, optionalCount, literal, local, optional, parameter, optionalParameter, defaultParameter, Box} from "./out/library";
 import type {Open} from "./out/library";
 type Assert<T extends true> = T;
 type Equal<A,B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
@@ -16,3 +16,7 @@ type Second = Assert<Equal<typeof second,1|undefined>>;
 type Third = Assert<Equal<typeof third,1>>;
 type Fourth = Assert<Equal<typeof fourth,1>>;
 type Fifth = Assert<Equal<typeof fifth,1>>;
+const optionalArgument = optionalParameter<Open>();
+const defaultArgument = defaultParameter<Open>();
+type OptionalArgument = Assert<Equal<typeof optionalArgument,1|undefined>>;
+type DefaultArgument = Assert<Equal<typeof defaultArgument,1>>;

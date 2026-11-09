@@ -18,3 +18,5 @@ export class Box<T extends object> {
 export const count = local<Open>();
 export const optionalCount = optional<Open>();
 export const literal = 1;
+export function optionalParameter<T extends object>(value?:Count<T>) { return value; }
+export function defaultParameter<T extends object>(value:Count<T> = read<T>()) { return value; }
