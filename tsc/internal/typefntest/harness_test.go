@@ -25,12 +25,13 @@ import (
 )
 
 type fixture struct {
-	Files       map[string]string `json:"files"` // virtual filename -> fixture source filename
-	Options     map[string]any    `json:"options"`
-	Diagnostics []wantDiagnostic  `json:"diagnostics"`
-	Outputs     map[string]string `json:"outputs"` // exact output text, including newlines
-	EmitSkipped bool              `json:"emitSkipped"`
-	Consumer    *fixture          `json:"consumer"` // fresh checker with emitted declarations and consumer files only
+	Files       map[string]string    `json:"files"` // virtual filename -> fixture source filename
+	Options     map[string]any       `json:"options"`
+	Diagnostics []wantDiagnostic     `json:"diagnostics"`
+	Outputs     map[string]string    `json:"outputs"` // exact output text, including newlines
+	EmitSkipped bool                 `json:"emitSkipped"`
+	Consumer    *fixture             `json:"consumer"` // fresh checker with emitted declarations and consumer files only
+	emitOptions compiler.EmitOptions // API-only modes exercised by declaration tests
 }
 
 type wantDiagnostic struct {
@@ -154,12 +155,14 @@ func runFixtureSources(t testing.TB, f fixture, files map[string]string, roots [
 		if f.Outputs != nil || f.Consumer != nil {
 			outputs := map[string]string{}
 			var outputMu sync.Mutex
-			result := p.Emit(t.Context(), compiler.EmitOptions{WriteFile: func(name tspath.RootedFilePath, text string, _ *compiler.WriteFileData) error {
+			emitOptions := f.emitOptions
+			emitOptions.WriteFile = func(name tspath.RootedFilePath, text string, _ *compiler.WriteFileData) error {
 				outputMu.Lock()
 				defer outputMu.Unlock()
 				outputs[strings.TrimPrefix(string(name), "/project/")] = text
 				return nil
-			}})
+			}
+			result := p.Emit(t.Context(), emitOptions)
 			add("emit", result.Diagnostics)
 			if result.EmitSkipped != f.EmitSkipped {
 				t.Errorf("emit skipped: got %v, want %v", result.EmitSkipped, f.EmitSkipped)

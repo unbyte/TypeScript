@@ -1,0 +1,37 @@
+{
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [
+    {
+      "phase": "syntax",
+      "code": -1,
+      "file": "bad.ts",
+      "message": "expected a DSL expression"
+    },
+    {
+      "phase": "syntax",
+      "code": 1005,
+      "file": "bad.ts",
+      "message": "';' expected"
+    },
+    {
+      "phase": "emit",
+      "code": -1,
+      "file": "bad.ts",
+      "message": "cannot emit an invalid declaration recipe"
+    }
+  ],
+  "files": {
+    "bad.ts": "error-declaration-malformed-recipe.ts",
+    "native.ts": "declaration-independent-native.ts"
+  },
+  "outputs": {
+    "out/native.d.ts": "export type Valid = 1;\n"
+  },
+  "emitSkipped": true
+}

@@ -671,8 +671,7 @@ Recipe dependency records now retain both the written import/name and its resolv
 declarations. `stripInternal` rejects direct dependencies it would remove, including
 private/exported helpers and imports from another source module. Namespace imports
 track distinct target members; already-authored declaration dependencies remain
-available and are not treated as newly stripped source. Transitive native dependency
-validation and cross-file failure propagation still require further work.
+available and are not treated as newly stripped source.
 
 Validation for emitted definitions and constructor aliases now follows transitive
 source dependencies with an iterative, cycle-safe walk. A stripped helper behind a
@@ -681,5 +680,12 @@ failures include producer provenance. Inspection does not consume or enqueue the
 other module's native visibility work. Explicitly annotated native declarations
 contribute their type surface rather than their runtime bodies/default initializers.
 Tests cover alias factories, indirect aliases, cross-module failures, recursive
-native alias graphs and this native/DSL boundary. Ordinary native references and
-inferred exports still need the same complete dependency-failure guarantees.
+native alias graphs and this native/DSL boundary. Ordinary native references now
+validate reachable recipes too, with cycle-safe positive/negative reachability caches
+and a native-only stripInternal control. Inferred exports and dependencies reached
+through existing declarations still need complete failure guarantees.
+
+The harness exercises ordinary emission, forced declaration emission and incremental
+builder signatures against invalid definitions, malformed DSL syntax and transitive
+stripped dependencies. Even modes that bypass native noEmitOnError gates preserve
+the per-file DSL failure boundary; independent native declarations still emit.

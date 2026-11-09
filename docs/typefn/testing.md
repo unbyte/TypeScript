@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 402 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 403 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -47,6 +47,10 @@ against the language specification; these checks establish the boundaries below.
   and later-parameter references diagnose. This does not add `where` syntax.
 * Passed: decoded declaration mappings for DSL statement starts after the ABI header;
   full printer and integration suites rerun after enabling per-node mapping.
+* Passed: ordinary, forced and builder-signature emission for invalid definitions,
+  malformed DSL bodies and transitive stripped dependencies. Forced/builder cases
+  explicitly enable noEmitOnError; the DSL failure boundary still withholds affected
+  output, while independent native output is preserved. Full integration harness rerun.
 * Passed: changed Go source formatting and `git diff --check`.
 
 Earlier race, project-invalidation, extension-build and wider package checks are
