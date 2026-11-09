@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 495 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 498 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -104,6 +104,10 @@ against the language specification; these checks establish the boundaries below.
   require a native key-domain proof; non-key shapes still diagnose. Repeated failing
   specializations retain their application spans, including with skipLibCheck.
   Full harness/checker/LS suites pass for this scope.
+  Shared mapped-member tables are retried after a failed key calculation, including
+  after some properties have already been built. Repeated reflection, a successful
+  sibling, fresh declaration consumers and application/native API queries in both
+  orders pass. Full harness/checker/LS suites pass after the publication guard.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A

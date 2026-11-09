@@ -159,7 +159,11 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   failure generation before publication. This covers failures inside tuple
   branches, distributive conditionals and results absorbed by unknown. Signature
   return resolution also unwinds and discards failed combined returns, including
-  callable/constructor unions and optional call chains. Other
+  callable/constructor unions and optional call chains. Mapped-member resolution
+  keeps its provisional empty structure only for recursion; failed key calculations
+  clear the resolved flag and discard partial properties/indexers. Later uses of
+  the same mapped Type retry resolution instead of accepting that recovery view.
+  Other
   native cache publishers still need equivalent coverage; this is not a complete
   cache transaction mechanism.
   Native type-node resolution establishes an outer source site when an editor or

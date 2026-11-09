@@ -21630,6 +21630,7 @@ func (c *Checker) getDefaultConstructSignatures(classType *Type) []*Signature {
 }
 
 func (c *Checker) resolveMappedTypeMembers(t *Type) {
+	failureEpoch := c.typefnFailureEpoch()
 	members := ast.NewSymbolTable()
 	var indexInfos []*IndexInfo
 	// Resolve upfront such that recursive references see an empty object type.
@@ -21715,6 +21716,14 @@ func (c *Checker) resolveMappedTypeMembers(t *Type) {
 		c.forEachMappedTypePropertyKeyTypeAndIndexSignatureKeyType(modifiersType, include, false /*stringsOnly*/, addMemberForKeyType)
 	} else {
 		forEachType(c.getLowerBoundOfKeyType(constraintType), addMemberForKeyType)
+	}
+	if c.typefnFailedSince(failureEpoch) {
+		// The initial empty structure breaks recursive resolution, but neither it
+		// nor a partially populated member table is a completed result. Leave an
+		// empty recovery view for this query and retry resolution on the next use.
+		c.setStructuredTypeMembers(t, nil, nil, nil, nil)
+		t.objectFlags &^= ObjectFlagsMembersResolved
+		return
 	}
 	c.setStructuredTypeMembers(t, members, nil, nil, indexInfos)
 }

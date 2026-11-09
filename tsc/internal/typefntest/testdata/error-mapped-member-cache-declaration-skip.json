@@ -1,0 +1,54 @@
+{
+  "files": {
+    "library.ts": "mapped-key-eligibility-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-mapped-member-cache-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "Properties<Remapped /* first */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "Properties<Remapped /* second */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "Properties<Computed /* first */>"
+      },
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "consumer.ts",
+        "message": "Mapped key failure",
+        "at": "Properties<Computed /* second */>"
+      }
+    ]
+  }
+}

@@ -10,6 +10,7 @@ func TestTypefnMappedFailureQueryOrder(t *testing.T) {
   if (N == 0) { fail<"Member replay failure">; }
   return N;
 }
+
 type Mapped<T> = { [K in keyof T]: Guard<T[K]> };
 type Input = { value: 0 };
 typefn Read<T> { return type(Mapped<T>["value" & keyof T]); }
@@ -17,6 +18,26 @@ type First = Read<Input /* first */>;
 type Second = Read<Input /* second */>;
 `
 	testTypefnMemberFailureQueryOrder(t, source, true, []string{"Read<Input /* first */>", "Read<Input /* second */>"})
+}
+
+func TestTypefnMappedMembersFailureQueryOrder(t *testing.T) {
+	const source = `typefn Guard<K> {
+  if (K == "bad") { fail<"Member replay failure">; }
+  return K;
+}
+type Mapped<T> = { [K in keyof T as Guard<K> & PropertyKey]: T[K] };
+type Shared = Mapped<{ good: 1; bad: 2 }>;
+typefn Properties<T> { return reflect.properties<T>; }
+type First = Properties<Shared /* first */>;
+type Second = Properties<Shared /* second */>;
+`
+	sites := []string{"Properties<Shared /* first */>", "Properties<Shared /* second */>"}
+	t.Run("application", func(t *testing.T) {
+		testTypefnMemberFailureQueryOrder(t, source, true, sites)
+	})
+	t.Run("native", func(t *testing.T) {
+		testTypefnMemberFailureQueryOrder(t, source, false, sites)
+	})
 }
 
 func TestTypefnInstantiatedMemberFailureQueryOrder(t *testing.T) {
