@@ -1,0 +1,69 @@
+{
+  "files": {
+    "main.ts": "error-native-signature-cache-failure.ts",
+    "library.ts": "native-signature-cache-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "bad(/* first */)"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "bad(/* second */)"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "optional?.(/* first */)"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "optional?.(/* second */)"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "new badConstructor(/* first */)"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "new badConstructor(/* second */)"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "overloaded(\"fail\" /* first */)"
+    },
+    {
+      "phase": "semantic",
+      "code": -1,
+      "file": "main.ts",
+      "message": "Native cached-container failure",
+      "at": "overloaded(\"fail\" /* second */)"
+    }
+  ]
+}

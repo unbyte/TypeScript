@@ -157,7 +157,9 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   Types, so repeated indexed reads and assignments replay at their own uses.
   Native substitution, conditional-root and generic-alias caches check the same
   failure generation before publication. This covers failures inside tuple
-  branches, distributive conditionals and results absorbed by unknown. Other
+  branches, distributive conditionals and results absorbed by unknown. Signature
+  return resolution also unwinds and discards failed combined returns, including
+  callable/constructor unions and optional call chains. Other
   native cache publishers still need equivalent coverage; this is not a complete
   cache transaction mechanism.
   Native type-node resolution establishes an outer source site when an editor or

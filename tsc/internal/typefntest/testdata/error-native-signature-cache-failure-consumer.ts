@@ -1,0 +1,18 @@
+import type { Functions, Constructors, Overloaded } from "./out/library";
+declare const bad: Functions<0>;
+const first = bad(/* first */);
+const second = bad(/* second */);
+declare const good: Functions<1>;
+const successful: 1 = good();
+declare const optional: Functions<0> | undefined;
+const optionalFirst = optional?.(/* first */);
+const optionalSecond = optional?.(/* second */);
+declare const badConstructor: Constructors<0>;
+const constructorFirst = new badConstructor(/* first */);
+const constructorSecond = new badConstructor(/* second */);
+declare const goodConstructor: Constructors<1>;
+const successfulConstructor: [1] = new goodConstructor();
+declare const overloaded: Overloaded<0>;
+const overloadFirst = overloaded("fail" /* first */);
+const overloadSecond = overloaded("fail" /* second */);
+const successfulOverload: 1 = overloaded("ok");

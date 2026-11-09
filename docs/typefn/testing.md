@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 484 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 487 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -91,6 +91,11 @@ against the language specification; these checks establish the boundaries below.
   branches are controls. Source/declaration consumers and native query-order tests
   pass, together with the full harness/checker/LS suites, after guarding substitution,
   conditional-root and generic-alias cache publication.
+  Combined-return cache tests cover repeated calls, optional calls, constructor
+  unions and overload selection, with successful siblings and fresh declaration
+  consumers in both skipLibCheck modes. Full integration, checker and language-service
+  suites pass for this scope. Repeated early-query diagnostic deduplication remains
+  a separate open regression.
 * Passed: type-fest literal word-scanner workload: 464 native-Type comparisons in
   direct and declaration-only programs, fixed expected results, generic options,
   explicit unions, tuple metadata, domain failures and resource diagnostics. A
@@ -109,7 +114,7 @@ against the language specification; these checks establish the boundaries below.
 * Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
   calls, contextual typing, type-parameter defaults and the type-system selection below,
   including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after conditional-container failure cache invalidation.
+  through its existing filters. Rerun after combined-signature return cache invalidation.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.

@@ -20725,6 +20725,7 @@ func (c *Checker) getReturnTypeOfSignature(sig *Signature) *Type {
 	if sig.resolvedReturnType != nil {
 		return sig.resolvedReturnType
 	}
+	failureEpoch := c.typefnFailureEpoch()
 	if !c.pushTypeResolution(sig, TypeSystemPropertyNameResolvedReturnType) {
 		return c.errorType
 	}
@@ -20752,7 +20753,12 @@ func (c *Checker) getReturnTypeOfSignature(sig *Signature) *Type {
 	} else if sig.flags&SignatureFlagsIsOuterCallChain != 0 {
 		t = c.getOptionalType(t, false /*isProperty*/)
 	}
-	if !c.popTypeResolution() {
+	resolved := c.popTypeResolution()
+	if c.typefnFailedSince(failureEpoch) {
+		sig.resolvedReturnType = nil
+		return c.errorType
+	}
+	if !resolved {
 		if sig.declaration != nil {
 			typeNode := sig.declaration.Type()
 			if typeNode != nil {
