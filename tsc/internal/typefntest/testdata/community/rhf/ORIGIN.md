@@ -4,11 +4,15 @@ The imperative port targets FieldPath traversal for object/form inputs. It prese
 union distribution, native keyof/indexing, tuple/array dispatch, visited-type equality,
 browser/registered opaque leaves and the default maximum of ten path segments.
 FieldPathsAt exposes deliberate truncation for integer depths 0..9, matching the
-native internal traversal on that range. This is not ArrayPath or PathValue yet.
+native internal traversal on that range. FieldArrayPaths and FieldArrayPathsAt
+separately port ArrayPath with the same depth/domain contract: primitive-only arrays
+are excluded, element unions distribute, and any/never retain upstream behavior.
+PathValue is not included yet.
 
 Native algorithm: https://github.com/react-hook-form/react-hook-form/blob/master/src/types/path/eager.ts
 Inspected 2026-11-06 snapshot SHA-256: `3f45ff3c90ee307dce876423430404ad1daef7a9cf8ee7633816a175a25b90d2`.
-The conditional Path implementation is retained in paths-native.ts; its scalar/key
+The conditional Path implementation is retained in paths-native.ts and ArrayPath
+in array-paths-native.ts (same eager.ts snapshot); their scalar/key
 helpers are selected from upstream common.ts. Native leaf/equality/opaque registry
 contracts are selected from upstream utils.ts, fetched on 2026-11-09. Both algorithms
 share those declarations so nominal and module-augmentation identities agree.

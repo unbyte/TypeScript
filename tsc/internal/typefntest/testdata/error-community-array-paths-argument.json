@@ -1,0 +1,20 @@
+{
+  "files": {
+    "paths.ts": "community/rhf/array-paths.ts",
+    "contracts.ts": "community/rhf/contracts.ts",
+    "consumer.ts": "error-community-array-paths-argument.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "code": 2345,
+      "file": "consumer.ts",
+      "message": "not assignable"
+    }
+  ]
+}

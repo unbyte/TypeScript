@@ -35,6 +35,10 @@ func BenchmarkTypefnCommunityPaths(b *testing.B) {
 	benchmarkTypefnFixture(b, "community-paths")
 }
 
+func BenchmarkTypefnCommunityArrayPaths(b *testing.B) {
+	benchmarkTypefnFixture(b, "community-array-paths")
+}
+
 func benchmarkTypefnFixture(b *testing.B, name string) {
 	b.Helper()
 	data, err := os.ReadFile("testdata/" + name + ".json")

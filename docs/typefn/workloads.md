@@ -75,5 +75,31 @@ Evidence:
 * Invalid input/depth diagnostics and call-depth exhaustion in source and fresh
   declaration-only consumers, including skipLibCheck.
 
-ArrayPath and PathValue are not included yet. This port does not claim compatibility
-for unrestricted primitive roots or the complete React Hook Form library.
+PathValue is not included yet. These ports do not claim compatibility for unrestricted
+primitive roots or the complete React Hook Form library.
+
+## React Hook Form: field-array paths
+
+[Imperative traversal](../../tsc/internal/typefntest/testdata/community/rhf/array-paths.ts)
+and [native comparison](../../tsc/internal/typefntest/testdata/community/rhf/array-paths-native.ts)
+use the same upstream snapshot and leaf/identity contracts as FieldPaths.
+`FieldArrayPaths` ports `FieldArrayPath` for object/form inputs; `FieldArrayPathsAt`
+accepts explicit depths 0 through 9. It selects paths to arrays of non-leaf elements,
+excluding primitive-only arrays. This is not equivalent to filtering FieldPaths
+by whether each property's Type extends an array: element-union distribution,
+opaque leaves and recursion checks affect the result.
+
+Evidence:
+
+* A 35-model native comparison corpus covers optional/readonly/variadic tuples,
+  mixed elements, nested arrays, any/never/unknown, recursive/nominal Types,
+  numeric/string/symbol keys, indexers, unions, callable properties and dotted keys.
+* Fixed expected paths and independent last-segment/truncation checks supplement
+  native comparisons. Both exact-optional and unchecked-indexed-access settings
+  run in source and fresh declaration consumers.
+* Registered opaque classes and subclasses exclude their arrays; distinct private
+  brands retain traversal. Generic specialization and native inference are checked.
+* Consumer augmentation recomputes exported aliases and inferred native-call results;
+  an unmodified consumer checks the original result.
+* Invalid input/depth/path diagnostics and call-depth exhaustion remain failures,
+  including in a fresh declaration consumer with skipLibCheck.

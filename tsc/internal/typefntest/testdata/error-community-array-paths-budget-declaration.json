@@ -1,0 +1,37 @@
+{
+  "files": {
+    "paths.ts": "community/rhf/array-paths.ts",
+    "contracts.ts": "community/rhf/contracts.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/consumer.ts": "error-community-array-paths-budget.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1,
+        "limits": {
+          "callDepth": 3
+        }
+      },
+      "rootDir": ".",
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "out/consumer.ts",
+        "message": "call depth limit exceeded"
+      }
+    ]
+  }
+}

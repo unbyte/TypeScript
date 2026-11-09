@@ -1,0 +1,27 @@
+{
+  "files": {
+    "paths.ts": "community/rhf/array-paths.ts",
+    "contracts.ts": "community/rhf/contracts.ts",
+    "reference.ts": "community/rhf/array-paths-native.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/assertions.ts": "community-array-paths.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "rootDir": "."
+    },
+    "diagnostics": []
+  }
+}
