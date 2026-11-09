@@ -406,6 +406,19 @@ union. Such computations wait for substitution; the compiler does not use a
 constraint as though it were the actual input. Native inference sees available
 structure but does not reverse arbitrary imperative calculations.
 
+A native generic parameter can forward the same computed bound it declares:
+
+```ts
+typefn Keys<T> { return type(keyof T); }
+declare function read<T, P extends Keys<T>>(value: T, path: P): P;
+function forward<T, P extends Keys<T>>(value: T, path: P) {
+  return read<T, P>(value, path);
+}
+```
+
+This uses the declared promise inside the generic body. Concrete callers still
+have to satisfy it; an unknown parameter is not replaced by its bound.
+
 Reached validation is never discarded just because its result is unused:
 
 ```ts

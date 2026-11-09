@@ -131,7 +131,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   islands execute. Full outer-native lexical dependencies still require work.
 * Deferred scalar expressions, calls, control flow, captured construction, and
   native substitution/replay are implemented. Full requirement-bearing native
-  relation proofs, scoped generic-body assumptions, latent member/signature
+  relation proofs, general scoped generic-body assumptions, latent member/signature
   dependencies, and exhaustive inference/replay laws remain pending. Guarded
   relations currently require the same canonical check set. Structural predicates
   and union traversal use native dependency summaries; exhaustive native forms
@@ -141,6 +141,12 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   recursively following the same term. A guard exposes its known shape for
   contextual typing while retaining its validation journal for relations and
   specialization; this does not reverse-infer opaque computations.
+  Native parameters can now forward the exact deferred constraint they declare,
+  including a chain of parameter bounds. This is an assignability proof scoped to
+  those binders, not Type identity, evaluation of an unknown argument, or a reverse
+  relation from the bound to every specialization. Concrete calls still instantiate
+  and check the original bound; failures do not publish an assumption proof.
+  General intersection/guard implication remains outside this narrow rule.
   Nested native instantiation retains the root application's diagnostic site;
   it does not replace that site with shared alias syntax. Repeated direct and
   alias-mediated failures therefore remain distinct, including across imports

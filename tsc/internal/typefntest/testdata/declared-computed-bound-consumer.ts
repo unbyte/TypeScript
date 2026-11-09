@@ -1,0 +1,11 @@
+import { forward, chained, assign, checkedForward } from "./out/library";
+type Assert<T extends true> = T;
+type Equal<A,B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+const first = forward({key:1}, "key");
+const second = chained({key:1}, "key");
+const third = assign<{key:1}, "key">("key");
+const checked = checkedForward({good:1}, "good");
+type First = Assert<Equal<typeof first, "key">>;
+type Second = Assert<Equal<typeof second, "key">>;
+type Third = Assert<Equal<typeof third, "key">>;
+type Checked = Assert<Equal<typeof checked, "good">>;

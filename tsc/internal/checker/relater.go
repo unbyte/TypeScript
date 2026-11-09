@@ -172,6 +172,9 @@ func (c *Checker) isTypeRelatedTo(source *Type, target *Type, relation *Relation
 		return false
 	}
 	if source != target && (source.flags|target.flags)&TypeFlagsTypefn != 0 {
+		if c.typefnHasDeclaredConstraint(source, target, relation) {
+			return true
+		}
 		a, ra := splitTypefn(source)
 		b, rb := splitTypefn(target)
 		if !slices.Equal(ra, rb) || a == source && b == target {
@@ -2655,6 +2658,9 @@ func (r *Relater) isRelatedToEx(originalSource *Type, originalTarget *Type, recu
 		return TernaryFalse
 	}
 	if originalSource != originalTarget && (originalSource.flags|originalTarget.flags)&TypeFlagsTypefn != 0 {
+		if r.c.typefnHasDeclaredConstraint(originalSource, originalTarget, r.relation) {
+			return TernaryTrue
+		}
 		a, ra := splitTypefn(originalSource)
 		b, rb := splitTypefn(originalTarget)
 		if !slices.Equal(ra, rb) || a == originalSource && b == originalTarget {

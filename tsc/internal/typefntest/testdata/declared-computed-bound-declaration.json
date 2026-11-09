@@ -1,0 +1,24 @@
+{
+  "files": {
+    "library.ts": "declared-computed-bound-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "declared-computed-bound-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      }
+    },
+    "diagnostics": []
+  }
+}

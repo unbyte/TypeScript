@@ -1,0 +1,47 @@
+{
+  "files": {
+    "library.ts": "declared-computed-bound-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "consumer.ts": "error-declared-computed-bound-consumer.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "skipLibCheck": false
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "file": "consumer.ts",
+        "code": 2345,
+        "message": "not assignable",
+        "at": "\"missing\""
+      },
+      {
+        "phase": "semantic",
+        "file": "consumer.ts",
+        "code": -1,
+        "message": "Input bound failure",
+        "at": "checkedForward({bad:1}, \"bad\")"
+      },
+      {
+        "phase": "semantic",
+        "file": "consumer.ts",
+        "code": -1,
+        "message": "Input bound failure",
+        "at": "checkedForward({bad:2}, \"bad\")"
+      }
+    ]
+  }
+}

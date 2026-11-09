@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 518 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 523 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -113,6 +113,11 @@ against the language specification; these checks establish the boundaries below.
   skipLibCheck both off and on. Computed native bounds retain their declaration
   checking policy. Stripped qualified helpers suppress ordinary, forced and builder
   output. Full harness/checker/LS suites pass for this scope.
+  Declared computed bounds support exact-bound forwarding, chained parameters and
+  native assignments. Source/declaration consumers retain invalid-argument errors
+  and repeated bound-execution failures, including with skipLibCheck. Checker tests
+  distinguish assignability from identity/reverse assignability, reject unrelated
+  terms and withhold proofs during failed evaluation. Full harness/checker/LS pass.
 * Passed: generated calculator conformance (S20). A deterministic corpus contains
   144 expression trees, each rendered with minimal parentheses and again with
   redundant groups and ASCII whitespace. An independent Go `math/big` tree evaluator

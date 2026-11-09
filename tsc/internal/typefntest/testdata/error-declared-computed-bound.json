@@ -1,0 +1,34 @@
+{
+  "files": {
+    "main.ts": "error-declared-computed-bound.ts",
+    "library.ts": "declared-computed-bound-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": [
+    {
+      "phase": "semantic",
+      "file": "main.ts",
+      "code": 2345,
+      "message": "not assignable",
+      "at": "\"missing\""
+    },
+    {
+      "phase": "semantic",
+      "file": "main.ts",
+      "code": -1,
+      "message": "Input bound failure",
+      "at": "checkedForward({bad:1}, \"bad\")"
+    },
+    {
+      "phase": "semantic",
+      "file": "main.ts",
+      "code": -1,
+      "message": "Input bound failure",
+      "at": "checkedForward({bad:2}, \"bad\")"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "files": {
+    "main.ts": "declared-computed-bound.ts",
+    "library.ts": "declared-computed-bound-library.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    }
+  },
+  "diagnostics": []
+}
