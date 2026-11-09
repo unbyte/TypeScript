@@ -200,11 +200,15 @@ against the language specification; these checks establish the boundaries below.
   Full checker and language-service suites pass.
 * Passed: desktop and web extension bundles rebuilt at `e1fad7459`. This is a build
   check, not a graphical Extension Host session.
+* Passed: race-enabled `Typefn`-named tests in checker, language service, project,
+  LSP and DSL harness at `cf76b97bb`. This includes query-order/cancellation/cache
+  tests, project edits/profile invalidation, LSP requests, atomic declaration emit
+  and generated calculator conformance. It does not run the entire JSON fixture
+  collection under the race detector; that collection is recorded separately.
 * Passed: changed Go source formatting and `git diff --check`.
 
-Earlier race, project-invalidation, extension-build and wider package checks are
-recorded in the [historical validation record](https://github.com/unbyte/TypeScript/blob/7fe54fd975b95531092485468ac5677ed3a453fc/docs/typefn/testing.md).
-They are not reported as rerun for this integration. Full conformance, declaration
+Broader historical race and package checks are recorded in the [historical validation record](https://github.com/unbyte/TypeScript/blob/7fe54fd975b95531092485468ac5677ed3a453fc/docs/typefn/testing.md).
+Only the selections explicitly listed above are reported as rerun for this integration. Full conformance, declaration
 recipes, broad community ports, resource accounting and performance acceptance
 remain tracked in [acceptance](acceptance.md).
 
@@ -214,6 +218,7 @@ than the latest seven-package run):
 ```sh
 go test ./tsc/internal/typefntest ./tsc/internal/tsoptions ./tsc/internal/parser ./tsc/internal/printer ./tsc/internal/ast ./tsc/internal/astnav ./tsc/internal/api/encoder ./tsc/internal/binder ./tsc/internal/checker ./tsc/internal/compiler ./tsc/internal/ls ./tsc/internal/format ./tsc/internal/ls/lsutil ./tsc/internal/project ./tsc/internal/lsp ./tsc/internal/core ./tools/gen-proto -count=1
 go test -race ./tsc/internal/typefntest ./tsc/internal/parser ./tsc/internal/ls ./tsc/internal/project ./tsc/internal/lsp -run 'TestIntegration|Typefn' -count=1
+GOMAXPROCS=4 go test -p 1 -race ./tsc/internal/checker ./tsc/internal/ls ./tsc/internal/project ./tsc/internal/lsp ./tsc/internal/typefntest -run 'Typefn' -count=1 -timeout=15m
 go test ./tsc/internal/testrunner -run '^TestLocal/(declarationEmit.*|generic.*|contextual.*|typeParameterDefault.*|conditionalTypes[12]|mappedTypes[12]|unionTypeReduction2?|templateLiteralTypes[12])\.ts' -count=1
 go test ./tsc/internal/testrunner -run '^TestLocal$' -count=1 -timeout=20m
 go build -o built/local/tsc ./tsc/cmd/tsc
