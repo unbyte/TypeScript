@@ -1,6 +1,7 @@
-// R2 specification examples; no runtime declarations or values are generated.
+// Executable examples; checked directly by the compiler integration harness.
+// These calculate Types; no runtime declarations or values are generated.
 
-typefn Field<Name, Value> {
+export typefn Field<Name, Value> {
   return types.object<[
     { key: Name; value: Value; optional: false; readonly: false }
   ]>;
@@ -8,7 +9,7 @@ typefn Field<Name, Value> {
 
 // Explicit public structural projection, not a clone of nominal class identity.
 // Preserve optionality, declared undefined, indexers and all signatures.
-typefn ReadonlyPublic<T> {
+export typefn ReadonlyPublic<T> {
   type fields = [];
   for (type property of reflect.properties<T>) {
     fields = [...fields, {
@@ -25,7 +26,7 @@ typefn ReadonlyPublic<T> {
   return types.object<fields, indexers, reflect.calls<T>, reflect.constructs<T>>;
 }
 
-typefn EventHandlers<Events> {
+export typefn EventHandlers<Events> {
   type fields = [];
   for (type event in Events) {
     fields = [...fields, {
@@ -37,31 +38,31 @@ typefn EventHandlers<Events> {
   return types.object<fields>;
 }
 
-typefn ListNode<Item> {
+export typefn ListNode<Item> {
   type Build = typefn<Self> {
     return { value: Item; next: Self | null };
   };
   return types.recursive<Build>;
 }
 
-typefn MapTypes<Items, F<_>> {
+export typefn MapTypes<Items, F<_>> {
   type result = [];
   for (type item of Items) { result = [...result, F<item>]; }
   return result;
 }
-typefn Compose<F<_>, G<_>> {
+export typefn Compose<F<_>, G<_>> {
   return typefn<T> { return F<G<T>>; };
 }
 
-type Id = Field<"id", number>; // { id: number }
-type View = ReadonlyPublic<{ name?: string; count: number }>;
+export type Id = Field<"id", number>; // { id: number }
+export type View = ReadonlyPublic<{ name?: string; count: number }>;
 // { readonly name?: string; readonly count: number }
-type Handlers = EventHandlers<
+export type Handlers = EventHandlers<
   { kind: "opened"; id: string } | { kind: "closed"; code: number }
 >;
 // { opened: (event: {kind:"opened";id:string}) => void;
 //   closed: (event: {kind:"closed";code:number}) => void }
-type StringList = ListNode<string>; // { value: string; next: StringList | null }
-type Promises = MapTypes<[string, number], Promise>; // [Promise<string>, Promise<number>]
-type AsyncArray = Compose<Promise, Array>;
-type Names = AsyncArray<string>; // Promise<string[]>
+export type StringList = ListNode<string>; // { value: string; next: StringList | null }
+export type Promises = MapTypes<[string, number], Promise>; // [Promise<string>, Promise<number>]
+export type AsyncArray = Compose<Promise, Array>;
+export type Names = AsyncArray<string>; // Promise<string[]>

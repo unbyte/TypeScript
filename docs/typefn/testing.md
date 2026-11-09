@@ -5,9 +5,9 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 559 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 565 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
-  to literal true. Calculator, numeric and HTTP-route documentation sources execute
+  to literal true. Calculator, numeric, HTTP-route and construction documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
   creation-check readiness, computed bounds, mixed constructor arguments, native
   constructor identity, dependent bounds, lexical capture substitution, constructor
@@ -141,6 +141,13 @@ against the language specification; these checks establish the boundaries below.
   Invalid concrete targets, computed return/input checks, ordinary assignments,
   satisfies expressions and unrelated native cast errors remain diagnostic.
   Full harness/checker/LS suites pass.
+* Passed: construction documentation as executable source: six fixtures cover
+  source and fresh declaration consumers in both exact-optional modes and with
+  skipLibCheck on/off. Assertions verify public readonly projections, optional
+  and explicit-undefined metadata, string/number indexers, ordered/generic call
+  and construct signatures, recursive lists, event handlers, unique-symbol keys,
+  nominal leaves, constructor composition and consumer augmentation. The full
+  integration harness passes.
 * Passed: generated calculator conformance (S20). A deterministic corpus contains
   144 expression trees, each rendered with minimal parentheses and again with
   redundant groups and ASCII whitespace. An independent Go `math/big` tree evaluator

@@ -36,7 +36,9 @@ and checks their native results, including generic specialization and invalid in
 Copy them to `.ts` files to use them in an enabled project.
 [HTTP routes](examples/http-routes.typefn) also executes in the harness. Calculator
 and route tests additionally consume their emitted declarations in fresh checkers.
-[Construction](examples/construction.typefn) remains a target-design example.
+[Construction](examples/construction.typefn) also executes directly, with source and
+fresh declaration-consumer tests for metadata, recursive structure and constructor
+composition.
 
 Superseded drafts, full research reports and historical validation journals remain
 in the [preserved snapshot](https://github.com/unbyte/TypeScript/tree/7fe54fd975b95531092485468ac5677ed3a453fc/docs/typefn) on

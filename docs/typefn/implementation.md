@@ -119,7 +119,7 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
   DSL captures conservatively retain the whole island for replay. Publishing stable
   symbolic native shapes, reusing equivalent environments and complete native work
   accounting still require work.
-* The calculator, numeric and HTTP-route examples execute directly from their
+* The calculator, numeric, HTTP-route and construction examples execute directly from their
   documentation sources. They are milestones, not full conformance coverage.
   The [community workload record](workloads.md) additionally covers executed
   type-fest word scanning and React Hook Form field-path/field-array traversal and

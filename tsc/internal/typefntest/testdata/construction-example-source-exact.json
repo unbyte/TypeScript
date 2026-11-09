@@ -1,0 +1,14 @@
+{
+  "files": {
+    "construction.ts": "../../../../docs/typefn/examples/construction.typefn",
+    "model.ts": "construction-example-model.ts",
+    "assertions.ts": "construction-example-assertions.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "exactOptionalPropertyTypes": true
+  },
+  "diagnostics": []
+}
