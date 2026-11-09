@@ -797,3 +797,20 @@ fields, private imported return helpers and an argument bound invalidated by int
 augmentation. A separate specialization with the same current native Type but a
 fixed argument remains fixed. Overloaded/non-identifier callee projection and
 arbitrary inferred value origins remain incomplete.
+
+
+Call-return recipes no longer require a written return annotation. A single native
+callee with an inferred return uses the native instantiated return Type for the
+producer equivalence check, applying only the enclosing builder mapper. The emitted
+value query retains the helper's own inferred recipe. Nongeneric constructed callable
+signatures also participate: when no source declaration exists, selection requires
+signature identity, not equality of two missing declaration pointers. Native inferred
+predicates keep their existing serialization path.
+
+Consumer tests cover inferred generic functions/arrows, generic class fields and
+functions produced by types.function. An augmented input that invalidates a concrete
+constructed callable diagnoses in the emitted declaration. That declaration semantic
+diagnostic follows native skipLibCheck policy; the separate ABI/frontend execution
+safety checks remain mandatory. This differs from generic parameter checks instantiated
+at a consumer use, which diagnose there even with skipLibCheck. Multi-return/async
+flow, overload/receiver projection and local lifting remain incomplete.

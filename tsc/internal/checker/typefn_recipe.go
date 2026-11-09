@@ -63,22 +63,30 @@ func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceReci
 		return nil
 	}
 	signature := c.getResolvedSignature(expression, nil, CheckModeNormal)
-	if signature == nil || signature.declaration == nil {
+	if signature == nil {
 		return nil
 	}
-	annotation := signature.declaration.Type()
-	if annotation == nil || ast.IsTypePredicateNode(annotation) {
+	var annotation *ast.Node
+	var typeParameters, parameters []*ast.Node
+	if declaration := signature.declaration; declaration != nil {
+		annotation = declaration.Type()
+		typeParameters, parameters = declaration.TypeParameters(), declaration.Parameters()
+	}
+	if annotation != nil && ast.IsTypePredicateNode(annotation) {
 		return nil
 	}
 	recipe := &typefnSourceRecipe{node: annotation, mapper: signature.mapper, call: expression, signature: signature}
-	hasRecipe := c.typefnNodeHasRecipe(annotation) || c.typefnNodeHasRecipe(expression.Expression())
-	for _, parameter := range signature.declaration.TypeParameters() {
+	hasRecipe := c.typefnNodeHasRecipe(expression.Expression())
+	if annotation != nil {
+		hasRecipe = hasRecipe || c.typefnNodeHasRecipe(annotation)
+	}
+	for _, parameter := range typeParameters {
 		if constraint := parameter.AsTypeParameterDeclaration().Constraint; constraint != nil {
 			recipe.applicationRequired = true
 			hasRecipe = hasRecipe || c.typefnNodeHasRecipe(constraint)
 		}
 	}
-	for _, parameter := range signature.declaration.Parameters() {
+	for _, parameter := range parameters {
 		if parameter.Type() != nil && c.typefnParameterHasRecipe(parameter.Type()) {
 			recipe.applicationRequired = true
 			hasRecipe = true
@@ -91,7 +99,7 @@ func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceReci
 	}
 	if len(arguments) != 0 || defaults != nil {
 		recipe.arguments = map[*Type]typefnRecipeArgument{}
-		for i, parameter := range signature.declaration.TypeParameters() {
+		for i, parameter := range typeParameters {
 			if len(arguments) == 0 && (i >= len(defaults.used) || !defaults.used[i]) {
 				continue
 			}
@@ -107,7 +115,7 @@ func (c *Checker) typefnExpressionRecipe(expression *ast.Node) *typefnSourceReci
 			}
 		}
 	}
-	if hasRecipe {
+	if hasRecipe && c.getTypePredicateOfSignature(signature) == nil {
 		return recipe
 	}
 	return nil
@@ -175,13 +183,21 @@ func (b *NodeBuilderImpl) tryTypefnExpressionRecipe(expression *ast.Node, inferr
 	}()
 	// Native widening or a surrounding operation may change the inferred Type.
 	// Only reuse a signature recipe when it describes this expression's Type.
-	if !b.ch.isTypeIdenticalTo(b.getTypeFromTypeNode(recipe.node, false), inferred) {
+	var resultType *Type
+	if recipe.node != nil {
+		resultType = b.getTypeFromTypeNode(recipe.node, false)
+	} else {
+		// The native signature's inferred return is already instantiated. Only
+		// apply the enclosing builder mapper, not the call mapper a second time.
+		resultType = b.ch.instantiateType(b.ch.getReturnTypeOfSignature(recipe.signature), oldMapper)
+	}
+	if !b.ch.isTypeIdenticalTo(resultType, inferred) {
 		return nil
 	}
 	if result := b.typefnCallRecipeNode(recipe); result != nil {
 		return result
 	}
-	if !recipe.applicationRequired {
+	if !recipe.applicationRequired && recipe.node != nil {
 		if result := b.tryReuseExistingNodeHelper(recipe.node); result != nil {
 			return result
 		}
@@ -267,7 +283,14 @@ func (b *NodeBuilderImpl) typefnCallRecipeNode(recipe *typefnSourceRecipe) *ast.
 	if len(signatures) != 1 || signatures[0].declaration != recipe.signature.declaration {
 		return nil
 	}
-	parameters := recipe.signature.declaration.TypeParameters()
+	var parameters []*ast.Node
+	if recipe.signature.declaration != nil {
+		parameters = recipe.signature.declaration.TypeParameters()
+	} else if signatures[0] != recipe.signature {
+		// Constructed nongeneric signatures have no source declaration. Their
+		// identity, rather than two nil declaration pointers, selects the call.
+		return nil
+	}
 	if len(signatures[0].TypeParameters()) == 0 {
 		parameters = nil // The callee already carries its specialization recipe.
 	} else if len(signatures[0].TypeParameters()) != len(parameters) {

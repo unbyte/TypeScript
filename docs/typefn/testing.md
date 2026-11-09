@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 433 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 437 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -50,6 +50,9 @@ against the language specification; these checks establish the boundaries below.
   Stored/direct native specializations preserve computed arguments and defaults;
   generic class fields, imported private helpers and consumer-invalidated bounds
   are exercised alongside a fixed specialization with the same producer Type.
+  Inferred native returns and constructed callable signatures now retain consumer
+  recipes, with generic function/arrow/class cases and concrete declaration failure
+  checks under normal and skipLibCheck policies.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.
@@ -59,15 +62,15 @@ against the language specification; these checks establish the boundaries below.
 * Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
   calls, contextual typing, type-parameter defaults and the type-system selection below,
   including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after native specialization recipes.
+  through its existing filters. Rerun after inferred/constructed callable return recipes.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
 * Passed: async and generated sync RPC profile tests against the compiler rebuilt
-  at `1a884501c`.
+  at `2b1368aec`.
   Both read parameter, bound, lambda and result-kind nodes from the Go-encoded AST,
   preserve computed native results and reject the disabled profile.
-* Passed: CLI rebuilt at `1a884501c` against the editor example project and the constraint probe
+* Passed: CLI rebuilt at `2b1368aec` against the editor example project and the constraint probe
   script (13 fork cases and the native baseline). Unused bounds no longer execute,
   and later-parameter references diagnose. This does not add `where` syntax.
 * Passed: decoded declaration mappings for DSL statement starts after the ABI header;
@@ -76,6 +79,8 @@ against the language specification; these checks establish the boundaries below.
   malformed DSL bodies and transitive stripped dependencies. Forced/builder cases
   explicitly enable noEmitOnError; the DSL failure boundary still withholds affected
   output, while independent native output is preserved. Full integration harness rerun.
+* Passed: desktop and web extension bundles rebuilt at `2b1368aec`. This is a build
+  check, not a graphical Extension Host session.
 * Passed: changed Go source formatting and `git diff --check`.
 
 Earlier race, project-invalidation, extension-build and wider package checks are
