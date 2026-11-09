@@ -1,0 +1,43 @@
+{
+  "files": {
+    "values.ts": "community/rhf/path-value.ts",
+    "reference.ts": "community/rhf/path-value-native.ts",
+    "paths.ts": "community/rhf/paths.ts",
+    "array-paths.ts": "community/rhf/array-paths.ts",
+    "paths-native.ts": "community/rhf/paths-native.ts",
+    "array-paths-native.ts": "community/rhf/array-paths-native.ts",
+    "contracts.ts": "community/rhf/contracts.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/consumer.ts": "error-community-path-value-budget.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1,
+        "limits": {
+          "callDepth": 4
+        }
+      },
+      "rootDir": ".",
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": -1,
+        "file": "out/consumer.ts",
+        "message": "call depth limit exceeded",
+        "at": "FieldPathValue<any, \"a.b.c.d.e\">"
+      }
+    ]
+  }
+}

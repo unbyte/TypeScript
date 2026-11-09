@@ -5,7 +5,7 @@ constructors, native island capture bridges and native lexical invocation enviro
 the rebuilt fork reports `Version 7.1.0-dev`. The implementation remains incomplete
 against the language specification; these checks establish the boundaries below.
 
-* Passed: 523 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
+* Passed: 536 compiler fixtures (full harness, including written-recipe producer/consumer cases). The harness checks complete
   diagnostics and requires successful native `Assert<...>` applications to resolve
   to literal true. Calculator, numeric and HTTP-route documentation sources execute
   directly. Recent cases cover tuple provenance, closures/factories, static kinds,
@@ -143,6 +143,12 @@ against the language specification; these checks establish the boundaries below.
   leaves, generic inference and consumer augmentation. Source/declaration programs
   cover optional/indexed-access settings and invalid input/path/depth/resource cases.
   The full integration suite passes with both traversal workloads.
+* Passed: React Hook Form path-value lookup: 13 fixtures and a 37-model native
+  comparison corpus, including optional reads, symbolic string paths, any/never,
+  tuple/array indices, class identity, computed input bounds and generic forwarding.
+  Source/declaration programs cover compiler-option variants, consumer augmentation,
+  invalid inputs/paths and lookup recursion exhaustion through any. Native `const`
+  path parameters preserve literal call inference. The full integration suite passes.
 * Passed: full parser, binder, printer, Go API encoder, checker, DSL harness and
   language-service suites. Checker, harness and language-service suites were rerun
   after native receiver capture, recovery-Type rejection and declaration ABI checks.
@@ -152,7 +158,7 @@ against the language specification; these checks establish the boundaries below.
 * Passed: 751 upstream compiler configurations selected by `declarationEmit*`, generic
   calls, contextual typing, type-parameter defaults and the type-system selection below,
   including native emit and type/symbol baselines. The runner skipped 23 configurations
-  through its existing filters. Rerun after namespace-qualified declaration recipes.
+  through its existing filters. Rerun after exact declared-constraint forwarding.
 * Passed: AST, enum and sync API regeneration. Generated enum values agree with Go.
 * Passed: API/test project type checks, ten DSL AST traversal/factory/protocol tests
   and 28 API encoder tests.
@@ -279,6 +285,16 @@ go test ./tsc/internal/typefntest -run '^$' -bench '^BenchmarkTypefnCommunityArr
 191.9 ms/op, 53,189,368 bytes/op, 320,689 allocations/op. The verified cold project
 includes both the imperative and native traversals and their assertions. This is
 not isolated VM throughput or a speedup comparison.
+
+Community path-value benchmark (same host/toolchain, three iterations):
+
+```sh
+go test ./tsc/internal/typefntest -run '^$' -bench '^BenchmarkTypefnCommunityPathValue$' -benchtime=3x -count=1
+```
+
+230.5 ms/op, 56,412,354 bytes/op, 349,597 allocations/op. This includes native path
+bounds, both lookup algorithms, assertions, generic calls and cold compiler setup;
+it is not isolated VM throughput or a speedup comparison.
 
 Community field-path benchmark (same host/toolchain, three iterations):
 

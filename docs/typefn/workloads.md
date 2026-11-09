@@ -75,8 +75,8 @@ Evidence:
 * Invalid input/depth diagnostics and call-depth exhaustion in source and fresh
   declaration-only consumers, including skipLibCheck.
 
-PathValue is not included yet. These ports do not claim compatibility for unrestricted
-primitive roots or the complete React Hook Form library.
+These ports do not claim compatibility for unrestricted primitive roots or the
+complete React Hook Form library.
 
 ## React Hook Form: field-array paths
 
@@ -103,3 +103,31 @@ Evidence:
   an unmodified consumer checks the original result.
 * Invalid input/depth/path diagnostics and call-depth exhaustion remain failures,
   including in a fresh declaration consumer with skipLibCheck.
+
+## React Hook Form: path values
+
+[Imperative traversal](../../tsc/internal/typefntest/testdata/community/rhf/path-value.ts)
+and [native comparison](../../tsc/internal/typefntest/testdata/community/rhf/path-value-native.ts)
+cover `FieldPathValue` and `FieldArrayPathValue` for object/form inputs, using the
+path bounds above. Input and path unions are traversed explicitly; optional reads
+retain undefined and array indices retain the native numeric-template rules.
+Native template inference handles symbolic paths such as `${string}.id`. A small
+generic native lookup helper preserves indexed-access narrowing; these operations
+are deliberately not approximated by scanning opaque string holes.
+
+Evidence:
+
+* A 37-model native comparison corpus covers optional/nullish fields, tuples and
+  arrays, indexers and symbolic paths, any/never/unknown, unions, recursive/nominal
+  Types, numeric and dotted keys, and callable properties. Fixed results also
+  check nested field-array values and undefined propagation.
+* Source and fresh declaration consumers run with optional/indexed-access settings.
+  Opaque registry cases preserve class/subclass identity in returned values.
+* Generic forwarding and a native `const` path parameter preserve literal call
+  inference. An opaque computed bound alone does not promise a primitive literal
+  context; the port does not claim inference equivalence for that unannotated case.
+* Consumer augmentation recomputes a union of path values and its inferred native
+  call result. Invalid paths, primitive-only field arrays and invalid inputs still
+  diagnose with skipLibCheck on or off.
+* Recursive lookup of a long path through any fails at a bounded call depth,
+  including in a declaration consumer; any cannot absorb the resource failure.

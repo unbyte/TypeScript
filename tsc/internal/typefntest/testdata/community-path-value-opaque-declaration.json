@@ -1,0 +1,31 @@
+{
+  "files": {
+    "values.ts": "community/rhf/path-value.ts",
+    "reference.ts": "community/rhf/path-value-native.ts",
+    "paths.ts": "community/rhf/paths.ts",
+    "array-paths.ts": "community/rhf/array-paths.ts",
+    "paths-native.ts": "community/rhf/paths-native.ts",
+    "array-paths-native.ts": "community/rhf/array-paths-native.ts",
+    "contracts.ts": "community/rhf/contracts.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/assertions.ts": "community-path-value-opaque.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "rootDir": "."
+    },
+    "diagnostics": []
+  }
+}

@@ -122,7 +122,8 @@ computed pins, tuples/objects and opaque template suffixes. Native-island patter
 * The calculator, numeric and HTTP-route examples execute directly from their
   documentation sources. They are milestones, not full conformance coverage.
   The [community workload record](workloads.md) additionally covers executed
-  type-fest word scanning and React Hook Form field-path traversal, including
+  type-fest word scanning and React Hook Form field-path/field-array traversal and
+  path-value lookup, including
   native comparisons, declaration consumers and resource failures.
 * Local named helpers and anonymous Type-returning closures now execute with frozen captures.
   Factories can return constructors inside DSL computations. Mixed Type/helper-constructor

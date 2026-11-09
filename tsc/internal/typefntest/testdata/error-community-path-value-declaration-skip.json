@@ -1,0 +1,57 @@
+{
+  "files": {
+    "values.ts": "community/rhf/path-value.ts",
+    "reference.ts": "community/rhf/path-value-native.ts",
+    "paths.ts": "community/rhf/paths.ts",
+    "array-paths.ts": "community/rhf/array-paths.ts",
+    "paths-native.ts": "community/rhf/paths-native.ts",
+    "array-paths-native.ts": "community/rhf/array-paths-native.ts",
+    "contracts.ts": "community/rhf/contracts.ts"
+  },
+  "options": {
+    "typefn": {
+      "version": 1
+    },
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "diagnostics": [],
+  "consumer": {
+    "files": {
+      "out/consumer.ts": "error-community-path-value.ts"
+    },
+    "options": {
+      "typefn": {
+        "version": 1
+      },
+      "rootDir": ".",
+      "skipLibCheck": true
+    },
+    "diagnostics": [
+      {
+        "phase": "semantic",
+        "code": 2344,
+        "file": "out/consumer.ts",
+        "message": "does not satisfy the constraint"
+      },
+      {
+        "phase": "semantic",
+        "code": 2344,
+        "file": "out/consumer.ts",
+        "message": "does not satisfy the constraint"
+      },
+      {
+        "phase": "semantic",
+        "code": 2344,
+        "file": "out/consumer.ts",
+        "message": "does not satisfy the constraint"
+      },
+      {
+        "phase": "semantic",
+        "code": 2344,
+        "file": "out/consumer.ts",
+        "message": "does not satisfy the constraint"
+      }
+    ]
+  }
+}
