@@ -238,6 +238,9 @@ func (n *Node) Locals() SymbolTable {
 }
 
 func (n *Node) Body() *Node {
+	if n.Kind == KindTypeFunctionDeclaration {
+		return n.AsTypeFunctionDeclaration().Body
+	}
 	data := n.BodyData()
 	if data != nil {
 		return data.Body
@@ -507,8 +510,10 @@ func (n *Node) TypeParameterList() *NodeList {
 		return n.AsClassExpression().TypeParameters
 	case KindInterfaceDeclaration:
 		return n.AsInterfaceDeclaration().TypeParameters
-	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		return n.AsTypeAliasDeclaration().TypeParameters
+	case KindTypeFunctionDeclaration:
+		return n.AsTypeFunctionDeclaration().TypeParameters
 	case KindJSDocTemplateTag:
 		return n.AsJSDocTemplateTag().TypeParameters
 	default:
@@ -629,8 +634,10 @@ func (n *Node) Type() *Node {
 		return n.AsAsExpression().Type
 	case KindSatisfiesExpression:
 		return n.AsSatisfiesExpression().Type
-	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		return n.AsTypeAliasDeclaration().Type
+	case KindTypeFunctionDeclaration:
+		return n.AsTypeFunctionDeclaration().Body
 	case KindNamedTupleMember:
 		return n.AsNamedTupleMember().Type
 	case KindOptionalType:
@@ -690,8 +697,10 @@ func (m *MutableNode) SetType(t *Node) {
 		n.AsAsExpression().Type = t
 	case KindSatisfiesExpression:
 		n.AsSatisfiesExpression().Type = t
-	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		n.AsTypeAliasDeclaration().Type = t
+	case KindTypeFunctionDeclaration:
+		n.AsTypeFunctionDeclaration().Body = t
 	case KindNamedTupleMember:
 		n.AsNamedTupleMember().Type = t
 	case KindOptionalType:

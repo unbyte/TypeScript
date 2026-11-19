@@ -1,0 +1,103 @@
+//// [tests/cases/compiler/typeFunctionLimits.ts] ////
+
+=== typeFunctionLimits.ts ===
+typefn Walk<N> {
+>Walk : Symbol(Walk, Decl(typeFunctionLimits.ts, 0, 0))
+>N : Symbol(N, Decl(typeFunctionLimits.ts, 0, 12))
+
+    if (N === 0) { return 0; }
+>N : Symbol(N, Decl(typeFunctionLimits.ts, 0, 12))
+
+    return Walk<number.subtract<N, 1>>;
+>Walk : Symbol(Walk, Decl(typeFunctionLimits.ts, 0, 0))
+>number : Symbol(number)
+>subtract : Symbol(number.subtract)
+>N : Symbol(N, Decl(typeFunctionLimits.ts, 0, 12))
+}
+typefn Spin<> { while (true) {} }
+>Spin : Symbol(Spin, Decl(typeFunctionLimits.ts, 3, 1))
+
+typefn Constant<T> { return 7; }
+>Constant : Symbol(Constant, Decl(typeFunctionLimits.ts, 4, 33))
+>T : Symbol(T, Decl(typeFunctionLimits.ts, 5, 16))
+
+declare const shallow: Walk<8>;
+>shallow : Symbol(shallow, Decl(typeFunctionLimits.ts, 7, 13))
+>Walk : Symbol(Walk, Decl(typeFunctionLimits.ts, 0, 0))
+
+const zero: 0 = shallow;
+>zero : Symbol(zero, Decl(typeFunctionLimits.ts, 8, 5))
+>shallow : Symbol(shallow, Decl(typeFunctionLimits.ts, 7, 13))
+
+declare const deep: Walk<150>;
+>deep : Symbol(deep, Decl(typeFunctionLimits.ts, 9, 13))
+>Walk : Symbol(Walk, Decl(typeFunctionLimits.ts, 0, 0))
+
+deep.recovered;
+>deep : Symbol(deep, Decl(typeFunctionLimits.ts, 9, 13))
+
+declare const spin: Spin<>;
+>spin : Symbol(spin, Decl(typeFunctionLimits.ts, 11, 13))
+>Spin : Symbol(Spin, Decl(typeFunctionLimits.ts, 3, 1))
+
+spin.recovered;
+>spin : Symbol(spin, Decl(typeFunctionLimits.ts, 11, 13))
+
+// Rebuilding an object charges the fields copied, even with a short loop.
+type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+>Digit : Symbol(Digit, Decl(typeFunctionLimits.ts, 12, 15))
+
+type Wide = { [K in `k${Digit}${Digit}${Digit}`]: 1 };
+>Wide : Symbol(Wide, Decl(typeFunctionLimits.ts, 15, 51))
+>K : Symbol(K, Decl(typeFunctionLimits.ts, 16, 15))
+>Digit : Symbol(Digit, Decl(typeFunctionLimits.ts, 12, 15))
+>Digit : Symbol(Digit, Decl(typeFunctionLimits.ts, 12, 15))
+>Digit : Symbol(Digit, Decl(typeFunctionLimits.ts, 12, 15))
+
+typefn ReplaceMany<T> {
+>ReplaceMany : Symbol(ReplaceMany, Decl(typeFunctionLimits.ts, 16, 54))
+>T : Symbol(T, Decl(typeFunctionLimits.ts, 17, 19))
+
+    type Out = T;
+>Out : Symbol(Out, Decl(typeFunctionLimits.ts, 18, 8))
+>T : Symbol(T, Decl(typeFunctionLimits.ts, 17, 19))
+
+    type I = 0;
+>I : Symbol(I, Decl(typeFunctionLimits.ts, 19, 8))
+
+    while (number.lessThan<I, 128>) {
+>number : Symbol(number)
+>lessThan : Symbol(number.lessThan)
+>I : Symbol(I, Decl(typeFunctionLimits.ts, 19, 8))
+
+        Out = object.setField<Out, "extra", { type: 2 }>;
+>object : Symbol(object)
+>setField : Symbol(object.setField)
+>Out : Symbol(Out, Decl(typeFunctionLimits.ts, 18, 8))
+>type : Symbol(type, Decl(typeFunctionLimits.ts, 21, 45))
+
+        I = number.add<I, 1>;
+>number : Symbol(number)
+>add : Symbol(number.add)
+>I : Symbol(I, Decl(typeFunctionLimits.ts, 19, 8))
+    }
+    return Out;
+>Out : Symbol(Out, Decl(typeFunctionLimits.ts, 18, 8))
+}
+declare const wide: ReplaceMany<Wide>;
+>wide : Symbol(wide, Decl(typeFunctionLimits.ts, 26, 13))
+>ReplaceMany : Symbol(ReplaceMany, Decl(typeFunctionLimits.ts, 16, 54))
+>Wide : Symbol(Wide, Decl(typeFunctionLimits.ts, 15, 51))
+
+wide.recovered;
+>wide : Symbol(wide, Decl(typeFunctionLimits.ts, 26, 13))
+
+// A failed root cannot spend the next application's budget.
+declare const next: Constant<"ok">;
+>next : Symbol(next, Decl(typeFunctionLimits.ts, 30, 13))
+>Constant : Symbol(Constant, Decl(typeFunctionLimits.ts, 4, 33))
+
+const seven: 7 = next;
+>seven : Symbol(seven, Decl(typeFunctionLimits.ts, 31, 5))
+>next : Symbol(next, Decl(typeFunctionLimits.ts, 30, 13))
+

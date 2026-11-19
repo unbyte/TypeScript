@@ -504,6 +504,11 @@ Log paths used during the 'moduleResolution' process.
 type: boolean
 default: false
 
+[94m--traceTypeFunctions[39m
+Print log statements from type function evaluations.
+type: boolean
+default: false
+
 ### Editor Support
 
 [94m--disableSizeLimit[39m

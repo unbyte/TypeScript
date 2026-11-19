@@ -42,6 +42,14 @@ typefn ExtractId<T> {
 declare const ref: ExtractId<{ id: 42 }>;
 const n: 42 = ref;
 
+function capture<Outer>(v: Outer) {
+    type Pair<T> = [Outer, T];
+    declareValue<Apply<Pair<_>, 1>>();
+    return null! as Apply<Pair<_>, 1>;
+}
+declare function declareValue<T>(): void;
+const captured: [string, 1] = capture<string>("a");
+
 
 //// [typeFunctionComposition.js]
 const id = flags.id;
@@ -53,6 +61,11 @@ const reply = wrapped(42);
 // @ts-expect-error parameter type must survive recomposition
 wrapped("wrong");
 const n = ref;
+function capture(v) {
+    declareValue();
+    return null;
+}
+const captured = capture("a");
 export {};
 
 

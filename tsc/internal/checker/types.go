@@ -1503,8 +1503,6 @@ type IntersectionType struct {
 
 type TypeParameter struct {
 	ConstrainedType
-	constructor         *typeFunctionConstructor
-	application         *typeFunctionApplication
 	constraint          *Type
 	target              *Type
 	mapper              *TypeMapper
@@ -1620,17 +1618,17 @@ const (
 	SignatureFlagsIsNonInferrable                        SignatureFlags = 1 << 7 // Indicates signature comes from a non-inferrable type
 	SignatureFlagsIsSignatureCandidateForOverloadFailure SignatureFlags = 1 << 8
 	signatureFlagsNoTypePredicate                        SignatureFlags = 1 << 9
+	SignatureFlagsTypeFunctionComposed                   SignatureFlags = 1 << 10
 	// We do not propagate `IsInnerCallChain` or `IsOuterCallChain` to instantiated signatures, as that would result in us
 	// attempting to add `| undefined` on each recursive call to `getReturnTypeOfSignature` when
 	// instantiating the return type.
-	SignatureFlagsPropagatingFlags = SignatureFlagsHasRestParameter | SignatureFlagsHasLiteralTypes | SignatureFlagsConstruct | SignatureFlagsAbstract | SignatureFlagsIsUntypedSignatureInJSFile | SignatureFlagsIsSignatureCandidateForOverloadFailure
+	SignatureFlagsPropagatingFlags = SignatureFlagsTypeFunctionComposed | SignatureFlagsHasRestParameter | SignatureFlagsHasLiteralTypes | SignatureFlagsConstruct | SignatureFlagsAbstract | SignatureFlagsIsUntypedSignatureInJSFile | SignatureFlagsIsSignatureCandidateForOverloadFailure
 	SignatureFlagsCallChainFlags   = SignatureFlagsIsInnerCallChain | SignatureFlagsIsOuterCallChain
 )
 
 // Signature
 
 type Signature struct {
-	typeFunctionComposed     bool
 	id                       SignatureId
 	flags                    SignatureFlags
 	minArgumentCount         int32

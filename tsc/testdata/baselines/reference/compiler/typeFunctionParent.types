@@ -55,6 +55,7 @@ typefn RecordFields<C> {
 >string : any
 
             case ["hit", infer Close, infer End] { return [Out, End]; }
+            else {} // Read the next field.
         }
         type [Name, AfterName] = Word<At>;
         type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;

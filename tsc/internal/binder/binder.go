@@ -256,7 +256,7 @@ func (b *Binder) declareSymbolEx(symbolTable ast.SymbolTable, parent *ast.Symbol
 				}
 				if ast.IsTypeAliasDeclaration(node) && ast.NodeIsMissing(node.Type()) && ast.HasSyntacticModifier(node, ast.ModifierFlagsExport) && symbol.Flags()&(ast.SymbolFlagsAlias|ast.SymbolFlagsType|ast.SymbolFlagsNamespace) != 0 {
 					// export type T; - may have meant export type { T }?
-					diag.AddRelatedInfo(b.createDiagnosticForNode(node, diagnostics.Did_you_mean_0, "export type { "+node.AsTypeAliasDeclaration().Name().Text()+" }"))
+					diag.AddRelatedInfo(b.createDiagnosticForNode(node, diagnostics.Did_you_mean_0, "export type { "+node.Name().Text()+" }"))
 				}
 				for index, declaration := range symbol.Declarations() {
 					var decl *ast.Node = ast.GetNameOfDeclaration(declaration)

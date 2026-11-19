@@ -1,0 +1,48 @@
+//// [tests/cases/compiler/typeFunctionContextual.tsx] ////
+
+=== typeFunctionContextual.tsx ===
+namespace JSX { export interface IntrinsicElements { div: {} } }
+>div : {}
+
+const typefn = <T,>(x: T) => x;
+>typefn : <T>(x: T) => T
+><T,>(x: T) => x : <T>(x: T) => T
+>x : T
+>x : T
+
+const ordinary: 1 = typefn(1);
+>ordinary : 1
+>typefn(1) : 1
+>typefn : <T>(x: T) => T
+>1 : 1
+
+const jsx = <div>{typefn("value")}</div>;
+>jsx : error
+><div>{typefn("value")}</div> : error
+>div : any
+>typefn("value") : "value"
+>typefn : <T>(x: T) => T
+>"value" : "value"
+>div : any
+
+namespace Native {
+    export type typefn<T> = { value: T };
+>typefn : typefn<T>
+>value : T
+
+    export typefn Box<T> { return { wrapped: typefn<T> }; }
+>Box : Box<T>
+>wrapped : typefn<T>
+}
+declare const item: Native.Box<42>;
+>item : { wrapped: Native.typefn<42>; }
+>Native : any
+
+const result: 42 = item.wrapped.value;
+>result : 42
+>item.wrapped.value : 42
+>item.wrapped : Native.typefn<42>
+>item : { wrapped: Native.typefn<42>; }
+>wrapped : Native.typefn<42>
+>value : 42
+

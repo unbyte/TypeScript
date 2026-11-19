@@ -201,6 +201,22 @@ func (r *EmitResolver) markLinkedAliases(node *ast.Node) {
 	}
 }
 
+func (r *EmitResolver) ReferencedTypeFunctionDependency(name *ast.EntityName) []*ast.Node {
+	r.checkerMu.Lock()
+	defer r.checkerMu.Unlock()
+	symbol := r.checker.getSymbolAtLocation(name, true)
+	if symbol == nil {
+		return nil
+	}
+	if symbol.Flags()&ast.SymbolFlagsAlias != 0 {
+		symbol = r.checker.resolveAlias(symbol)
+	}
+	if symbol == nil {
+		return nil
+	}
+	return symbol.Declarations()
+}
+
 func (r *EmitResolver) IsEntityNameVisible(entityName *ast.Node, enclosingDeclaration *ast.Node) printer.SymbolAccessibilityResult {
 	r.checkerMu.Lock()
 	defer r.checkerMu.Unlock()

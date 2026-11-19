@@ -146,3 +146,34 @@ const n: 42 = ref;
 >n : Symbol(n, Decl(typeFunctionComposition.ts, 39, 5))
 >ref : Symbol(ref, Decl(typeFunctionComposition.ts, 38, 13))
 
+function capture<Outer>(v: Outer) {
+>capture : Symbol(capture, Decl(typeFunctionComposition.ts, 39, 18))
+>Outer : Symbol(Outer, Decl(typeFunctionComposition.ts, 41, 17))
+>v : Symbol(v, Decl(typeFunctionComposition.ts, 41, 24))
+>Outer : Symbol(Outer, Decl(typeFunctionComposition.ts, 41, 17))
+
+    type Pair<T> = [Outer, T];
+>Pair : Symbol(Pair, Decl(typeFunctionComposition.ts, 41, 35))
+>T : Symbol(T, Decl(typeFunctionComposition.ts, 42, 14))
+>Outer : Symbol(Outer, Decl(typeFunctionComposition.ts, 41, 17))
+>T : Symbol(T, Decl(typeFunctionComposition.ts, 42, 14))
+
+    declareValue<Apply<Pair<_>, 1>>();
+>declareValue : Symbol(declareValue, Decl(typeFunctionComposition.ts, 45, 1))
+>Apply : Symbol(Apply, Decl(typeFunctionComposition.ts, 13, 27))
+>Pair : Symbol(Pair, Decl(typeFunctionComposition.ts, 41, 35))
+>_ : Symbol(_)
+
+    return null! as Apply<Pair<_>, 1>;
+>Apply : Symbol(Apply, Decl(typeFunctionComposition.ts, 13, 27))
+>Pair : Symbol(Pair, Decl(typeFunctionComposition.ts, 41, 35))
+>_ : Symbol(_)
+}
+declare function declareValue<T>(): void;
+>declareValue : Symbol(declareValue, Decl(typeFunctionComposition.ts, 45, 1))
+>T : Symbol(T, Decl(typeFunctionComposition.ts, 46, 30))
+
+const captured: [string, 1] = capture<string>("a");
+>captured : Symbol(captured, Decl(typeFunctionComposition.ts, 47, 5))
+>capture : Symbol(capture, Decl(typeFunctionComposition.ts, 39, 18))
+

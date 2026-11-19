@@ -60,6 +60,7 @@ type NodeFactory struct {
 	stringLiteralArena                 core.Arena[StringLiteral]
 	tokenArena                         core.Arena[Token]
 	typeAliasDeclarationArena          core.Arena[TypeAliasDeclaration]
+	typeFunctionDeclarationArena       core.Arena[TypeFunctionDeclaration]
 	typeLiteralNodeArena               core.Arena[TypeLiteralNode]
 	typeOperatorNodeArena              core.Arena[TypeOperatorNode]
 	typeParameterDeclarationArena      core.Arena[TypeParameterDeclaration]
@@ -451,14 +452,17 @@ type (
 	TypeFunctionBlockNode             = Node
 	TypeFunctionBindingNode           = Node
 	TypeFunctionAssignmentNode        = Node
-	TypeFunctionOperandStatementNode  = Node
-	TypeFunctionBranchNode            = Node
 	TypeFunctionForNode               = Node
 	TypeFunctionMatchNode             = Node
 	TypeFunctionArmNode               = Node
 	TypeFunctionBinaryNode            = Node
 	TypeFunctionNotNode               = Node
 	TypeFunctionConstructorSlotsNode  = Node
+	TypeFunctionDeclarationNode       = Node
+	TypeFunctionReturnNode            = Node
+	TypeFunctionCallStatementNode     = Node
+	TypeFunctionIfNode                = Node
+	TypeFunctionWhileNode             = Node
 	EndOfFile                         = Node
 	DotToken                          = Node
 	DotDotDotToken                    = Node
@@ -2390,15 +2394,6 @@ func (f *NodeFactory) NewJSTypeAliasDeclaration(modifiers *ModifierList, name *I
 	return f.newNode(KindJSTypeAliasDeclaration, data.AsNode())
 }
 
-func (f *NodeFactory) NewTypeFunctionDeclaration(modifiers *ModifierList, name *IdentifierNode, typeParameters *TypeParameterList, typeNode *TypeNode) *Node {
-	data := f.typeAliasDeclarationArena.New()
-	data.modifiers = modifiers
-	data.name = name
-	data.TypeParameters = typeParameters
-	data.Type = typeNode
-	return f.newNode(KindTypeFunctionDeclaration, data.AsNode())
-}
-
 func (f *NodeFactory) UpdateTypeAliasDeclaration(node *TypeAliasDeclaration, modifiers *ModifierList, name *IdentifierNode, typeParameters *TypeParameterList, typeNode *TypeNode) *Node {
 	if modifiers != node.modifiers || name != node.name || typeParameters != node.TypeParameters || typeNode != node.Type {
 		switch node.Kind {
@@ -2406,8 +2401,6 @@ func (f *NodeFactory) UpdateTypeAliasDeclaration(node *TypeAliasDeclaration, mod
 			return updateNode(f.NewTypeAliasDeclaration(modifiers, name, typeParameters, typeNode), node.AsNode(), f.hooks)
 		case KindJSTypeAliasDeclaration:
 			return updateNode(f.NewJSTypeAliasDeclaration(modifiers, name, typeParameters, typeNode), node.AsNode(), f.hooks)
-		case KindTypeFunctionDeclaration:
-			return updateNode(f.NewTypeFunctionDeclaration(modifiers, name, typeParameters, typeNode), node.AsNode(), f.hooks)
 		default:
 			panic("unexpected kind in UpdateTypeAliasDeclaration: " + node.Kind.String())
 		}
@@ -2432,8 +2425,6 @@ func (node *TypeAliasDeclaration) Clone(f NodeFactoryCoercible) *Node {
 		return cloneNode(f.AsNodeFactory().NewTypeAliasDeclaration(node.Modifiers(), node.name, node.TypeParameters, node.Type), node.AsNode(), f.AsNodeFactory().hooks)
 	case KindJSTypeAliasDeclaration:
 		return cloneNode(f.AsNodeFactory().NewJSTypeAliasDeclaration(node.Modifiers(), node.name, node.TypeParameters, node.Type), node.AsNode(), f.AsNodeFactory().hooks)
-	case KindTypeFunctionDeclaration:
-		return cloneNode(f.AsNodeFactory().NewTypeFunctionDeclaration(node.Modifiers(), node.name, node.TypeParameters, node.Type), node.AsNode(), f.AsNodeFactory().hooks)
 	default:
 		panic("unexpected kind in TypeAliasDeclaration.Clone: " + node.Kind.String())
 	}
@@ -2449,10 +2440,6 @@ func IsTypeAliasDeclaration(node *Node) bool {
 
 func IsJSTypeAliasDeclaration(node *Node) bool {
 	return node.Kind == KindJSTypeAliasDeclaration
-}
-
-func IsTypeFunctionDeclaration(node *Node) bool {
-	return node.Kind == KindTypeFunctionDeclaration
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -8957,136 +8944,6 @@ func IsTypeFunctionAssignment(node *Node) bool {
 }
 
 // ──────────────────────────────────────────────────────────────────────
-// TypeFunctionOperandStatement
-// ──────────────────────────────────────────────────────────────────────
-
-type TypeFunctionOperandStatement struct {
-	StatementBase
-	Operand *TypeNode
-}
-
-func (f *NodeFactory) NewTypeFunctionOperandStatement(operand *TypeNode) *Node {
-	data := &TypeFunctionOperandStatement{}
-	data.Operand = operand
-	return f.newNode(KindTypeFunctionReturn, data.AsNode())
-}
-
-func (f *NodeFactory) NewTypeFunctionCallStatement(operand *TypeNode) *Node {
-	data := &TypeFunctionOperandStatement{}
-	data.Operand = operand
-	return f.newNode(KindTypeFunctionCallStatement, data.AsNode())
-}
-
-func (f *NodeFactory) UpdateTypeFunctionOperandStatement(node *TypeFunctionOperandStatement, operand *TypeNode) *Node {
-	if operand != node.Operand {
-		switch node.Kind {
-		case KindTypeFunctionReturn:
-			return updateNode(f.NewTypeFunctionOperandStatement(operand), node.AsNode(), f.hooks)
-		case KindTypeFunctionCallStatement:
-			return updateNode(f.NewTypeFunctionCallStatement(operand), node.AsNode(), f.hooks)
-		default:
-			panic("unexpected kind in UpdateTypeFunctionOperandStatement: " + node.Kind.String())
-		}
-	}
-	return node.AsNode()
-}
-
-func (node *TypeFunctionOperandStatement) ForEachChild(v Visitor) bool {
-	return visit(v, node.Operand)
-}
-
-func (node *TypeFunctionOperandStatement) VisitEachChild(v *NodeVisitor) *Node {
-	return v.Factory.UpdateTypeFunctionOperandStatement(node, requiredChild(node.Operand, v.visitNode(node.Operand)))
-}
-
-func (node *TypeFunctionOperandStatement) Clone(f NodeFactoryCoercible) *Node {
-	switch node.Kind {
-	case KindTypeFunctionReturn:
-		return cloneNode(f.AsNodeFactory().NewTypeFunctionOperandStatement(node.Operand), node.AsNode(), f.AsNodeFactory().hooks)
-	case KindTypeFunctionCallStatement:
-		return cloneNode(f.AsNodeFactory().NewTypeFunctionCallStatement(node.Operand), node.AsNode(), f.AsNodeFactory().hooks)
-	default:
-		panic("unexpected kind in TypeFunctionOperandStatement.Clone: " + node.Kind.String())
-	}
-}
-
-func IsTypeFunctionOperandStatement(node *Node) bool {
-	return node.Kind == KindTypeFunctionReturn
-}
-
-func IsTypeFunctionCallStatement(node *Node) bool {
-	return node.Kind == KindTypeFunctionCallStatement
-}
-
-// ──────────────────────────────────────────────────────────────────────
-// TypeFunctionBranch
-// ──────────────────────────────────────────────────────────────────────
-
-type TypeFunctionBranch struct {
-	StatementBase
-	Condition  *TypeNode
-	Block      *TypeFunctionBlockNode
-	ElseBranch *Node // Optional
-}
-
-func (f *NodeFactory) NewTypeFunctionBranch(condition *TypeNode, block *TypeFunctionBlockNode, elseBranch *Node) *Node {
-	data := &TypeFunctionBranch{}
-	data.Condition = condition
-	data.Block = block
-	data.ElseBranch = elseBranch
-	return f.newNode(KindTypeFunctionIf, data.AsNode())
-}
-
-func (f *NodeFactory) NewTypeFunctionWhile(condition *TypeNode, block *TypeFunctionBlockNode, elseBranch *Node) *Node {
-	data := &TypeFunctionBranch{}
-	data.Condition = condition
-	data.Block = block
-	data.ElseBranch = elseBranch
-	return f.newNode(KindTypeFunctionWhile, data.AsNode())
-}
-
-func (f *NodeFactory) UpdateTypeFunctionBranch(node *TypeFunctionBranch, condition *TypeNode, block *TypeFunctionBlockNode, elseBranch *Node) *Node {
-	if condition != node.Condition || block != node.Block || elseBranch != node.ElseBranch {
-		switch node.Kind {
-		case KindTypeFunctionIf:
-			return updateNode(f.NewTypeFunctionBranch(condition, block, elseBranch), node.AsNode(), f.hooks)
-		case KindTypeFunctionWhile:
-			return updateNode(f.NewTypeFunctionWhile(condition, block, elseBranch), node.AsNode(), f.hooks)
-		default:
-			panic("unexpected kind in UpdateTypeFunctionBranch: " + node.Kind.String())
-		}
-	}
-	return node.AsNode()
-}
-
-func (node *TypeFunctionBranch) ForEachChild(v Visitor) bool {
-	return visit(v, node.Condition) || visit(v, node.Block) || visit(v, node.ElseBranch)
-}
-
-func (node *TypeFunctionBranch) VisitEachChild(v *NodeVisitor) *Node {
-	return v.Factory.UpdateTypeFunctionBranch(node, requiredChild(node.Condition, v.visitNode(node.Condition)), requiredChild(node.Block, v.visitNode(node.Block)), v.visitNode(node.ElseBranch))
-}
-
-func (node *TypeFunctionBranch) Clone(f NodeFactoryCoercible) *Node {
-	switch node.Kind {
-	case KindTypeFunctionIf:
-		return cloneNode(f.AsNodeFactory().NewTypeFunctionBranch(node.Condition, node.Block, node.ElseBranch), node.AsNode(), f.AsNodeFactory().hooks)
-	case KindTypeFunctionWhile:
-		return cloneNode(f.AsNodeFactory().NewTypeFunctionWhile(node.Condition, node.Block, node.ElseBranch), node.AsNode(), f.AsNodeFactory().hooks)
-	default:
-		panic("unexpected kind in TypeFunctionBranch.Clone: " + node.Kind.String())
-	}
-}
-
-func IsTypeFunctionBranch(node *Node) bool {
-	return node.Kind == KindTypeFunctionIf
-}
-
-func IsTypeFunctionWhile(node *Node) bool {
-	return node.Kind == KindTypeFunctionWhile
-}
-
-// ──────────────────────────────────────────────────────────────────────
 // TypeFunctionFor
 // ──────────────────────────────────────────────────────────────────────
 
@@ -9329,6 +9186,219 @@ func IsTypeFunctionConstructorSlots(node *Node) bool {
 }
 
 // ──────────────────────────────────────────────────────────────────────
+// TypeFunctionDeclaration
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionDeclaration struct {
+	TypeSyntaxBase
+	StatementBase
+	DeclarationBase
+	ExportableBase
+	ModifiersBase
+	LocalsContainerBase
+	name           *IdentifierNode
+	TypeParameters *TypeParameterList
+	Body           *TypeFunctionBlockNode
+}
+
+func (f *NodeFactory) NewTypeFunctionDeclaration(modifiers *ModifierList, name *IdentifierNode, typeParameters *TypeParameterList, body *TypeFunctionBlockNode) *Node {
+	data := f.typeFunctionDeclarationArena.New()
+	data.modifiers = modifiers
+	data.name = name
+	data.TypeParameters = typeParameters
+	data.Body = body
+	return f.newNode(KindTypeFunctionDeclaration, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionDeclaration(node *TypeFunctionDeclaration, modifiers *ModifierList, name *IdentifierNode, typeParameters *TypeParameterList, body *TypeFunctionBlockNode) *Node {
+	if modifiers != node.modifiers || name != node.name || typeParameters != node.TypeParameters || body != node.Body {
+		return updateNode(f.NewTypeFunctionDeclaration(modifiers, name, typeParameters, body), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionDeclaration) ForEachChild(v Visitor) bool {
+	return visitModifiers(v, node.modifiers) ||
+		visit(v, node.name) ||
+		visitNodeList(v, node.TypeParameters) ||
+		visit(v, node.Body)
+}
+
+func (node *TypeFunctionDeclaration) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionDeclaration(node, v.visitModifiers(node.modifiers), requiredChild(node.name, v.visitNode(node.name)), requiredChild(node.TypeParameters, v.visitNodes(node.TypeParameters)), requiredChild(node.Body, v.visitNode(node.Body)))
+}
+
+func (node *TypeFunctionDeclaration) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionDeclaration(node.Modifiers(), node.name, node.TypeParameters, node.Body), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func (node *TypeFunctionDeclaration) Name() *DeclarationName {
+	return node.name
+}
+
+func IsTypeFunctionDeclaration(node *Node) bool {
+	return node.Kind == KindTypeFunctionDeclaration
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionReturn
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionReturn struct {
+	StatementBase
+	Operand *TypeNode
+}
+
+func (f *NodeFactory) NewTypeFunctionReturn(operand *TypeNode) *Node {
+	data := &TypeFunctionReturn{}
+	data.Operand = operand
+	return f.newNode(KindTypeFunctionReturn, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionReturn(node *TypeFunctionReturn, operand *TypeNode) *Node {
+	if operand != node.Operand {
+		return updateNode(f.NewTypeFunctionReturn(operand), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionReturn) ForEachChild(v Visitor) bool {
+	return visit(v, node.Operand)
+}
+
+func (node *TypeFunctionReturn) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionReturn(node, requiredChild(node.Operand, v.visitNode(node.Operand)))
+}
+
+func (node *TypeFunctionReturn) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionReturn(node.Operand), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionReturn(node *Node) bool {
+	return node.Kind == KindTypeFunctionReturn
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionCallStatement
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionCallStatement struct {
+	StatementBase
+	Operand *TypeNode
+}
+
+func (f *NodeFactory) NewTypeFunctionCallStatement(operand *TypeNode) *Node {
+	data := &TypeFunctionCallStatement{}
+	data.Operand = operand
+	return f.newNode(KindTypeFunctionCallStatement, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionCallStatement(node *TypeFunctionCallStatement, operand *TypeNode) *Node {
+	if operand != node.Operand {
+		return updateNode(f.NewTypeFunctionCallStatement(operand), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionCallStatement) ForEachChild(v Visitor) bool {
+	return visit(v, node.Operand)
+}
+
+func (node *TypeFunctionCallStatement) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionCallStatement(node, requiredChild(node.Operand, v.visitNode(node.Operand)))
+}
+
+func (node *TypeFunctionCallStatement) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionCallStatement(node.Operand), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionCallStatement(node *Node) bool {
+	return node.Kind == KindTypeFunctionCallStatement
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionIf
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionIf struct {
+	StatementBase
+	Condition  *TypeNode
+	Block      *TypeFunctionBlockNode
+	ElseBranch *Node // Optional
+}
+
+func (f *NodeFactory) NewTypeFunctionIf(condition *TypeNode, block *TypeFunctionBlockNode, elseBranch *Node) *Node {
+	data := &TypeFunctionIf{}
+	data.Condition = condition
+	data.Block = block
+	data.ElseBranch = elseBranch
+	return f.newNode(KindTypeFunctionIf, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionIf(node *TypeFunctionIf, condition *TypeNode, block *TypeFunctionBlockNode, elseBranch *Node) *Node {
+	if condition != node.Condition || block != node.Block || elseBranch != node.ElseBranch {
+		return updateNode(f.NewTypeFunctionIf(condition, block, elseBranch), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionIf) ForEachChild(v Visitor) bool {
+	return visit(v, node.Condition) || visit(v, node.Block) || visit(v, node.ElseBranch)
+}
+
+func (node *TypeFunctionIf) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionIf(node, requiredChild(node.Condition, v.visitNode(node.Condition)), requiredChild(node.Block, v.visitNode(node.Block)), v.visitNode(node.ElseBranch))
+}
+
+func (node *TypeFunctionIf) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionIf(node.Condition, node.Block, node.ElseBranch), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionIf(node *Node) bool {
+	return node.Kind == KindTypeFunctionIf
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionWhile
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionWhile struct {
+	StatementBase
+	Condition *TypeNode
+	Block     *TypeFunctionBlockNode
+}
+
+func (f *NodeFactory) NewTypeFunctionWhile(condition *TypeNode, block *TypeFunctionBlockNode) *Node {
+	data := &TypeFunctionWhile{}
+	data.Condition = condition
+	data.Block = block
+	return f.newNode(KindTypeFunctionWhile, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionWhile(node *TypeFunctionWhile, condition *TypeNode, block *TypeFunctionBlockNode) *Node {
+	if condition != node.Condition || block != node.Block {
+		return updateNode(f.NewTypeFunctionWhile(condition, block), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionWhile) ForEachChild(v Visitor) bool {
+	return visit(v, node.Condition) || visit(v, node.Block)
+}
+
+func (node *TypeFunctionWhile) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionWhile(node, requiredChild(node.Condition, v.visitNode(node.Condition)), requiredChild(node.Block, v.visitNode(node.Block)))
+}
+
+func (node *TypeFunctionWhile) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionWhile(node.Condition, node.Block), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionWhile(node *Node) bool {
+	return node.Kind == KindTypeFunctionWhile
+}
+
+// ──────────────────────────────────────────────────────────────────────
 // ForEachChild dispatch
 // ──────────────────────────────────────────────────────────────────────
 
@@ -9436,7 +9506,7 @@ func (n *Node) ForEachChild(v Visitor) bool {
 	case KindInterfaceDeclaration:
 		// SAFETY: This case only matches kinds allocated as a InterfaceDeclaration, which embeds its Node header at offset zero.
 		return (*InterfaceDeclaration)(unsafe.Pointer(n)).ForEachChild(v)
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		// SAFETY: This case only matches kinds allocated as a TypeAliasDeclaration, which embeds its Node header at offset zero.
 		return (*TypeAliasDeclaration)(unsafe.Pointer(n)).ForEachChild(v)
 	case KindEnumMember:
@@ -9847,12 +9917,6 @@ func (n *Node) ForEachChild(v Visitor) bool {
 	case KindTypeFunctionAssignment:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionAssignment, which embeds its Node header at offset zero.
 		return (*TypeFunctionAssignment)(unsafe.Pointer(n)).ForEachChild(v)
-	case KindTypeFunctionReturn, KindTypeFunctionCallStatement:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionOperandStatement, which embeds its Node header at offset zero.
-		return (*TypeFunctionOperandStatement)(unsafe.Pointer(n)).ForEachChild(v)
-	case KindTypeFunctionIf, KindTypeFunctionWhile:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionBranch, which embeds its Node header at offset zero.
-		return (*TypeFunctionBranch)(unsafe.Pointer(n)).ForEachChild(v)
 	case KindTypeFunctionFor:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionFor, which embeds its Node header at offset zero.
 		return (*TypeFunctionFor)(unsafe.Pointer(n)).ForEachChild(v)
@@ -9871,6 +9935,21 @@ func (n *Node) ForEachChild(v Visitor) bool {
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionDeclaration:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionReturn:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionReturn, which embeds its Node header at offset zero.
+		return (*TypeFunctionReturn)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionCallStatement:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionCallStatement, which embeds its Node header at offset zero.
+		return (*TypeFunctionCallStatement)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionIf:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionIf, which embeds its Node header at offset zero.
+		return (*TypeFunctionIf)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionWhile:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionWhile, which embeds its Node header at offset zero.
+		return (*TypeFunctionWhile)(unsafe.Pointer(n)).ForEachChild(v)
 	default:
 		return false
 	}
@@ -9984,7 +10063,7 @@ func (n *Node) VisitEachChild(v *NodeVisitor) *Node {
 	case KindInterfaceDeclaration:
 		// SAFETY: This case only matches kinds allocated as a InterfaceDeclaration, which embeds its Node header at offset zero.
 		return (*InterfaceDeclaration)(unsafe.Pointer(n)).VisitEachChild(v)
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		// SAFETY: This case only matches kinds allocated as a TypeAliasDeclaration, which embeds its Node header at offset zero.
 		return (*TypeAliasDeclaration)(unsafe.Pointer(n)).VisitEachChild(v)
 	case KindEnumMember:
@@ -10395,12 +10474,6 @@ func (n *Node) VisitEachChild(v *NodeVisitor) *Node {
 	case KindTypeFunctionAssignment:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionAssignment, which embeds its Node header at offset zero.
 		return (*TypeFunctionAssignment)(unsafe.Pointer(n)).VisitEachChild(v)
-	case KindTypeFunctionReturn, KindTypeFunctionCallStatement:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionOperandStatement, which embeds its Node header at offset zero.
-		return (*TypeFunctionOperandStatement)(unsafe.Pointer(n)).VisitEachChild(v)
-	case KindTypeFunctionIf, KindTypeFunctionWhile:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionBranch, which embeds its Node header at offset zero.
-		return (*TypeFunctionBranch)(unsafe.Pointer(n)).VisitEachChild(v)
 	case KindTypeFunctionFor:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionFor, which embeds its Node header at offset zero.
 		return (*TypeFunctionFor)(unsafe.Pointer(n)).VisitEachChild(v)
@@ -10419,6 +10492,21 @@ func (n *Node) VisitEachChild(v *NodeVisitor) *Node {
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionDeclaration:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionReturn:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionReturn, which embeds its Node header at offset zero.
+		return (*TypeFunctionReturn)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionCallStatement:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionCallStatement, which embeds its Node header at offset zero.
+		return (*TypeFunctionCallStatement)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionIf:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionIf, which embeds its Node header at offset zero.
+		return (*TypeFunctionIf)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionWhile:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionWhile, which embeds its Node header at offset zero.
+		return (*TypeFunctionWhile)(unsafe.Pointer(n)).VisitEachChild(v)
 	default:
 		return n
 	}
@@ -10582,7 +10670,7 @@ func (n *Node) Clone(f NodeFactoryCoercible) *Node {
 	case KindInterfaceDeclaration:
 		// SAFETY: This case only matches kinds allocated as a InterfaceDeclaration, which embeds its Node header at offset zero.
 		return (*InterfaceDeclaration)(unsafe.Pointer(n)).Clone(f)
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		// SAFETY: This case only matches kinds allocated as a TypeAliasDeclaration, which embeds its Node header at offset zero.
 		return (*TypeAliasDeclaration)(unsafe.Pointer(n)).Clone(f)
 	case KindEnumMember:
@@ -11020,12 +11108,6 @@ func (n *Node) Clone(f NodeFactoryCoercible) *Node {
 	case KindTypeFunctionAssignment:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionAssignment, which embeds its Node header at offset zero.
 		return (*TypeFunctionAssignment)(unsafe.Pointer(n)).Clone(f)
-	case KindTypeFunctionReturn, KindTypeFunctionCallStatement:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionOperandStatement, which embeds its Node header at offset zero.
-		return (*TypeFunctionOperandStatement)(unsafe.Pointer(n)).Clone(f)
-	case KindTypeFunctionIf, KindTypeFunctionWhile:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionBranch, which embeds its Node header at offset zero.
-		return (*TypeFunctionBranch)(unsafe.Pointer(n)).Clone(f)
 	case KindTypeFunctionFor:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionFor, which embeds its Node header at offset zero.
 		return (*TypeFunctionFor)(unsafe.Pointer(n)).Clone(f)
@@ -11044,6 +11126,21 @@ func (n *Node) Clone(f NodeFactoryCoercible) *Node {
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionDeclaration:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionReturn:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionReturn, which embeds its Node header at offset zero.
+		return (*TypeFunctionReturn)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionCallStatement:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionCallStatement, which embeds its Node header at offset zero.
+		return (*TypeFunctionCallStatement)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionIf:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionIf, which embeds its Node header at offset zero.
+		return (*TypeFunctionIf)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionWhile:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionWhile, which embeds its Node header at offset zero.
+		return (*TypeFunctionWhile)(unsafe.Pointer(n)).Clone(f)
 	default:
 		return nil
 	}
@@ -11185,7 +11282,7 @@ func (n *Node) SubtreeFacts() SubtreeFacts {
 		return (*HeritageClause)(unsafe.Pointer(n)).subtreeFactsWorker(n)
 	case KindInterfaceDeclaration:
 		return n.computeSubtreeFacts()
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		return n.computeSubtreeFacts()
 	case KindEnumMember:
 		// SAFETY: This case only matches kinds allocated as a EnumMember, which embeds its Node header at offset zero.
@@ -11522,10 +11619,6 @@ func (n *Node) SubtreeFacts() SubtreeFacts {
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionAssignment:
 		return n.computeSubtreeFacts()
-	case KindTypeFunctionReturn, KindTypeFunctionCallStatement:
-		return n.computeSubtreeFacts()
-	case KindTypeFunctionIf, KindTypeFunctionWhile:
-		return n.computeSubtreeFacts()
 	case KindTypeFunctionFor:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionMatch:
@@ -11537,6 +11630,16 @@ func (n *Node) SubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionNot:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionConstructorSlots:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionDeclaration:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionReturn:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionCallStatement:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionIf:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionWhile:
 		return n.computeSubtreeFacts()
 	default:
 		return SubtreeFactsNone
@@ -11695,7 +11798,7 @@ func (n *Node) computeSubtreeFacts() SubtreeFacts {
 	case KindInterfaceDeclaration:
 		// SAFETY: This case only matches kinds allocated as a InterfaceDeclaration, which embeds its Node header at offset zero.
 		return (*InterfaceDeclaration)(unsafe.Pointer(n)).computeSubtreeFacts()
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		// SAFETY: This case only matches kinds allocated as a TypeAliasDeclaration, which embeds its Node header at offset zero.
 		return (*TypeAliasDeclaration)(unsafe.Pointer(n)).computeSubtreeFacts()
 	case KindEnumMember:
@@ -12133,12 +12236,6 @@ func (n *Node) computeSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionAssignment:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionAssignment, which embeds its Node header at offset zero.
 		return (*TypeFunctionAssignment)(unsafe.Pointer(n)).computeSubtreeFacts()
-	case KindTypeFunctionReturn, KindTypeFunctionCallStatement:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionOperandStatement, which embeds its Node header at offset zero.
-		return (*TypeFunctionOperandStatement)(unsafe.Pointer(n)).computeSubtreeFacts()
-	case KindTypeFunctionIf, KindTypeFunctionWhile:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionBranch, which embeds its Node header at offset zero.
-		return (*TypeFunctionBranch)(unsafe.Pointer(n)).computeSubtreeFacts()
 	case KindTypeFunctionFor:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionFor, which embeds its Node header at offset zero.
 		return (*TypeFunctionFor)(unsafe.Pointer(n)).computeSubtreeFacts()
@@ -12157,6 +12254,21 @@ func (n *Node) computeSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionDeclaration:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionReturn:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionReturn, which embeds its Node header at offset zero.
+		return (*TypeFunctionReturn)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionCallStatement:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionCallStatement, which embeds its Node header at offset zero.
+		return (*TypeFunctionCallStatement)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionIf:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionIf, which embeds its Node header at offset zero.
+		return (*TypeFunctionIf)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionWhile:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionWhile, which embeds its Node header at offset zero.
+		return (*TypeFunctionWhile)(unsafe.Pointer(n)).computeSubtreeFacts()
 	default:
 		return SubtreeFactsNone
 	}
@@ -12314,7 +12426,7 @@ func (n *Node) propagateSubtreeFacts() SubtreeFacts {
 	case KindInterfaceDeclaration:
 		// SAFETY: This case only matches kinds allocated as a InterfaceDeclaration, which embeds its Node header at offset zero.
 		return (*InterfaceDeclaration)(unsafe.Pointer(n)).propagateSubtreeFacts()
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		// SAFETY: This case only matches kinds allocated as a TypeAliasDeclaration, which embeds its Node header at offset zero.
 		return (*TypeAliasDeclaration)(unsafe.Pointer(n)).propagateSubtreeFacts()
 	case KindEnumMember:
@@ -12752,12 +12864,6 @@ func (n *Node) propagateSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionAssignment:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionAssignment, which embeds its Node header at offset zero.
 		return (*TypeFunctionAssignment)(unsafe.Pointer(n)).propagateSubtreeFacts()
-	case KindTypeFunctionReturn, KindTypeFunctionCallStatement:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionOperandStatement, which embeds its Node header at offset zero.
-		return (*TypeFunctionOperandStatement)(unsafe.Pointer(n)).propagateSubtreeFacts()
-	case KindTypeFunctionIf, KindTypeFunctionWhile:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionBranch, which embeds its Node header at offset zero.
-		return (*TypeFunctionBranch)(unsafe.Pointer(n)).propagateSubtreeFacts()
 	case KindTypeFunctionFor:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionFor, which embeds its Node header at offset zero.
 		return (*TypeFunctionFor)(unsafe.Pointer(n)).propagateSubtreeFacts()
@@ -12776,6 +12882,21 @@ func (n *Node) propagateSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionDeclaration:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionReturn:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionReturn, which embeds its Node header at offset zero.
+		return (*TypeFunctionReturn)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionCallStatement:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionCallStatement, which embeds its Node header at offset zero.
+		return (*TypeFunctionCallStatement)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionIf:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionIf, which embeds its Node header at offset zero.
+		return (*TypeFunctionIf)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionWhile:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionWhile, which embeds its Node header at offset zero.
+		return (*TypeFunctionWhile)(unsafe.Pointer(n)).propagateSubtreeFacts()
 	default:
 		return SubtreeFactsNone
 	}
@@ -12827,7 +12948,6 @@ var nodeFlowNodeDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindInterfaceDeclaration:       25,
 	KindTypeAliasDeclaration:       26,
 	KindJSTypeAliasDeclaration:     26,
-	KindTypeFunctionDeclaration:    26,
 	KindEnumDeclaration:            27,
 	KindModuleBlock:                28,
 	KindNotEmittedStatement:        29,
@@ -12854,12 +12974,13 @@ var nodeFlowNodeDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindExportDeclaration:          44,
 	KindTypeFunctionBinding:        45,
 	KindTypeFunctionAssignment:     46,
-	KindTypeFunctionReturn:         47,
-	KindTypeFunctionCallStatement:  47,
-	KindTypeFunctionIf:             48,
-	KindTypeFunctionWhile:          48,
-	KindTypeFunctionFor:            49,
-	KindTypeFunctionMatch:          50,
+	KindTypeFunctionFor:            47,
+	KindTypeFunctionMatch:          48,
+	KindTypeFunctionDeclaration:    49,
+	KindTypeFunctionReturn:         50,
+	KindTypeFunctionCallStatement:  51,
+	KindTypeFunctionIf:             52,
+	KindTypeFunctionWhile:          53,
 }
 
 func (n *Node) FlowNodeData() *FlowNodeBase {
@@ -13003,17 +13124,26 @@ func (n *Node) FlowNodeData() *FlowNodeBase {
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionAssignment, which embeds its Node header at offset zero.
 		return (*TypeFunctionAssignment)(unsafe.Pointer(n)).FlowNodeData()
 	case 47:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionOperandStatement, which embeds its Node header at offset zero.
-		return (*TypeFunctionOperandStatement)(unsafe.Pointer(n)).FlowNodeData()
-	case 48:
-		// SAFETY: This case only matches kinds allocated as a TypeFunctionBranch, which embeds its Node header at offset zero.
-		return (*TypeFunctionBranch)(unsafe.Pointer(n)).FlowNodeData()
-	case 49:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionFor, which embeds its Node header at offset zero.
 		return (*TypeFunctionFor)(unsafe.Pointer(n)).FlowNodeData()
-	case 50:
+	case 48:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionMatch, which embeds its Node header at offset zero.
 		return (*TypeFunctionMatch)(unsafe.Pointer(n)).FlowNodeData()
+	case 49:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).FlowNodeData()
+	case 50:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionReturn, which embeds its Node header at offset zero.
+		return (*TypeFunctionReturn)(unsafe.Pointer(n)).FlowNodeData()
+	case 51:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionCallStatement, which embeds its Node header at offset zero.
+		return (*TypeFunctionCallStatement)(unsafe.Pointer(n)).FlowNodeData()
+	case 52:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionIf, which embeds its Node header at offset zero.
+		return (*TypeFunctionIf)(unsafe.Pointer(n)).FlowNodeData()
+	case 53:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionWhile, which embeds its Node header at offset zero.
+		return (*TypeFunctionWhile)(unsafe.Pointer(n)).FlowNodeData()
 	default:
 		return nil
 	}
@@ -13030,7 +13160,6 @@ var nodeDeclarationDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindInterfaceDeclaration:          8,
 	KindTypeAliasDeclaration:          9,
 	KindJSTypeAliasDeclaration:        9,
-	KindTypeFunctionDeclaration:       9,
 	KindEnumMember:                    10,
 	KindEnumDeclaration:               11,
 	KindNotEmittedTypeElement:         12,
@@ -13079,6 +13208,7 @@ var nodeDeclarationDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindImportSpecifier:               54,
 	KindTypeParameter:                 55,
 	KindJSDocTypeLiteral:              56,
+	KindTypeFunctionDeclaration:       57,
 }
 
 func (n *Node) DeclarationData() *DeclarationBase {
@@ -13251,6 +13381,9 @@ func (n *Node) DeclarationData() *DeclarationBase {
 	case 56:
 		// SAFETY: This case only matches kinds allocated as a JSDocTypeLiteral, which embeds its Node header at offset zero.
 		return (*JSDocTypeLiteral)(unsafe.Pointer(n)).DeclarationData()
+	case 57:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).DeclarationData()
 	default:
 		return nil
 	}
@@ -13265,7 +13398,6 @@ var nodeExportableDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindInterfaceDeclaration:    6,
 	KindTypeAliasDeclaration:    7,
 	KindJSTypeAliasDeclaration:  7,
-	KindTypeFunctionDeclaration: 7,
 	KindEnumDeclaration:         8,
 	KindNamespaceImport:         9,
 	KindExportSpecifier:         10,
@@ -13273,6 +13405,7 @@ var nodeExportableDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindImportEqualsDeclaration: 12,
 	KindImportClause:            13,
 	KindImportSpecifier:         14,
+	KindTypeFunctionDeclaration: 15,
 }
 
 func (n *Node) ExportableData() *ExportableBase {
@@ -13319,6 +13452,9 @@ func (n *Node) ExportableData() *ExportableBase {
 	case 14:
 		// SAFETY: This case only matches kinds allocated as a ImportSpecifier, which embeds its Node header at offset zero.
 		return (*ImportSpecifier)(unsafe.Pointer(n)).ExportableData()
+	case 15:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).ExportableData()
 	default:
 		return nil
 	}
@@ -13336,7 +13472,6 @@ var nodeLocalsContainerDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindClassExpression:             8,
 	KindTypeAliasDeclaration:        9,
 	KindJSTypeAliasDeclaration:      9,
-	KindTypeFunctionDeclaration:     9,
 	KindCallSignature:               10,
 	KindConstructSignature:          11,
 	KindConstructor:                 12,
@@ -13357,6 +13492,7 @@ var nodeLocalsContainerDataDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindTypeFunctionBlock:           27,
 	KindTypeFunctionFor:             28,
 	KindTypeFunctionArm:             29,
+	KindTypeFunctionDeclaration:     30,
 }
 
 func (n *Node) LocalsContainerData() *LocalsContainerBase {
@@ -13448,6 +13584,9 @@ func (n *Node) LocalsContainerData() *LocalsContainerBase {
 	case 29:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionArm, which embeds its Node header at offset zero.
 		return (*TypeFunctionArm)(unsafe.Pointer(n)).LocalsContainerData()
+	case 30:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).LocalsContainerData()
 	default:
 		return nil
 	}
@@ -13649,7 +13788,6 @@ var nodeNameDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindInterfaceDeclaration:        7,
 	KindTypeAliasDeclaration:        8,
 	KindJSTypeAliasDeclaration:      8,
-	KindTypeFunctionDeclaration:     8,
 	KindEnumMember:                  9,
 	KindEnumDeclaration:             10,
 	KindNamespaceImport:             11,
@@ -13684,6 +13822,7 @@ var nodeNameDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindTypeParameter:               40,
 	KindJSDocParameterTag:           41,
 	KindJSDocPropertyTag:            41,
+	KindTypeFunctionDeclaration:     42,
 }
 
 func (n *Node) Name() *DeclarationName {
@@ -13811,6 +13950,9 @@ func (n *Node) Name() *DeclarationName {
 	case 41:
 		// SAFETY: This case only matches kinds allocated as a JSDocParameterOrPropertyTag, which embeds its Node header at offset zero.
 		return (*JSDocParameterOrPropertyTag)(unsafe.Pointer(n)).Name()
+	case 42:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).Name()
 	default:
 		return nil
 	}
@@ -13826,7 +13968,6 @@ var nodeModifiersDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindInterfaceDeclaration:        7,
 	KindTypeAliasDeclaration:        8,
 	KindJSTypeAliasDeclaration:      8,
-	KindTypeFunctionDeclaration:     8,
 	KindEnumDeclaration:             9,
 	KindImportDeclaration:           10,
 	KindJSImportDeclaration:         10,
@@ -13851,6 +13992,7 @@ var nodeModifiersDispatch = [kindFlowReduceLabelData + 1]uint8{
 	KindImportEqualsDeclaration:     29,
 	KindExportDeclaration:           30,
 	KindTypeParameter:               31,
+	KindTypeFunctionDeclaration:     32,
 }
 
 func (n *Node) Modifiers() *ModifierList {
@@ -13948,6 +14090,9 @@ func (n *Node) Modifiers() *ModifierList {
 	case 31:
 		// SAFETY: This case only matches kinds allocated as a TypeParameterDeclaration, which embeds its Node header at offset zero.
 		return (*TypeParameterDeclaration)(unsafe.Pointer(n)).Modifiers()
+	case 32:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		return (*TypeFunctionDeclaration)(unsafe.Pointer(n)).Modifiers()
 	default:
 		return nil
 	}
@@ -13976,7 +14121,7 @@ func (n *MutableNode) SetModifiers(modifiers *ModifierList) {
 	case KindInterfaceDeclaration:
 		// SAFETY: This case only matches kinds allocated as a InterfaceDeclaration, which embeds its Node header at offset zero.
 		(*InterfaceDeclaration)(unsafe.Pointer(n)).setModifiers(modifiers)
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 		// SAFETY: This case only matches kinds allocated as a TypeAliasDeclaration, which embeds its Node header at offset zero.
 		(*TypeAliasDeclaration)(unsafe.Pointer(n)).setModifiers(modifiers)
 	case KindEnumDeclaration:
@@ -14048,6 +14193,9 @@ func (n *MutableNode) SetModifiers(modifiers *ModifierList) {
 	case KindTypeParameter:
 		// SAFETY: This case only matches kinds allocated as a TypeParameterDeclaration, which embeds its Node header at offset zero.
 		(*TypeParameterDeclaration)(unsafe.Pointer(n)).setModifiers(modifiers)
+	case KindTypeFunctionDeclaration:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+		(*TypeFunctionDeclaration)(unsafe.Pointer(n)).setModifiers(modifiers)
 	}
 }
 
@@ -14253,14 +14401,17 @@ var (
 	_ [0 - unsafe.Offsetof(TypeFunctionBlock{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionBinding{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionAssignment{}.Node)]byte
-	_ [0 - unsafe.Offsetof(TypeFunctionOperandStatement{}.Node)]byte
-	_ [0 - unsafe.Offsetof(TypeFunctionBranch{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionFor{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionMatch{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionArm{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionBinary{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionNot{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionConstructorSlots{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionDeclaration{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionReturn{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionCallStatement{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionIf{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionWhile{}.Node)]byte
 )
 
 func (n *Node) AsToken() *Token {
@@ -14583,7 +14734,7 @@ func (n *Node) AsInterfaceDeclaration() *InterfaceDeclaration {
 
 func (n *Node) AsTypeAliasDeclaration() *TypeAliasDeclaration {
 	switch n.Kind {
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
 	default:
 		panic("Invalid node cast to TypeAliasDeclaration")
 	}
@@ -15847,26 +15998,6 @@ func (n *Node) AsTypeFunctionAssignment() *TypeFunctionAssignment {
 	return (*TypeFunctionAssignment)(unsafe.Pointer(n))
 }
 
-func (n *Node) AsTypeFunctionOperandStatement() *TypeFunctionOperandStatement {
-	switch n.Kind {
-	case KindTypeFunctionReturn, KindTypeFunctionCallStatement:
-	default:
-		panic("Invalid node cast to TypeFunctionOperandStatement")
-	}
-	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionOperandStatement, which embeds its Node header at offset zero.
-	return (*TypeFunctionOperandStatement)(unsafe.Pointer(n))
-}
-
-func (n *Node) AsTypeFunctionBranch() *TypeFunctionBranch {
-	switch n.Kind {
-	case KindTypeFunctionIf, KindTypeFunctionWhile:
-	default:
-		panic("Invalid node cast to TypeFunctionBranch")
-	}
-	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionBranch, which embeds its Node header at offset zero.
-	return (*TypeFunctionBranch)(unsafe.Pointer(n))
-}
-
 func (n *Node) AsTypeFunctionFor() *TypeFunctionFor {
 	if n.Kind != KindTypeFunctionFor {
 		panic("Invalid node cast to TypeFunctionFor")
@@ -15913,6 +16044,46 @@ func (n *Node) AsTypeFunctionConstructorSlots() *TypeFunctionConstructorSlots {
 	}
 	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 	return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionDeclaration() *TypeFunctionDeclaration {
+	if n.Kind != KindTypeFunctionDeclaration {
+		panic("Invalid node cast to TypeFunctionDeclaration")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionDeclaration, which embeds its Node header at offset zero.
+	return (*TypeFunctionDeclaration)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionReturn() *TypeFunctionReturn {
+	if n.Kind != KindTypeFunctionReturn {
+		panic("Invalid node cast to TypeFunctionReturn")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionReturn, which embeds its Node header at offset zero.
+	return (*TypeFunctionReturn)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionCallStatement() *TypeFunctionCallStatement {
+	if n.Kind != KindTypeFunctionCallStatement {
+		panic("Invalid node cast to TypeFunctionCallStatement")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionCallStatement, which embeds its Node header at offset zero.
+	return (*TypeFunctionCallStatement)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionIf() *TypeFunctionIf {
+	if n.Kind != KindTypeFunctionIf {
+		panic("Invalid node cast to TypeFunctionIf")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionIf, which embeds its Node header at offset zero.
+	return (*TypeFunctionIf)(unsafe.Pointer(n))
+}
+
+func (n *Node) AsTypeFunctionWhile() *TypeFunctionWhile {
+	if n.Kind != KindTypeFunctionWhile {
+		panic("Invalid node cast to TypeFunctionWhile")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionWhile, which embeds its Node header at offset zero.
+	return (*TypeFunctionWhile)(unsafe.Pointer(n))
 }
 
 // ──────────────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ package checker
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -49,6 +50,7 @@ func (c *Checker) typeFunctionDisplay(t *Type, depth int) string {
 	}
 	return c.typeFunctionKind(t)
 }
+
 func (f *typeFunctionFrame) log(node *ast.Node) {
 	c := f.c
 	root := c.typeFunctionExecution
@@ -65,8 +67,8 @@ func (f *typeFunctionFrame) log(node *ast.Node) {
 			values = append(values, strconv.Quote(n.AsLiteralTypeNode().Literal.Text()))
 		} else if isSimpleIdentifierTypeReference(n) {
 			name := n.AsTypeReferenceNode().TypeName.Text()
-			for i := len(f.sources) - 1; i >= 0; i-- {
-				if f.sources[i].symbol != nil && f.sources[i].symbol.Name() == name {
+			for i, source := range slices.Backward(f.sources) {
+				if source.symbol != nil && source.symbol.Name() == name {
 					values = append(values, c.typeFunctionDisplay(f.values[i], 0))
 					break
 				}
@@ -74,4 +76,31 @@ func (f *typeFunctionFrame) log(node *ast.Node) {
 		}
 	}
 	root.trace = append(root.trace, fmt.Sprintf("%s (called at %s) %s", typeFunctionLocation(node), typeFunctionLocation(root.site), strings.Join(values, " ")))
+}
+
+type typeFunctionTraceKey struct {
+	site      *ast.Node
+	arguments CacheHashKey
+}
+
+func (c *Checker) publishTypeFunctionTrace(app *typeFunctionApplication) {
+	root := c.typeFunctionExecution
+	if len(root.trace) == 0 || (c.ctx != nil && c.ctx.Err() != nil) {
+		return
+	}
+	host, ok := c.program.(interface{ TraceTypeFunction(event string) })
+	if !ok {
+		return
+	}
+	key := typeFunctionTraceKey{app.use, getTypeListKey(app.arguments)}
+	if c.typeFunctionReportedTraces[key] {
+		return
+	}
+	if c.typeFunctionReportedTraces == nil {
+		c.typeFunctionReportedTraces = make(map[typeFunctionTraceKey]bool)
+	}
+	c.typeFunctionReportedTraces[key] = true
+	for _, event := range root.trace {
+		host.TraceTypeFunction(event)
+	}
 }

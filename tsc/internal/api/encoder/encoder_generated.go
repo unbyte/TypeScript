@@ -137,7 +137,7 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindInterfaceDeclaration:
 		n := node.AsInterfaceDeclaration()
 		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.HeritageClauses != nil) << 3) | (boolToByte(n.Members != nil) << 4)
-	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
 		n := node.AsTypeAliasDeclaration()
 		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.Type != nil) << 3)
 	case ast.KindEnumMember:
@@ -545,12 +545,6 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindTypeFunctionAssignment:
 		n := node.AsTypeFunctionAssignment()
 		return (boolToByte(n.Target != nil) << 0) | (boolToByte(n.Value != nil) << 1)
-	case ast.KindTypeFunctionReturn, ast.KindTypeFunctionCallStatement:
-		n := node.AsTypeFunctionOperandStatement()
-		return (boolToByte(n.Operand != nil) << 0)
-	case ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile:
-		n := node.AsTypeFunctionBranch()
-		return (boolToByte(n.Condition != nil) << 0) | (boolToByte(n.Block != nil) << 1) | (boolToByte(n.ElseBranch != nil) << 2)
 	case ast.KindTypeFunctionFor:
 		n := node.AsTypeFunctionFor()
 		return (boolToByte(n.Binding != nil) << 0) | (boolToByte(n.Sequence != nil) << 1) | (boolToByte(n.Block != nil) << 2)
@@ -569,6 +563,21 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindTypeFunctionConstructorSlots:
 		n := node.AsTypeFunctionConstructorSlots()
 		return (boolToByte(n.Holes != nil) << 0)
+	case ast.KindTypeFunctionDeclaration:
+		n := node.AsTypeFunctionDeclaration()
+		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.Body != nil) << 3)
+	case ast.KindTypeFunctionReturn:
+		n := node.AsTypeFunctionReturn()
+		return (boolToByte(n.Operand != nil) << 0)
+	case ast.KindTypeFunctionCallStatement:
+		n := node.AsTypeFunctionCallStatement()
+		return (boolToByte(n.Operand != nil) << 0)
+	case ast.KindTypeFunctionIf:
+		n := node.AsTypeFunctionIf()
+		return (boolToByte(n.Condition != nil) << 0) | (boolToByte(n.Block != nil) << 1) | (boolToByte(n.ElseBranch != nil) << 2)
+	case ast.KindTypeFunctionWhile:
+		n := node.AsTypeFunctionWhile()
+		return (boolToByte(n.Condition != nil) << 0) | (boolToByte(n.Block != nil) << 1)
 	default:
 		return 0
 	}

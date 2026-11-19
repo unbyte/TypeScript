@@ -2,12 +2,14 @@ package checker
 
 import (
 	"fmt"
+	"slices"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
-	"slices"
+	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 )
 
-func (c *Checker) typeFunctionCallable(op string, args []*Type) *Type {
+func (c *Checker) typeFunctionCallable(node *ast.Node, op string, args []*Type) *Type {
 	t := args[0]
 	field := c.getTypeOfPropertyOfType
 	switch op {
@@ -30,7 +32,7 @@ func (c *Checker) typeFunctionCallable(op string, args []*Type) *Type {
 			from = append(from, a)
 			to = append(to, b)
 		}
-		return c.instantiateType(t, newTypeMapper(from, to))
+		return c.substituteTypeFunctionFragment(t, newTypeMapper(from, to))
 	case "specialize":
 		input, ok := typeFunctionTuple(c, args[1])
 		if !ok {
@@ -68,8 +70,19 @@ func (c *Checker) typeFunctionCallable(op string, args []*Type) *Type {
 		if t.flags&TypeFlagsUnion != 0 || len(calls)+len(ctors) == 0 {
 			return nil
 		}
-		members := ast.NewSymbolTable()
-		for _, p := range c.getPropertiesOfType(t) {
+		properties := c.getPropertiesOfType(t)
+		if !c.typeFunctionCharge(node, len(properties)+len(calls)+len(ctors)) {
+			return c.anyType
+		}
+		for _, group := range [][]*Signature{calls, ctors} {
+			for _, sig := range group {
+				if !c.typeFunctionCharge(node, len(sig.parameters)+len(sig.TypeParameters())) {
+					return c.anyType
+				}
+			}
+		}
+		members := ast.NewSymbolTableWithCapacity(len(properties))
+		for _, p := range properties {
 			members.Set(p.Name(), p)
 		}
 		return c.typeFunctionRecord(typeFunctionField{"members", c.newAnonymousType(nil, members, nil, nil, c.getIndexInfosOfType(t))}, typeFunctionField{"calls", c.createTupleType(core.Map(calls, c.describeTypeFunctionSignature))}, typeFunctionField{"constructs", c.createTupleType(core.Map(ctors, c.describeTypeFunctionSignature))})
@@ -78,8 +91,12 @@ func (c *Checker) typeFunctionCallable(op string, args []*Type) *Type {
 		if parts == nil || parts.flags&TypeFlagsObject == 0 {
 			return nil
 		}
-		members := ast.NewSymbolTable()
-		for _, p := range c.getPropertiesOfType(parts) {
+		properties := c.getPropertiesOfType(parts)
+		if !c.typeFunctionCharge(node, len(properties)) {
+			return c.anyType
+		}
+		members := ast.NewSymbolTableWithCapacity(len(properties))
+		for _, p := range properties {
 			members.Set(p.Name(), p)
 		}
 		var groups [2][]*Signature
@@ -88,11 +105,11 @@ func (c *Checker) typeFunctionCallable(op string, args []*Type) *Type {
 				return nil
 			}
 			records, ok := typeFunctionTuple(c, field(t, list))
-			if !ok {
+			if !ok || !c.typeFunctionCharge(node, len(records)) {
 				return nil
 			}
 			for _, r := range records {
-				sig := c.composeTypeFunctionSignature(r, i == 1)
+				sig := c.composeTypeFunctionSignature(node, r, i == 1)
 				if sig == nil {
 					return nil
 				}
@@ -106,13 +123,18 @@ func (c *Checker) typeFunctionCallable(op string, args []*Type) *Type {
 
 func (c *Checker) typeFunctionBinderRef(key *Type) *Type {
 	root := c.typeFunctionExecution
+	root.fragments = true
 	if root.refs == nil {
 		root.refs = make(map[*Type]*Type)
 	}
 	if ref := root.refs[key]; ref != nil {
 		return ref
 	}
-	ref := c.newTypeParameter(nil)
+	name, ok := typeFunctionString(key)
+	if !ok {
+		name = "T"
+	}
+	ref := c.newTypeParameter(c.newSymbol(ast.SymbolFlagsTypeParameter, name))
 	ref.AsTypeParameter().constraint = c.noConstraintType
 	root.refs[key] = ref
 	return ref
@@ -123,6 +145,7 @@ func (c *Checker) describeTypeFunctionSignature(s *Signature) *Type {
 	record := c.typeFunctionRecord
 	var parameters, binders []*Type
 	for _, p := range s.TypeParameters() {
+		c.typeFunctionExecution.fragments = true
 		key := word(p.symbol.Name())
 		f := []typeFunctionField{{"name", key}, {"key", key}, {"ref", p}}
 		if constraint := c.getConstraintOfTypeParameter(p); constraint != nil {
@@ -178,25 +201,33 @@ func (c *Checker) describeTypeFunctionSignature(s *Signature) *Type {
 	return record(fields...)
 }
 
-func (c *Checker) composeTypeFunctionSignature(r *Type, construct bool) *Signature {
+func (c *Checker) composeTypeFunctionSignature(node *ast.Node, r *Type, construct bool) *Signature {
 	field := c.getTypeOfPropertyOfType
 	var old, params []*Type
 	var declarations []*Type
 	if list := field(r, "typeParameters"); list != nil {
 		var ok bool
 		declarations, ok = typeFunctionTuple(c, list)
-		if !ok {
+		if !ok || !c.typeFunctionCharge(node, len(declarations)) {
 			return nil
 		}
 	}
 	keys := make(map[*Type]bool)
+	names := make(map[string]bool)
+	seenDefault := false
 	for _, d := range declarations {
 		key := field(d, "key")
 		name, ok := typeFunctionString(field(d, "name"))
-		if !ok || key == nil || !isTypeUsableAsPropertyName(key) || keys[key] {
+		if !ok || !scanner.IsIdentifierText(name, core.LanguageVariantStandard) || names[name] || key == nil || !isTypeUsableAsPropertyName(key) || keys[key] {
 			return nil
 		}
 		keys[key] = true
+		names[name] = true
+		if field(d, "default") != nil {
+			seenDefault = true
+		} else if seenDefault {
+			return nil
+		}
 		ref := field(d, "ref")
 		if ref == nil {
 			ref = c.typeFunctionBinderRef(key)
@@ -204,20 +235,34 @@ func (c *Checker) composeTypeFunctionSignature(r *Type, construct bool) *Signatu
 		if ref.flags&TypeFlagsTypeParameter == 0 {
 			return nil
 		}
-		p := c.newTypeParameter(c.newSymbol(ast.SymbolFlagsTypeParameter, name))
+		symbol := c.newSymbol(ast.SymbolFlagsTypeParameter, name)
+		isConst, validConst := c.typeFunctionFlag(d, "const")
+		if !validConst {
+			return nil
+		}
+		if isConst {
+			f := ast.NewNodeFactory(ast.NodeFactoryHooks{})
+			modifiers := f.NewModifierList([]*ast.Node{f.NewModifier(ast.KindConstKeyword)})
+			symbol.SetDeclarations([]*ast.Node{f.NewTypeParameterDeclaration(modifiers, f.NewIdentifier(name), nil, nil, nil)})
+		}
+		p := c.newTypeParameter(symbol)
 		p.AsTypeParameter().constraint = c.noConstraintType
 		p.AsTypeParameter().resolvedDefaultType = c.noConstraintType
 		old = append(old, ref)
 		params = append(params, p)
 	}
 	mapper := newTypeMapper(old, params)
-	mapped := func(t *Type) *Type { return c.instantiateType(t, mapper) }
+	mapped := func(t *Type) *Type { return c.substituteTypeFunctionFragment(t, mapper) }
 	for i, d := range declarations {
 		if con := field(d, "constraint"); con != nil {
 			params[i].AsTypeParameter().constraint = mapped(con)
 		}
 		if def := field(d, "default"); def != nil {
-			params[i].AsTypeParameter().resolvedDefaultType = mapped(def)
+			value := mapped(def)
+			if constraint := c.getConstraintOfTypeParameter(params[i]); constraint != nil && !c.isTypeAssignableTo(value, constraint) {
+				return nil
+			}
+			params[i].AsTypeParameter().resolvedDefaultType = value
 		}
 	}
 	var recv *ast.Symbol
@@ -229,7 +274,7 @@ func (c *Checker) composeTypeFunctionSignature(r *Type, construct bool) *Signatu
 		recv = c.newParameter("this", mapped(v))
 	}
 	values, ok := typeFunctionTuple(c, field(r, "parameters"))
-	if !ok {
+	if !ok || !c.typeFunctionCharge(node, len(values)) {
 		return nil
 	}
 	var parameters []*ast.Symbol
@@ -254,7 +299,6 @@ func (c *Checker) composeTypeFunctionSignature(r *Type, construct bool) *Signatu
 		name := fmt.Sprintf("arg%d", i)
 		named := field(d, "name")
 		if named != nil {
-			var ok bool
 			name, ok = typeFunctionString(named)
 			if !ok {
 				return nil
@@ -361,6 +405,32 @@ func (c *Checker) composeTypeFunctionSignature(r *Type, construct bool) *Signatu
 		declaration = s.declaration
 	}
 	sig := c.newSignature(flags, declaration, params, recv, parameters, ret, predicate, minCount)
-	sig.typeFunctionComposed = true
+	sig.flags |= SignatureFlagsTypeFunctionComposed
 	return sig
+}
+
+// Native anonymous type declarations carry a mapper and a lexical environment.
+// Computed signature records instead store their fields directly. Rebuild these
+// records under the substitution, leaving native binders to instantiateType.
+func (c *Checker) substituteTypeFunctionFragment(t *Type, m *TypeMapper) *Type {
+	if t == nil {
+		return nil
+	}
+	if c.typeFunctionExecution.records[t] {
+		var fields []typeFunctionField
+		for _, p := range c.getPropertiesOfType(t) {
+			fields = append(fields, typeFunctionField{p.Name(), c.substituteTypeFunctionFragment(c.getTypeOfSymbol(p), m)})
+		}
+		return c.typeFunctionRecord(fields...)
+	}
+	if t.IsTupleType() {
+		args := c.getTypeArguments(t)
+		values := core.Map(args, func(a *Type) *Type { return c.substituteTypeFunctionFragment(a, m) })
+		if !slices.Equal(args, values) {
+			target := t.TargetTupleType()
+			return c.createTupleTypeEx(values, target.elementInfos, target.readonly)
+		}
+		return t
+	}
+	return c.instantiateType(t, m)
 }

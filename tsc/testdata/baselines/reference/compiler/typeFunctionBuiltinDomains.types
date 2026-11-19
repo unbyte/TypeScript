@@ -1,0 +1,275 @@
+//// [tests/cases/compiler/typeFunctionBuiltinDomains.ts] ////
+
+=== typeFunctionBuiltinDomains.ts ===
+typefn Arithmetic<> {
+>Arithmetic : [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 9007199254740991, 12345678901234567890n, -42n, 7n, -3n, -12n, -7n, -2n, -1n, true]
+
+    return [
+        number.add<9007199254740992, 1>, number.subtract<0, 3>, number.multiply<-2, 4>,
+>number : any
+>number : any
+>number : any
+>-2 : -2
+>2 : 2
+
+        number.divide<3, 2>, number.remainder<-5, 3>, number.negate<-1>, number.trunc<-1.75>,
+>number : any
+>number : any
+>-5 : -5
+>5 : 5
+>number : any
+>-1 : -1
+>1 : 1
+>number : any
+>-1.75 : -1.75
+>1.75 : 1.75
+
+        number.lessThan<1, 2>, number.fromDecimal<"+007.5e1">, number.fromBigInt<9007199254740991n>,
+>number : any
+>number : any
+>number : any
+
+        bigint.fromDecimal<"00012345678901234567890">, bigint.fromNumber<-42>,
+>bigint : any
+>bigint : any
+>-42 : -42
+>42 : 42
+
+        bigint.add<3n, 4n>, bigint.subtract<2n, 5n>, bigint.multiply<-3n, 4n>, bigint.negate<7n>,
+>bigint : any
+>bigint : any
+>bigint : any
+>-3n : -3n
+>3n : 3n
+>bigint : any
+
+        bigint.divide<-7n, 3n>, bigint.remainder<-7n, 3n>, bigint.lessThan<0n, 1n>
+>bigint : any
+>-7n : -7n
+>7n : 7n
+>bigint : any
+>-7n : -7n
+>7n : 7n
+>bigint : any
+
+    ];
+}
+declare const math: Arithmetic<>;
+>math : [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 9007199254740991, 12345678901234567890n, -42n, 7n, -3n, -12n, -7n, -2n, -1n, true]
+
+const numbers: [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 9007199254740991,
+>numbers : [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 9007199254740991, 12345678901234567890n, -42n, 7n, -3n, -12n, -7n, -2n, -1n, true]
+>-3 : -3
+>3 : 3
+>-8 : -8
+>8 : 8
+>-2 : -2
+>2 : 2
+>-1 : -1
+>1 : 1
+>true : true
+
+    12345678901234567890n, -42n, 7n, -3n, -12n, -7n, -2n, -1n, true] = math;
+>-42n : -42n
+>42n : 42n
+>-3n : -3n
+>3n : 3n
+>-12n : -12n
+>12n : 12n
+>-7n : -7n
+>7n : 7n
+>-2n : -2n
+>2n : 2n
+>-1n : -1n
+>1n : 1n
+>true : true
+>math : [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 9007199254740991, 12345678901234567890n, -42n, 7n, -3n, -12n, -7n, -2n, -1n, true]
+
+typefn LexicalFacts<S> {
+>LexicalFacts : LexicalFacts<S>
+
+    type Cursor = { source: S; offset: 0 };
+>source : S
+>offset : 0
+
+    return [
+        string.length<S>, string.read<Cursor>, string.slice<S, 0, 2>, string.find<Cursor, "a">,
+>string : any
+>string : any
+>string : any
+>string : any
+
+        string.match<Cursor, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
+>string : any
+>run : [["😀", "😀"]]
+>max : 1
+>string : any
+
+        string.codePoint<"\ud800">, string.fromCodePoint<55296>,
+>string : any
+>string : any
+
+        string.match<Cursor, "b">, string.find<Cursor, "b">
+>string : any
+>string : any
+
+    ];
+}
+declare const text: LexicalFacts<"😀a">;
+>text : [3, ["hit", "😀", { offset: 2; source: "😀a"; }], "😀", ["hit", { end: 3; source: "😀a"; start: 2; }], ["hit", "😀", { offset: 2; source: "😀a"; }], ["a", "", "b", ""], 55296, "\uD800", ["miss"], ["miss"]]
+
+const lexical: [3, ["hit", "😀", {source: "😀a"; offset: 2}], "😀",
+>lexical : [3, ["hit", "😀", { source: "😀a"; offset: 2; }], "😀", ["hit", { source: "😀a"; start: 2; end: 3; }], ["hit", "😀", { source: "😀a"; offset: 2; }], ["a", "", "b", ""], 55296, "\uD800", ["miss"], ["miss"]]
+>source : "😀a"
+>offset : 2
+
+    ["hit", {source: "😀a"; start: 2; end: 3}], ["hit", "😀", {source: "😀a"; offset: 2}],
+>source : "😀a"
+>start : 2
+>end : 3
+>source : "😀a"
+>offset : 2
+
+    ["a", "", "b", ""], 55296, "\ud800", ["miss"], ["miss"]] = text;
+>text : [3, ["hit", "😀", { offset: 2; source: "😀a"; }], "😀", ["hit", { end: 3; source: "😀a"; start: 2; }], ["hit", "😀", { offset: 2; source: "😀a"; }], ["a", "", "b", ""], 55296, "\uD800", ["miss"], ["miss"]]
+
+typefn Forms<T> {
+>Forms : Forms<T>
+
+    type Copy = intersection.fromTuple<intersection.parts<T>>;
+>intersection : any
+>intersection : any
+
+    type Arr = array.compose<array.decompose<readonly T[]>>;
+>array : any
+>array : any
+
+    type Template = template.compose<template.decompose<`id-${number}`>>;
+>template : any
+>template : any
+
+    return [Copy, Arr, Template, type.kind<T>, type.kind<any>, type.kind<unknown>, type.kind<never>,
+>type : any
+>type : any
+>type : any
+>type : any
+
+        type.kind<[T]>, type.kind<T[]>, type.baseOfLiteral<"ok">,
+>type : any
+>type : any
+>type : any
+
+        type.isIdentical<1, number>, type.isAssignableTo<1, number>, tuple.count<[1, 2?]>];
+>type : any
+>type : any
+>tuple : any
+}
+declare const forms: Forms<{a: 1} & {b: 2}>;
+>forms : [{ a: 1; } & { b: 2; }, readonly ({ a: 1; } & { b: 2; })[], `id-${number}`, "intersection", "any", "unknown", "never", "tuple", "array", string, false, true, 1 | 2]
+>a : 1
+>b : 2
+
+const ordinary: [{a: 1; b: 2}, readonly {a: 1; b: 2}[], `id-${number}`, "intersection",
+>ordinary : [{ a: 1; b: 2; }, readonly { a: 1; b: 2; }[], `id-${number}`, "intersection", "any", "unknown", "never", "tuple", "array", string, false, true, 1 | 2]
+>a : 1
+>b : 2
+>a : 1
+>b : 2
+
+    "any", "unknown", "never", "tuple", "array", string, false, true, 1 | 2] = forms;
+>false : false
+>true : true
+>forms : [{ a: 1; } & { b: 2; }, readonly ({ a: 1; } & { b: 2; })[], `id-${number}`, "intersection", "any", "unknown", "never", "tuple", "array", string, false, true, 1 | 2]
+
+enum Choice { First = "x", Second = 5 }
+>Choice : Choice
+>First : Choice.First
+>"x" : "x"
+>Second : Choice.Second
+>5 : 5
+
+typefn Meta<E> { return enumType.members<E>; }
+>Meta : Meta<E>
+>enumType : any
+
+declare const enumInfo: Meta<typeof Choice>;
+>enumInfo : { First: { type: Choice.First; value: ["constant", "x"]; }; Second: { type: Choice.Second; value: ["constant", 5]; }; }
+>Choice : typeof Choice
+
+const enumValue: ["constant", 5] = enumInfo.Second.value;
+>enumValue : ["constant", 5]
+>enumInfo.Second.value : ["constant", 5]
+>enumInfo.Second : { type: Choice.Second; value: ["constant", 5]; }
+>enumInfo : { First: { type: Choice.First; value: ["constant", "x"]; }; Second: { type: Choice.Second; value: ["constant", 5]; }; }
+>Second : { type: Choice.Second; value: ["constant", 5]; }
+>value : ["constant", 5]
+
+typefn Yield<T> { return iter.protocol<T, "sync">; }
+>Yield : Yield<T>
+>iter : any
+
+declare const protocol: Yield<Generator<1, 2, 3>>;
+>protocol : [1, 2, 3]
+
+const iterator: [1, 2, 3] = protocol;
+>iterator : [1, 2, 3]
+>protocol : [1, 2, 3]
+
+type KindKey<T> = T extends { kind: infer K } ? K : never;
+>KindKey : KindKey<T>
+>kind : K
+
+typefn Ordered<T> { return union.toTuple<T, KindKey<_>>; }
+>Ordered : Ordered<T>
+>union : any
+
+declare const ordered: Ordered<{kind:"z"} | {kind:"a"}>;
+>ordered : [{ kind: "a"; }, { kind: "z"; }]
+>kind : "z"
+>kind : "a"
+
+const sort: [{kind:"a"}, {kind:"z"}] = ordered;
+>sort : [{ kind: "a"; }, { kind: "z"; }]
+>kind : "a"
+>kind : "z"
+>ordered : [{ kind: "a"; }, { kind: "z"; }]
+
+typefn Edit<Base, Name> {
+>Edit : Edit<Base, Name>
+
+    type Old = object.getField<Base, Name>;
+>object : any
+
+    type Without = object.removeField<Base, Name>;
+>object : any
+
+    type Absent = object.hasField<Without, Name>;
+>object : any
+
+    type Restored = object.addField<Without, Name, Old>;
+>object : any
+
+    type WithIndex = object.withIndexes<Restored, {key: string; type: number; readonly: true}>;
+>object : any
+>key : string
+>type : number
+>readonly : true
+>true : true
+
+    return [Absent, Restored, object.indexes<WithIndex>];
+>object : any
+}
+declare const edits: Edit<{n: 1}, "n">;
+>edits : [false, { n: 1; }, { key: string; readonly: true; type: number; }]
+>n : 1
+
+const edited: [false, {n: 1}, {key: string; type: number; readonly: true}] = edits;
+>edited : [false, { n: 1; }, { key: string; type: number; readonly: true; }]
+>false : false
+>n : 1
+>key : string
+>type : number
+>readonly : true
+>true : true
+>edits : [false, { n: 1; }, { key: string; readonly: true; type: number; }]
+

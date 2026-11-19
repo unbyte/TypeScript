@@ -1922,7 +1922,12 @@ func (p *Printer) emitTypeArguments(parentNode *ast.Node, nodes *ast.TypeArgumen
 func (p *Printer) emitTypeReference(node *ast.TypeReferenceNode) {
 	state := p.enterNode(node.AsNode())
 	p.emitEntityName(node.TypeName)
-	p.emitTypeArguments(node.AsNode(), node.TypeArguments)
+	if node.TypeArguments != nil && len(node.TypeArguments.Nodes) == 0 {
+		p.writePunctuation("<")
+		p.writePunctuation(">")
+	} else {
+		p.emitTypeArguments(node.AsNode(), node.TypeArguments)
+	}
 	p.exitNode(node.AsNode(), state)
 }
 
@@ -3812,20 +3817,6 @@ func (p *Printer) emitInterfaceDeclaration(node *ast.InterfaceDeclaration) {
 func (p *Printer) emitTypeAliasDeclaration(node *ast.TypeAliasDeclaration) {
 	state := p.enterNode(node.AsNode())
 	p.emitModifierList(node.AsNode(), node.Modifiers(), false /*allowDecorators*/)
-	if node.Kind == ast.KindTypeFunctionDeclaration {
-		p.writeKeyword("typefn")
-		p.writeSpace()
-		p.emitBindingIdentifier(node.Name().AsIdentifier())
-		if len(node.TypeParameters.Nodes) == 0 {
-			p.writePunctuation("<>")
-		} else {
-			p.emitTypeParameters(node.AsNode(), node.TypeParameters)
-		}
-		p.writeSpace()
-		p.emitTypeFunctionBlock(node.Type)
-		p.exitNode(node.AsNode(), state)
-		return
-	}
 	p.writeKeyword("type")
 	p.writeSpace()
 	p.emitBindingIdentifier(node.Name().AsIdentifier())
@@ -4236,7 +4227,9 @@ func (p *Printer) emitStatement(node *ast.Statement) {
 		p.emitClassDeclaration(node.AsClassDeclaration())
 	case ast.KindInterfaceDeclaration:
 		p.emitInterfaceDeclaration(node.AsInterfaceDeclaration())
-	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration:
+	case ast.KindTypeFunctionDeclaration:
+		p.emitTypeFunctionDeclaration(node.AsTypeFunctionDeclaration())
+	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
 		p.emitTypeAliasDeclaration(node.AsTypeAliasDeclaration())
 	case ast.KindEnumDeclaration:
 		p.emitEnumDeclaration(node.AsEnumDeclaration())

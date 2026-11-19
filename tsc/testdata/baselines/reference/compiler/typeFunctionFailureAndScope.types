@@ -83,3 +83,82 @@ const after: "after" = snapshot[1];
 >snapshot : [{ read: () => "before"; }, "after"]
 >1 : 1
 
+typefn Selected<T> { return T extends "yes" ? 1 : Failed<>; }
+>Selected : Selected<T>
+
+declare const selected: Selected<"yes">;
+>selected : 1
+
+const one: 1 = selected;
+>one : 1
+>selected : 1
+
+typefn Span<S> { fail<"unexpected token", { source: S; start: 2; end: 3 }>; }
+>Span : Span<S>
+>source : S
+>start : 2
+>end : 3
+
+declare const spelling: Span<"\u{1F600}\x2b">;
+>spelling : any
+
+spelling.recovered;
+>spelling.recovered : any
+>spelling : any
+>recovered : any
+
+type Computed = `😀${"+"}`;
+>Computed : "😀+"
+
+declare const computed: Span<Computed>;
+>computed : any
+
+computed.recovered;
+>computed.recovered : any
+>computed : any
+>recovered : any
+
+type FailedAlias = Failed<>;
+>FailedAlias : any
+
+declare const firstFailed: FailedAlias;
+>firstFailed : any
+
+declare const secondFailed: FailedAlias;
+>secondFailed : any
+
+firstFailed.a;
+>firstFailed.a : any
+>firstFailed : any
+>a : any
+
+secondFailed.b;
+>secondFailed.b : any
+>secondFailed : any
+>b : any
+
+typefn ConditionalField<T> {
+>ConditionalField : ConditionalField<T>
+
+    return { payload: T extends [infer I] ? { nested: Failed<> } : "ok"; stable: 1 };
+>payload : T extends [infer I] ? { nested: Failed<>; } : "ok"
+>nested : any
+>stable : 1
+}
+declare const matchFails: ConditionalField<[1]>;
+>matchFails : any
+
+matchFails.afterFailure;
+>matchFails.afterFailure : any
+>matchFails : any
+>afterFailure : any
+
+declare const matchSkips: ConditionalField<"outside">;
+>matchSkips : { payload: "ok"; stable: 1; }
+
+const skipped: "ok" = matchSkips.payload;
+>skipped : "ok"
+>matchSkips.payload : "ok"
+>matchSkips : { payload: "ok"; stable: 1; }
+>payload : "ok"
+

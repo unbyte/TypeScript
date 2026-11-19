@@ -594,6 +594,9 @@ type Host interface {
 var nextCheckerID atomic.Uint32
 
 type Checker struct {
+	typeFunctionApplications                    map[*Type]*typeFunctionApplication
+	typeFunctionConstructors                    map[*Type]*typeFunctionConstructor
+	typeFunctionReportedTraces                  map[typeFunctionTraceKey]bool
 	typeFunctionOrigins                         map[*Type]*Signature
 	typeFunctionExecution                       *typeFunctionExecution
 	id                                          uint32
@@ -3070,12 +3073,15 @@ func (c *Checker) checkAccessorDeclaration(node *ast.Node) {
 }
 
 func (c *Checker) checkTypeReferenceNode(node *ast.Node) {
+	c.checkSourceElements(node.TypeArguments())
 	if typeFunctionHole(node) && node.Parent != nil && c.typeFunctionConstructorArity(node.Parent) > 0 {
 		return
 	}
-	if arity := c.typeFunctionConstructorArity(node); arity > 0 {
-		c.readTypeFunctionConstructor(node, arity)
-		return
+	if core.Some(node.TypeArguments(), typeFunctionHole) {
+		if arity := c.typeFunctionConstructorArity(node); arity > 0 {
+			c.readTypeFunctionConstructor(node, arity)
+			return
+		}
 	}
 	if list := node.TypeArgumentList(); list == nil || len(list.Nodes) != 0 || ast.GetDeclarationOfKind(c.getSymbolFromTypeReference(node), ast.KindTypeFunctionDeclaration) == nil {
 		c.checkGrammarTypeArguments(node, node.TypeArgumentList())
@@ -3090,7 +3096,6 @@ func (c *Checker) checkTypeReferenceNode(node *ast.Node) {
 			}
 		}
 	}
-	c.checkSourceElements(node.TypeArguments())
 	if !(isConstTypeReference(node) && ast.IsAssertionExpression(node.Parent)) {
 		c.checkTypeReferenceOrImport(node)
 	}
@@ -7123,20 +7128,24 @@ func (c *Checker) checkTypeAliasDeclaration(node *ast.Node) {
 	typeParameters := node.TypeParameters()
 	c.checkTypeParameters(typeParameters)
 	if ast.IsTypeFunctionDeclaration(node) {
-		c.checkTypeFunctionBlock(typeNode, 0)
-		return
-	}
-	if typeNode != nil && typeNode.Kind == ast.KindIntrinsicKeyword {
+		for _, p := range typeParameters {
+			if expr := p.AsTypeParameterDeclaration().Expression; expr != nil && ast.IsTypeFunctionConstructorSlots(expr) {
+				holes := expr.AsTypeFunctionConstructorSlots().Holes.Nodes
+				if len(holes) == 0 || core.Some(holes, func(h *ast.Node) bool { return h.Text() != "_" }) {
+					c.error(expr, diagnostics.Type_function_Colon_0, "constructor parameters require one or more underscore slots")
+				}
+			}
+		}
+		c.checkTypeFunctionBlock(node.Body(), 0)
+	} else if typeNode != nil && typeNode.Kind == ast.KindIntrinsicKeyword {
 		if !(len(typeParameters) == 0 && node.Name().Text() == "BuiltinIteratorReturn" ||
 			len(typeParameters) == 1 && intrinsicTypeKinds[node.Name().Text()] != IntrinsicTypeKindUnknown) {
 			c.error(typeNode, diagnostics.The_intrinsic_keyword_can_only_be_used_to_declare_compiler_provided_intrinsic_types)
 		}
-		// The `intrinsic` keyword is a leaf type node with no child nodes to check,
-		// so skipping the checkSourceElement below visits nothing.
-		return //nolint:customlint // intrinsic keyword has no children to check
+	} else {
+		c.checkSourceElement(typeNode)
+		c.registerForUnusedIdentifiersCheck(node)
 	}
-	c.checkSourceElement(typeNode)
-	c.registerForUnusedIdentifiersCheck(node)
 }
 
 func (c *Checker) checkTypeNameIsReserved(name *ast.Node, message *diagnostics.Message) {
@@ -17700,13 +17709,6 @@ func (c *Checker) getInferredTypeParameterConstraint(t *Type, omitTypeReferences
 }
 
 func (c *Checker) getTypeParametersForTypeReferenceOrImport(node *ast.Node) []*Type {
-	if ast.IsTypeReferenceNode(node) {
-		if symbol := c.getSymbolFromTypeReference(node); symbol != nil {
-			if decl := ast.GetDeclarationOfKind(symbol, ast.KindTypeFunctionDeclaration); decl != nil {
-				return c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
-			}
-		}
-	}
 	t := c.getTypeFromTypeNode(node)
 	if !c.isErrorType(t) {
 		symbol := c.getResolvedSymbolOrNil(node)
@@ -17720,6 +17722,9 @@ func (c *Checker) getTypeParametersForTypeReferenceOrImport(node *ast.Node) []*T
 func (c *Checker) getTypeParametersForTypeAndSymbol(t *Type, symbol *ast.Symbol) []*Type {
 	if !c.isErrorType(t) {
 		if symbol.Flags()&ast.SymbolFlagsTypeAlias != 0 {
+			if t.typeFunctionApplication() != nil {
+				return c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
+			}
 			if typeParameters := c.typeAliasLinks.Get(symbol).typeParameters; len(typeParameters) != 0 {
 				return typeParameters
 			}
@@ -20108,7 +20113,7 @@ func (c *Checker) getOrCreateTypeFromSignature(sig *Signature) *Type {
 		// If declaration is undefined, it is likely to be the signature of the default constructor.
 		isConstructor := kind == ast.KindUnknown || kind == ast.KindConstructor || kind == ast.KindConstructSignature || kind == ast.KindConstructorType
 
-		if sig.typeFunctionComposed {
+		if sig.flags&SignatureFlagsTypeFunctionComposed != 0 {
 			isConstructor = sig.flags&SignatureFlagsConstruct != 0
 		}
 		var symbol *ast.Symbol
@@ -23038,10 +23043,11 @@ func (c *Checker) instantiateTypeWorker(t *Type, m *TypeMapper, alias *TypeAlias
 	flags := t.flags
 	switch {
 	case flags&TypeFlagsTypeParameter != 0:
-		if ctor := t.AsTypeParameter().constructor; ctor != nil {
+		if ctor := c.typeFunctionConstructors[t]; ctor != nil {
 			args := c.instantiateTypes(ctor.arguments, m)
-			if !core.Same(args, ctor.arguments) {
-				return c.newTypeFunctionConstructor(ctor.target, args)
+			captured := c.instantiateTypes(ctor.captured, m)
+			if !core.Same(args, ctor.arguments) || !core.Same(captured, ctor.captured) {
+				return c.newTypeFunctionConstructor(ctor.target, args, ctor.outer, captured)
 			}
 		}
 		return getMappedType(t, m)
@@ -23855,7 +23861,12 @@ func (c *Checker) getTypeFromTypeReference(node *ast.Node) *Type {
 				args := append([]*Type{c.getDeclaredTypeOfSymbol(symbol)}, c.getTypeArgumentsFromNode(node)...)
 				links.resolvedType = c.newTypeFunctionApplication(node, nil, "@apply", args)
 			} else {
-				links.resolvedType = c.getDistributedTypeParameter(node, c.getTypeReferenceType(node, symbol))
+				value := c.getTypeReferenceType(node, symbol)
+				if app := value.typeFunctionApplication(); app != nil && app.use != node {
+					// Attribute an alias demand to its own occurrence, including cached aliases.
+					value = c.newTypeFunctionApplication(node, app.declaration, app.builtin, app.arguments)
+				}
+				links.resolvedType = c.getDistributedTypeParameter(node, value)
 			}
 		}
 	}

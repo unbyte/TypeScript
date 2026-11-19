@@ -1366,16 +1366,6 @@ export interface TypeFunctionAssignment extends StatementBase {
     readonly target: Identifier;
     readonly value: TypeNode;
 }
-export interface TypeFunctionOperandStatement extends StatementBase {
-    readonly kind: SyntaxKind.TypeFunctionReturn;
-    readonly operand: TypeNode;
-}
-export interface TypeFunctionBranch extends StatementBase {
-    readonly kind: SyntaxKind.TypeFunctionIf;
-    readonly condition: TypeNode;
-    readonly block: TypeFunctionBlock;
-    readonly elseBranch?: Node;
-}
 export interface TypeFunctionFor extends StatementBase {
     readonly kind: SyntaxKind.TypeFunctionFor;
     readonly binding: TypeParameterDeclaration;
@@ -1405,6 +1395,31 @@ export interface TypeFunctionNot extends TypeNodeBase {
 export interface TypeFunctionConstructorSlots extends ExpressionBase {
     readonly kind: SyntaxKind.TypeFunctionConstructorSlots;
     readonly holes: NodeArray<Identifier>;
+}
+export interface TypeFunctionDeclaration extends StatementBase, DeclarationBase, ModifiersBase {
+    readonly kind: SyntaxKind.TypeFunctionDeclaration;
+    readonly name: Identifier;
+    readonly typeParameters: NodeArray<TypeParameterDeclaration>;
+    readonly body: TypeFunctionBlock;
+}
+export interface TypeFunctionReturn extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionReturn;
+    readonly operand: TypeNode;
+}
+export interface TypeFunctionCallStatement extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionCallStatement;
+    readonly operand: TypeNode;
+}
+export interface TypeFunctionIf extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionIf;
+    readonly condition: TypeNode;
+    readonly block: TypeFunctionBlock;
+    readonly elseBranch?: Node;
+}
+export interface TypeFunctionWhile extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionWhile;
+    readonly condition: TypeNode;
+    readonly block: TypeFunctionBlock;
 }
 
 export type Expression = ExpressionBase;

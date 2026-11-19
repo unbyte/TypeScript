@@ -1,7 +1,12 @@
 typeFunctionFailureAndScope.ts(15,20): error TS18200: Type function: inner failure
+typeFunctionFailureAndScope.ts(33,40): error TS18200: Type function: unexpected token
+typeFunctionFailureAndScope.ts(36,25): error TS18200: Type function: unexpected token (decoded UTF-16 offsets 2..3)
+typeFunctionFailureAndScope.ts(40,28): error TS18200: Type function: inner failure
+typeFunctionFailureAndScope.ts(41,29): error TS18200: Type function: inner failure
+typeFunctionFailureAndScope.ts(48,27): error TS18200: Type function: inner failure
 
 
-==== typeFunctionFailureAndScope.ts (1 errors) ====
+==== typeFunctionFailureAndScope.ts (6 errors) ====
     typefn Failed<> { fail<"inner failure">; }
     typefn ExplicitAny<> { return any; }
     typefn After<T> { type A = T; return 1; }
@@ -20,6 +25,7 @@ typeFunctionFailureAndScope.ts(15,20): error TS18200: Type function: inner failu
                        ~~~~~~~
 !!! error TS18200: Type function: inner failure
 !!! related TS18200 typeFunctionFailureAndScope.ts:1:19: Type function: inner failure
+!!! related TS18200 typeFunctionFailureAndScope.ts:4:44: Type function: called here
     bad.anyPropertyAfterRecovery;
     
     typefn Snapshots<> {
@@ -31,4 +37,46 @@ typeFunctionFailureAndScope.ts(15,20): error TS18200: Type function: inner failu
     declare const snapshot: Snapshots<>;
     const before: "before" = snapshot[0].read();
     const after: "after" = snapshot[1];
+    
+    typefn Selected<T> { return T extends "yes" ? 1 : Failed<>; }
+    declare const selected: Selected<"yes">;
+    const one: 1 = selected;
+    
+    typefn Span<S> { fail<"unexpected token", { source: S; start: 2; end: 3 }>; }
+    declare const spelling: Span<"\u{1F600}\x2b">;
+                                           ~~~~
+!!! error TS18200: Type function: unexpected token
+!!! related TS18200 typeFunctionFailureAndScope.ts:33:25: Type function: while evaluating this application
+!!! related TS18200 typeFunctionFailureAndScope.ts:32:18: Type function: unexpected token
+    spelling.recovered;
+    type Computed = `😀${"+"}`;
+    declare const computed: Span<Computed>;
+                            ~~~~~~~~~~~~~~
+!!! error TS18200: Type function: unexpected token (decoded UTF-16 offsets 2..3)
+!!! related TS18200 typeFunctionFailureAndScope.ts:32:18: Type function: unexpected token (decoded UTF-16 offsets 2..3)
+    computed.recovered;
+    
+    type FailedAlias = Failed<>;
+    declare const firstFailed: FailedAlias;
+                               ~~~~~~~~~~~
+!!! error TS18200: Type function: inner failure
+!!! related TS18200 typeFunctionFailureAndScope.ts:1:19: Type function: inner failure
+    declare const secondFailed: FailedAlias;
+                                ~~~~~~~~~~~
+!!! error TS18200: Type function: inner failure
+!!! related TS18200 typeFunctionFailureAndScope.ts:1:19: Type function: inner failure
+    firstFailed.a;
+    secondFailed.b;
+    
+    typefn ConditionalField<T> {
+        return { payload: T extends [infer I] ? { nested: Failed<> } : "ok"; stable: 1 };
+    }
+    declare const matchFails: ConditionalField<[1]>;
+                              ~~~~~~~~~~~~~~~~~~~~~
+!!! error TS18200: Type function: inner failure
+!!! related TS18200 typeFunctionFailureAndScope.ts:1:19: Type function: inner failure
+!!! related TS18200 typeFunctionFailureAndScope.ts:46:55: Type function: called here
+    matchFails.afterFailure;
+    declare const matchSkips: ConditionalField<"outside">;
+    const skipped: "ok" = matchSkips.payload;
     

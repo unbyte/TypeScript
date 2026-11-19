@@ -1,0 +1,200 @@
+//// [tests/cases/compiler/typeFunctionInvalidInputs.ts] ////
+
+=== typeFunctionInvalidInputs.ts ===
+typefn Domain<T> { return tuple.count<T>; }
+>Domain : Domain<T>
+>tuple : any
+
+typefn Slice<S> { return string.slice<S, 1, 2>; }
+>Slice : Slice<S>
+>string : any
+
+typefn Div<N> { return number.divide<1, N>; }
+>Div : Div<N>
+>number : any
+
+typefn BadIndex<T> { return object.withIndexes<T, {key: string; type: number}>; }
+>BadIndex : BadIndex<T>
+>object : any
+>key : string
+>type : number
+
+typefn Recursive<T> { return Recursive<T>; }
+>Recursive : Recursive<T>
+
+typefn Malformed<T> { return number.fromDecimal<T>; }
+>Malformed : Malformed<T>
+>number : any
+
+typefn Duplicate<T> { return object.addField<T, "name", {type: string}>; }
+>Duplicate : Duplicate<T>
+>object : any
+>type : string
+
+declare const array: Domain<string[]>;
+>array : any
+
+declare const splitPair: Slice<"😀">;
+>splitPair : any
+
+declare const zero: Div<0>;
+>zero : any
+
+declare const index: BadIndex<{name: string}>;
+>index : any
+>name : string
+
+declare const cycle: Recursive<1>;
+>cycle : any
+
+declare const malformed: Malformed<"1e">;
+>malformed : any
+
+declare const duplicate: Duplicate<{name: string}>;
+>duplicate : any
+>name : string
+
+array.a; splitPair.a; zero.a; index.a; cycle.a; malformed.a; duplicate.a;
+>array.a : any
+>array : any
+>a : any
+>splitPair.a : any
+>splitPair : any
+>a : any
+>zero.a : any
+>zero : any
+>a : any
+>index.a : any
+>index : any
+>a : any
+>cycle.a : any
+>cycle : any
+>a : any
+>malformed.a : any
+>malformed : any
+>a : any
+>duplicate.a : any
+>duplicate : any
+>a : any
+
+typefn Control<T> {
+>Control : Control<T>
+
+    break;
+    T = number;
+>T : any
+
+    fail<"too", "many", "args">;
+}
+type Outside = tuple.count<[1]>;
+>Outside : tuple.count<[1]>
+>tuple : any
+
+typefn Escape<> { return {ref: fn.ref<"missing">}; }
+>Escape : any
+>ref : missing
+>fn : any
+
+declare const escaped: Escape<>;
+>escaped : any
+
+escaped.anyProperty;
+>escaped.anyProperty : any
+>escaped : any
+>anyProperty : any
+
+typefn WrongSlots<F<X>> { return 1; }
+>WrongSlots : WrongSlots<F>
+>X : any
+
+typefn NestedConstructor<F<_>> { return {nested: [F]}; }
+>NestedConstructor : NestedConstructor<F>
+>_ : any
+>nested : [F]
+
+typefn Parameter<T extends string> { return T; }
+>Parameter : Parameter<T>
+
+type BadConstraint = Parameter<5>;
+>BadConstraint : 5
+
+typefn BadUse<T> {
+>BadUse : BadUse<T>
+
+    type A = Parameter<T, T>;
+    42;
+    match T { else { return 0; } case string { return 1; } }
+}
+typefn Missing<T> { if (false) { return T; } }
+>Missing : Missing<T>
+>false : false
+
+declare const end: Missing<1>;
+>end : any
+
+end.recovered;
+>end.recovered : any
+>end : any
+>recovered : any
+
+typefn InvalidDefault<> {
+>InvalidDefault : any
+
+    return fn.compose<{ members: {}; constructs: []; calls: [{
+>fn : any
+>members : {}
+>constructs : []
+>calls : [{ typeParameters: [{ name: "T"; key: "t"; constraint: string; default: 1; }]; parameters: []; result: { kind: "return"; type: 0; }; }]
+
+        typeParameters: [{name: "T"; key: "t"; constraint: string; default: 1}];
+>typeParameters : [{ name: "T"; key: "t"; constraint: string; default: 1; }]
+>name : "T"
+>key : "t"
+>constraint : string
+>default : 1
+
+        parameters: []; result: {kind: "return"; type: 0};
+>parameters : []
+>result : { kind: "return"; type: 0; }
+>kind : "return"
+>type : 0
+
+    }] }>;
+}
+declare const invalidDefault: InvalidDefault<>;
+>invalidDefault : any
+
+invalidDefault.recovered;
+>invalidDefault.recovered : any
+>invalidDefault : any
+>recovered : any
+
+typefn MatchOne<T> {
+>MatchOne : MatchOne<T>
+
+    match T { case [infer X] { return X; } }
+    return "fell through";
+}
+typefn DuplicateCapture<T> { match T { case [infer X, infer X] { return X; } } }
+>DuplicateCapture : DuplicateCapture<T>
+
+declare const noArm: MatchOne<0>;
+>noArm : any
+
+declare const ambiguous: MatchOne<any>;
+>ambiguous : any
+
+declare const empty: MatchOne<never>;
+>empty : any
+
+noArm.recovered; ambiguous.recovered; empty.recovered;
+>noArm.recovered : any
+>noArm : any
+>recovered : any
+>ambiguous.recovered : any
+>ambiguous : any
+>recovered : any
+>empty.recovered : any
+>empty : any
+>recovered : any
+

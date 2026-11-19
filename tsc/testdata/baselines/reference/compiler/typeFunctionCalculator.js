@@ -14,6 +14,7 @@ typefn Atom<C> {
     type At = Skip<C>;
     match string.match<At, { run: [["0", "9"]] }> {
         case ["hit", infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
+        else {} // Try a unary operator or a parenthesized expression.
     }
     match string.read<At> {
         case ["hit", "-", infer Next] {
@@ -24,11 +25,11 @@ typefn Atom<C> {
             type [Value, After] = Sum<Next>;
             match string.match<Skip<After>, ")"> {
                 case ["hit", ")", infer End] { return [Value, End]; }
+                else { fail<"expected closing parenthesis">; }
             }
-            fail<"expected closing parenthesis">;
         }
+        else { fail<"expected an integer or parenthesis">; }
     }
-    fail<"expected an integer or parenthesis">;
 }
 
 typefn Product<C> {

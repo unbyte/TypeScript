@@ -1,11 +1,12 @@
 package checker
 
 import (
+	"math"
+	"strings"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
 	"github.com/microsoft/TypeScript/tsc/internal/stringutil"
-	"math"
-	"strings"
 )
 
 type typeFunctionField struct {
@@ -18,7 +19,13 @@ func (c *Checker) typeFunctionRecord(fields ...typeFunctionField) *Type {
 	for _, field := range fields {
 		members.Set(field.name, c.newProperty(field.name, field.value))
 	}
-	return c.newAnonymousType(nil, members, nil, nil, nil)
+	record := c.newAnonymousType(nil, members, nil, nil, nil)
+	root := c.typeFunctionExecution
+	if root.records == nil {
+		root.records = make(map[*Type]bool)
+	}
+	root.records[record] = true
+	return record
 }
 func (c *Checker) typeFunctionInt(n int) *Type { return c.getNumberLiteralType(jsnum.Number(n)) }
 func typeFunctionOffset(t *Type) (int, bool) {
@@ -40,12 +47,14 @@ func (p *typeFunctionTextPosition) advance() rune {
 	}
 	return ch
 }
+
 func (p *typeFunctionTextPosition) seek(offset int) bool {
 	for p.units < offset && p.bytes < len(p.text) {
 		p.advance()
 	}
 	return p.units == offset
 }
+
 func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Type {
 	first := args[0]
 	if op == "fromCodePoint" {
@@ -72,6 +81,9 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 	s, ok := typeFunctionString(source)
 	if !ok {
 		return nil
+	}
+	if cursor && !c.typeFunctionCharge(node, len(s)) {
+		return c.anyType
 	}
 	s = stringutil.CombineSurrogatePairs(s)
 	pos := typeFunctionTextPosition{text: s}
@@ -208,6 +220,9 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 				after := pos
 				ch := after.advance()
 				match := false
+				if !c.typeFunctionCharge(node, len(ranges)) {
+					return c.anyType
+				}
 				for _, r := range ranges {
 					if r[0] <= ch && ch <= r[1] {
 						match = true

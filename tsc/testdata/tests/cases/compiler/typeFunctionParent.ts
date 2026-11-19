@@ -33,6 +33,7 @@ typefn RecordFields<C> {
     while (true) {
         match string.match<Skip<At>, "}"> {
             case ["hit", infer Close, infer End] { return [Out, End]; }
+            else {} // Read the next field.
         }
         type [Name, AfterName] = Word<At>;
         type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;

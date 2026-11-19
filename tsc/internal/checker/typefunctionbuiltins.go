@@ -1,14 +1,15 @@
 package checker
 
 import (
-	"github.com/microsoft/TypeScript/tsc/internal/ast"
-	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
-	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
 	"math"
 	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
+	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
 )
 
 func (c *Checker) typeFunctionBoolean(b bool) *Type {
@@ -17,18 +18,21 @@ func (c *Checker) typeFunctionBoolean(b bool) *Type {
 	}
 	return c.regularFalseType
 }
+
 func typeFunctionString(t *Type) (string, bool) {
 	if t != nil && t.flags&TypeFlagsStringLiteral != 0 {
 		return t.AsLiteralType().value.(string), true
 	}
 	return "", false
 }
+
 func typeFunctionNumber(t *Type) (float64, bool) {
 	if t != nil && t.flags&TypeFlagsNumberLiteral != 0 {
 		return float64(t.AsLiteralType().value.(jsnum.Number)), true
 	}
 	return 0, false
 }
+
 func typeFunctionInteger(t *Type) (*big.Int, bool) {
 	if t == nil || t.flags&TypeFlagsBigIntLiteral == 0 {
 		return nil, false
@@ -36,8 +40,10 @@ func typeFunctionInteger(t *Type) (*big.Int, bool) {
 	return new(big.Int).SetString(t.AsLiteralType().value.(jsnum.PseudoBigInt).String(), 10)
 }
 
-var typeFunctionDecimal = regexp.MustCompile("^[+-]?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$")
-var typeFunctionWhole = regexp.MustCompile("^[+-]?[0-9]+$")
+var (
+	typeFunctionDecimal = regexp.MustCompile("^[+-]?[0-9]+([.][0-9]+)?([eE][+-]?[0-9]+)?$")
+	typeFunctionWhole   = regexp.MustCompile("^[+-]?[0-9]+$")
+)
 
 func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Type) *Type {
 	op, ok := typefunction.Lookup(name)
@@ -45,6 +51,22 @@ func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Ty
 		return c.failTypeFunction(node, "invalid builtin application "+name)
 	}
 	first := args[0]
+	// Charge work before parsing digits or allocating a larger numeric result.
+	for _, arg := range args {
+		size := 0
+		if v, ok := typeFunctionString(arg); ok {
+			size = len(v)
+		} else if arg.flags&TypeFlagsBigIntLiteral != 0 {
+			size = len(arg.AsLiteralType().value.(jsnum.PseudoBigInt).String())
+		} else if arg.IsTupleType() {
+			size = len(c.getTypeArguments(arg))
+		} else if arg.flags&TypeFlagsUnionOrIntersection != 0 {
+			size = len(arg.Types())
+		}
+		if !c.typeFunctionCharge(node, size) {
+			return c.anyType
+		}
+	}
 	switch name {
 	case "type.kind":
 		return c.getStringLiteralType(c.typeFunctionKind(first))
@@ -83,7 +105,7 @@ func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Ty
 			return v
 		}
 	case "fn":
-		if v := c.typeFunctionCallable(operation, args); v != nil {
+		if v := c.typeFunctionCallable(node, operation, args); v != nil {
 			return v
 		}
 	case "string":
@@ -97,6 +119,7 @@ func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Ty
 	}
 	return c.failTypeFunction(node, "invalid operands for "+name)
 }
+
 func (c *Checker) typeFunctionArithmetic(group, op string, args []*Type) *Type {
 	var right *Type
 	if len(args) > 1 {

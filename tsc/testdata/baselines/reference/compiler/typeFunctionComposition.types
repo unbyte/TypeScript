@@ -117,3 +117,27 @@ const n: 42 = ref;
 >n : 42
 >ref : 42
 
+function capture<Outer>(v: Outer) {
+>capture : <Outer>(v: Outer) => Apply<[Outer, _], 1>
+>v : Outer
+
+    type Pair<T> = [Outer, T];
+>Pair : [Outer, T]
+
+    declareValue<Apply<Pair<_>, 1>>();
+>declareValue<Apply<Pair<_>, 1>>() : void
+>declareValue : <T>() => void
+
+    return null! as Apply<Pair<_>, 1>;
+>null! as Apply<Pair<_>, 1> : Apply<Pair<_>, 1>
+>null! : never
+}
+declare function declareValue<T>(): void;
+>declareValue : <T>() => void
+
+const captured: [string, 1] = capture<string>("a");
+>captured : [string, 1]
+>capture<string>("a") : [string, 1]
+>capture : <Outer>(v: Outer) => Apply<[Outer, _], 1>
+>"a" : "a"
+

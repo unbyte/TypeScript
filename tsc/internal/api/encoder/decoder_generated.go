@@ -389,7 +389,7 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		heritageClauses := d.nodeListAt(it.nextIf(mask, 3))
 		members := d.nodeListAt(it.nextIf(mask, 4))
 		return d.factory.NewInterfaceDeclaration(modifiers, name, typeParameters, heritageClauses, members), nil
-	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
 		it := newChildIter(childIndices)
 		modifiers := d.modifierListAt(it.nextIf(mask, 0))
 		name := d.nodeAt(it.nextIf(mask, 1))
@@ -397,9 +397,6 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		typeNode := d.nodeAt(it.nextIf(mask, 3))
 		if kind == ast.KindJSTypeAliasDeclaration {
 			return d.factory.NewJSTypeAliasDeclaration(modifiers, name, typeParameters, typeNode), nil
-		}
-		if kind == ast.KindTypeFunctionDeclaration {
-			return d.factory.NewTypeFunctionDeclaration(modifiers, name, typeParameters, typeNode), nil
 		}
 		return d.factory.NewTypeAliasDeclaration(modifiers, name, typeParameters, typeNode), nil
 	case ast.KindEnumMember:
@@ -1159,17 +1156,6 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		target := d.nodeAt(it.nextIf(mask, 0))
 		value := d.nodeAt(it.nextIf(mask, 1))
 		return d.factory.NewTypeFunctionAssignment(target, value), nil
-	case ast.KindTypeFunctionReturn, ast.KindTypeFunctionCallStatement:
-		return d.factory.NewTypeFunctionOperandStatement(d.singleChild(childIndices)), nil
-	case ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile:
-		it := newChildIter(childIndices)
-		condition := d.nodeAt(it.nextIf(mask, 0))
-		block := d.nodeAt(it.nextIf(mask, 1))
-		elseBranch := d.nodeAt(it.nextIf(mask, 2))
-		if kind == ast.KindTypeFunctionWhile {
-			return d.factory.NewTypeFunctionWhile(condition, block, elseBranch), nil
-		}
-		return d.factory.NewTypeFunctionBranch(condition, block, elseBranch), nil
 	case ast.KindTypeFunctionFor:
 		it := newChildIter(childIndices)
 		binding := d.nodeAt(it.nextIf(mask, 0))
@@ -1196,6 +1182,28 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		return d.factory.NewTypeFunctionNot(d.singleChild(childIndices)), nil
 	case ast.KindTypeFunctionConstructorSlots:
 		return d.factory.NewTypeFunctionConstructorSlots(d.singleNodeListChild(childIndices)), nil
+	case ast.KindTypeFunctionDeclaration:
+		it := newChildIter(childIndices)
+		modifiers := d.modifierListAt(it.nextIf(mask, 0))
+		name := d.nodeAt(it.nextIf(mask, 1))
+		typeParameters := d.nodeListAt(it.nextIf(mask, 2))
+		body := d.nodeAt(it.nextIf(mask, 3))
+		return d.factory.NewTypeFunctionDeclaration(modifiers, name, typeParameters, body), nil
+	case ast.KindTypeFunctionReturn:
+		return d.factory.NewTypeFunctionReturn(d.singleChild(childIndices)), nil
+	case ast.KindTypeFunctionCallStatement:
+		return d.factory.NewTypeFunctionCallStatement(d.singleChild(childIndices)), nil
+	case ast.KindTypeFunctionIf:
+		it := newChildIter(childIndices)
+		condition := d.nodeAt(it.nextIf(mask, 0))
+		block := d.nodeAt(it.nextIf(mask, 1))
+		elseBranch := d.nodeAt(it.nextIf(mask, 2))
+		return d.factory.NewTypeFunctionIf(condition, block, elseBranch), nil
+	case ast.KindTypeFunctionWhile:
+		it := newChildIter(childIndices)
+		condition := d.nodeAt(it.nextIf(mask, 0))
+		block := d.nodeAt(it.nextIf(mask, 1))
+		return d.factory.NewTypeFunctionWhile(condition, block), nil
 	default:
 		return nil, fmt.Errorf("unhandled node kind %v with %d children", kind, len(childIndices))
 	}

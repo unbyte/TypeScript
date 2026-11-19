@@ -60,6 +60,7 @@ func getThisPropertyAssignmentKey(name *ast.Node, node *ast.Node, isStatic bool)
 }
 
 type DeclarationTransformer struct {
+	typeFunctionDependencies map[*ast.Node]bool
 	transformers.Transformer
 	host                DeclarationEmitHost
 	compilerOptions     *core.CompilerOptions
@@ -144,7 +145,7 @@ func (tx *DeclarationTransformer) GetDiagnostics() []*ast.Diagnostic {
 }
 
 func (tx *DeclarationTransformer) shouldStripInternal(node *ast.Node) bool {
-	return tx.state.stripInternal && node != nil && tx.isInternalDeclaration(node, tx.state.currentSourceFile)
+	return tx.state.stripInternal && node != nil && !tx.typeFunctionDependencies[node] && tx.isInternalDeclaration(node, tx.state.currentSourceFile)
 }
 
 func (tx *DeclarationTransformer) isInternalDeclaration(node *ast.Node, sourceFile *ast.SourceFile) bool {
@@ -1166,6 +1167,12 @@ func (tx *DeclarationTransformer) transformMethodDeclaration(input *ast.MethodDe
 
 func (tx *DeclarationTransformer) visitDeclarationStatements(input *ast.Node) *ast.Node {
 	if tx.shouldStripInternal(input) {
+		// A later exported type function may require this private declaration.
+		// Keep its position available to the existing late visibility pass.
+		if ast.IsLateVisibilityPaintedStatement(input) {
+			tx.lateStatementReplacementMap[ast.GetNodeId(tx.EmitContext().MostOriginal(input))] = nil
+			return input
+		}
 		return nil
 	}
 	switch input.Kind {
@@ -1793,7 +1800,13 @@ func (tx *DeclarationTransformer) transformTopLevelDeclaration(input *ast.Node) 
 
 	var result *ast.Node
 	switch input.Kind {
-	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration:
+	case ast.KindTypeFunctionDeclaration:
+		if tx.state.stripInternal {
+			tx.retainTypeFunctionDependencies(input)
+		}
+		tx.needsDeclare = false
+		result = tx.Factory().UpdateTypeFunctionDeclaration(input.AsTypeFunctionDeclaration(), tx.ensureModifiers(input), input.Name(), tx.Visitor().VisitNodes(input.TypeParameterList()), tx.Visitor().Visit(input.Body()))
+	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
 		result = tx.transformTypeAliasDeclaration(input.AsTypeAliasDeclaration())
 	case ast.KindInterfaceDeclaration:
 		result = tx.transformInterfaceDeclaration(input.AsInterfaceDeclaration())

@@ -51,6 +51,11 @@ Log paths used during the 'moduleResolution' process.
 type: boolean
 default: false
 
+[94m--traceTypeFunctions[39m
+Print log statements from type function evaluations.
+type: boolean
+default: false
+
 [94m--diagnostics[39m
 Output compiler performance information after building.
 type: boolean

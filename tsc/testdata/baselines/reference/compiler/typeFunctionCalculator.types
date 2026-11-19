@@ -28,6 +28,8 @@ typefn Atom<C> {
 
         case ["hit", infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
 >number : any
+
+        else {} // Try a unary operator or a parenthesized expression.
     }
     match string.read<At> {
 >string : any
@@ -43,11 +45,11 @@ typefn Atom<C> {
 >string : any
 
                 case ["hit", ")", infer End] { return [Value, End]; }
+                else { fail<"expected closing parenthesis">; }
             }
-            fail<"expected closing parenthesis">;
         }
+        else { fail<"expected an integer or parenthesis">; }
     }
-    fail<"expected an integer or parenthesis">;
 }
 
 typefn Product<C> {

@@ -165,12 +165,15 @@ import type {
     TypeFunctionBinary,
     TypeFunctionBinding,
     TypeFunctionBlock,
-    TypeFunctionBranch,
+    TypeFunctionCallStatement,
     TypeFunctionConstructorSlots,
+    TypeFunctionDeclaration,
     TypeFunctionFor,
+    TypeFunctionIf,
     TypeFunctionMatch,
     TypeFunctionNot,
-    TypeFunctionOperandStatement,
+    TypeFunctionReturn,
+    TypeFunctionWhile,
     TypeLiteralNode,
     TypeOfExpression,
     TypeOperatorNode,
@@ -348,12 +351,15 @@ import {
     updateTypeFunctionBinary,
     updateTypeFunctionBinding,
     updateTypeFunctionBlock,
-    updateTypeFunctionBranch,
+    updateTypeFunctionCallStatement,
     updateTypeFunctionConstructorSlots,
+    updateTypeFunctionDeclaration,
     updateTypeFunctionFor,
+    updateTypeFunctionIf,
     updateTypeFunctionMatch,
     updateTypeFunctionNot,
-    updateTypeFunctionOperandStatement,
+    updateTypeFunctionReturn,
+    updateTypeFunctionWhile,
     updateTypeLiteralNode,
     updateTypeOfExpression,
     updateTypeOperatorNode,
@@ -1453,16 +1459,6 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
         const _value = visitNode(node.value, visitor, isTypeNode);
         return updateTypeFunctionAssignment(node, _target, _value);
     },
-    [SyntaxKind.TypeFunctionReturn]: (node: TypeFunctionOperandStatement, visitor: Visitor): TypeFunctionOperandStatement => {
-        const _operand = visitNode(node.operand, visitor, isTypeNode);
-        return updateTypeFunctionOperandStatement(node, _operand);
-    },
-    [SyntaxKind.TypeFunctionIf]: (node: TypeFunctionBranch, visitor: Visitor): TypeFunctionBranch => {
-        const _condition = visitNode(node.condition, visitor, isTypeNode);
-        const _block = visitNode(node.block, visitor, isTypeFunctionBlock);
-        const _elseBranch = visitNode(node.elseBranch, visitor);
-        return updateTypeFunctionBranch(node, _condition, _block, _elseBranch);
-    },
     [SyntaxKind.TypeFunctionFor]: (node: TypeFunctionFor, visitor: Visitor): TypeFunctionFor => {
         const _binding = visitNode(node.binding, visitor, isTypeParameterDeclaration);
         const _sequence = visitNode(node.sequence, visitor, isTypeNode);
@@ -1492,6 +1488,32 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
     [SyntaxKind.TypeFunctionConstructorSlots]: (node: TypeFunctionConstructorSlots, visitor: Visitor): TypeFunctionConstructorSlots => {
         const _holes = visitNodes(node.holes, visitor);
         return updateTypeFunctionConstructorSlots(node, _holes);
+    },
+    [SyntaxKind.TypeFunctionDeclaration]: (node: TypeFunctionDeclaration, visitor: Visitor): TypeFunctionDeclaration => {
+        const _modifiers = visitNodes(node.modifiers, visitor);
+        const _name = visitNode(node.name, visitor, isIdentifier);
+        const _typeParameters = visitNodes(node.typeParameters, visitor);
+        const _body = visitNode(node.body, visitor, isTypeFunctionBlock);
+        return updateTypeFunctionDeclaration(node, _modifiers, _name, _typeParameters, _body);
+    },
+    [SyntaxKind.TypeFunctionReturn]: (node: TypeFunctionReturn, visitor: Visitor): TypeFunctionReturn => {
+        const _operand = visitNode(node.operand, visitor, isTypeNode);
+        return updateTypeFunctionReturn(node, _operand);
+    },
+    [SyntaxKind.TypeFunctionCallStatement]: (node: TypeFunctionCallStatement, visitor: Visitor): TypeFunctionCallStatement => {
+        const _operand = visitNode(node.operand, visitor, isTypeNode);
+        return updateTypeFunctionCallStatement(node, _operand);
+    },
+    [SyntaxKind.TypeFunctionIf]: (node: TypeFunctionIf, visitor: Visitor): TypeFunctionIf => {
+        const _condition = visitNode(node.condition, visitor, isTypeNode);
+        const _block = visitNode(node.block, visitor, isTypeFunctionBlock);
+        const _elseBranch = visitNode(node.elseBranch, visitor);
+        return updateTypeFunctionIf(node, _condition, _block, _elseBranch);
+    },
+    [SyntaxKind.TypeFunctionWhile]: (node: TypeFunctionWhile, visitor: Visitor): TypeFunctionWhile => {
+        const _condition = visitNode(node.condition, visitor, isTypeNode);
+        const _block = visitNode(node.block, visitor, isTypeFunctionBlock);
+        return updateTypeFunctionWhile(node, _condition, _block);
     },
     [SyntaxKind.ForInStatement]: (node: ForInStatement, visitor: Visitor): ForInStatement => {
         const _awaitModifier = visitNode(node.awaitModifier, visitor, isAwaitKeyword);

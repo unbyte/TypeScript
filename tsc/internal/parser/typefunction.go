@@ -66,7 +66,7 @@ func (p *Parser) parseTypeFunctionStatement() *ast.Node {
 		if p.hasPrecedingLineBreak() {
 			p.parseErrorAtCurrentToken(diagnostics.Line_break_not_permitted_here)
 		}
-		result = p.factory.NewTypeFunctionOperandStatement(p.parseTypeFunctionOperand())
+		result = p.factory.NewTypeFunctionReturn(p.parseTypeFunctionOperand())
 	case ast.KindIfKeyword, ast.KindWhileKeyword:
 		kind := p.token
 		p.nextToken()
@@ -75,7 +75,7 @@ func (p *Parser) parseTypeFunctionStatement() *ast.Node {
 		p.parseExpected(ast.KindCloseParenToken)
 		body := p.parseTypeFunctionBlock()
 		if kind == ast.KindWhileKeyword {
-			return p.finishNode(p.factory.NewTypeFunctionWhile(condition, body, nil), pos)
+			return p.finishNode(p.factory.NewTypeFunctionWhile(condition, body), pos)
 		}
 		var alternative *ast.Node
 		if p.parseOptional(ast.KindElseKeyword) {
@@ -85,7 +85,7 @@ func (p *Parser) parseTypeFunctionStatement() *ast.Node {
 				alternative = p.parseTypeFunctionBlock()
 			}
 		}
-		return p.finishNode(p.factory.NewTypeFunctionBranch(condition, body, alternative), pos)
+		return p.finishNode(p.factory.NewTypeFunctionIf(condition, body, alternative), pos)
 	case ast.KindForKeyword:
 		p.nextToken()
 		p.parseExpected(ast.KindOpenParenToken)

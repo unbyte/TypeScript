@@ -109,173 +109,175 @@ typefn RecordFields<C> {
 >End : Symbol(End, Decl(typeFunctionParent.ts, 31, 43))
 >Out : Symbol(Out, Decl(typeFunctionParent.ts, 28, 8))
 >End : Symbol(End, Decl(typeFunctionParent.ts, 31, 43))
+
+            else {} // Read the next field.
         }
         type [Name, AfterName] = Word<At>;
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 33, 14))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 33, 19))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 34, 14))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 34, 19))
 >Word : Symbol(Word, Decl(typeFunctionParent.ts, 11, 1))
 >At : Symbol(At, Decl(typeFunctionParent.ts, 27, 8))
 
         type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 34, 14))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 34, 20))
->Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 47, 1))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 35, 14))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 35, 20))
+>Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 48, 1))
 >Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 33, 19))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 34, 19))
 
         Out = object.addField<Out, Name, { type: Value }>;
 >object : Symbol(object)
 >addField : Symbol(object.addField)
 >Out : Symbol(Out, Decl(typeFunctionParent.ts, 28, 8))
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 33, 14))
->type : Symbol(type, Decl(typeFunctionParent.ts, 35, 42))
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 34, 14))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 34, 14))
+>type : Symbol(type, Decl(typeFunctionParent.ts, 36, 42))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 35, 14))
 
         match string.match<Skip<AfterValue>, ";"> {
 >string : Symbol(string)
 >match : Symbol(string.match)
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 34, 20))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 35, 20))
 
             case ["hit", infer Sep, infer Next] { At = Next; }
->Sep : Symbol(Sep, Decl(typeFunctionParent.ts, 37, 30))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 37, 41))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 37, 41))
+>Sep : Symbol(Sep, Decl(typeFunctionParent.ts, 38, 30))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 38, 41))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 38, 41))
 
             else { return [Out, Expect<AfterValue, "}">]; }
 >Out : Symbol(Out, Decl(typeFunctionParent.ts, 28, 8))
 >Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 34, 20))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 35, 20))
         }
     }
 }
 typefn Primary<C> {
->Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 41, 1))
->C : Symbol(C, Decl(typeFunctionParent.ts, 42, 15))
+>Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 42, 1))
+>C : Symbol(C, Decl(typeFunctionParent.ts, 43, 15))
 
     match string.match<Skip<C>, "{"> {
 >string : Symbol(string)
 >match : Symbol(string.match)
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->C : Symbol(C, Decl(typeFunctionParent.ts, 42, 15))
+>C : Symbol(C, Decl(typeFunctionParent.ts, 43, 15))
 
         case ["hit", infer Open, infer At] { return RecordFields<At>; }
->Open : Symbol(Open, Decl(typeFunctionParent.ts, 44, 26))
->At : Symbol(At, Decl(typeFunctionParent.ts, 44, 38))
+>Open : Symbol(Open, Decl(typeFunctionParent.ts, 45, 26))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 45, 38))
 >RecordFields : Symbol(RecordFields, Decl(typeFunctionParent.ts, 25, 1))
->At : Symbol(At, Decl(typeFunctionParent.ts, 44, 38))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 45, 38))
 
         else { return Scalar<C>; }
 >Scalar : Symbol(Scalar, Decl(typeFunctionParent.ts, 17, 1))
->C : Symbol(C, Decl(typeFunctionParent.ts, 42, 15))
+>C : Symbol(C, Decl(typeFunctionParent.ts, 43, 15))
     }
 }
 typefn Annotation<C> {
->Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 47, 1))
->C : Symbol(C, Decl(typeFunctionParent.ts, 48, 18))
+>Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 48, 1))
+>C : Symbol(C, Decl(typeFunctionParent.ts, 49, 18))
 
     type [Value, At] = Primary<C>;
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 49, 10))
->At : Symbol(At, Decl(typeFunctionParent.ts, 49, 16))
->Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 41, 1))
->C : Symbol(C, Decl(typeFunctionParent.ts, 48, 18))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 50, 10))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 50, 16))
+>Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 42, 1))
+>C : Symbol(C, Decl(typeFunctionParent.ts, 49, 18))
 
     while (true) {
         match string.match<Skip<At>, "[]"> {
 >string : Symbol(string)
 >match : Symbol(string.match)
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->At : Symbol(At, Decl(typeFunctionParent.ts, 49, 16))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 50, 16))
 
             case ["hit", infer Suffix, infer Next] { Value = Value[]; At = Next; }
->Suffix : Symbol(Suffix, Decl(typeFunctionParent.ts, 52, 30))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 52, 44))
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 49, 10))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 52, 44))
+>Suffix : Symbol(Suffix, Decl(typeFunctionParent.ts, 53, 30))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 53, 44))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 50, 10))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 53, 44))
 
             else { return [Value, At]; }
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 49, 10))
->At : Symbol(At, Decl(typeFunctionParent.ts, 49, 16))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 50, 10))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 50, 16))
         }
     }
 }
 typefn Parent<S> {
->Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 56, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 57, 14))
+>Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 57, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
 
     type Start = { source: S; offset: 0 };
->Start : Symbol(Start, Decl(typeFunctionParent.ts, 58, 8))
->source : Symbol(source, Decl(typeFunctionParent.ts, 58, 18))
->S : Symbol(S, Decl(typeFunctionParent.ts, 57, 14))
->offset : Symbol(offset, Decl(typeFunctionParent.ts, 58, 29))
+>Start : Symbol(Start, Decl(typeFunctionParent.ts, 59, 8))
+>source : Symbol(source, Decl(typeFunctionParent.ts, 59, 18))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
+>offset : Symbol(offset, Decl(typeFunctionParent.ts, 59, 29))
 
     type [Name, AfterName] = Word<Expect<Start, "root(parent ">>;
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 59, 10))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 59, 15))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 60, 10))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 60, 15))
 >Word : Symbol(Word, Decl(typeFunctionParent.ts, 11, 1))
 >Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->Start : Symbol(Start, Decl(typeFunctionParent.ts, 58, 8))
+>Start : Symbol(Start, Decl(typeFunctionParent.ts, 59, 8))
 
     type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 60, 10))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 60, 16))
->Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 47, 1))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 61, 10))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 61, 16))
+>Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 48, 1))
 >Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 59, 15))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 60, 15))
 
     type End = Expect<AfterValue, ")">;
->End : Symbol(End, Decl(typeFunctionParent.ts, 61, 8))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 62, 8))
 >Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 60, 16))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 61, 16))
 
     match string.read<Skip<End>> {
 >string : Symbol(string)
 >read : Symbol(string.read)
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->End : Symbol(End, Decl(typeFunctionParent.ts, 61, 8))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 62, 8))
 
         case ["eof"] { return object.addField<{}, Name, { type: Value }>; }
 >object : Symbol(object)
 >addField : Symbol(object.addField)
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 59, 10))
->type : Symbol(type, Decl(typeFunctionParent.ts, 63, 57))
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 60, 10))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 60, 10))
+>type : Symbol(type, Decl(typeFunctionParent.ts, 64, 57))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 61, 10))
 
         else { fail<"trailing input">; }
 >fail : Symbol(fail)
     }
 }
 declare const a: Parent<"root(parent account: { id: number; roles: string[] })">;
->a : Symbol(a, Decl(typeFunctionParent.ts, 67, 13))
->Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 56, 1))
+>a : Symbol(a, Decl(typeFunctionParent.ts, 68, 13))
+>Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 57, 1))
 
 declare const b: Parent<"root(parent owner: string)">;
->b : Symbol(b, Decl(typeFunctionParent.ts, 68, 13))
->Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 56, 1))
+>b : Symbol(b, Decl(typeFunctionParent.ts, 69, 13))
+>Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 57, 1))
 
 const id: number = a.account.id;
->id : Symbol(id, Decl(typeFunctionParent.ts, 69, 5))
+>id : Symbol(id, Decl(typeFunctionParent.ts, 70, 5))
 >a.account.id : Symbol(id)
 >a.account : Symbol(account)
->a : Symbol(a, Decl(typeFunctionParent.ts, 67, 13))
+>a : Symbol(a, Decl(typeFunctionParent.ts, 68, 13))
 >account : Symbol(account)
 >id : Symbol(id)
 
 const role: string = a.account.roles[0];
->role : Symbol(role, Decl(typeFunctionParent.ts, 70, 5))
+>role : Symbol(role, Decl(typeFunctionParent.ts, 71, 5))
 >a.account.roles : Symbol(roles)
 >a.account : Symbol(account)
->a : Symbol(a, Decl(typeFunctionParent.ts, 67, 13))
+>a : Symbol(a, Decl(typeFunctionParent.ts, 68, 13))
 >account : Symbol(account)
 >roles : Symbol(roles)
 
 const owner: string = b.owner;
->owner : Symbol(owner, Decl(typeFunctionParent.ts, 71, 5))
+>owner : Symbol(owner, Decl(typeFunctionParent.ts, 72, 5))
 >b.owner : Symbol(owner)
->b : Symbol(b, Decl(typeFunctionParent.ts, 68, 13))
+>b : Symbol(b, Decl(typeFunctionParent.ts, 69, 13))
 >owner : Symbol(owner)
 
 // @ts-expect-error independent calculations have different named fields
 b.account;
->b : Symbol(b, Decl(typeFunctionParent.ts, 68, 13))
+>b : Symbol(b, Decl(typeFunctionParent.ts, 69, 13))
 

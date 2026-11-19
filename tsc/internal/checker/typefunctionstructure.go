@@ -2,12 +2,14 @@ package checker
 
 import (
 	"cmp"
+	"slices"
+	"unicode/utf16"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
 	"github.com/microsoft/TypeScript/tsc/internal/jsnum"
+	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 	"github.com/microsoft/TypeScript/tsc/internal/stringutil"
-	"slices"
-	"unicode/utf16"
 )
 
 func typeFunctionTuple(c *Checker, t *Type) ([]*Type, bool) {
@@ -16,6 +18,7 @@ func typeFunctionTuple(c *Checker, t *Type) ([]*Type, bool) {
 	}
 	return c.getTypeArguments(t), true
 }
+
 func (c *Checker) typeFunctionFlag(t *Type, name string) (bool, bool) {
 	value := c.getTypeOfPropertyOfType(t, name)
 	if value == nil {
@@ -62,6 +65,9 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 			entries[i] = alternative{value: value, key: key}
 			if kind == TypeFlagsStringLiteral {
 				s, _ := typeFunctionString(key)
+				if !c.typeFunctionCharge(node, len(s)) {
+					return c.anyType
+				}
 				for len(s) > 0 {
 					ch, n := stringutil.DecodeJSStringRune(s)
 					s = s[n:]
@@ -109,7 +115,11 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 			return nil
 		}
 		members := ast.NewSymbolTable()
-		for _, p := range c.getPropertiesOfType(t) {
+		properties := c.getPropertiesOfType(t)
+		if !c.typeFunctionCharge(node, len(properties)) {
+			return c.anyType
+		}
+		for _, p := range properties {
 			d := ast.GetDeclarationOfKind(p, ast.KindEnumMember)
 			if d == nil {
 				continue
@@ -160,7 +170,7 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 		return c.typeFunctionRecord(typeFunctionField{"slots", c.createTupleType(slots)}, typeFunctionField{"readonly", c.typeFunctionBoolean(t.TargetTupleType().readonly)})
 	case "tuple.compose":
 		slots, ok := typeFunctionTuple(c, field(t, "slots"))
-		if !ok {
+		if !ok || !c.typeFunctionCharge(node, len(slots)) {
 			return nil
 		}
 		ro, ok := c.typeFunctionFlag(t, "readonly")
@@ -169,6 +179,7 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 		}
 		var values []*Type
 		var infos []TupleElementInfo
+		var seenOptional, seenRest bool
 		for _, slot := range slots {
 			kind, ok := typeFunctionString(field(slot, "kind"))
 			value := field(slot, "type")
@@ -176,20 +187,34 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 				return nil
 			}
 			flags := map[string]ElementFlags{"required": ElementFlagsRequired, "optional": ElementFlagsOptional, "rest": ElementFlagsRest, "variadic": ElementFlagsVariadic}[kind]
-			if flags == 0 {
+			if flags == 0 || flags == ElementFlagsRequired && seenOptional || flags == ElementFlagsOptional && seenRest || flags == ElementFlagsRest && seenRest {
+				return nil
+			}
+			if flags == ElementFlagsVariadic && !c.isArrayLikeType(value) {
 				return nil
 			}
 			if flags == ElementFlagsRest {
+				seenRest = true
 				if !c.isArrayType(value) {
 					return nil
 				}
 				value = c.getTypeArguments(value)[0]
 			}
 			if flags == ElementFlagsOptional {
+				seenOptional = true
 				value = c.getOptionalType(value, true)
 			}
 			values = append(values, value)
-			infos = append(infos, TupleElementInfo{flags: flags})
+			info := TupleElementInfo{flags: flags}
+			if label := field(slot, "label"); label != nil {
+				name, ok := typeFunctionString(label)
+				if !ok || !scanner.IsIdentifierText(name, core.LanguageVariantStandard) {
+					return nil
+				}
+				factory := ast.NewNodeFactory(ast.NodeFactoryHooks{})
+				info.labeledDeclaration = factory.NewNamedTupleMember(nil, factory.NewIdentifier(name), nil, nil)
+			}
+			infos = append(infos, info)
 		}
 		return c.createTupleTypeEx(values, infos, ro)
 	case "template.decompose":
@@ -208,7 +233,7 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 	case "template.compose":
 		values, ok := typeFunctionTuple(c, field(t, "texts"))
 		holes, ok2 := typeFunctionTuple(c, field(t, "types"))
-		if !ok || !ok2 || len(values) != len(holes)+1 {
+		if !ok || !ok2 || len(values) != len(holes)+1 || !c.typeFunctionCharge(node, len(values)+len(holes)) {
 			return nil
 		}
 		var texts []string
@@ -218,6 +243,11 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 				return nil
 			}
 			texts = append(texts, s)
+		}
+		for _, hole := range holes {
+			if !c.isTypeAssignableTo(hole, c.templateConstraintType) {
+				return nil
+			}
 		}
 		return c.getTemplateLiteralType(texts, holes)
 	case "iter.protocol":
@@ -233,104 +263,7 @@ func (c *Checker) typeFunctionStructure(node *ast.Node, name string, args []*Typ
 		return c.createTupleType([]*Type{info.yieldType, info.returnType, info.nextType})
 	}
 	if len(name) > 7 && name[:7] == "object." {
-		return c.typeFunctionObject(name[7:], args)
+		return c.typeFunctionObject(node, name[7:], args)
 	}
 	return nil
-}
-
-func (c *Checker) typeFunctionObject(op string, args []*Type) *Type {
-	t := args[0]
-	if t.flags&TypeFlagsObject == 0 && t.flags&TypeFlagsIntersection == 0 {
-		return nil
-	}
-	fields := ast.NewSymbolTable()
-	for _, p := range c.getPropertiesOfType(t) {
-		fields.Set(p.Name(), p)
-	}
-	indexes := c.getIndexInfosOfType(t)
-	describe := func(p *ast.Symbol) *Type {
-		read := c.getTypeOfSymbol(p)
-		ro := c.isReadonlySymbol(p)
-		write := c.createTupleType([]*Type{c.getStringLiteralType("readonly")})
-		if !ro {
-			write = c.createTupleType([]*Type{c.getStringLiteralType("accepts"), c.getWriteTypeOfSymbol(p)})
-		}
-		return c.typeFunctionRecord(typeFunctionField{"kind", c.getStringLiteralType("data")}, typeFunctionField{"read", read}, typeFunctionField{"write", write}, typeFunctionField{"type", c.getNonMissingTypeOfSymbol(p)}, typeFunctionField{"optional", c.typeFunctionBoolean(p.Flags()&ast.SymbolFlagsOptional != 0)}, typeFunctionField{"readonly", c.typeFunctionBoolean(ro)})
-	}
-	install := func(key string, d *Type) bool {
-		value := c.getTypeOfPropertyOfType(d, "type")
-		ro, ok := c.typeFunctionFlag(d, "readonly")
-		optional, ok2 := c.typeFunctionFlag(d, "optional")
-		if value == nil || !ok || !ok2 {
-			return false
-		}
-		p := c.newSymbolEx(ast.SymbolFlagsProperty|core.IfElse(optional, ast.SymbolFlagsOptional, 0), key, core.IfElse(ro, ast.CheckFlagsReadonly, 0))
-		if optional && c.strictNullChecks {
-			value = c.getOptionalType(value, true)
-		}
-		c.valueSymbolLinks.Get(p).resolvedType = value
-		fields.Set(key, p)
-		return true
-	}
-	switch op {
-	case "fields":
-		desc := ast.NewSymbolTable()
-		for name, p := range fields.All() {
-			desc.Set(name, c.newProperty(name, describe(p)))
-		}
-		return c.newAnonymousType(nil, desc, nil, nil, nil)
-	case "indexes":
-		var records []*Type
-		for _, i := range indexes {
-			records = append(records, c.typeFunctionRecord(typeFunctionField{"key", i.keyType}, typeFunctionField{"type", i.valueType}, typeFunctionField{"readonly", c.typeFunctionBoolean(i.isReadonly)}))
-		}
-		return c.getUnionType(records)
-	case "withIndexes":
-		indexes = nil
-		if args[1] != c.neverType {
-			for _, d := range args[1].Distributed() {
-				key := c.getTypeOfPropertyOfType(d, "key")
-				value := c.getTypeOfPropertyOfType(d, "type")
-				ro, ok := c.typeFunctionFlag(d, "readonly")
-				if !ok || value == nil || key == nil {
-					return nil
-				}
-				indexes = append(indexes, &IndexInfo{keyType: key, valueType: value, isReadonly: ro})
-			}
-		}
-	case "withFields":
-		fields = ast.NewSymbolTable()
-		for _, p := range c.getPropertiesOfType(args[1]) {
-			if !install(p.Name(), c.getTypeOfSymbol(p)) {
-				return nil
-			}
-		}
-	default:
-		if !isTypeUsableAsPropertyName(args[1]) {
-			return nil
-		}
-		key := getPropertyNameFromType(args[1])
-		p := fields.Get(key)
-		switch op {
-		case "hasField":
-			return c.typeFunctionBoolean(p != nil)
-		case "getField":
-			if p == nil {
-				return nil
-			}
-			return describe(p)
-		case "removeField":
-			if p == nil {
-				return t
-			}
-			fields.Delete(key)
-		case "addField", "setField":
-			if op == "addField" && p != nil || !install(key, args[2]) {
-				return nil
-			}
-		default:
-			return nil
-		}
-	}
-	return c.newAnonymousType(nil, fields, c.getSignaturesOfType(t, SignatureKindCall), c.getSignaturesOfType(t, SignatureKindConstruct), indexes)
 }

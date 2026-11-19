@@ -11,6 +11,7 @@ export declare enum SignatureFlags {
     IsUntypedSignatureInJSFile = 1 << 6,
     IsNonInferrable = 1 << 7,
     IsSignatureCandidateForOverloadFailure = 1 << 8,
-    PropagatingFlags = HasRestParameter | HasLiteralTypes | Construct | Abstract | IsUntypedSignatureInJSFile | IsSignatureCandidateForOverloadFailure,
+    TypeFunctionComposed = 1 << 10,
+    PropagatingFlags = TypeFunctionComposed | HasRestParameter | HasLiteralTypes | Construct | Abstract | IsUntypedSignatureInJSFile | IsSignatureCandidateForOverloadFailure,
     CallChainFlags = IsInnerCallChain | IsOuterCallChain,
 }

@@ -2141,7 +2141,7 @@ func (b *NodeBuilderImpl) tryGetThisParameterDeclaration(signature *Signature) *
 * Serializes the return type of the signature by first trying to use the syntactic printer if possible and falling back to the checker type if not.
  */
 func (b *NodeBuilderImpl) serializeReturnTypeForSignature(signature *Signature, tryReuse bool) *ast.Node {
-	tryReuse = tryReuse && !signature.typeFunctionComposed
+	tryReuse = tryReuse && signature.flags&SignatureFlagsTypeFunctionComposed == 0
 	suppressAny := b.ctx.flags&nodebuilder.FlagsSuppressAnyReturnType != 0
 	restoreFlags := b.saveRestoreFlags()
 	if suppressAny {
@@ -2664,6 +2664,20 @@ func (b *NodeBuilderImpl) addPropertyToElementList(propertySymbol *ast.Symbol, t
 	b.ctx.enclosingDeclaration = saveEnclosingDeclaration
 	b.ctx.approximateLength += len(ast.SymbolName(propertySymbol)) + 1
 
+	if propertySymbol.Flags()&ast.SymbolFlagsAccessor != 0 && len(propertySymbol.Declarations()) == 0 {
+		// Computed accessors carry their read and write contracts directly.
+		elements := typeElements
+		if propertySymbol.Flags()&ast.SymbolFlagsGetAccessor != 0 {
+			sig := b.ch.newSignature(SignatureFlagsNone, nil, nil, nil, nil, propertyType, nil, 0)
+			elements = append(elements, b.signatureToSignatureDeclarationHelper(sig, ast.KindGetAccessor, &SignatureToSignatureDeclarationOptions{name: propertyName}))
+		}
+		if propertySymbol.Flags()&ast.SymbolFlagsSetAccessor != 0 {
+			param := b.ch.newParameter("value", b.ch.getWriteTypeOfSymbol(propertySymbol))
+			sig := b.ch.newSignature(SignatureFlagsNone, nil, nil, nil, []*ast.Symbol{param}, b.ch.voidType, nil, 1)
+			elements = append(elements, b.signatureToSignatureDeclarationHelper(sig, ast.KindSetAccessor, &SignatureToSignatureDeclarationOptions{name: propertyName}))
+		}
+		return elements
+	}
 	if propertySymbol.Flags()&ast.SymbolFlagsAccessor != 0 {
 		writeType := b.ch.getWriteTypeOfSymbol(propertySymbol)
 		if !b.ch.isErrorType(propertyType) && !b.ch.isErrorType(writeType) {
@@ -3429,6 +3443,27 @@ func (b *NodeBuilderImpl) typeToTypeNode(t *Type) *ast.TypeNode {
 
 	if b.ctx.flags&nodebuilder.FlagsNoTypeReduction == 0 {
 		t = b.ch.getReducedType(t)
+	}
+
+	if t.flags&TypeFlagsTypeParameter != 0 {
+		if ctor := b.ch.typeFunctionConstructors[t]; ctor != nil {
+			args := make([]*ast.Node, len(ctor.arguments))
+			for i, arg := range ctor.arguments {
+				if arg == nil {
+					args[i] = b.f.NewTypeReferenceNode(b.f.NewIdentifier("_"), nil)
+				} else {
+					args[i] = b.typeToTypeNode(arg)
+				}
+			}
+			return b.symbolToTypeNode(ctor.target, ast.SymbolFlagsType, b.f.NewNodeList(args))
+		}
+		if app := t.typeFunctionApplication(); app != nil && app.builtin != "" {
+			if app.builtin == "@apply" {
+				return b.f.NewTypeReferenceNode(b.f.DeepCloneNode(app.use.AsTypeReferenceNode().TypeName), b.mapToTypeNodes(app.arguments[1:], false))
+			}
+			namespace, name, _ := strings.Cut(app.builtin, ".")
+			return b.f.NewTypeReferenceNode(b.f.NewQualifiedName(b.f.NewIdentifier(namespace), b.f.NewIdentifier(name)), b.mapToTypeNodes(app.arguments, false))
+		}
 	}
 
 	if t.flags&TypeFlagsAny != 0 {

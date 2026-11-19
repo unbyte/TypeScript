@@ -5,6 +5,22 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 )
 
+func (p *Printer) emitTypeFunctionDeclaration(node *ast.TypeFunctionDeclaration) {
+	state := p.enterNode(node.AsNode())
+	p.emitModifierList(node.AsNode(), node.Modifiers(), false)
+	p.writeKeyword("typefn")
+	p.writeSpace()
+	p.emitBindingIdentifier(node.Name().AsIdentifier())
+	if len(node.TypeParameters.Nodes) == 0 {
+		p.writePunctuation("<>")
+	} else {
+		p.emitTypeParameters(node.AsNode(), node.TypeParameters)
+	}
+	p.writeSpace()
+	p.emitTypeFunctionBlock(node.Body)
+	p.exitNode(node.AsNode(), state)
+}
+
 func (p *Printer) emitTypeFunctionBlock(node *ast.Node) {
 	state := p.enterNode(node)
 	statements := node.AsTypeFunctionBlock().Statements
@@ -51,8 +67,10 @@ func (p *Printer) emitTypeFunctionStatement(node *ast.Node) {
 		if node.Kind == ast.KindTypeFunctionReturn {
 			p.writeKeyword("return")
 			p.writeSpace()
+			p.emitTypeNodeOutsideExtends(node.AsTypeFunctionReturn().Operand)
+		} else {
+			p.emitTypeNodeOutsideExtends(node.AsTypeFunctionCallStatement().Operand)
 		}
-		p.emitTypeNodeOutsideExtends(node.AsTypeFunctionOperandStatement().Operand)
 		p.writeTrailingSemicolon()
 	case ast.KindBreakStatement, ast.KindContinueStatement:
 		if node.Kind == ast.KindBreakStatement {
@@ -62,7 +80,7 @@ func (p *Printer) emitTypeFunctionStatement(node *ast.Node) {
 		}
 		p.writeTrailingSemicolon()
 	case ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile:
-		branch := node.AsTypeFunctionBranch()
+		condition, block, alternative := ast.TypeFunctionBranchParts(node)
 		if node.Kind == ast.KindTypeFunctionIf {
 			p.writeKeyword("if")
 		} else {
@@ -70,18 +88,18 @@ func (p *Printer) emitTypeFunctionStatement(node *ast.Node) {
 		}
 		p.writeSpace()
 		p.writePunctuation("(")
-		p.emitTypeNodeOutsideExtends(branch.Condition)
+		p.emitTypeNodeOutsideExtends(condition)
 		p.writePunctuation(")")
 		p.writeSpace()
-		p.emitTypeFunctionBlock(branch.Block)
-		if branch.ElseBranch != nil {
+		p.emitTypeFunctionBlock(block)
+		if alternative != nil {
 			p.writeSpace()
 			p.writeKeyword("else")
 			p.writeSpace()
-			if ast.IsTypeFunctionBlock(branch.ElseBranch) {
-				p.emitTypeFunctionBlock(branch.ElseBranch)
+			if ast.IsTypeFunctionBlock(alternative) {
+				p.emitTypeFunctionBlock(alternative)
 			} else {
-				p.emitTypeFunctionStatement(branch.ElseBranch)
+				p.emitTypeFunctionStatement(alternative)
 			}
 		}
 	case ast.KindTypeFunctionFor:

@@ -1,0 +1,311 @@
+//// [tests/cases/compiler/typeFunctionSignatureParts.ts] ////
+
+=== typeFunctionSignatureParts.ts ===
+typefn Rebuild<F> { return fn.compose<fn.decompose<F>>; }
+>Rebuild : Symbol(Rebuild, Decl(typeFunctionSignatureParts.ts, 0, 0))
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 0, 15))
+>fn : Symbol(fn)
+>compose : Symbol(fn.compose)
+>fn : Symbol(fn)
+>decompose : Symbol(fn.decompose)
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 0, 15))
+
+interface Factory {
+>Factory : Symbol(Factory, Decl(typeFunctionSignatureParts.ts, 0, 57))
+
+    tag: "factory";
+>tag : Symbol(Factory.tag, Decl(typeFunctionSignatureParts.ts, 2, 19))
+
+    <T>(x: T | undefined): x is T;
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 4, 5))
+>x : Symbol(x, Decl(typeFunctionSignatureParts.ts, 4, 8))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 4, 5))
+>x : Symbol(x, Decl(typeFunctionSignatureParts.ts, 4, 8))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 4, 5))
+
+    (x: unknown, kind: "text"): x is string;
+>x : Symbol(x, Decl(typeFunctionSignatureParts.ts, 5, 5))
+>kind : Symbol(kind, Decl(typeFunctionSignatureParts.ts, 5, 16))
+>x : Symbol(x, Decl(typeFunctionSignatureParts.ts, 5, 5))
+
+    new (name: string): { name: string };
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 6, 9))
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 6, 25))
+}
+
+declare const factory: Rebuild<Factory>;
+>factory : Symbol(factory, Decl(typeFunctionSignatureParts.ts, 9, 13))
+>Rebuild : Symbol(Rebuild, Decl(typeFunctionSignatureParts.ts, 0, 0))
+>Factory : Symbol(Factory, Decl(typeFunctionSignatureParts.ts, 0, 57))
+
+declare const maybe: number | undefined;
+>maybe : Symbol(maybe, Decl(typeFunctionSignatureParts.ts, 10, 13))
+
+declare const input: unknown;
+>input : Symbol(input, Decl(typeFunctionSignatureParts.ts, 11, 13))
+
+if (factory(maybe)) { const n: number = maybe; }
+>factory : Symbol(factory, Decl(typeFunctionSignatureParts.ts, 9, 13))
+>maybe : Symbol(maybe, Decl(typeFunctionSignatureParts.ts, 10, 13))
+>n : Symbol(n, Decl(typeFunctionSignatureParts.ts, 12, 27))
+>maybe : Symbol(maybe, Decl(typeFunctionSignatureParts.ts, 10, 13))
+
+if (factory(input, "text")) { const s: string = input; }
+>factory : Symbol(factory, Decl(typeFunctionSignatureParts.ts, 9, 13))
+>input : Symbol(input, Decl(typeFunctionSignatureParts.ts, 11, 13))
+>s : Symbol(s, Decl(typeFunctionSignatureParts.ts, 13, 35))
+>input : Symbol(input, Decl(typeFunctionSignatureParts.ts, 11, 13))
+
+const tag: "factory" = factory.tag;
+>tag : Symbol(tag, Decl(typeFunctionSignatureParts.ts, 14, 5))
+>factory.tag : Symbol(Factory.tag, Decl(typeFunctionSignatureParts.ts, 2, 19))
+>factory : Symbol(factory, Decl(typeFunctionSignatureParts.ts, 9, 13))
+>tag : Symbol(Factory.tag, Decl(typeFunctionSignatureParts.ts, 2, 19))
+
+const made: string = new factory("example").name;
+>made : Symbol(made, Decl(typeFunctionSignatureParts.ts, 15, 5))
+>new factory("example").name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 6, 25))
+>factory : Symbol(factory, Decl(typeFunctionSignatureParts.ts, 9, 13))
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 6, 25))
+
+type Shadow = <T>(x: T) => <T>(y: T) => [typeof x, T extends string ? 1 : 2];
+>Shadow : Symbol(Shadow, Decl(typeFunctionSignatureParts.ts, 15, 49))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 17, 15))
+>x : Symbol(x, Decl(typeFunctionSignatureParts.ts, 17, 18))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 17, 15))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 17, 28))
+>y : Symbol(y, Decl(typeFunctionSignatureParts.ts, 17, 31))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 17, 28))
+>x : Symbol(x, Decl(typeFunctionSignatureParts.ts, 17, 18))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 17, 28))
+
+declare const nested: Rebuild<Shadow>;
+>nested : Symbol(nested, Decl(typeFunctionSignatureParts.ts, 18, 13))
+>Rebuild : Symbol(Rebuild, Decl(typeFunctionSignatureParts.ts, 0, 0))
+>Shadow : Symbol(Shadow, Decl(typeFunctionSignatureParts.ts, 15, 49))
+
+const nestedText: [7, 1] = nested<7>(7)<"x">("x");
+>nestedText : Symbol(nestedText, Decl(typeFunctionSignatureParts.ts, 19, 5))
+>nested : Symbol(nested, Decl(typeFunctionSignatureParts.ts, 18, 13))
+
+const nestedBool: [7, 2] = nested<7>(7)<boolean>(false);
+>nestedBool : Symbol(nestedBool, Decl(typeFunctionSignatureParts.ts, 20, 5))
+>nested : Symbol(nested, Decl(typeFunctionSignatureParts.ts, 18, 13))
+
+typefn Fresh<> {
+>Fresh : Symbol(Fresh, Decl(typeFunctionSignatureParts.ts, 20, 56))
+
+    type Item = fn.ref<"item">;
+>Item : Symbol(Item, Decl(typeFunctionSignatureParts.ts, 23, 8))
+>fn : Symbol(fn)
+>ref : Symbol(fn.ref)
+
+    return fn.compose<{
+>fn : Symbol(fn)
+>compose : Symbol(fn.compose)
+
+        members: {};
+>members : Symbol(members, Decl(typeFunctionSignatureParts.ts, 24, 23))
+
+        constructs: [];
+>constructs : Symbol(constructs, Decl(typeFunctionSignatureParts.ts, 25, 20))
+
+        calls: [{
+>calls : Symbol(calls, Decl(typeFunctionSignatureParts.ts, 26, 23))
+
+            typeParameters: [{ name: "T"; key: "item"; const: true }];
+>typeParameters : Symbol(typeParameters, Decl(typeFunctionSignatureParts.ts, 27, 17))
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 28, 30))
+>key : Symbol(key, Decl(typeFunctionSignatureParts.ts, 28, 41))
+>const : Symbol(const, Decl(typeFunctionSignatureParts.ts, 28, 54))
+
+            parameters: [{ name: "value"; type: Item }];
+>parameters : Symbol(parameters, Decl(typeFunctionSignatureParts.ts, 28, 70))
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 29, 26))
+>type : Symbol(type, Decl(typeFunctionSignatureParts.ts, 29, 41))
+>Item : Symbol(Item, Decl(typeFunctionSignatureParts.ts, 23, 8))
+
+            result: { kind: "return"; type: Item };
+>result : Symbol(result, Decl(typeFunctionSignatureParts.ts, 29, 56))
+>kind : Symbol(kind, Decl(typeFunctionSignatureParts.ts, 30, 21))
+>type : Symbol(type, Decl(typeFunctionSignatureParts.ts, 30, 37))
+>Item : Symbol(Item, Decl(typeFunctionSignatureParts.ts, 23, 8))
+
+        }];
+    }>;
+}
+declare const fresh: Fresh<>;
+>fresh : Symbol(fresh, Decl(typeFunctionSignatureParts.ts, 34, 13))
+>Fresh : Symbol(Fresh, Decl(typeFunctionSignatureParts.ts, 20, 56))
+
+const freshObject: { readonly a: 1 } = fresh({a: 1});
+>freshObject : Symbol(freshObject, Decl(typeFunctionSignatureParts.ts, 35, 5))
+>a : Symbol(a, Decl(typeFunctionSignatureParts.ts, 35, 20))
+>fresh : Symbol(fresh, Decl(typeFunctionSignatureParts.ts, 34, 13))
+>a : Symbol(a, Decl(typeFunctionSignatureParts.ts, 35, 46))
+
+typefn Specialized<F, Args> { return fn.specialize<F, Args>; }
+>Specialized : Symbol(Specialized, Decl(typeFunctionSignatureParts.ts, 35, 53))
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 37, 19))
+>Args : Symbol(Args, Decl(typeFunctionSignatureParts.ts, 37, 21))
+>fn : Symbol(fn)
+>specialize : Symbol(fn.specialize)
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 37, 19))
+>Args : Symbol(Args, Decl(typeFunctionSignatureParts.ts, 37, 21))
+
+declare const specific: Specialized<<T extends string, R = T>(v: T) => R, ["a"]>;
+>specific : Symbol(specific, Decl(typeFunctionSignatureParts.ts, 38, 13))
+>Specialized : Symbol(Specialized, Decl(typeFunctionSignatureParts.ts, 35, 53))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 38, 37))
+>R : Symbol(R, Decl(typeFunctionSignatureParts.ts, 38, 54))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 38, 37))
+>v : Symbol(v, Decl(typeFunctionSignatureParts.ts, 38, 62))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 38, 37))
+>R : Symbol(R, Decl(typeFunctionSignatureParts.ts, 38, 54))
+
+const result: "a" = specific("a");
+>result : Symbol(result, Decl(typeFunctionSignatureParts.ts, 39, 5))
+>specific : Symbol(specific, Decl(typeFunctionSignatureParts.ts, 38, 13))
+
+// @ts-expect-error rejects a different argument after specialization
+specific("b");
+>specific : Symbol(specific, Decl(typeFunctionSignatureParts.ts, 38, 13))
+
+typefn Transfer<F> {
+>Transfer : Symbol(Transfer, Decl(typeFunctionSignatureParts.ts, 41, 14))
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 43, 16))
+
+    type P = fn.decompose<F>;
+>P : Symbol(P, Decl(typeFunctionSignatureParts.ts, 44, 8))
+>fn : Symbol(fn)
+>decompose : Symbol(fn.decompose)
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 43, 16))
+
+    type S = P["calls"][0];
+>S : Symbol(S, Decl(typeFunctionSignatureParts.ts, 45, 8))
+>P : Symbol(P, Decl(typeFunctionSignatureParts.ts, 44, 8))
+
+    type Original = S["typeParameters"][0]["ref"];
+>Original : Symbol(Original, Decl(typeFunctionSignatureParts.ts, 46, 8))
+>S : Symbol(S, Decl(typeFunctionSignatureParts.ts, 45, 8))
+
+    type New = fn.ref<"destination">;
+>New : Symbol(New, Decl(typeFunctionSignatureParts.ts, 47, 8))
+>fn : Symbol(fn)
+>ref : Symbol(fn.ref)
+
+    type Result = fn.rebind<S["result"], [{ from: Original; to: New }]>;
+>Result : Symbol(Result, Decl(typeFunctionSignatureParts.ts, 48, 8))
+>fn : Symbol(fn)
+>rebind : Symbol(fn.rebind)
+>S : Symbol(S, Decl(typeFunctionSignatureParts.ts, 45, 8))
+>from : Symbol(from, Decl(typeFunctionSignatureParts.ts, 48, 43))
+>Original : Symbol(Original, Decl(typeFunctionSignatureParts.ts, 46, 8))
+>to : Symbol(to, Decl(typeFunctionSignatureParts.ts, 48, 59))
+>New : Symbol(New, Decl(typeFunctionSignatureParts.ts, 47, 8))
+
+    return fn.compose<{
+>fn : Symbol(fn)
+>compose : Symbol(fn.compose)
+
+        members: {}; constructs: []; calls: [{
+>members : Symbol(members, Decl(typeFunctionSignatureParts.ts, 49, 23))
+>constructs : Symbol(constructs, Decl(typeFunctionSignatureParts.ts, 50, 20))
+>calls : Symbol(calls, Decl(typeFunctionSignatureParts.ts, 50, 36))
+
+            typeParameters: [{key: "destination"; name: "New"}];
+>typeParameters : Symbol(typeParameters, Decl(typeFunctionSignatureParts.ts, 50, 46))
+>key : Symbol(key, Decl(typeFunctionSignatureParts.ts, 51, 30))
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 51, 49))
+
+            parameters: [{type: New}]; result: Result;
+>parameters : Symbol(parameters, Decl(typeFunctionSignatureParts.ts, 51, 64))
+>type : Symbol(type, Decl(typeFunctionSignatureParts.ts, 52, 26))
+>New : Symbol(New, Decl(typeFunctionSignatureParts.ts, 47, 8))
+>result : Symbol(result, Decl(typeFunctionSignatureParts.ts, 52, 38))
+>Result : Symbol(Result, Decl(typeFunctionSignatureParts.ts, 48, 8))
+
+        }];
+    }>;
+}
+declare const moved: Transfer<<T>(x: T) => { list: [T] }>;
+>moved : Symbol(moved, Decl(typeFunctionSignatureParts.ts, 56, 13))
+>Transfer : Symbol(Transfer, Decl(typeFunctionSignatureParts.ts, 41, 14))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 56, 31))
+>x : Symbol(x, Decl(typeFunctionSignatureParts.ts, 56, 34))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 56, 31))
+>list : Symbol(list, Decl(typeFunctionSignatureParts.ts, 56, 44))
+>T : Symbol(T, Decl(typeFunctionSignatureParts.ts, 56, 31))
+
+const transferred: { list: [7] } = moved<7>(7);
+>transferred : Symbol(transferred, Decl(typeFunctionSignatureParts.ts, 57, 5))
+>list : Symbol(list, Decl(typeFunctionSignatureParts.ts, 57, 20))
+>moved : Symbol(moved, Decl(typeFunctionSignatureParts.ts, 56, 13))
+
+typefn AddContext<F> {
+>AddContext : Symbol(AddContext, Decl(typeFunctionSignatureParts.ts, 57, 47))
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 59, 18))
+
+    type Parts = fn.decompose<F>;
+>Parts : Symbol(Parts, Decl(typeFunctionSignatureParts.ts, 60, 8))
+>fn : Symbol(fn)
+>decompose : Symbol(fn.decompose)
+>F : Symbol(F, Decl(typeFunctionSignatureParts.ts, 59, 18))
+
+    type Calls = [];
+>Calls : Symbol(Calls, Decl(typeFunctionSignatureParts.ts, 61, 8))
+
+    for (type Call of Parts["calls"]) {
+>Call : Symbol(Call, Decl(typeFunctionSignatureParts.ts, 62, 13))
+>Parts : Symbol(Parts, Decl(typeFunctionSignatureParts.ts, 60, 8))
+
+        type Params = [{name: "context"; key: "ctx"; type: object}, ...Call["parameters"]];
+>Params : Symbol(Params, Decl(typeFunctionSignatureParts.ts, 63, 12))
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 63, 24))
+>key : Symbol(key, Decl(typeFunctionSignatureParts.ts, 63, 40))
+>type : Symbol(type, Decl(typeFunctionSignatureParts.ts, 63, 52))
+>Call : Symbol(Call, Decl(typeFunctionSignatureParts.ts, 62, 13))
+
+        type Edited = Omit<Call, "parameters"> & {parameters: Params};
+>Edited : Symbol(Edited, Decl(typeFunctionSignatureParts.ts, 64, 12))
+>Omit : Symbol(Omit, Decl(lib.es5.d.ts, --, --))
+>Call : Symbol(Call, Decl(typeFunctionSignatureParts.ts, 62, 13))
+>parameters : Symbol(parameters, Decl(typeFunctionSignatureParts.ts, 64, 50))
+>Params : Symbol(Params, Decl(typeFunctionSignatureParts.ts, 63, 12))
+
+        Calls = [...Calls, Edited];
+>Calls : Symbol(Calls, Decl(typeFunctionSignatureParts.ts, 61, 8))
+>Edited : Symbol(Edited, Decl(typeFunctionSignatureParts.ts, 64, 12))
+    }
+    return fn.compose<{members: Parts["members"]; calls: Calls; constructs: Parts["constructs"]}>;
+>fn : Symbol(fn)
+>compose : Symbol(fn.compose)
+>members : Symbol(members, Decl(typeFunctionSignatureParts.ts, 67, 23))
+>Parts : Symbol(Parts, Decl(typeFunctionSignatureParts.ts, 60, 8))
+>calls : Symbol(calls, Decl(typeFunctionSignatureParts.ts, 67, 49))
+>Calls : Symbol(Calls, Decl(typeFunctionSignatureParts.ts, 61, 8))
+>constructs : Symbol(constructs, Decl(typeFunctionSignatureParts.ts, 67, 63))
+>Parts : Symbol(Parts, Decl(typeFunctionSignatureParts.ts, 60, 8))
+}
+declare const contextual: AddContext<Factory>;
+>contextual : Symbol(contextual, Decl(typeFunctionSignatureParts.ts, 69, 13))
+>AddContext : Symbol(AddContext, Decl(typeFunctionSignatureParts.ts, 57, 47))
+>Factory : Symbol(Factory, Decl(typeFunctionSignatureParts.ts, 0, 57))
+
+if (contextual({}, input, "text")) { const narrowed: string = input; }
+>contextual : Symbol(contextual, Decl(typeFunctionSignatureParts.ts, 69, 13))
+>input : Symbol(input, Decl(typeFunctionSignatureParts.ts, 11, 13))
+>narrowed : Symbol(narrowed, Decl(typeFunctionSignatureParts.ts, 70, 42))
+>input : Symbol(input, Decl(typeFunctionSignatureParts.ts, 11, 13))
+
+// @ts-expect-error the added context is required
+contextual(maybe);
+>contextual : Symbol(contextual, Decl(typeFunctionSignatureParts.ts, 69, 13))
+>maybe : Symbol(maybe, Decl(typeFunctionSignatureParts.ts, 10, 13))
+
+const preserved: string = new contextual("a").name;
+>preserved : Symbol(preserved, Decl(typeFunctionSignatureParts.ts, 73, 5))
+>new contextual("a").name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 6, 25))
+>contextual : Symbol(contextual, Decl(typeFunctionSignatureParts.ts, 69, 13))
+>name : Symbol(name, Decl(typeFunctionSignatureParts.ts, 6, 25))
+

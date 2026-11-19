@@ -1,0 +1,82 @@
+//// [tests/cases/compiler/typeFunctionLimits.ts] ////
+
+=== typeFunctionLimits.ts ===
+typefn Walk<N> {
+>Walk : Walk<N>
+
+    if (N === 0) { return 0; }
+    return Walk<number.subtract<N, 1>>;
+>number : any
+}
+typefn Spin<> { while (true) {} }
+>Spin : any
+>true : true
+
+typefn Constant<T> { return 7; }
+>Constant : Constant<T>
+
+declare const shallow: Walk<8>;
+>shallow : 0
+
+const zero: 0 = shallow;
+>zero : 0
+>shallow : 0
+
+declare const deep: Walk<150>;
+>deep : any
+
+deep.recovered;
+>deep.recovered : any
+>deep : any
+>recovered : any
+
+declare const spin: Spin<>;
+>spin : any
+
+spin.recovered;
+>spin.recovered : any
+>spin : any
+>recovered : any
+
+// Rebuilding an object charges the fields copied, even with a short loop.
+type Digit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+>Digit : Digit
+
+type Wide = { [K in `k${Digit}${Digit}${Digit}`]: 1 };
+>Wide : Wide
+
+typefn ReplaceMany<T> {
+>ReplaceMany : ReplaceMany<T>
+
+    type Out = T;
+    type I = 0;
+    while (number.lessThan<I, 128>) {
+>number : any
+
+        Out = object.setField<Out, "extra", { type: 2 }>;
+>Out : any
+>object : any
+>type : 2
+
+        I = number.add<I, 1>;
+>I : any
+>number : any
+    }
+    return Out;
+}
+declare const wide: ReplaceMany<Wide>;
+>wide : any
+
+wide.recovered;
+>wide.recovered : any
+>wide : any
+>recovered : any
+
+// A failed root cannot spend the next application's budget.
+declare const next: Constant<"ok">;
+>next : 7
+
+const seven: 7 = next;
+>seven : 7
+>next : 7
+

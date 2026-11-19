@@ -1,14 +1,17 @@
 package checker
 
 import (
-	"github.com/microsoft/TypeScript/tsc/internal/ast"
-	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
 	"slices"
+
+	"github.com/microsoft/TypeScript/tsc/internal/ast"
+	"github.com/microsoft/TypeScript/tsc/internal/core"
+	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
 )
 
 type typeFunctionConstructor struct {
-	target    *ast.Symbol
-	arguments []*Type
+	target          *ast.Symbol
+	arguments       []*Type
+	outer, captured []*Type
 }
 
 func typeFunctionSlots(parameter *ast.Node) int {
@@ -21,6 +24,7 @@ func typeFunctionSlots(parameter *ast.Node) int {
 	}
 	return len(expr.AsTypeFunctionConstructorSlots().Holes.Nodes)
 }
+
 func typeFunctionConstructorParameter(symbol *ast.Symbol) int {
 	if symbol == nil || symbol.Flags()&ast.SymbolFlagsTypeParameter == 0 {
 		return 0
@@ -32,6 +36,7 @@ func typeFunctionConstructorParameter(symbol *ast.Symbol) int {
 	}
 	return 0
 }
+
 func (c *Checker) typeFunctionConstructorArity(node *ast.Node) int {
 	call := node.Parent
 	if call == nil || !ast.IsTypeReferenceNode(call) {
@@ -54,9 +59,11 @@ func (c *Checker) typeFunctionConstructorArity(node *ast.Node) int {
 	}
 	return typeFunctionSlots(decl.TypeParameters()[i])
 }
+
 func typeFunctionHole(n *ast.Node) bool {
 	return isSimpleIdentifierTypeReference(n) && n.AsTypeReferenceNode().TypeName.Text() == "_"
 }
+
 func (c *Checker) readTypeFunctionConstructor(node *ast.Node, arity int) *Type {
 	if !ast.IsTypeReferenceNode(node) {
 		c.error(node, diagnostics.Type_function_Colon_0, "expected a type constructor")
@@ -83,19 +90,38 @@ func (c *Checker) readTypeFunctionConstructor(node *ast.Node, arity int) *Type {
 	if typeFunctionConstructorParameter(sym) == arity && holes == len(arguments) {
 		return c.getDeclaredTypeOfSymbol(sym)
 	}
-	return c.newTypeFunctionConstructor(sym, arguments)
+	if ast.GetDeclarationOfKind(sym, ast.KindTypeFunctionDeclaration) != nil {
+		c.error(node, diagnostics.Type_function_Colon_0, "expected an ordinary generic type constructor")
+		return c.errorType
+	}
+	params := c.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(sym)
+	if len(arguments) < c.getMinTypeArgumentCount(params) || len(arguments) > len(params) {
+		c.error(node, diagnostics.Type_function_Colon_0, "incorrect constructor arity")
+		return c.errorType
+	}
+	var outer []*Type
+	if decl := core.FirstOrNil(sym.Declarations()); decl != nil {
+		outer = c.getOuterTypeParameters(decl.Parent, false)
+		outer = core.Filter(outer, func(p *Type) bool { return c.isTypeParameterPossiblyReferenced(p, decl) })
+	}
+	return c.newTypeFunctionConstructor(sym, arguments, outer, outer)
 }
-func (c *Checker) newTypeFunctionConstructor(sym *ast.Symbol, args []*Type) *Type {
+
+func (c *Checker) newTypeFunctionConstructor(sym *ast.Symbol, args, outer, captured []*Type) *Type {
 	t := c.newTypeParameter(nil)
 	t.AsTypeParameter().constraint = c.noConstraintType
-	t.AsTypeParameter().constructor = &typeFunctionConstructor{sym, args}
+	if c.typeFunctionConstructors == nil {
+		c.typeFunctionConstructors = make(map[*Type]*typeFunctionConstructor)
+	}
+	c.typeFunctionConstructors[t] = &typeFunctionConstructor{sym, args, outer, captured}
 	return t
 }
+
 func (c *Checker) applyTypeFunctionConstructor(node *ast.Node, t *Type, values []*Type) *Type {
-	if t.flags&TypeFlagsTypeParameter == 0 || t.AsTypeParameter().constructor == nil {
+	ctor := c.typeFunctionConstructors[t]
+	if ctor == nil {
 		return c.failTypeFunction(node, "expected a constructor input")
 	}
-	ctor := t.AsTypeParameter().constructor
 	args := slices.Clone(ctor.arguments)
 	index := 0
 	for i, v := range args {
@@ -122,7 +148,16 @@ func (c *Checker) applyTypeFunctionConstructor(node *ast.Node, t *Type, values [
 		}
 	}
 	if ctor.target.Flags()&ast.SymbolFlagsTypeAlias != 0 {
-		return c.getTypeAliasInstantiation(ctor.target, args, nil)
+		value := c.getTypeAliasInstantiation(ctor.target, args, nil)
+		if len(ctor.outer) != 0 {
+			value = c.instantiateType(value, newTypeMapper(ctor.outer, ctor.captured))
+		}
+		return value
 	}
-	return c.createTypeReference(c.getDeclaredTypeOfSymbol(ctor.target), args)
+	target := c.getDeclaredTypeOfSymbol(ctor.target)
+	if captured := target.AsInterfaceType().OuterTypeParameters(); len(captured) != 0 {
+		values := c.instantiateTypes(captured, newTypeMapper(ctor.outer, ctor.captured))
+		args = append(slices.Clone(values), args...)
+	}
+	return c.createTypeReference(target, args)
 }

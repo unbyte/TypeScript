@@ -1,0 +1,158 @@
+//// [tests/cases/compiler/typeFunctionReflection.ts] ////
+
+=== typeFunctionReflection.ts ===
+declare const token: unique symbol;
+>token : unique symbol
+
+class Model {
+>Model : Model
+
+    private hidden = 0;
+>hidden : number
+>0 : 0
+
+    readonly [token] = "tag" as const;
+>[token] : "tag"
+>token : unique symbol
+>"tag" as const : "tag"
+>"tag" : "tag"
+
+    get count(): number { return this.hidden; }
+>count : number
+>this.hidden : number
+>this : this
+>hidden : number
+
+    set count(value: string | number) { this.hidden = Number(value); }
+>count : number
+>value : string | number
+>this.hidden = Number(value) : number
+>this.hidden : number
+>this : this
+>hidden : number
+>Number(value) : number
+>Number : NumberConstructor
+>value : string | number
+
+    run?(id: number): void;
+>run : ((id: number) => void) | undefined
+>id : number
+}
+typefn Fields<T> { return object.fields<T>; }
+>Fields : Fields<T>
+>object : any
+
+typefn Project<T> { return object.withFields<{}, object.fields<T>>; }
+>Project : Project<T>
+>object : any
+>object : any
+
+declare const fields: Fields<Model>;
+>fields : { count: { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }; run: { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }; [token]: { kind: "data"; optional: false; read: "tag"; readonly: true; type: "tag"; write: ["readonly"]; }; }
+
+const getter: [number] = fields.count.getter;
+>getter : [number]
+>fields.count.getter : [number]
+>fields.count : { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }
+>fields : { count: { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }; run: { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }; [token]: { kind: "data"; optional: false; read: "tag"; readonly: true; type: "tag"; write: ["readonly"]; }; }
+>count : { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }
+>getter : [number]
+
+const setter: [number | string] = fields.count.setter;
+>setter : [string | number]
+>fields.count.setter : [string | number]
+>fields.count : { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }
+>fields : { count: { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }; run: { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }; [token]: { kind: "data"; optional: false; read: "tag"; readonly: true; type: "tag"; write: ["readonly"]; }; }
+>count : { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }
+>setter : [string | number]
+
+const method: "method" = fields.run.kind;
+>method : "method"
+>fields.run.kind : "method"
+>fields.run : { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }
+>fields : { count: { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }; run: { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }; [token]: { kind: "data"; optional: false; read: "tag"; readonly: true; type: "tag"; write: ["readonly"]; }; }
+>run : { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }
+>kind : "method"
+
+const keyKind: "data" = fields[token].kind;
+>keyKind : "data"
+>fields[token].kind : "data"
+>fields[token] : { kind: "data"; optional: false; read: "tag"; readonly: true; type: "tag"; write: ["readonly"]; }
+>fields : { count: { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }; run: { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }; [token]: { kind: "data"; optional: false; read: "tag"; readonly: true; type: "tag"; write: ["readonly"]; }; }
+>token : unique symbol
+>kind : "data"
+
+// @ts-expect-error private members do not appear in the projection
+fields.hidden;
+>fields.hidden : error
+>fields : { count: { getter: [number]; kind: "accessor"; optional: false; read: number; setter: [string | number]; write: ["accepts", string | number]; }; run: { kind: "method"; optional: true; read: ((id: number) => void) | undefined; readonly: false; type: (id: number) => void; write: ["accepts", ((id: number) => void) | undefined]; }; [token]: { kind: "data"; optional: false; read: "tag"; readonly: true; type: "tag"; write: ["readonly"]; }; }
+>hidden : any
+
+declare let projection: Project<Model>;
+>projection : { get count(): number; set count(value: string | number); run?(id: number): void; readonly [token]: "tag"; }
+
+projection.count = "2";
+>projection.count = "2" : "2"
+>projection.count : string | number
+>projection : { get count(): number; set count(value: string | number); run?(id: number): void; readonly [token]: "tag"; }
+>count : string | number
+>"2" : "2"
+
+const read: number = projection.count;
+>read : number
+>projection.count : number
+>projection : { get count(): number; set count(value: string | number); run?(id: number): void; readonly [token]: "tag"; }
+>count : number
+
+const tag: "tag" = projection[token];
+>tag : "tag"
+>projection[token] : "tag"
+>projection : { get count(): number; set count(value: string | number); run?(id: number): void; readonly [token]: "tag"; }
+>token : unique symbol
+
+// @ts-expect-error a symbol-keyed readonly field retains its modifier
+projection[token] = "tag";
+>projection[token] = "tag" : "tag"
+>projection[token] : error
+>projection : { get count(): number; set count(value: string | number); run?(id: number): void; readonly [token]: "tag"; }
+>token : unique symbol
+>"tag" : "tag"
+
+typefn TupleCopy<T> { return tuple.compose<tuple.decompose<T>>; }
+>TupleCopy : TupleCopy<T>
+>tuple : any
+>tuple : any
+
+declare const tuple: TupleCopy<readonly [head: number, tail?: string]>;
+>tuple : readonly [head: number, tail?: string]
+
+const head: number = tuple[0];
+>head : number
+>tuple[0] : number
+>tuple : readonly [head: number, tail?: string]
+>0 : 0
+
+typefn Template<T> { return template.compose<{ texts: ["on", ""]; types: [T] }>; }
+>Template : Template<T>
+>template : any
+>texts : ["on", ""]
+>types : [T]
+
+declare const eventName: Template<"Ready" | "Close">;
+>eventName : "onClose" | "onReady"
+
+const events: "onReady" | "onClose" = eventName;
+>events : "onClose" | "onReady"
+>eventName : "onClose" | "onReady"
+
+typefn Sort<T> { return union.toTuple<T>; }
+>Sort : Sort<T>
+>union : any
+
+declare const order: Sort<"😀" | "a" | "𐀀">;
+>order : ["a", "𐀀", "😀"]
+
+const keys: ["a", "𐀀", "😀"] = order;
+>keys : ["a", "𐀀", "😀"]
+>order : ["a", "𐀀", "😀"]
+

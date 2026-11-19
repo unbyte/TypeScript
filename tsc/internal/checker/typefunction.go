@@ -2,8 +2,9 @@ package checker
 
 import (
 	"fmt"
-	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
 	"slices"
+
+	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
 
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/core"
@@ -13,6 +14,7 @@ import (
 // The result of an open application is an opaque type variable. Its arguments
 // participate in substitution, but never in inference from its result.
 type typeFunctionApplication struct {
+	completed   *Type
 	use         *ast.Node
 	declaration *ast.Node
 	builtin     string
@@ -21,7 +23,7 @@ type typeFunctionApplication struct {
 
 func (t *Type) typeFunctionApplication() *typeFunctionApplication {
 	if t != nil && t.flags&TypeFlagsTypeParameter != 0 {
-		return t.AsTypeParameter().application
+		return t.checker.typeFunctionApplications[t]
 	}
 	return nil
 }
@@ -34,7 +36,10 @@ func (c *Checker) newTypeFunctionApplication(use, declaration *ast.Node, builtin
 	t := c.newTypeParameter(symbol)
 	tp := t.AsTypeParameter()
 	tp.constraint = c.noConstraintType
-	tp.application = &typeFunctionApplication{use, declaration, builtin, arguments}
+	if c.typeFunctionApplications == nil {
+		c.typeFunctionApplications = make(map[*Type]*typeFunctionApplication)
+	}
+	c.typeFunctionApplications[t] = &typeFunctionApplication{use: use, declaration: declaration, builtin: builtin, arguments: arguments}
 	if symbol != nil {
 		t.alias = &TypeAlias{symbol: symbol, typeArguments: arguments}
 	}
@@ -95,10 +100,10 @@ func (c *Checker) TypeFunctionBuiltinNamespace(node *ast.Node) string {
 }
 
 func (c *Checker) typeFunctionClosed(t *Type, path, bound map[*Type]bool) bool {
-	if t == nil || bound[t] || path[t] {
+	if t == nil || bound[getNonDistributedTypeParameter(t)] || path[t] {
 		return true
 	}
-	if t.flags&(TypeFlagsStructuredOrInstantiable) == 0 {
+	if t.flags&TypeFlagsStructuredOrInstantiable == 0 {
 		return true
 	}
 	path[t] = true
@@ -112,12 +117,23 @@ func (c *Checker) typeFunctionClosed(t *Type, path, bound map[*Type]bool) bool {
 		}
 		return true
 	}
+	// A module-level alias can depend only on its explicit parameters. This
+	// shortcut also bounds the inspection of recursively expanding aliases.
+	if t.typeFunctionApplication() == nil && t.alias != nil && t.alias.symbol != nil {
+		if decl := ast.GetDeclarationOfKind(t.alias.symbol, ast.KindTypeAliasDeclaration); decl != nil && (ast.IsSourceFile(decl.Parent) || ast.IsModuleBlock(decl.Parent)) {
+			return all(t.alias.typeArguments)
+		}
+	}
 	switch {
 	case t.typeFunctionApplication() != nil:
-		return all(t.typeFunctionApplication().arguments)
+		app := t.typeFunctionApplication()
+		if app.builtin == "fn.ref" && c.typeFunctionExecution != nil && c.typeFunctionExecution.fragments {
+			return false
+		}
+		return all(app.arguments)
 	case t.flags&TypeFlagsTypeParameter != 0:
-		if ctor := t.AsTypeParameter().constructor; ctor != nil {
-			return all(ctor.arguments)
+		if ctor := c.typeFunctionConstructors[t]; ctor != nil {
+			return all(ctor.arguments) && all(ctor.captured)
 		}
 		return false
 	case t.flags&TypeFlagsUnionOrIntersection != 0:
@@ -136,7 +152,12 @@ func (c *Checker) typeFunctionClosed(t *Type, path, bound map[*Type]bool) bool {
 		return closed(a.baseType) && closed(a.constraint)
 	case t.flags&TypeFlagsConditional != 0:
 		a := t.AsConditionalType()
-		return closed(a.checkType) && closed(a.extendsType)
+		for _, dep := range a.root.outerTypeParameters {
+			if !closed(c.instantiateType(dep, a.mapper)) {
+				return false
+			}
+		}
+		return closed(a.checkType)
 	case t.objectFlags&ObjectFlagsReference != 0:
 		return all(c.getTypeArguments(t))
 	case t.flags&TypeFlagsObject != 0:
@@ -183,29 +204,38 @@ func (c *Checker) typeFunctionClosed(t *Type, path, bound map[*Type]bool) bool {
 }
 
 type typeFunctionExecution struct {
-	trace  []string
-	refs   map[*Type]*Type
-	site   *ast.Node
-	stack  []*typeFunctionApplication
-	steps  int
-	failed bool
+	records   map[*Type]bool
+	fragments bool
+	trace     []string
+	refs      map[*Type]*Type
+	site      *ast.Node
+	stack     []*typeFunctionApplication
+	steps     int
+	failed    bool
 }
 
 func (c *Checker) failTypeFunction(node *ast.Node, message string) *Type {
 	root := c.typeFunctionExecution
+	if root != nil && c.ctx != nil && c.ctx.Err() != nil {
+		root.failed = true
+	}
 	if root != nil && !root.failed {
 		root.failed = true
 		d := c.error(root.site, diagnostics.Type_function_Colon_0, message)
-		if node != nil && node != root.site && d != nil {
-			d.AddRelatedInfo(createDiagnosticForNode(node, diagnostics.Type_function_Colon_0, message))
+		if d != nil {
+			root.addFrames(d, node, message)
 		}
 	}
 	return c.anyType
 }
 
 func (c *Checker) typeFunctionStep(node *ast.Node) bool {
+	return c.typeFunctionCharge(node, 1)
+}
+
+func (c *Checker) typeFunctionCharge(node *ast.Node, units int) bool {
 	root := c.typeFunctionExecution
-	root.steps++
+	root.steps += units
 	if root.steps > 100000 {
 		c.failTypeFunction(node, "work limit exceeded")
 	}
@@ -215,24 +245,40 @@ func (c *Checker) typeFunctionStep(node *ast.Node) bool {
 	return !root.failed
 }
 
-func (c *Checker) forceTypeFunction(t *Type) *Type {
+func (c *Checker) typeFunctionReady(app *typeFunctionApplication) bool {
+	if app.builtin != "" && c.typeFunctionExecution != nil {
+		// Reflection may manipulate fragments bound by the signature under construction.
+		return true
+	}
+	for _, arg := range app.arguments {
+		if !c.typeFunctionClosed(arg, map[*Type]bool{}, map[*Type]bool{}) {
+			return false
+		}
+	}
+	return true
+}
+
+func (c *Checker) forceTypeFunction(t *Type) (result *Type) {
 	app := t.typeFunctionApplication()
 	if app == nil {
 		return t
 	}
-	for _, arg := range app.arguments {
-		if !(app.builtin != "" && c.typeFunctionExecution != nil) && !c.typeFunctionClosed(arg, map[*Type]bool{}, map[*Type]bool{}) {
-			return t
-		}
+	if c.typeFunctionExecution == nil && app.completed != nil {
+		return app.completed
+	}
+	if !c.typeFunctionReady(app) {
+		return t
 	}
 	if c.typeFunctionExecution == nil {
 		c.typeFunctionExecution = &typeFunctionExecution{site: app.use}
 		defer func() {
-			if traceHost, ok := c.program.(interface{ TraceTypeFunction(string) }); ok && (c.ctx == nil || c.ctx.Err() == nil) {
-				for _, event := range c.typeFunctionExecution.trace {
-					traceHost.TraceTypeFunction(event)
-				}
+			root := c.typeFunctionExecution
+			if !root.failed && (c.ctx == nil || c.ctx.Err() == nil) {
+				// Only complete roots can be reused. Nested calls always share and
+				// charge the active root's budget, including on a warm checker.
+				app.completed = result
 			}
+			c.publishTypeFunctionTrace(app)
 			c.typeFunctionExecution = nil
 		}()
 	}
@@ -267,12 +313,18 @@ func (c *Checker) forceTypeFunction(t *Type) *Type {
 	for i, p := range app.declaration.TypeParameters() {
 		frame.bind(p, args[i])
 	}
-	value, flow := frame.block(app.declaration.Type())
+	value, flow := frame.block(app.declaration.Body())
 	if root.failed {
 		return c.anyType
 	}
 	if flow != typeFunctionReturned {
 		return c.failTypeFunction(app.declaration, "execution reached the end without a return")
+	}
+	if len(root.stack) == 1 && root.fragments && !c.typeFunctionClosed(value, map[*Type]bool{}, map[*Type]bool{}) {
+		return c.failTypeFunction(app.use, "an unbound signature reference escaped the calculation")
+	}
+	if c.typeFunctionConstructors[value] != nil {
+		return c.failTypeFunction(app.use, "a constructor cannot be returned as a type")
 	}
 	return value
 }
@@ -286,6 +338,7 @@ func (f *typeFunctionFrame) bind(node *ast.Node, value *Type) {
 	f.sources = append(f.sources, f.c.getDeclaredTypeOfSymbol(f.c.getSymbolOfDeclaration(node)))
 	f.values = append(f.values, value)
 }
+
 func (f *typeFunctionFrame) operand(node *ast.Node) *Type {
 	c := f.c
 	if !c.typeFunctionStep(node) {
@@ -327,13 +380,37 @@ func (f *typeFunctionFrame) operand(node *ast.Node) *Type {
 	}
 	sources := slices.Clone(f.sources)
 	values := slices.Clone(f.values)
-	node.ForEachChild(func(n *ast.Node) bool { return f.forceNestedOperand(n, &sources, &values) })
+	switch node.Kind {
+	case ast.KindConditionalType:
+		return f.selectedOperand(node, sources, values)
+	case ast.KindFunctionType, ast.KindConstructorType, ast.KindMappedType:
+		// Native instantiation introduces binders.
+	case ast.KindTypeReference:
+		template := c.getTypeFromTypeNode(node)
+		value := template
+		if len(sources) > 0 {
+			value = c.instantiateType(template, newTypeMapper(sources, values))
+		}
+		if app := value.typeFunctionApplication(); app != nil && !c.typeFunctionReady(app) {
+			return value
+		}
+		fallthrough
+	default:
+		node.ForEachChild(func(n *ast.Node) bool { return f.forceNestedOperand(n, &sources, &values) })
+	}
 	if c.typeFunctionExecution.failed {
 		return c.anyType
 	}
 	t := c.getTypeFromTypeNode(node)
 	if len(sources) > 0 {
-		t = c.instantiateType(t, newTypeMapper(sources, values))
+		mapper := newTypeMapper(sources, values)
+		if ast.IsTypeLiteralNode(node) && len(sources) > len(f.sources) && t.objectFlags&ObjectFlagsAnonymous != 0 {
+			// A closed literal has no lexical type parameters. It still needs a
+			// mapper when an explicit member computation has just run.
+			t = c.instantiateAnonymousType(t, mapper, nil)
+		} else {
+			t = c.instantiateType(t, mapper)
+		}
 	}
 	return c.getRegularTypeOfLiteralType(c.forceTypeFunction(t))
 }
@@ -346,18 +423,12 @@ func (f *typeFunctionFrame) forceNestedOperand(node *ast.Node, sources, values *
 	case ast.KindFunctionType, ast.KindConstructorType, ast.KindMethodSignature, ast.KindCallSignature, ast.KindConstructSignature, ast.KindMappedType:
 		return false
 	case ast.KindConditionalType:
-		cond := node.AsConditionalTypeNode()
-		v := f.operand(cond.CheckType)
-		target := f.operand(cond.ExtendsType)
-		if c.typeFunctionClosed(v, map[*Type]bool{}, map[*Type]bool{}) && c.typeFunctionClosed(target, map[*Type]bool{}, map[*Type]bool{}) {
-			branch := cond.FalseType
-			if c.isTypeAssignableTo(v, target) {
-				branch = cond.TrueType
-			}
-			return f.forceNestedOperand(branch, sources, values)
-		}
-		return false
+		f.selectedOperand(node, *sources, *values)
+		return c.typeFunctionExecution.failed
 	case ast.KindTypeReference:
+		if core.Some(node.TypeArguments(), typeFunctionHole) && c.typeFunctionConstructorArity(node) > 0 {
+			return false
+		}
 		template := c.getTypeFromTypeNode(node)
 		if template.typeFunctionApplication() != nil {
 			t := template
@@ -373,6 +444,50 @@ func (f *typeFunctionFrame) forceNestedOperand(node *ast.Node, sources, values *
 		}
 	}
 	return node.ForEachChild(func(child *ast.Node) bool { return f.forceNestedOperand(child, sources, values) })
+}
+
+// The checker selects native conditional arms, including distributive and infer
+// cases. Inspect only selected shapes written in that operand. Existing named
+// objects retain their ordinary lazy member resolution.
+func (f *typeFunctionFrame) selectedOperand(node *ast.Node, sources, values []*Type) *Type {
+	c := f.c
+	t := c.getTypeFromTypeNode(node)
+	if len(sources) != 0 {
+		t = c.instantiateType(t, newTypeMapper(slices.Clone(sources), slices.Clone(values)))
+	}
+	visited := make(map[*Type]bool)
+	var force func(*Type) *Type
+	force = func(v *Type) *Type {
+		if app := v.typeFunctionApplication(); app != nil {
+			return c.forceTypeFunction(v)
+		}
+		if visited[v] || c.typeFunctionExecution.failed {
+			return v
+		}
+		visited[v] = true
+		switch {
+		case v.flags&TypeFlagsUnion != 0:
+			return c.getUnionType(core.Map(v.Types(), force))
+		case v.IsTupleType():
+			args := c.getTypeArguments(v)
+			mapped := core.Map(args, force)
+			if !slices.Equal(args, mapped) {
+				target := v.TargetTupleType()
+				return c.createTupleTypeEx(mapped, target.elementInfos, target.readonly)
+			}
+		case v.flags&TypeFlagsObject != 0 && v.symbol != nil:
+			if d := ast.GetDeclarationOfKind(v.symbol, ast.KindTypeLiteral); d != nil && node.Pos() <= d.Pos() && d.End() <= node.End() && ast.GetSourceFileOfNode(node) == ast.GetSourceFileOfNode(d) {
+				for _, p := range c.getPropertiesOfType(v) {
+					force(c.getTypeOfSymbol(p))
+					if c.typeFunctionExecution.failed {
+						break
+					}
+				}
+			}
+		}
+		return v
+	}
+	return force(t)
 }
 
 func (f *typeFunctionFrame) boolean(value bool) *Type {
@@ -405,21 +520,23 @@ func (f *typeFunctionFrame) block(node *ast.Node) (*Type, typeFunctionFlow) {
 	}
 	return nil, typeFunctionNext
 }
+
 func (f *typeFunctionFrame) statement(node *ast.Node) (*Type, typeFunctionFlow) {
 	c := f.c
 	switch node.Kind {
 	case ast.KindTypeFunctionReturn:
-		return f.operand(node.AsTypeFunctionOperandStatement().Operand), typeFunctionReturned
+		return f.operand(node.AsTypeFunctionReturn().Operand), typeFunctionReturned
 	case ast.KindTypeFunctionBinding:
 		b := node.AsTypeFunctionBinding()
 		value := f.operand(b.Initializer)
 		if b.Destructured {
-			if !value.IsTupleType() || len(c.getTypeArguments(value)) != len(b.Bindings.Nodes) {
+			items, ok := typeFunctionTuple(c, value)
+			if !ok || len(items) != len(b.Bindings.Nodes) {
 				c.failTypeFunction(node, "tuple does not match the binding list")
 				break
 			}
 			for i, name := range b.Bindings.Nodes {
-				f.bind(name, c.getTypeArguments(value)[i])
+				f.bind(name, items[i])
 			}
 		} else {
 			f.bind(b.Bindings.Nodes[0], value)
@@ -436,7 +553,7 @@ func (f *typeFunctionFrame) statement(node *ast.Node) (*Type, typeFunctionFlow) 
 		}
 		c.failTypeFunction(node, "assignment requires a bound local")
 	case ast.KindTypeFunctionCallStatement:
-		operand := node.AsTypeFunctionOperandStatement().Operand
+		operand := node.AsTypeFunctionCallStatement().Operand
 		if ast.IsTypeReferenceNode(operand) && ast.IsIdentifier(operand.AsTypeReferenceNode().TypeName) {
 			switch operand.AsTypeReferenceNode().TypeName.Text() {
 			case "fail":
@@ -449,7 +566,12 @@ func (f *typeFunctionFrame) statement(node *ast.Node) (*Type, typeFunctionFlow) 
 				if message.flags&TypeFlagsStringLiteral == 0 {
 					c.failTypeFunction(node, "fail requires a string literal")
 				} else {
-					c.failTypeFunction(node, message.AsLiteralType().value.(string))
+					text := message.AsLiteralType().value.(string)
+					if len(args) == 2 {
+						c.failTypeFunctionAtSpan(node, text, f.operand(args[1]))
+					} else {
+						c.failTypeFunction(node, text)
+					}
 				}
 				return nil, typeFunctionNext
 			case "log":
@@ -459,15 +581,15 @@ func (f *typeFunctionFrame) statement(node *ast.Node) (*Type, typeFunctionFlow) 
 		}
 		f.operand(operand)
 	case ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile:
-		b := node.AsTypeFunctionBranch()
+		condition, block, alternative := ast.TypeFunctionBranchParts(node)
 		for c.typeFunctionStep(node) {
-			v := f.operand(b.Condition)
+			v := f.operand(condition)
 			if v == c.regularFalseType {
-				if b.ElseBranch != nil {
-					if ast.IsTypeFunctionBlock(b.ElseBranch) {
-						return f.block(b.ElseBranch)
+				if alternative != nil {
+					if ast.IsTypeFunctionBlock(alternative) {
+						return f.block(alternative)
 					}
-					return f.statement(b.ElseBranch)
+					return f.statement(alternative)
 				}
 				break
 			}
@@ -475,7 +597,7 @@ func (f *typeFunctionFrame) statement(node *ast.Node) (*Type, typeFunctionFlow) 
 				c.failTypeFunction(node, "expected a boolean literal")
 				break
 			}
-			value, flow := f.block(b.Block)
+			value, flow := f.block(block)
 			if node.Kind == ast.KindTypeFunctionIf || flow == typeFunctionReturned {
 				return value, flow
 			}
@@ -491,6 +613,9 @@ func (f *typeFunctionFrame) statement(node *ast.Node) (*Type, typeFunctionFlow) 
 			break
 		}
 		for _, item := range c.getTypeArguments(seq) {
+			if !c.typeFunctionStep(node) {
+				break
+			}
 			f.bind(loop.Binding, item)
 			value, flow := f.block(loop.Block)
 			f.sources = f.sources[:len(f.sources)-1]
@@ -514,7 +639,11 @@ func (f *typeFunctionFrame) statement(node *ast.Node) (*Type, typeFunctionFlow) 
 				f.values = f.values[:start]
 				return value, flow
 			}
+			if c.typeFunctionExecution.failed {
+				return nil, typeFunctionNext
+			}
 		}
+		c.failTypeFunction(node, "no match arm accepted the input")
 	case ast.KindBreakStatement:
 		return nil, typeFunctionBreak
 	case ast.KindContinueStatement:
@@ -531,17 +660,14 @@ func (c *Checker) instantiateTypeFunction(t *Type, app *typeFunctionApplication,
 	return c.newTypeFunctionApplication(app.use, app.declaration, app.builtin, args)
 }
 
-func (f *typeFunctionFrame) match(value *Type, pattern *ast.Node) bool {
-	c := f.c
-	target := f.operand(pattern)
+// Inference binders inside a native conditional belong to that conditional.
+func typeFunctionPatternCaptures(pattern *ast.Node) []*ast.Node {
 	var names []*ast.Node
-	var parameters []*Type
 	var visit ast.Visitor
 	visit = func(n *ast.Node) bool {
 		if n.Kind == ast.KindInferType {
 			p := n.AsInferTypeNode().TypeParameter
 			names = append(names, p)
-			parameters = append(parameters, c.getDeclaredTypeOfSymbol(c.getSymbolOfDeclaration(p)))
 			return false
 		}
 		if n.Kind == ast.KindConditionalType {
@@ -550,9 +676,21 @@ func (f *typeFunctionFrame) match(value *Type, pattern *ast.Node) bool {
 		return n.ForEachChild(visit)
 	}
 	visit(pattern)
+	return names
+}
+
+func (f *typeFunctionFrame) match(value *Type, pattern *ast.Node) bool {
+	c := f.c
+	target := f.operand(pattern)
+	names := typeFunctionPatternCaptures(pattern)
 	if len(names) == 0 {
 		return c.isTypeAssignableTo(value, target)
 	}
+	if pattern.Kind != ast.KindInferType && value.flags&(TypeFlagsAny|TypeFlagsNever) != 0 {
+		c.failTypeFunction(pattern, "cannot capture structure from any or never")
+		return false
+	}
+	parameters := core.Map(names, func(p *ast.Node) *Type { return c.getDeclaredTypeOfSymbol(c.getSymbolOfDeclaration(p)) })
 	inference := c.newInferenceContext(parameters, nil, InferenceFlagsNoDefault, nil)
 	c.inferTypes(inference.inferences, value, target, InferencePriorityNone, false)
 	values := c.getInferredTypes(inference)

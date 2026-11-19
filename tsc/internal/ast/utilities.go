@@ -773,7 +773,8 @@ func IsCatchClauseVariableDeclarationOrBindingElement(declaration *Node) bool {
 
 func IsTypeNodeKind(kind Kind) bool {
 	switch kind {
-	case KindTypeFunctionBlock, KindTypeFunctionNot, KindTypeFunctionBinary: return true
+	case KindTypeFunctionBlock, KindTypeFunctionNot, KindTypeFunctionBinary:
+		return true
 	case KindAnyKeyword,
 		KindUnknownKeyword,
 		KindNumberKeyword,
@@ -3594,7 +3595,9 @@ func ReplaceModifiers(factory *NodeFactory, node *Node, modifierArray *ModifierL
 			node.AsInterfaceDeclaration().HeritageClauses,
 			node.MemberList(),
 		)
-	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration:
+	case KindTypeFunctionDeclaration:
+		return factory.UpdateTypeFunctionDeclaration(node.AsTypeFunctionDeclaration(), modifierArray, node.Name(), node.TypeParameterList(), node.Body())
+	case KindTypeAliasDeclaration:
 		return factory.UpdateTypeAliasDeclaration(
 			node.AsTypeAliasDeclaration(),
 			modifierArray,
@@ -4696,4 +4699,14 @@ func IsProtoSetter(node *Node) bool {
 func IsStringLiteralLikeType(node *Node) bool {
 	return node.Kind == KindLiteralType &&
 		IsStringLiteralLike(node.AsLiteralTypeNode().Literal)
+}
+
+// TypeFunctionBranchParts exposes the common operands of if and while.
+func TypeFunctionBranchParts(node *Node) (condition, block, alternative *Node) {
+	if IsTypeFunctionWhile(node) {
+		loop := node.AsTypeFunctionWhile()
+		return loop.Condition, loop.Block, nil
+	}
+	branch := node.AsTypeFunctionIf()
+	return branch.Condition, branch.Block, branch.ElseBranch
 }

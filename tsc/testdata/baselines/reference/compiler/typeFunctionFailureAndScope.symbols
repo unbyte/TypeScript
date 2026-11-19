@@ -106,3 +106,91 @@ const after: "after" = snapshot[1];
 >snapshot : Symbol(snapshot, Decl(typeFunctionFailureAndScope.ts, 23, 13))
 >1 : Symbol(1)
 
+typefn Selected<T> { return T extends "yes" ? 1 : Failed<>; }
+>Selected : Symbol(Selected, Decl(typeFunctionFailureAndScope.ts, 25, 35))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 27, 16))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 27, 16))
+>Failed : Symbol(Failed, Decl(typeFunctionFailureAndScope.ts, 0, 0))
+
+declare const selected: Selected<"yes">;
+>selected : Symbol(selected, Decl(typeFunctionFailureAndScope.ts, 28, 13))
+>Selected : Symbol(Selected, Decl(typeFunctionFailureAndScope.ts, 25, 35))
+
+const one: 1 = selected;
+>one : Symbol(one, Decl(typeFunctionFailureAndScope.ts, 29, 5))
+>selected : Symbol(selected, Decl(typeFunctionFailureAndScope.ts, 28, 13))
+
+typefn Span<S> { fail<"unexpected token", { source: S; start: 2; end: 3 }>; }
+>Span : Symbol(Span, Decl(typeFunctionFailureAndScope.ts, 29, 24))
+>S : Symbol(S, Decl(typeFunctionFailureAndScope.ts, 31, 12))
+>fail : Symbol(fail)
+>source : Symbol(source, Decl(typeFunctionFailureAndScope.ts, 31, 43))
+>S : Symbol(S, Decl(typeFunctionFailureAndScope.ts, 31, 12))
+>start : Symbol(start, Decl(typeFunctionFailureAndScope.ts, 31, 54))
+>end : Symbol(end, Decl(typeFunctionFailureAndScope.ts, 31, 64))
+
+declare const spelling: Span<"\u{1F600}\x2b">;
+>spelling : Symbol(spelling, Decl(typeFunctionFailureAndScope.ts, 32, 13))
+>Span : Symbol(Span, Decl(typeFunctionFailureAndScope.ts, 29, 24))
+
+spelling.recovered;
+>spelling : Symbol(spelling, Decl(typeFunctionFailureAndScope.ts, 32, 13))
+
+type Computed = `😀${"+"}`;
+>Computed : Symbol(Computed, Decl(typeFunctionFailureAndScope.ts, 33, 19))
+
+declare const computed: Span<Computed>;
+>computed : Symbol(computed, Decl(typeFunctionFailureAndScope.ts, 35, 13))
+>Span : Symbol(Span, Decl(typeFunctionFailureAndScope.ts, 29, 24))
+>Computed : Symbol(Computed, Decl(typeFunctionFailureAndScope.ts, 33, 19))
+
+computed.recovered;
+>computed : Symbol(computed, Decl(typeFunctionFailureAndScope.ts, 35, 13))
+
+type FailedAlias = Failed<>;
+>FailedAlias : Symbol(FailedAlias, Decl(typeFunctionFailureAndScope.ts, 36, 19))
+>Failed : Symbol(Failed, Decl(typeFunctionFailureAndScope.ts, 0, 0))
+
+declare const firstFailed: FailedAlias;
+>firstFailed : Symbol(firstFailed, Decl(typeFunctionFailureAndScope.ts, 39, 13))
+>FailedAlias : Symbol(FailedAlias, Decl(typeFunctionFailureAndScope.ts, 36, 19))
+
+declare const secondFailed: FailedAlias;
+>secondFailed : Symbol(secondFailed, Decl(typeFunctionFailureAndScope.ts, 40, 13))
+>FailedAlias : Symbol(FailedAlias, Decl(typeFunctionFailureAndScope.ts, 36, 19))
+
+firstFailed.a;
+>firstFailed : Symbol(firstFailed, Decl(typeFunctionFailureAndScope.ts, 39, 13))
+
+secondFailed.b;
+>secondFailed : Symbol(secondFailed, Decl(typeFunctionFailureAndScope.ts, 40, 13))
+
+typefn ConditionalField<T> {
+>ConditionalField : Symbol(ConditionalField, Decl(typeFunctionFailureAndScope.ts, 42, 15))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 44, 24))
+
+    return { payload: T extends [infer I] ? { nested: Failed<> } : "ok"; stable: 1 };
+>payload : Symbol(payload, Decl(typeFunctionFailureAndScope.ts, 45, 12))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 44, 24))
+>I : Symbol(I, Decl(typeFunctionFailureAndScope.ts, 45, 38))
+>nested : Symbol(nested, Decl(typeFunctionFailureAndScope.ts, 45, 45))
+>Failed : Symbol(Failed, Decl(typeFunctionFailureAndScope.ts, 0, 0))
+>stable : Symbol(stable, Decl(typeFunctionFailureAndScope.ts, 45, 72))
+}
+declare const matchFails: ConditionalField<[1]>;
+>matchFails : Symbol(matchFails, Decl(typeFunctionFailureAndScope.ts, 47, 13))
+>ConditionalField : Symbol(ConditionalField, Decl(typeFunctionFailureAndScope.ts, 42, 15))
+
+matchFails.afterFailure;
+>matchFails : Symbol(matchFails, Decl(typeFunctionFailureAndScope.ts, 47, 13))
+
+declare const matchSkips: ConditionalField<"outside">;
+>matchSkips : Symbol(matchSkips, Decl(typeFunctionFailureAndScope.ts, 49, 13))
+>ConditionalField : Symbol(ConditionalField, Decl(typeFunctionFailureAndScope.ts, 42, 15))
+
+const skipped: "ok" = matchSkips.payload;
+>skipped : Symbol(skipped, Decl(typeFunctionFailureAndScope.ts, 50, 5))
+>matchSkips.payload : Symbol(payload, Decl(typeFunctionFailureAndScope.ts, 45, 12))
+>matchSkips : Symbol(matchSkips, Decl(typeFunctionFailureAndScope.ts, 49, 13))
+>payload : Symbol(payload, Decl(typeFunctionFailureAndScope.ts, 45, 12))
+

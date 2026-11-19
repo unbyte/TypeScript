@@ -1,6 +1,8 @@
 package checker
 
 import (
+	"fmt"
+
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
 	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
@@ -24,9 +26,35 @@ func (c *Checker) checkTypeFunctionBlock(node *ast.Node, loopDepth int) {
 		} else if decl := ast.GetDeclarationOfKind(symbol, ast.KindTypeParameter); decl == nil || !(ast.IsTypeFunctionBinding(decl.Parent) || ast.IsTypeFunctionFor(decl.Parent)) {
 			c.error(a.Target, diagnostics.Type_function_Colon_0, "only a calculation local may be rebound")
 		}
+	case ast.KindTypeFunctionCallStatement:
+		operand := node.AsTypeFunctionCallStatement().Operand
+		if !ast.IsTypeReferenceNode(operand) || operand.TypeArgumentList() == nil {
+			c.error(operand, diagnostics.Type_function_Colon_0, "expected an explicit type function call")
+		}
+	case ast.KindTypeFunctionMatch:
+		arms := node.AsTypeFunctionMatch().Arms.Nodes
+		for i, arm := range arms {
+			if arm.AsTypeFunctionArm().Pattern == nil && i+1 < len(arms) {
+				c.error(arm, diagnostics.Type_function_Colon_0, "the else arm must be last")
+			}
+		}
+	case ast.KindTypeFunctionArm:
+		if pattern := node.AsTypeFunctionArm().Pattern; pattern != nil {
+			seen := make(map[string]bool)
+			for _, capture := range typeFunctionPatternCaptures(pattern) {
+				name := capture.Name().Text()
+				if seen[name] {
+					c.error(capture, diagnostics.Type_function_Colon_0, "duplicate pattern capture "+name)
+				}
+				seen[name] = true
+			}
+		}
 	case ast.KindTypeFunctionDeclaration:
 		return
 	case ast.KindTypeReference:
+		if typeFunctionHole(node) && c.typeFunctionConstructorArity(node.Parent) > 0 {
+			return
+		}
 		name := node.AsTypeReferenceNode().TypeName
 		if ast.IsIdentifier(name) && ast.IsTypeFunctionCallStatement(node.Parent) && (name.Text() == "log" || name.Text() == "fail") {
 			if name.Text() == "fail" && (len(node.TypeArguments()) < 1 || len(node.TypeArguments()) > 2) {
@@ -55,7 +83,15 @@ func (c *Checker) checkTypeFunctionBlock(node *ast.Node, loopDepth int) {
 				c.error(node, diagnostics.Type_function_Colon_0, "incorrect number of arguments to "+name)
 			}
 		} else {
-			c.getSymbolFromTypeReference(node)
+			symbol := c.getSymbolFromTypeReference(node)
+			if typeFunctionConstructorParameter(symbol) != 0 && node.TypeArgumentList() == nil {
+				c.error(node, diagnostics.Type_function_Colon_0, "a constructor input must be applied or passed with explicit holes")
+			}
+			if decl := ast.GetDeclarationOfKind(symbol, ast.KindTypeFunctionDeclaration); decl != nil {
+				if node.TypeArgumentList() == nil || len(node.TypeArguments()) != len(decl.TypeParameters()) {
+					c.error(node, diagnostics.Type_function_Colon_0, fmt.Sprintf("%s requires %d explicit type arguments", symbol.Name(), len(decl.TypeParameters())))
+				}
+			}
 		}
 	}
 	node.ForEachChild(visit)

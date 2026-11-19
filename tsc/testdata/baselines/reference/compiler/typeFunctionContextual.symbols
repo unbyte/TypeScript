@@ -1,0 +1,54 @@
+//// [tests/cases/compiler/typeFunctionContextual.tsx] ////
+
+=== typeFunctionContextual.tsx ===
+namespace JSX { export interface IntrinsicElements { div: {} } }
+>JSX : Symbol(JSX, Decl(typeFunctionContextual.tsx, 0, 0))
+>IntrinsicElements : Symbol(IntrinsicElements, Decl(typeFunctionContextual.tsx, 0, 15))
+>div : Symbol(IntrinsicElements.div, Decl(typeFunctionContextual.tsx, 0, 52))
+
+const typefn = <T,>(x: T) => x;
+>typefn : Symbol(typefn, Decl(typeFunctionContextual.tsx, 1, 5))
+>T : Symbol(T, Decl(typeFunctionContextual.tsx, 1, 16))
+>x : Symbol(x, Decl(typeFunctionContextual.tsx, 1, 20))
+>T : Symbol(T, Decl(typeFunctionContextual.tsx, 1, 16))
+>x : Symbol(x, Decl(typeFunctionContextual.tsx, 1, 20))
+
+const ordinary: 1 = typefn(1);
+>ordinary : Symbol(ordinary, Decl(typeFunctionContextual.tsx, 2, 5))
+>typefn : Symbol(typefn, Decl(typeFunctionContextual.tsx, 1, 5))
+
+const jsx = <div>{typefn("value")}</div>;
+>jsx : Symbol(jsx, Decl(typeFunctionContextual.tsx, 3, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(typeFunctionContextual.tsx, 0, 52))
+>typefn : Symbol(typefn, Decl(typeFunctionContextual.tsx, 1, 5))
+>div : Symbol(JSX.IntrinsicElements.div, Decl(typeFunctionContextual.tsx, 0, 52))
+
+namespace Native {
+>Native : Symbol(Native, Decl(typeFunctionContextual.tsx, 3, 41))
+
+    export type typefn<T> = { value: T };
+>typefn : Symbol(typefn, Decl(typeFunctionContextual.tsx, 4, 18))
+>T : Symbol(T, Decl(typeFunctionContextual.tsx, 5, 23))
+>value : Symbol(value, Decl(typeFunctionContextual.tsx, 5, 29))
+>T : Symbol(T, Decl(typeFunctionContextual.tsx, 5, 23))
+
+    export typefn Box<T> { return { wrapped: typefn<T> }; }
+>Box : Symbol(Box, Decl(typeFunctionContextual.tsx, 5, 41))
+>T : Symbol(T, Decl(typeFunctionContextual.tsx, 6, 22))
+>wrapped : Symbol(wrapped, Decl(typeFunctionContextual.tsx, 6, 35))
+>typefn : Symbol(typefn, Decl(typeFunctionContextual.tsx, 4, 18))
+>T : Symbol(T, Decl(typeFunctionContextual.tsx, 6, 22))
+}
+declare const item: Native.Box<42>;
+>item : Symbol(item, Decl(typeFunctionContextual.tsx, 8, 13))
+>Native : Symbol(Native, Decl(typeFunctionContextual.tsx, 3, 41))
+>Box : Symbol(Native.Box, Decl(typeFunctionContextual.tsx, 5, 41))
+
+const result: 42 = item.wrapped.value;
+>result : Symbol(result, Decl(typeFunctionContextual.tsx, 9, 5))
+>item.wrapped.value : Symbol(value, Decl(typeFunctionContextual.tsx, 5, 29))
+>item.wrapped : Symbol(wrapped, Decl(typeFunctionContextual.tsx, 6, 35))
+>item : Symbol(item, Decl(typeFunctionContextual.tsx, 8, 13))
+>wrapped : Symbol(wrapped, Decl(typeFunctionContextual.tsx, 6, 35))
+>value : Symbol(value, Decl(typeFunctionContextual.tsx, 5, 29))
+

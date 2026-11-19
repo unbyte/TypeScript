@@ -1,0 +1,168 @@
+//// [tests/cases/compiler/typeFunctionReflection.ts] ////
+
+=== typeFunctionReflection.ts ===
+declare const token: unique symbol;
+>token : Symbol(token, Decl(typeFunctionReflection.ts, 0, 13))
+
+class Model {
+>Model : Symbol(Model, Decl(typeFunctionReflection.ts, 0, 35))
+
+    private hidden = 0;
+>hidden : Symbol(Model.hidden, Decl(typeFunctionReflection.ts, 1, 13))
+
+    readonly [token] = "tag" as const;
+>[token] : Symbol(Model[token], Decl(typeFunctionReflection.ts, 2, 23))
+>token : Symbol(token, Decl(typeFunctionReflection.ts, 0, 13))
+>const : Symbol(const)
+
+    get count(): number { return this.hidden; }
+>count : Symbol(Model.count, Decl(typeFunctionReflection.ts, 3, 38), Decl(typeFunctionReflection.ts, 4, 47))
+>this.hidden : Symbol(Model.hidden, Decl(typeFunctionReflection.ts, 1, 13))
+>this : Symbol(Model, Decl(typeFunctionReflection.ts, 0, 35))
+>hidden : Symbol(Model.hidden, Decl(typeFunctionReflection.ts, 1, 13))
+
+    set count(value: string | number) { this.hidden = Number(value); }
+>count : Symbol(Model.count, Decl(typeFunctionReflection.ts, 3, 38), Decl(typeFunctionReflection.ts, 4, 47))
+>value : Symbol(value, Decl(typeFunctionReflection.ts, 5, 14))
+>this.hidden : Symbol(Model.hidden, Decl(typeFunctionReflection.ts, 1, 13))
+>this : Symbol(Model, Decl(typeFunctionReflection.ts, 0, 35))
+>hidden : Symbol(Model.hidden, Decl(typeFunctionReflection.ts, 1, 13))
+>Number : Symbol(Number, Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es5.d.ts, --, --), Decl(lib.es2020.number.d.ts, --, --))
+>value : Symbol(value, Decl(typeFunctionReflection.ts, 5, 14))
+
+    run?(id: number): void;
+>run : Symbol(Model.run, Decl(typeFunctionReflection.ts, 5, 70))
+>id : Symbol(id, Decl(typeFunctionReflection.ts, 6, 9))
+}
+typefn Fields<T> { return object.fields<T>; }
+>Fields : Symbol(Fields, Decl(typeFunctionReflection.ts, 7, 1))
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 8, 14))
+>object : Symbol(object)
+>fields : Symbol(object.fields)
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 8, 14))
+
+typefn Project<T> { return object.withFields<{}, object.fields<T>>; }
+>Project : Symbol(Project, Decl(typeFunctionReflection.ts, 8, 45))
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 9, 15))
+>object : Symbol(object)
+>withFields : Symbol(object.withFields)
+>object : Symbol(object)
+>fields : Symbol(object.fields)
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 9, 15))
+
+declare const fields: Fields<Model>;
+>fields : Symbol(fields, Decl(typeFunctionReflection.ts, 10, 13))
+>Fields : Symbol(Fields, Decl(typeFunctionReflection.ts, 7, 1))
+>Model : Symbol(Model, Decl(typeFunctionReflection.ts, 0, 35))
+
+const getter: [number] = fields.count.getter;
+>getter : Symbol(getter, Decl(typeFunctionReflection.ts, 11, 5))
+>fields.count.getter : Symbol(getter)
+>fields.count : Symbol(count)
+>fields : Symbol(fields, Decl(typeFunctionReflection.ts, 10, 13))
+>count : Symbol(count)
+>getter : Symbol(getter)
+
+const setter: [number | string] = fields.count.setter;
+>setter : Symbol(setter, Decl(typeFunctionReflection.ts, 12, 5))
+>fields.count.setter : Symbol(setter)
+>fields.count : Symbol(count)
+>fields : Symbol(fields, Decl(typeFunctionReflection.ts, 10, 13))
+>count : Symbol(count)
+>setter : Symbol(setter)
+
+const method: "method" = fields.run.kind;
+>method : Symbol(method, Decl(typeFunctionReflection.ts, 13, 5))
+>fields.run.kind : Symbol(kind)
+>fields.run : Symbol(run)
+>fields : Symbol(fields, Decl(typeFunctionReflection.ts, 10, 13))
+>run : Symbol(run)
+>kind : Symbol(kind)
+
+const keyKind: "data" = fields[token].kind;
+>keyKind : Symbol(keyKind, Decl(typeFunctionReflection.ts, 14, 5))
+>fields[token].kind : Symbol(kind)
+>fields : Symbol(fields, Decl(typeFunctionReflection.ts, 10, 13))
+>token : Symbol(token, Decl(typeFunctionReflection.ts, 0, 13))
+>kind : Symbol(kind)
+
+// @ts-expect-error private members do not appear in the projection
+fields.hidden;
+>fields : Symbol(fields, Decl(typeFunctionReflection.ts, 10, 13))
+
+declare let projection: Project<Model>;
+>projection : Symbol(projection, Decl(typeFunctionReflection.ts, 17, 11))
+>Project : Symbol(Project, Decl(typeFunctionReflection.ts, 8, 45))
+>Model : Symbol(Model, Decl(typeFunctionReflection.ts, 0, 35))
+
+projection.count = "2";
+>projection.count : Symbol(count)
+>projection : Symbol(projection, Decl(typeFunctionReflection.ts, 17, 11))
+>count : Symbol(count)
+
+const read: number = projection.count;
+>read : Symbol(read, Decl(typeFunctionReflection.ts, 19, 5))
+>projection.count : Symbol(count)
+>projection : Symbol(projection, Decl(typeFunctionReflection.ts, 17, 11))
+>count : Symbol(count)
+
+const tag: "tag" = projection[token];
+>tag : Symbol(tag, Decl(typeFunctionReflection.ts, 20, 5))
+>projection : Symbol(projection, Decl(typeFunctionReflection.ts, 17, 11))
+>token : Symbol(token, Decl(typeFunctionReflection.ts, 0, 13))
+
+// @ts-expect-error a symbol-keyed readonly field retains its modifier
+projection[token] = "tag";
+>projection : Symbol(projection, Decl(typeFunctionReflection.ts, 17, 11))
+>token : Symbol(token, Decl(typeFunctionReflection.ts, 0, 13))
+
+typefn TupleCopy<T> { return tuple.compose<tuple.decompose<T>>; }
+>TupleCopy : Symbol(TupleCopy, Decl(typeFunctionReflection.ts, 22, 26))
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 24, 17))
+>tuple : Symbol(tuple)
+>compose : Symbol(tuple.compose)
+>tuple : Symbol(tuple)
+>decompose : Symbol(tuple.decompose)
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 24, 17))
+
+declare const tuple: TupleCopy<readonly [head: number, tail?: string]>;
+>tuple : Symbol(tuple, Decl(typeFunctionReflection.ts, 25, 13))
+>TupleCopy : Symbol(TupleCopy, Decl(typeFunctionReflection.ts, 22, 26))
+
+const head: number = tuple[0];
+>head : Symbol(head, Decl(typeFunctionReflection.ts, 26, 5))
+>tuple : Symbol(tuple, Decl(typeFunctionReflection.ts, 25, 13))
+>0 : Symbol(0)
+
+typefn Template<T> { return template.compose<{ texts: ["on", ""]; types: [T] }>; }
+>Template : Symbol(Template, Decl(typeFunctionReflection.ts, 26, 30))
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 28, 16))
+>template : Symbol(template)
+>compose : Symbol(template.compose)
+>texts : Symbol(texts, Decl(typeFunctionReflection.ts, 28, 46))
+>types : Symbol(types, Decl(typeFunctionReflection.ts, 28, 65))
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 28, 16))
+
+declare const eventName: Template<"Ready" | "Close">;
+>eventName : Symbol(eventName, Decl(typeFunctionReflection.ts, 29, 13))
+>Template : Symbol(Template, Decl(typeFunctionReflection.ts, 26, 30))
+
+const events: "onReady" | "onClose" = eventName;
+>events : Symbol(events, Decl(typeFunctionReflection.ts, 30, 5))
+>eventName : Symbol(eventName, Decl(typeFunctionReflection.ts, 29, 13))
+
+typefn Sort<T> { return union.toTuple<T>; }
+>Sort : Symbol(Sort, Decl(typeFunctionReflection.ts, 30, 48))
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 32, 12))
+>union : Symbol(union)
+>toTuple : Symbol(union.toTuple)
+>T : Symbol(T, Decl(typeFunctionReflection.ts, 32, 12))
+
+declare const order: Sort<"😀" | "a" | "𐀀">;
+>order : Symbol(order, Decl(typeFunctionReflection.ts, 33, 13))
+>Sort : Symbol(Sort, Decl(typeFunctionReflection.ts, 30, 48))
+
+const keys: ["a", "𐀀", "😀"] = order;
+>keys : Symbol(keys, Decl(typeFunctionReflection.ts, 34, 5))
+>order : Symbol(order, Decl(typeFunctionReflection.ts, 33, 13))
+

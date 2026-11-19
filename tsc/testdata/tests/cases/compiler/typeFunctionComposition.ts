@@ -42,3 +42,11 @@ typefn ExtractId<T> {
 }
 declare const ref: ExtractId<{ id: 42 }>;
 const n: 42 = ref;
+
+function capture<Outer>(v: Outer) {
+    type Pair<T> = [Outer, T];
+    declareValue<Apply<Pair<_>, 1>>();
+    return null! as Apply<Pair<_>, 1>;
+}
+declare function declareValue<T>(): void;
+const captured: [string, 1] = capture<string>("a");

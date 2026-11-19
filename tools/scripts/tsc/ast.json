@@ -2036,8 +2036,7 @@
             "TypeAliasDeclaration": {
                 "kind": [
                     "TypeAliasDeclaration",
-                    "JSTypeAliasDeclaration",
-                    "TypeFunctionDeclaration"
+                    "JSTypeAliasDeclaration"
                 ],
                 "extends": [
                     "StatementBase",
@@ -5237,45 +5236,6 @@
                     }
                 ]
             },
-            "TypeFunctionOperandStatement": {
-                "extends": [
-                    "StatementBase"
-                ],
-                "members": [
-                    {
-                        "name": "Operand",
-                        "type": "TypeNode"
-                    }
-                ],
-                "kind": [
-                    "TypeFunctionReturn",
-                    "TypeFunctionCallStatement"
-                ]
-            },
-            "TypeFunctionBranch": {
-                "extends": [
-                    "StatementBase"
-                ],
-                "members": [
-                    {
-                        "name": "Condition",
-                        "type": "TypeNode"
-                    },
-                    {
-                        "name": "Block",
-                        "type": "TypeFunctionBlock"
-                    },
-                    {
-                        "name": "ElseBranch",
-                        "type": "Node",
-                        "optional": true
-                    }
-                ],
-                "kind": [
-                    "TypeFunctionIf",
-                    "TypeFunctionWhile"
-                ]
-            },
             "TypeFunctionFor": {
                 "extends": [
                     "StatementBase",
@@ -5368,6 +5328,94 @@
                         "name": "Holes",
                         "type": "Identifier",
                         "list": "NodeList"
+                    }
+                ]
+            },
+            "TypeFunctionDeclaration": {
+                "extends": [
+                    "StatementBase",
+                    "DeclarationBase",
+                    "ExportableBase",
+                    "ModifiersBase",
+                    "LocalsContainerBase",
+                    "TypeSyntaxBase"
+                ],
+                "members": [
+                    {
+                        "name": "modifiers",
+                        "inherited": true
+                    },
+                    {
+                        "name": "name",
+                        "type": "Identifier",
+                        "private": true
+                    },
+                    {
+                        "name": "TypeParameters",
+                        "type": "TypeParameterDeclaration",
+                        "list": "NodeList"
+                    },
+                    {
+                        "name": "Body",
+                        "type": "TypeFunctionBlock"
+                    }
+                ],
+                "arena": true
+            },
+            "TypeFunctionReturn": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Operand",
+                        "type": "TypeNode"
+                    }
+                ]
+            },
+            "TypeFunctionCallStatement": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Operand",
+                        "type": "TypeNode"
+                    }
+                ]
+            },
+            "TypeFunctionIf": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Condition",
+                        "type": "TypeNode"
+                    },
+                    {
+                        "name": "Block",
+                        "type": "TypeFunctionBlock"
+                    },
+                    {
+                        "name": "ElseBranch",
+                        "type": "Node",
+                        "optional": true
+                    }
+                ]
+            },
+            "TypeFunctionWhile": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Condition",
+                        "type": "TypeNode"
+                    },
+                    {
+                        "name": "Block",
+                        "type": "TypeFunctionBlock"
                     }
                 ]
             }

@@ -1,0 +1,257 @@
+//// [tests/cases/compiler/typeFunctionSignatureParts.ts] ////
+
+=== typeFunctionSignatureParts.ts ===
+typefn Rebuild<F> { return fn.compose<fn.decompose<F>>; }
+>Rebuild : Rebuild<F>
+>fn : any
+>fn : any
+
+interface Factory {
+    tag: "factory";
+>tag : "factory"
+
+    <T>(x: T | undefined): x is T;
+>x : T | undefined
+
+    (x: unknown, kind: "text"): x is string;
+>x : unknown
+>kind : "text"
+
+    new (name: string): { name: string };
+>name : string
+>name : string
+}
+
+declare const factory: Rebuild<Factory>;
+>factory : { <T>(x: T | undefined): x is T; (x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+
+declare const maybe: number | undefined;
+>maybe : number | undefined
+
+declare const input: unknown;
+>input : unknown
+
+if (factory(maybe)) { const n: number = maybe; }
+>factory(maybe) : boolean
+>factory : { <T>(x: T | undefined): x is T; (x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+>maybe : number | undefined
+>n : number
+>maybe : number
+
+if (factory(input, "text")) { const s: string = input; }
+>factory(input, "text") : boolean
+>factory : { <T>(x: T | undefined): x is T; (x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+>input : unknown
+>"text" : "text"
+>s : string
+>input : string
+
+const tag: "factory" = factory.tag;
+>tag : "factory"
+>factory.tag : "factory"
+>factory : { <T>(x: T | undefined): x is T; (x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+>tag : "factory"
+
+const made: string = new factory("example").name;
+>made : string
+>new factory("example").name : string
+>new factory("example") : { name: string; }
+>factory : { <T>(x: T | undefined): x is T; (x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+>"example" : "example"
+>name : string
+
+type Shadow = <T>(x: T) => <T>(y: T) => [typeof x, T extends string ? 1 : 2];
+>Shadow : Shadow
+>x : T
+>y : T
+>x : T_1
+
+declare const nested: Rebuild<Shadow>;
+>nested : <T>(x: T) => <T_1>(y: T_1) => [T, T_1 extends string ? 1 : 2]
+
+const nestedText: [7, 1] = nested<7>(7)<"x">("x");
+>nestedText : [7, 1]
+>nested<7>(7)<"x">("x") : [7, 1]
+>nested<7>(7) : <T>(y: T) => [7, T extends string ? 1 : 2]
+>nested : <T>(x: T) => <T_1>(y: T_1) => [T, T_1 extends string ? 1 : 2]
+>7 : 7
+>"x" : "x"
+
+const nestedBool: [7, 2] = nested<7>(7)<boolean>(false);
+>nestedBool : [7, 2]
+>nested<7>(7)<boolean>(false) : [7, 2]
+>nested<7>(7) : <T>(y: T) => [7, T extends string ? 1 : 2]
+>nested : <T>(x: T) => <T_1>(y: T_1) => [T, T_1 extends string ? 1 : 2]
+>7 : 7
+>false : false
+
+typefn Fresh<> {
+>Fresh : <const (Missing)>(value: (Missing)) => (Missing)
+
+    type Item = fn.ref<"item">;
+>fn : any
+
+    return fn.compose<{
+>fn : any
+
+        members: {};
+>members : {}
+
+        constructs: [];
+>constructs : []
+
+        calls: [{
+>calls : [{ typeParameters: [{ name: "T"; key: "item"; const: true; }]; parameters: [{ name: "value"; type: Item; }]; result: { kind: "return"; type: Item; }; }]
+
+            typeParameters: [{ name: "T"; key: "item"; const: true }];
+>typeParameters : [{ name: "T"; key: "item"; const: true; }]
+>name : "T"
+>key : "item"
+>const : true
+>true : true
+
+            parameters: [{ name: "value"; type: Item }];
+>parameters : [{ name: "value"; type: Item; }]
+>name : "value"
+>type : Item
+
+            result: { kind: "return"; type: Item };
+>result : { kind: "return"; type: Item; }
+>kind : "return"
+>type : Item
+
+        }];
+    }>;
+}
+declare const fresh: Fresh<>;
+>fresh : <const (Missing)>(value: (Missing)) => (Missing)
+
+const freshObject: { readonly a: 1 } = fresh({a: 1});
+>freshObject : { readonly a: 1; }
+>a : 1
+>fresh({a: 1}) : { readonly a: 1; }
+>fresh : <const (Missing)>(value: (Missing)) => (Missing)
+>{a: 1} : { a: 1; }
+>a : 1
+>1 : 1
+
+typefn Specialized<F, Args> { return fn.specialize<F, Args>; }
+>Specialized : Specialized<F, Args>
+>fn : any
+
+declare const specific: Specialized<<T extends string, R = T>(v: T) => R, ["a"]>;
+>specific : (v: "a") => "a"
+>v : T
+
+const result: "a" = specific("a");
+>result : "a"
+>specific("a") : "a"
+>specific : (v: "a") => "a"
+>"a" : "a"
+
+// @ts-expect-error rejects a different argument after specialization
+specific("b");
+>specific("b") : "a"
+>specific : (v: "a") => "a"
+>"b" : "b"
+
+typefn Transfer<F> {
+>Transfer : Transfer<F>
+
+    type P = fn.decompose<F>;
+>fn : any
+
+    type S = P["calls"][0];
+    type Original = S["typeParameters"][0]["ref"];
+    type New = fn.ref<"destination">;
+>fn : any
+
+    type Result = fn.rebind<S["result"], [{ from: Original; to: New }]>;
+>fn : any
+>from : Original
+>to : New
+
+    return fn.compose<{
+>fn : any
+
+        members: {}; constructs: []; calls: [{
+>members : {}
+>constructs : []
+>calls : [{ typeParameters: [{ key: "destination"; name: "New"; }]; parameters: [{ type: New; }]; result: Result; }]
+
+            typeParameters: [{key: "destination"; name: "New"}];
+>typeParameters : [{ key: "destination"; name: "New"; }]
+>key : "destination"
+>name : "New"
+
+            parameters: [{type: New}]; result: Result;
+>parameters : [{ type: New; }]
+>type : New
+>result : Result
+
+        }];
+    }>;
+}
+declare const moved: Transfer<<T>(x: T) => { list: [T] }>;
+>moved : <New>(arg0: New) => { list: [New]; }
+>x : T
+>list : [T]
+
+const transferred: { list: [7] } = moved<7>(7);
+>transferred : { list: [7]; }
+>list : [7]
+>moved<7>(7) : { list: [7]; }
+>moved : <New>(arg0: New) => { list: [New]; }
+>7 : 7
+
+typefn AddContext<F> {
+>AddContext : AddContext<F>
+
+    type Parts = fn.decompose<F>;
+>fn : any
+
+    type Calls = [];
+    for (type Call of Parts["calls"]) {
+        type Params = [{name: "context"; key: "ctx"; type: object}, ...Call["parameters"]];
+>name : "context"
+>key : "ctx"
+>type : object
+
+        type Edited = Omit<Call, "parameters"> & {parameters: Params};
+>parameters : Params
+
+        Calls = [...Calls, Edited];
+>Calls : error
+    }
+    return fn.compose<{members: Parts["members"]; calls: Calls; constructs: Parts["constructs"]}>;
+>fn : any
+>members : Parts["members"]
+>calls : Calls
+>constructs : Parts["constructs"]
+}
+declare const contextual: AddContext<Factory>;
+>contextual : { <T>(context: object, x: T | undefined): x is T; (context: object, x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+
+if (contextual({}, input, "text")) { const narrowed: string = input; }
+>contextual({}, input, "text") : boolean
+>contextual : { <T>(context: object, x: T | undefined): x is T; (context: object, x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+>{} : {}
+>input : unknown
+>"text" : "text"
+>narrowed : string
+>input : string
+
+// @ts-expect-error the added context is required
+contextual(maybe);
+>contextual(maybe) : boolean
+>contextual : { <T>(context: object, x: T | undefined): x is T; (context: object, x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+>maybe : number | undefined
+
+const preserved: string = new contextual("a").name;
+>preserved : string
+>new contextual("a").name : string
+>new contextual("a") : { name: string; }
+>contextual : { <T>(context: object, x: T | undefined): x is T; (context: object, x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }
+>"a" : "a"
+>name : string
+

@@ -78,6 +78,7 @@ func Lookup(name string) (Builtin, bool) {
 	}
 	return builtins[i], true
 }
+
 func Members(namespace string) []string {
 	prefix := namespace + "."
 	var result []string
@@ -88,6 +89,7 @@ func Members(namespace string) []string {
 	}
 	return result
 }
+
 func IsNamespace(name string) bool {
 	prefix := name + "."
 	i, _ := slices.BinarySearchFunc(builtins, prefix, func(a Builtin, b string) int { return strings.Compare(a.Name, b) })
