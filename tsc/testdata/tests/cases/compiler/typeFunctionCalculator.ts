@@ -1,82 +1,74 @@
 // @strict: true
 // @target: esnext
 
-type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
-
-typefn Skip<S> {
-    type Rest = S;
-    while (true) {
-        match Rest {
-            case ` ${infer Tail}`: { Rest = Tail; }
-            else: { return Rest; }
-        }
-    }
-}
-
-typefn Atom<S> {
-    type Rest = Skip<S>;
-    match Rest {
-        case `-${infer Tail}`: {
-            type [Value, After] = Atom<Tail>;
-            return [-Value, After];
-        }
-        case `(${infer Tail}`: {
-            type [Value, After] = Sum<Tail>;
-            match Skip<After> {
-                case `)${infer End}`: { return [Value, End]; }
-                else: { fail<"expected closing parenthesis">; }
-            }
-        }
-        else: {} // Scan the integer at the start of Rest.
-    }
-    type Digits = "";
-    while (true) {
-        match Rest {
-            case `${infer D extends Digit}${infer Tail}`: {
-                Digits = `${Digits}${D}`;
-                Rest = Tail;
-            }
-            else: { break; }
-        }
-    }
-    if (Digits === "") { fail<"expected an integer or parenthesis">; }
-    return [number.parse<Digits>, Rest];
-}
-
-typefn Product<S> {
-    type [Value, Rest] = Atom<S>;
-    while (true) {
-        match Skip<Rest> {
-            case `*${infer Right}`: {
-                type [Term, Next] = Atom<Right>;
-                Value = Value * Term;
-                Rest = Next;
-            }
-            else: { return [Value, Rest]; }
-        }
-    }
-}
-
-typefn Sum<S> {
-    type [Value, Rest] = Product<S>;
-    while (true) {
-        match Skip<Rest> {
-            case `${infer Op extends "+" | "-"}${infer Right}`: {
-                type [Term, Next] = Product<Right>;
-                if (Op === "+") { Value = Value + Term; }
-                else { Value = Value - Term; }
-                Rest = Next;
-            }
-            else: { return [Value, Rest]; }
-        }
-    }
-}
-
 typefn Calc<S extends string> {
-    type [Value, Rest] = Sum<S>;
-    if (Skip<Rest> !== "") { fail<"trailing input">; }
+    type Tokens = Tokenize<S>;
+    type [Value, End] = Sum<Tokens, 0>;
+    if (Tokens[End] !== undefined) { fail<"unexpected token after expression">; }
     return Value;
 }
+
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+type Whitespace = " " | "\t" | "\n" | "\r";
+
+typefn Tokenize<S> {
+    type Tokens = [];
+    type At = 0;
+    type End = string.length<S>;
+    while (At !== End) {
+        type Start = At;
+        type [Char, Next] = string.read<S, At>;
+        At = Next;
+        if (Char is Whitespace) { continue; }
+        if (Char is Digit) {
+            while (string.read<S, At> is [Digit, number]) { At = At + 1; }
+            type Text = string.slice<S, Start, At>;
+            Tokens = [...Tokens, number.parse<Text>];
+        } else {
+            Tokens = [...Tokens, Char];
+        }
+    }
+    return [...Tokens, undefined];
+}
+
+// Each parser returns the value and the index of the next token.
+typefn Sum<Tokens, Index> {
+    type [Value, At] = Product<Tokens, Index>;
+    while (Tokens[At] is "+" | "-") {
+        type Op = Tokens[At];
+        type [Right, Next] = Product<Tokens, At + 1>;
+        if (Op === "+") { Value = Value + Right; }
+        else { Value = Value - Right; }
+        At = Next;
+    }
+    return [Value, At];
+}
+
+typefn Product<Tokens, Index> {
+    type [Value, At] = Atom<Tokens, Index>;
+    while (Tokens[At] === "*") {
+        type [Right, Next] = Atom<Tokens, At + 1>;
+        Value = Value * Right;
+        At = Next;
+    }
+    return [Value, At];
+}
+
+typefn Atom<Tokens, At> {
+    type Token = Tokens[At];
+    if (Token is number) { return [Token, At + 1]; }
+    if (Token === "-") {
+        type [Value, Next] = Atom<Tokens, At + 1>;
+        return [-Value, Next];
+    }
+    if (Token === "(") {
+        type [Value, Close] = Sum<Tokens, At + 1>;
+        if (Tokens[Close] !== ")") { fail<"expected closing parenthesis">; }
+        return [Value, Close + 1];
+    }
+    fail<"expected an integer or parenthesis">;
+}
+
 declare const precedence: Calc<"2 + 3 * (8 - 5)">;
 declare const associativity: Calc<"10 - 3 - 2">;
 declare const unary: Calc<"-(2 + 3) * 4">;
@@ -85,5 +77,9 @@ const five: 5 = associativity;
 const negative: -20 = unary;
 // @ts-expect-error precedence yields the literal 11
 const wrong: 42 = precedence;
-declare const multiDigit: Calc<" 12 + 34 ">;
+declare const multiDigit: Calc<" \t12 + 34\r\n">;
 const fortySix: 46 = multiDigit;
+
+// @ts-expect-error whitespace separates integer tokens
+declare const separatedDigits: Calc<"1 2">;
+const invalid = separatedDigits;

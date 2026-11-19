@@ -1,115 +1,110 @@
 //// [tests/cases/compiler/typeFunctionCalculator.ts] ////
 
 === typeFunctionCalculator.ts ===
-type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
->Digit : Digit
-
-typefn Skip<S> {
->Skip : Skip<S>
-
-    type Rest = S;
-    while (true) {
->true : true
-
-        match Rest {
-            case ` ${infer Tail}`: { Rest = Tail; }
->Rest : error
-
-            else: { return Rest; }
-        }
-    }
-}
-
-typefn Atom<S> {
->Atom : Atom<S>
-
-    type Rest = Skip<S>;
-    match Rest {
-        case `-${infer Tail}`: {
-            type [Value, After] = Atom<Tail>;
-            return [-Value, After];
-        }
-        case `(${infer Tail}`: {
-            type [Value, After] = Sum<Tail>;
-            match Skip<After> {
-                case `)${infer End}`: { return [Value, End]; }
-                else: { fail<"expected closing parenthesis">; }
-            }
-        }
-        else: {} // Scan the integer at the start of Rest.
-    }
-    type Digits = "";
-    while (true) {
->true : true
-
-        match Rest {
-            case `${infer D extends Digit}${infer Tail}`: {
-                Digits = `${Digits}${D}`;
->Digits : error
-
-                Rest = Tail;
->Rest : error
-            }
-            else: { break; }
-        }
-    }
-    if (Digits === "") { fail<"expected an integer or parenthesis">; }
-    return [number.parse<Digits>, Rest];
->number : any
-}
-
-typefn Product<S> {
->Product : Product<S>
-
-    type [Value, Rest] = Atom<S>;
-    while (true) {
->true : true
-
-        match Skip<Rest> {
-            case `*${infer Right}`: {
-                type [Term, Next] = Atom<Right>;
-                Value = Value * Term;
->Value : error
-
-                Rest = Next;
->Rest : error
-            }
-            else: { return [Value, Rest]; }
-        }
-    }
-}
-
-typefn Sum<S> {
->Sum : Sum<S>
-
-    type [Value, Rest] = Product<S>;
-    while (true) {
->true : true
-
-        match Skip<Rest> {
-            case `${infer Op extends "+" | "-"}${infer Right}`: {
-                type [Term, Next] = Product<Right>;
-                if (Op === "+") { Value = Value + Term; }
->Value : error
-
-                else { Value = Value - Term; }
->Value : error
-
-                Rest = Next;
->Rest : error
-            }
-            else: { return [Value, Rest]; }
-        }
-    }
-}
-
 typefn Calc<S extends string> {
 >Calc : Calc<S>
 
-    type [Value, Rest] = Sum<S>;
-    if (Skip<Rest> !== "") { fail<"trailing input">; }
+    type Tokens = Tokenize<S>;
+    type [Value, End] = Sum<Tokens, 0>;
+    if (Tokens[End] !== undefined) { fail<"unexpected token after expression">; }
     return Value;
 }
+
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+>Digit : Digit
+
+type Whitespace = " " | "\t" | "\n" | "\r";
+>Whitespace : Whitespace
+
+typefn Tokenize<S> {
+>Tokenize : Tokenize<S>
+
+    type Tokens = [];
+    type At = 0;
+    type End = string.length<S>;
+>string : any
+
+    while (At !== End) {
+        type Start = At;
+        type [Char, Next] = string.read<S, At>;
+>string : any
+
+        At = Next;
+>At : error
+
+        if (Char is Whitespace) { continue; }
+        if (Char is Digit) {
+            while (string.read<S, At> is [Digit, number]) { At = At + 1; }
+>string : any
+>At : error
+
+            type Text = string.slice<S, Start, At>;
+>string : any
+
+            Tokens = [...Tokens, number.parse<Text>];
+>Tokens : error
+>number : any
+
+        } else {
+            Tokens = [...Tokens, Char];
+>Tokens : error
+        }
+    }
+    return [...Tokens, undefined];
+}
+
+// Each parser returns the value and the index of the next token.
+typefn Sum<Tokens, Index> {
+>Sum : Sum<Tokens, Index>
+
+    type [Value, At] = Product<Tokens, Index>;
+    while (Tokens[At] is "+" | "-") {
+        type Op = Tokens[At];
+        type [Right, Next] = Product<Tokens, At + 1>;
+        if (Op === "+") { Value = Value + Right; }
+>Value : error
+
+        else { Value = Value - Right; }
+>Value : error
+
+        At = Next;
+>At : error
+    }
+    return [Value, At];
+}
+
+typefn Product<Tokens, Index> {
+>Product : Product<Tokens, Index>
+
+    type [Value, At] = Atom<Tokens, Index>;
+    while (Tokens[At] === "*") {
+        type [Right, Next] = Atom<Tokens, At + 1>;
+        Value = Value * Right;
+>Value : error
+
+        At = Next;
+>At : error
+    }
+    return [Value, At];
+}
+
+typefn Atom<Tokens, At> {
+>Atom : Atom<Tokens, At>
+
+    type Token = Tokens[At];
+    if (Token is number) { return [Token, At + 1]; }
+    if (Token === "-") {
+        type [Value, Next] = Atom<Tokens, At + 1>;
+        return [-Value, Next];
+    }
+    if (Token === "(") {
+        type [Value, Close] = Sum<Tokens, At + 1>;
+        if (Tokens[Close] !== ")") { fail<"expected closing parenthesis">; }
+        return [Value, Close + 1];
+    }
+    fail<"expected an integer or parenthesis">;
+}
+
 declare const precedence: Calc<"2 + 3 * (8 - 5)">;
 >precedence : 11
 
@@ -138,10 +133,18 @@ const wrong: 42 = precedence;
 >wrong : 42
 >precedence : 11
 
-declare const multiDigit: Calc<" 12 + 34 ">;
+declare const multiDigit: Calc<" \t12 + 34\r\n">;
 >multiDigit : 46
 
 const fortySix: 46 = multiDigit;
 >fortySix : 46
 >multiDigit : 46
+
+// @ts-expect-error whitespace separates integer tokens
+declare const separatedDigits: Calc<"1 2">;
+>separatedDigits : any
+
+const invalid = separatedDigits;
+>invalid : any
+>separatedDigits : any
 
