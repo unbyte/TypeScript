@@ -46,20 +46,52 @@ func (c *Checker) newTypeFunctionApplication(use, declaration *ast.Node, builtin
 	return t
 }
 
-func (c *Checker) typeFunctionReference(node *ast.Node, symbol *ast.Symbol, decl *ast.Node) *Type {
-	if node.TypeArgumentList() == nil || len(node.TypeArguments()) != len(decl.TypeParameters()) {
-		c.error(node, diagnostics.Type_function_Colon_0, fmt.Sprintf("%s requires %d explicit type arguments", symbol.Name(), len(decl.TypeParameters())))
+func (c *Checker) checkTypeFunctionArgumentCount(node, decl *ast.Node) bool {
+	name := decl.Name().Text()
+	if node.TypeArgumentList() == nil {
+		c.error(node, diagnostics.Type_function_Colon_0, name+" requires an explicit type argument list")
+		return false
+	}
+	parameters := decl.TypeParameters()
+	count := len(node.TypeArguments())
+	if count == len(parameters) {
+		return true
+	}
+	minimum := len(parameters)
+	for minimum > 0 && parameters[minimum-1].AsTypeParameterDeclaration().DefaultType != nil {
+		minimum--
+	}
+	if count >= minimum && count <= len(parameters) {
+		return true
+	}
+	if minimum == len(parameters) {
+		c.error(node, diagnostics.Type_function_Colon_0, fmt.Sprintf("%s requires %d explicit type arguments", name, minimum))
+	} else {
+		c.error(node, diagnostics.Generic_type_0_requires_between_1_and_2_type_arguments, name, minimum, len(parameters))
+	}
+	return false
+}
+
+func (c *Checker) typeFunctionReference(node, decl *ast.Node) *Type {
+	if !c.checkTypeFunctionArgumentCount(node, decl) {
 		return c.errorType
 	}
 	arguments := make([]*Type, len(node.TypeArguments()))
 	for i, a := range node.TypeArguments() {
-		if arity := typeFunctionSlots(decl.TypeParameters()[i]); arity != 0 {
-			arguments[i] = c.readTypeFunctionConstructor(a, arity)
-		} else {
-			arguments[i] = c.getTypeFromTypeNode(a)
-		}
+		arguments[i] = c.getTypeArgumentForParameter(a, decl.TypeParameters()[i])
+	}
+	if len(arguments) < len(decl.TypeParameters()) {
+		parameters := core.Map(decl.TypeParameters(), func(p *ast.Node) *Type { return c.getDeclaredTypeOfTypeParameter(c.getSymbolOfDeclaration(p)) })
+		arguments = c.fillMissingTypeArguments(arguments, parameters, c.getMinTypeArgumentCount(parameters), false)
 	}
 	return c.newTypeFunctionApplication(node, decl, "", arguments)
+}
+
+func (c *Checker) getTypeArgumentForParameter(argument, parameter *ast.Node) *Type {
+	if arity := typeFunctionSlots(parameter); arity != 0 {
+		return c.readTypeFunctionConstructor(argument, arity)
+	}
+	return c.getTypeFromTypeNode(argument)
 }
 
 func (c *Checker) typeFunctionBuiltinName(node *ast.Node) string {

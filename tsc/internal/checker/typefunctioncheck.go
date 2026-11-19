@@ -1,8 +1,6 @@
 package checker
 
 import (
-	"fmt"
-
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
 	"github.com/microsoft/TypeScript/tsc/internal/diagnostics"
 	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
@@ -88,9 +86,7 @@ func (c *Checker) checkTypeFunctionBlock(node *ast.Node, loopDepth int) {
 				c.error(node, diagnostics.Type_function_Colon_0, "a constructor input must be applied or passed with explicit holes")
 			}
 			if decl := ast.GetDeclarationOfKind(symbol, ast.KindTypeFunctionDeclaration); decl != nil {
-				if node.TypeArgumentList() == nil || len(node.TypeArguments()) != len(decl.TypeParameters()) {
-					c.error(node, diagnostics.Type_function_Colon_0, fmt.Sprintf("%s requires %d explicit type arguments", symbol.Name(), len(decl.TypeParameters())))
-				}
+				c.checkTypeFunctionArgumentCount(node, decl)
 			}
 		}
 	}

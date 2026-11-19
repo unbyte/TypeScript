@@ -43,16 +43,25 @@ const expected: 2 = x;`,
 func TestTypeFunctionPublishedPackage(t *testing.T) {
 	t.Parallel()
 	const source = `/** @internal */
-typefn PrivateCount<T> {
-    type Words = string.split<T, " ">;
+typefn PrivateCount<T, Sep> {
+    type Words = string.split<T, Sep>;
     log<"split", Words>;
     return tuple.count<Words>;
 }
-export typefn Words<T> { return PrivateCount<T>; }
+/** @internal */
+type Space = " ";
+export typefn Words<T, Sep = Space> { return PrivateCount<T, Sep>; }
+/** @internal */
+type Box<T> = { value: T };
+export typefn Wrapped<T, F<_> = Box<_>> { return F<T>; }
 typefn Empty<> { return 0; }
 export type Zero = Empty<>;`
-	const consumer = `import type { Words, Zero } from "words";
+	const consumer = `import type { Words, Wrapped, Zero } from "words";
 type PrivateCount<T> = never;
+declare const wrapped: Wrapped<7>;
+const seven: 7 = wrapped.value;
+// @ts-expect-error the default constructor retains the supplied literal
+const wrongValue: 8 = wrapped.value;
 declare const zero: Zero;
 const verifiedZero: 0 = zero;
 // @ts-expect-error the published zero-argument application returns literal 0

@@ -1,0 +1,320 @@
+//// [tests/cases/compiler/typeFunctionDefaultArguments.ts] ////
+
+=== typeFunctionDefaultArguments.ts ===
+typefn Pair<T, U = T> { return [T, U]; }
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 0, 12))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 0, 14))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 0, 12))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 0, 12))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 0, 14))
+
+typefn Chain<T = "first", U = [T], V = [T, U]> { return V; }
+>Chain : Symbol(Chain, Decl(typeFunctionDefaultArguments.ts, 0, 40))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 1, 13))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 1, 25))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 1, 13))
+>V : Symbol(V, Decl(typeFunctionDefaultArguments.ts, 1, 34))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 1, 13))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 1, 25))
+>V : Symbol(V, Decl(typeFunctionDefaultArguments.ts, 1, 34))
+
+typefn Forward<X> { return Pair<X>; }
+>Forward : Symbol(Forward, Decl(typeFunctionDefaultArguments.ts, 1, 60))
+>X : Symbol(X, Decl(typeFunctionDefaultArguments.ts, 2, 15))
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+>X : Symbol(X, Decl(typeFunctionDefaultArguments.ts, 2, 15))
+
+declare const same: Pair<1>;
+>same : Symbol(same, Decl(typeFunctionDefaultArguments.ts, 4, 13))
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+
+declare const different: Pair<1, 2>;
+>different : Symbol(different, Decl(typeFunctionDefaultArguments.ts, 5, 13))
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+
+declare const allDefaults: Chain<>;
+>allDefaults : Symbol(allDefaults, Decl(typeFunctionDefaultArguments.ts, 6, 13))
+>Chain : Symbol(Chain, Decl(typeFunctionDefaultArguments.ts, 0, 40))
+
+declare const someDefaults: Chain<2, "second">;
+>someDefaults : Symbol(someDefaults, Decl(typeFunctionDefaultArguments.ts, 7, 13))
+>Chain : Symbol(Chain, Decl(typeFunctionDefaultArguments.ts, 0, 40))
+
+const a: [1, 1] = same;
+>a : Symbol(a, Decl(typeFunctionDefaultArguments.ts, 8, 5))
+>same : Symbol(same, Decl(typeFunctionDefaultArguments.ts, 4, 13))
+
+const b: [1, 2] = different;
+>b : Symbol(b, Decl(typeFunctionDefaultArguments.ts, 9, 5))
+>different : Symbol(different, Decl(typeFunctionDefaultArguments.ts, 5, 13))
+
+const c: ["first", ["first"]] = allDefaults;
+>c : Symbol(c, Decl(typeFunctionDefaultArguments.ts, 10, 5))
+>allDefaults : Symbol(allDefaults, Decl(typeFunctionDefaultArguments.ts, 6, 13))
+
+const d: [2, "second"] = someDefaults;
+>d : Symbol(d, Decl(typeFunctionDefaultArguments.ts, 11, 5))
+>someDefaults : Symbol(someDefaults, Decl(typeFunctionDefaultArguments.ts, 7, 13))
+
+type Later<T> = Forward<T>;
+>Later : Symbol(Later, Decl(typeFunctionDefaultArguments.ts, 11, 38))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 13, 11))
+>Forward : Symbol(Forward, Decl(typeFunctionDefaultArguments.ts, 1, 60))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 13, 11))
+
+declare const x: Later<"x">;
+>x : Symbol(x, Decl(typeFunctionDefaultArguments.ts, 14, 13))
+>Later : Symbol(Later, Decl(typeFunctionDefaultArguments.ts, 11, 38))
+
+declare const y: Later<"y">;
+>y : Symbol(y, Decl(typeFunctionDefaultArguments.ts, 15, 13))
+>Later : Symbol(Later, Decl(typeFunctionDefaultArguments.ts, 11, 38))
+
+const xPair: ["x", "x"] = x;
+>xPair : Symbol(xPair, Decl(typeFunctionDefaultArguments.ts, 16, 5))
+>x : Symbol(x, Decl(typeFunctionDefaultArguments.ts, 14, 13))
+
+const yPair: ["y", "y"] = y;
+>yPair : Symbol(yPair, Decl(typeFunctionDefaultArguments.ts, 17, 5))
+>y : Symbol(y, Decl(typeFunctionDefaultArguments.ts, 15, 13))
+
+type Swapped<A, B extends string = "label"> = Pair<B, A>;
+>Swapped : Symbol(Swapped, Decl(typeFunctionDefaultArguments.ts, 17, 28))
+>A : Symbol(A, Decl(typeFunctionDefaultArguments.ts, 18, 13))
+>B : Symbol(B, Decl(typeFunctionDefaultArguments.ts, 18, 15))
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+>B : Symbol(B, Decl(typeFunctionDefaultArguments.ts, 18, 15))
+>A : Symbol(A, Decl(typeFunctionDefaultArguments.ts, 18, 13))
+
+declare const swapped: Swapped<7>;
+>swapped : Symbol(swapped, Decl(typeFunctionDefaultArguments.ts, 19, 13))
+>Swapped : Symbol(Swapped, Decl(typeFunctionDefaultArguments.ts, 17, 28))
+
+const labeled: ["label", 7] = swapped;
+>labeled : Symbol(labeled, Decl(typeFunctionDefaultArguments.ts, 20, 5))
+>swapped : Symbol(swapped, Decl(typeFunctionDefaultArguments.ts, 19, 13))
+
+type Box<T> = { value: T };
+>Box : Symbol(Box, Decl(typeFunctionDefaultArguments.ts, 20, 38))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 22, 9))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 22, 9))
+
+typefn Wrap<F<_>, T extends string | number, U = F<T>> { return U; }
+>Wrap : Symbol(Wrap, Decl(typeFunctionDefaultArguments.ts, 22, 27))
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 23, 12))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 23, 17))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 23, 44))
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 23, 12))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 23, 17))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 23, 44))
+
+declare const box: Wrap<Box<_>, 3>;
+>box : Symbol(box, Decl(typeFunctionDefaultArguments.ts, 24, 13))
+>Wrap : Symbol(Wrap, Decl(typeFunctionDefaultArguments.ts, 22, 27))
+>Box : Symbol(Box, Decl(typeFunctionDefaultArguments.ts, 20, 38))
+>_ : Symbol(_)
+
+const three: 3 = box.value;
+>three : Symbol(three, Decl(typeFunctionDefaultArguments.ts, 25, 5))
+>box.value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+>box : Symbol(box, Decl(typeFunctionDefaultArguments.ts, 24, 13))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+
+type Entry<K, V> = { key: K; value: V };
+>Entry : Symbol(Entry, Decl(typeFunctionDefaultArguments.ts, 25, 27))
+>K : Symbol(K, Decl(typeFunctionDefaultArguments.ts, 27, 11))
+>V : Symbol(V, Decl(typeFunctionDefaultArguments.ts, 27, 13))
+>key : Symbol(key, Decl(typeFunctionDefaultArguments.ts, 27, 20))
+>K : Symbol(K, Decl(typeFunctionDefaultArguments.ts, 27, 11))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 27, 28))
+>V : Symbol(V, Decl(typeFunctionDefaultArguments.ts, 27, 13))
+
+typefn WithBox<T = 1, F<_> = Box<_>, G<_> = F<_>> { return G<T>; }
+>WithBox : Symbol(WithBox, Decl(typeFunctionDefaultArguments.ts, 27, 40))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 28, 15))
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 28, 21))
+>Box : Symbol(Box, Decl(typeFunctionDefaultArguments.ts, 20, 38))
+>_ : Symbol(_)
+>G : Symbol(G, Decl(typeFunctionDefaultArguments.ts, 28, 36))
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 28, 21))
+>_ : Symbol(_)
+>G : Symbol(G, Decl(typeFunctionDefaultArguments.ts, 28, 36))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 28, 15))
+
+typefn WithKey<K, F<_> = Entry<K, _>> { return F<"value">; }
+>WithKey : Symbol(WithKey, Decl(typeFunctionDefaultArguments.ts, 28, 66))
+>K : Symbol(K, Decl(typeFunctionDefaultArguments.ts, 29, 15))
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 29, 17))
+>Entry : Symbol(Entry, Decl(typeFunctionDefaultArguments.ts, 25, 27))
+>K : Symbol(K, Decl(typeFunctionDefaultArguments.ts, 29, 15))
+>_ : Symbol(_)
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 29, 17))
+
+declare const defaultBox: WithBox<>;
+>defaultBox : Symbol(defaultBox, Decl(typeFunctionDefaultArguments.ts, 30, 13))
+>WithBox : Symbol(WithBox, Decl(typeFunctionDefaultArguments.ts, 27, 40))
+
+declare const overrideBox: WithBox<2, Entry<"custom", _>>;
+>overrideBox : Symbol(overrideBox, Decl(typeFunctionDefaultArguments.ts, 31, 13))
+>WithBox : Symbol(WithBox, Decl(typeFunctionDefaultArguments.ts, 27, 40))
+>Entry : Symbol(Entry, Decl(typeFunctionDefaultArguments.ts, 25, 27))
+>_ : Symbol(_)
+
+declare const defaultKey: WithKey<"key">;
+>defaultKey : Symbol(defaultKey, Decl(typeFunctionDefaultArguments.ts, 32, 13))
+>WithKey : Symbol(WithKey, Decl(typeFunctionDefaultArguments.ts, 28, 66))
+
+const one: 1 = defaultBox.value;
+>one : Symbol(one, Decl(typeFunctionDefaultArguments.ts, 33, 5))
+>defaultBox.value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+>defaultBox : Symbol(defaultBox, Decl(typeFunctionDefaultArguments.ts, 30, 13))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+
+const custom: { key: "custom"; value: 2 } = overrideBox;
+>custom : Symbol(custom, Decl(typeFunctionDefaultArguments.ts, 34, 5))
+>key : Symbol(key, Decl(typeFunctionDefaultArguments.ts, 34, 15))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 34, 30))
+>overrideBox : Symbol(overrideBox, Decl(typeFunctionDefaultArguments.ts, 31, 13))
+
+const keyed: { key: "key"; value: "value" } = defaultKey;
+>keyed : Symbol(keyed, Decl(typeFunctionDefaultArguments.ts, 35, 5))
+>key : Symbol(key, Decl(typeFunctionDefaultArguments.ts, 35, 14))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 35, 26))
+>defaultKey : Symbol(defaultKey, Decl(typeFunctionDefaultArguments.ts, 32, 13))
+
+typefn Derived<T extends string, U = Wrap<Box<_>, T>> { return U; }
+>Derived : Symbol(Derived, Decl(typeFunctionDefaultArguments.ts, 35, 57))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 37, 15))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 37, 32))
+>Wrap : Symbol(Wrap, Decl(typeFunctionDefaultArguments.ts, 22, 27))
+>Box : Symbol(Box, Decl(typeFunctionDefaultArguments.ts, 20, 38))
+>_ : Symbol(_)
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 37, 15))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 37, 32))
+
+declare const derived: Derived<"nested">;
+>derived : Symbol(derived, Decl(typeFunctionDefaultArguments.ts, 38, 13))
+>Derived : Symbol(Derived, Decl(typeFunctionDefaultArguments.ts, 35, 57))
+
+const nested: "nested" = derived.value;
+>nested : Symbol(nested, Decl(typeFunctionDefaultArguments.ts, 39, 5))
+>derived.value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+>derived : Symbol(derived, Decl(typeFunctionDefaultArguments.ts, 38, 13))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+
+type NativeDefault<T = Wrap<Box<_>, "native">> = T;
+>NativeDefault : Symbol(NativeDefault, Decl(typeFunctionDefaultArguments.ts, 39, 39))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 40, 19))
+>Wrap : Symbol(Wrap, Decl(typeFunctionDefaultArguments.ts, 22, 27))
+>Box : Symbol(Box, Decl(typeFunctionDefaultArguments.ts, 20, 38))
+>_ : Symbol(_)
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 40, 19))
+
+declare const native: NativeDefault;
+>native : Symbol(native, Decl(typeFunctionDefaultArguments.ts, 41, 13))
+>NativeDefault : Symbol(NativeDefault, Decl(typeFunctionDefaultArguments.ts, 39, 39))
+
+const literal: "native" = native.value;
+>literal : Symbol(literal, Decl(typeFunctionDefaultArguments.ts, 42, 5))
+>native.value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+>native : Symbol(native, Decl(typeFunctionDefaultArguments.ts, 41, 13))
+>value : Symbol(value, Decl(typeFunctionDefaultArguments.ts, 22, 15))
+
+typefn Unused<> { fail<"overridden default was evaluated">; }
+>Unused : Symbol(Unused, Decl(typeFunctionDefaultArguments.ts, 42, 39))
+>fail : Symbol(fail)
+
+typefn Select<T = Unused<>> { return T; }
+>Select : Symbol(Select, Decl(typeFunctionDefaultArguments.ts, 44, 61))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 45, 14))
+>Unused : Symbol(Unused, Decl(typeFunctionDefaultArguments.ts, 42, 39))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 45, 14))
+
+declare const override: Select<4>;
+>override : Symbol(override, Decl(typeFunctionDefaultArguments.ts, 46, 13))
+>Select : Symbol(Select, Decl(typeFunctionDefaultArguments.ts, 44, 61))
+
+const four: 4 = override;
+>four : Symbol(four, Decl(typeFunctionDefaultArguments.ts, 47, 5))
+>override : Symbol(override, Decl(typeFunctionDefaultArguments.ts, 46, 13))
+
+typefn Checked<T extends string, U extends T = T> { return U; }
+>Checked : Symbol(Checked, Decl(typeFunctionDefaultArguments.ts, 47, 25))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 49, 15))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 49, 32))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 49, 15))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 49, 15))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 49, 32))
+
+declare const checked: Checked<"ok">;
+>checked : Symbol(checked, Decl(typeFunctionDefaultArguments.ts, 50, 13))
+>Checked : Symbol(Checked, Decl(typeFunctionDefaultArguments.ts, 47, 25))
+
+const ok: "ok" = checked;
+>ok : Symbol(ok, Decl(typeFunctionDefaultArguments.ts, 51, 5))
+>checked : Symbol(checked, Decl(typeFunctionDefaultArguments.ts, 50, 13))
+
+// @ts-expect-error explicit overrides must respect the constraint
+type BadConstraint = Checked<"ok", "other">;
+>BadConstraint : Symbol(BadConstraint, Decl(typeFunctionDefaultArguments.ts, 51, 25))
+>Checked : Symbol(Checked, Decl(typeFunctionDefaultArguments.ts, 47, 25))
+
+// @ts-expect-error a required argument is missing
+type TooFew = Pair<>;
+>TooFew : Symbol(TooFew, Decl(typeFunctionDefaultArguments.ts, 53, 44))
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+
+// @ts-expect-error excess arguments are rejected
+type TooMany = Pair<1, 2, 3>;
+>TooMany : Symbol(TooMany, Decl(typeFunctionDefaultArguments.ts, 55, 21))
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+
+// @ts-expect-error applying all defaults still requires <>
+type Bare = Chain;
+>Bare : Symbol(Bare, Decl(typeFunctionDefaultArguments.ts, 57, 29))
+>Chain : Symbol(Chain, Decl(typeFunctionDefaultArguments.ts, 0, 40))
+
+// @ts-expect-error constructor defaults must have the declared number of holes
+typefn WrongConstructor<F<_> = Entry<_, _>> { return F<0>; }
+>WrongConstructor : Symbol(WrongConstructor, Decl(typeFunctionDefaultArguments.ts, 59, 18))
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 61, 24))
+>Entry : Symbol(Entry, Decl(typeFunctionDefaultArguments.ts, 25, 27))
+>_ : Symbol(_)
+>_ : Symbol(_)
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 61, 24))
+
+// @ts-expect-error defaults can only refer to earlier parameters
+typefn LaterConstructor<F<_> = G<_>, G<_> = Box<_>> { return F<0>; }
+>LaterConstructor : Symbol(LaterConstructor, Decl(typeFunctionDefaultArguments.ts, 61, 60))
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 63, 24))
+>G : Symbol(G, Decl(typeFunctionDefaultArguments.ts, 63, 36))
+>_ : Symbol(_)
+>G : Symbol(G, Decl(typeFunctionDefaultArguments.ts, 63, 36))
+>Box : Symbol(Box, Decl(typeFunctionDefaultArguments.ts, 20, 38))
+>_ : Symbol(_)
+>F : Symbol(F, Decl(typeFunctionDefaultArguments.ts, 63, 24))
+
+// @ts-expect-error a required parameter cannot follow a default
+typefn Misordered<T = 1, U> { return [T, U]; }
+>Misordered : Symbol(Misordered, Decl(typeFunctionDefaultArguments.ts, 63, 68))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 65, 18))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 65, 24))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 65, 18))
+>U : Symbol(U, Decl(typeFunctionDefaultArguments.ts, 65, 24))
+
+// @ts-expect-error the default must satisfy its own constraint
+typefn InvalidDefault<T extends number = "text"> { return T; }
+>InvalidDefault : Symbol(InvalidDefault, Decl(typeFunctionDefaultArguments.ts, 65, 46))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 67, 22))
+>T : Symbol(T, Decl(typeFunctionDefaultArguments.ts, 67, 22))
+
+typefn InvalidBody<> {
+>InvalidBody : Symbol(InvalidBody, Decl(typeFunctionDefaultArguments.ts, 67, 62))
+
+    // @ts-expect-error arity is checked even in an unused body
+    return Pair<>;
+>Pair : Symbol(Pair, Decl(typeFunctionDefaultArguments.ts, 0, 0))
+}
+

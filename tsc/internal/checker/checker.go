@@ -7272,10 +7272,19 @@ func (c *Checker) checkTypeParametersNotReferenced(root *ast.Node, typeParameter
 	var visit func(*ast.Node) bool
 	visit = func(node *ast.Node) bool {
 		if ast.IsTypeReferenceNode(node) {
-			t := c.getTypeFromTypeReference(node)
-			if t.flags&TypeFlagsTypeParameter != 0 {
+			if typeFunctionHole(node) && c.typeFunctionConstructorArity(node.Parent) > 0 {
+				return false
+			}
+			var referenced *ast.Symbol
+			if ast.IsTypeFunctionDeclaration(typeParameters[index].Parent) || core.Some(node.TypeArguments(), typeFunctionHole) && c.typeFunctionConstructorArity(node) > 0 {
+				// A constructor reference can name a parameter even after application.
+				referenced = c.getSymbolFromTypeReference(node)
+			} else if t := c.getTypeFromTypeReference(node); t.flags&TypeFlagsTypeParameter != 0 {
+				referenced = t.symbol
+			}
+			if referenced != nil && referenced.Flags()&ast.SymbolFlagsTypeParameter != 0 {
 				for i := index; i < len(typeParameters); i++ {
-					if t.symbol == c.getSymbolOfDeclaration(typeParameters[i]) {
+					if referenced == c.getSymbolOfDeclaration(typeParameters[i]) {
 						c.error(node, diagnostics.Type_parameter_defaults_can_only_reference_previously_declared_type_parameters)
 					}
 				}
@@ -22734,6 +22743,15 @@ func (c *Checker) getTypeArguments(t *Type) []*Type {
 }
 
 func (c *Checker) getEffectiveTypeArguments(node *ast.Node, typeParameters []*Type) []*Type {
+	if c.typeFunctionApplications != nil {
+		app := c.typeFunctionApplications[c.typeNodeLinks.Get(node).resolvedType]
+		if app != nil && app.declaration != nil {
+			// An ordinary alias can resolve to the same application with different arguments.
+			if ast.GetDeclarationOfKind(c.getResolvedSymbolOrNil(node), ast.KindTypeFunctionDeclaration) == app.declaration {
+				return app.arguments
+			}
+		}
+	}
 	return c.fillMissingTypeArguments(core.Map(node.TypeArguments(), c.getTypeFromTypeNode), typeParameters, c.getMinTypeArgumentCount(typeParameters), ast.IsInJSFile(node))
 }
 
@@ -22829,7 +22847,7 @@ func (c *Checker) getResolvedTypeParameterDefault(t *Type) *Type {
 					return nil
 				})
 				if defaultDeclaration != nil {
-					defaultType = c.getTypeFromTypeNode(defaultDeclaration)
+					defaultType = c.getTypeArgumentForParameter(defaultDeclaration, defaultDeclaration.Parent)
 				}
 			}
 			if d.resolvedDefaultType == c.resolvingDefaultType {
@@ -24482,7 +24500,7 @@ func (c *Checker) getTupleElementType(t *Type, index int) *Type {
  */
 func (c *Checker) getTypeFromTypeAliasReference(node *ast.Node, symbol *ast.Symbol) *Type {
 	if decl := ast.GetDeclarationOfKind(symbol, ast.KindTypeFunctionDeclaration); decl != nil {
-		return c.typeFunctionReference(node, symbol, decl)
+		return c.typeFunctionReference(node, decl)
 	}
 	typeArguments := node.TypeArguments()
 	if symbol.CheckFlags()&ast.CheckFlagsUnresolved != 0 {

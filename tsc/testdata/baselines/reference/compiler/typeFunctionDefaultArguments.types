@@ -1,0 +1,214 @@
+//// [tests/cases/compiler/typeFunctionDefaultArguments.ts] ////
+
+=== typeFunctionDefaultArguments.ts ===
+typefn Pair<T, U = T> { return [T, U]; }
+>Pair : Pair<T, U>
+
+typefn Chain<T = "first", U = [T], V = [T, U]> { return V; }
+>Chain : Chain<T, U, V>
+
+typefn Forward<X> { return Pair<X>; }
+>Forward : Forward<X>
+
+declare const same: Pair<1>;
+>same : [1, 1]
+
+declare const different: Pair<1, 2>;
+>different : [1, 2]
+
+declare const allDefaults: Chain<>;
+>allDefaults : ["first", ["first"]]
+
+declare const someDefaults: Chain<2, "second">;
+>someDefaults : [2, "second"]
+
+const a: [1, 1] = same;
+>a : [1, 1]
+>same : [1, 1]
+
+const b: [1, 2] = different;
+>b : [1, 2]
+>different : [1, 2]
+
+const c: ["first", ["first"]] = allDefaults;
+>c : ["first", ["first"]]
+>allDefaults : ["first", ["first"]]
+
+const d: [2, "second"] = someDefaults;
+>d : [2, "second"]
+>someDefaults : [2, "second"]
+
+type Later<T> = Forward<T>;
+>Later : Forward<T>
+
+declare const x: Later<"x">;
+>x : ["x", "x"]
+
+declare const y: Later<"y">;
+>y : ["y", "y"]
+
+const xPair: ["x", "x"] = x;
+>xPair : ["x", "x"]
+>x : ["x", "x"]
+
+const yPair: ["y", "y"] = y;
+>yPair : ["y", "y"]
+>y : ["y", "y"]
+
+type Swapped<A, B extends string = "label"> = Pair<B, A>;
+>Swapped : Pair<B, A>
+
+declare const swapped: Swapped<7>;
+>swapped : ["label", 7]
+
+const labeled: ["label", 7] = swapped;
+>labeled : ["label", 7]
+>swapped : ["label", 7]
+
+type Box<T> = { value: T };
+>Box : Box<T>
+>value : T
+
+typefn Wrap<F<_>, T extends string | number, U = F<T>> { return U; }
+>Wrap : Wrap<F, T, U>
+>_ : error
+
+declare const box: Wrap<Box<_>, 3>;
+>box : Box<3>
+
+const three: 3 = box.value;
+>three : 3
+>box.value : 3
+>box : Box<3>
+>value : 3
+
+type Entry<K, V> = { key: K; value: V };
+>Entry : Entry<K, V>
+>key : K
+>value : V
+
+typefn WithBox<T = 1, F<_> = Box<_>, G<_> = F<_>> { return G<T>; }
+>WithBox : WithBox<T, F, G>
+>_ : error
+>_ : error
+
+typefn WithKey<K, F<_> = Entry<K, _>> { return F<"value">; }
+>WithKey : WithKey<K, F>
+>_ : error
+
+declare const defaultBox: WithBox<>;
+>defaultBox : Box<1>
+
+declare const overrideBox: WithBox<2, Entry<"custom", _>>;
+>overrideBox : Entry<"custom", 2>
+
+declare const defaultKey: WithKey<"key">;
+>defaultKey : Entry<"key", "value">
+
+const one: 1 = defaultBox.value;
+>one : 1
+>defaultBox.value : 1
+>defaultBox : Box<1>
+>value : 1
+
+const custom: { key: "custom"; value: 2 } = overrideBox;
+>custom : { key: "custom"; value: 2; }
+>key : "custom"
+>value : 2
+>overrideBox : Entry<"custom", 2>
+
+const keyed: { key: "key"; value: "value" } = defaultKey;
+>keyed : { key: "key"; value: "value"; }
+>key : "key"
+>value : "value"
+>defaultKey : Entry<"key", "value">
+
+typefn Derived<T extends string, U = Wrap<Box<_>, T>> { return U; }
+>Derived : Derived<T, U>
+
+declare const derived: Derived<"nested">;
+>derived : Box<"nested">
+
+const nested: "nested" = derived.value;
+>nested : "nested"
+>derived.value : "nested"
+>derived : Box<"nested">
+>value : "nested"
+
+type NativeDefault<T = Wrap<Box<_>, "native">> = T;
+>NativeDefault : T
+
+declare const native: NativeDefault;
+>native : Box<"native">
+
+const literal: "native" = native.value;
+>literal : "native"
+>native.value : "native"
+>native : Box<"native">
+>value : "native"
+
+typefn Unused<> { fail<"overridden default was evaluated">; }
+>Unused : any
+
+typefn Select<T = Unused<>> { return T; }
+>Select : Select<T>
+
+declare const override: Select<4>;
+>override : 4
+
+const four: 4 = override;
+>four : 4
+>override : 4
+
+typefn Checked<T extends string, U extends T = T> { return U; }
+>Checked : Checked<T, U>
+
+declare const checked: Checked<"ok">;
+>checked : "ok"
+
+const ok: "ok" = checked;
+>ok : "ok"
+>checked : "ok"
+
+// @ts-expect-error explicit overrides must respect the constraint
+type BadConstraint = Checked<"ok", "other">;
+>BadConstraint : "other"
+
+// @ts-expect-error a required argument is missing
+type TooFew = Pair<>;
+>TooFew : error
+
+// @ts-expect-error excess arguments are rejected
+type TooMany = Pair<1, 2, 3>;
+>TooMany : error
+
+// @ts-expect-error applying all defaults still requires <>
+type Bare = Chain;
+>Bare : error
+
+// @ts-expect-error constructor defaults must have the declared number of holes
+typefn WrongConstructor<F<_> = Entry<_, _>> { return F<0>; }
+>WrongConstructor : WrongConstructor<F>
+>_ : error
+
+// @ts-expect-error defaults can only refer to earlier parameters
+typefn LaterConstructor<F<_> = G<_>, G<_> = Box<_>> { return F<0>; }
+>LaterConstructor : LaterConstructor<F, G>
+>_ : error
+>_ : error
+
+// @ts-expect-error a required parameter cannot follow a default
+typefn Misordered<T = 1, U> { return [T, U]; }
+>Misordered : Misordered<T, U>
+
+// @ts-expect-error the default must satisfy its own constraint
+typefn InvalidDefault<T extends number = "text"> { return T; }
+>InvalidDefault : InvalidDefault<T>
+
+typefn InvalidBody<> {
+>InvalidBody : any
+
+    // @ts-expect-error arity is checked even in an unused body
+    return Pair<>;
+}
+

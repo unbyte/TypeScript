@@ -15,7 +15,7 @@ type typeFunctionConstructor struct {
 }
 
 func typeFunctionSlots(parameter *ast.Node) int {
-	if !ast.IsTypeParameterDeclaration(parameter) {
+	if parameter == nil || !ast.IsTypeParameterDeclaration(parameter) {
 		return 0
 	}
 	expr := parameter.AsTypeParameterDeclaration().Expression
@@ -39,6 +39,9 @@ func typeFunctionConstructorParameter(symbol *ast.Symbol) int {
 
 func (c *Checker) typeFunctionConstructorArity(node *ast.Node) int {
 	call := node.Parent
+	if call != nil && ast.IsTypeParameterDeclaration(call) && call.AsTypeParameterDeclaration().DefaultType == node {
+		return typeFunctionSlots(call)
+	}
 	if call == nil || !ast.IsTypeReferenceNode(call) {
 		return 0
 	}

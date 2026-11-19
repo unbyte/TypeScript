@@ -177,5 +177,9 @@ func (p *Parser) parseTypeFunctionParameter() *ast.Node {
 	start := p.nodePos()
 	holes := p.parseBracketedList(PCTypeParameters, (*Parser).parseIdentifier, ast.KindLessThanToken, ast.KindGreaterThanToken)
 	slots := p.finishNode(p.factory.NewTypeFunctionConstructorSlots(holes), start)
-	return p.finishNode(p.factory.NewTypeParameterDeclaration(nil, name, nil, slots, nil), pos)
+	var defaultType *ast.TypeNode
+	if p.parseOptional(ast.KindEqualsToken) {
+		defaultType = p.parseType()
+	}
+	return p.finishNode(p.factory.NewTypeParameterDeclaration(nil, name, nil, slots, defaultType), pos)
 }
