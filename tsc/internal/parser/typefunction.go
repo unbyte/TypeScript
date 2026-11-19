@@ -116,6 +116,7 @@ func (p *Parser) parseTypeFunctionStatement() *ast.Node {
 				if tag == ast.KindCaseKeyword {
 					pattern = p.parseType()
 				}
+				p.parseOptional(ast.KindColonToken)
 				arms = append(arms, p.finishNode(p.factory.NewTypeFunctionArm(pattern, p.parseTypeFunctionBlock()), armPos))
 			}
 			list := p.newNodeList(core.NewTextRange(start, p.nodePos()), arms)

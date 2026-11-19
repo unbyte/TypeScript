@@ -1,310 +1,339 @@
 //// [tests/cases/compiler/typeFunctionParent.ts] ////
 
 === typeFunctionParent.ts ===
-typefn Skip<S, Index> {
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 0, 12))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 0, 14))
+type Letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+>Letter : Symbol(Letter, Decl(typeFunctionParent.ts, 0, 0))
 
-    match string.match<S, Index, { run: [[" ", " "]] }> {
+    | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
+
+typefn Scan<S, Index, Allowed> {
+>Scan : Symbol(Scan, Decl(typeFunctionParent.ts, 1, 82))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 3, 12))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 3, 14))
+>Allowed : Symbol(Allowed, Decl(typeFunctionParent.ts, 3, 21))
+
+    type At = Index;
+>At : Symbol(At, Decl(typeFunctionParent.ts, 4, 8))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 3, 14))
+
+    while (true) {
+        match string.read<S, At> {
 >string : Symbol(string)
->match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionParent.ts, 0, 12))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 0, 14))
->run : Symbol(run, Decl(typeFunctionParent.ts, 1, 34))
+>read : Symbol(string.read)
+>S : Symbol(S, Decl(typeFunctionParent.ts, 3, 12))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 4, 8))
 
-        case undefined { return Index; }
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 0, 14))
+            case undefined: { return At; }
+>At : Symbol(At, Decl(typeFunctionParent.ts, 4, 8))
 
-        case [infer Spaces, infer Next] { return Next; }
->Spaces : Symbol(Spaces, Decl(typeFunctionParent.ts, 3, 19))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 3, 33))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 3, 33))
+            case [Allowed, infer Next]: { At = Next; }
+>Allowed : Symbol(Allowed, Decl(typeFunctionParent.ts, 3, 21))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 8, 32))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 8, 32))
+
+            else: { return At; }
+>At : Symbol(At, Decl(typeFunctionParent.ts, 4, 8))
+        }
     }
 }
+typefn Skip<S, Index> { return Scan<S, Index, " ">; }
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 13, 12))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 13, 14))
+>Scan : Symbol(Scan, Decl(typeFunctionParent.ts, 1, 82))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 13, 12))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 13, 14))
+
 typefn Expect<S, Index, Text> {
->Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 6, 14))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 6, 16))
->Text : Symbol(Text, Decl(typeFunctionParent.ts, 6, 23))
+>Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 13, 53))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 14, 14))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 14, 16))
+>Text : Symbol(Text, Decl(typeFunctionParent.ts, 14, 23))
 
     match string.match<S, Skip<S, Index>, Text> {
 >string : Symbol(string)
 >match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionParent.ts, 6, 14))
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 6, 14))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 6, 16))
->Text : Symbol(Text, Decl(typeFunctionParent.ts, 6, 23))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 14, 14))
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 14, 14))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 14, 16))
+>Text : Symbol(Text, Decl(typeFunctionParent.ts, 14, 23))
 
         case undefined { fail<`expected ${Text & string}`>; }
 >fail : Symbol(fail)
->Text : Symbol(Text, Decl(typeFunctionParent.ts, 6, 23))
+>Text : Symbol(Text, Decl(typeFunctionParent.ts, 14, 23))
 
         case [infer Spelling, infer Next] { return Next; }
->Spelling : Symbol(Spelling, Decl(typeFunctionParent.ts, 9, 19))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 9, 35))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 9, 35))
+>Spelling : Symbol(Spelling, Decl(typeFunctionParent.ts, 17, 19))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 17, 35))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 17, 35))
     }
 }
 typefn Word<S, Index> {
->Word : Symbol(Word, Decl(typeFunctionParent.ts, 11, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 12, 12))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 12, 14))
+>Word : Symbol(Word, Decl(typeFunctionParent.ts, 19, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 20, 12))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 20, 14))
 
-    match string.match<S, Skip<S, Index>, { run: [["a", "z"]] }> {
->string : Symbol(string)
->match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionParent.ts, 12, 12))
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 12, 12))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 12, 14))
->run : Symbol(run, Decl(typeFunctionParent.ts, 13, 43))
+    type Start = Skip<S, Index>;
+>Start : Symbol(Start, Decl(typeFunctionParent.ts, 21, 8))
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 20, 12))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 20, 14))
 
-        case undefined { fail<"expected a name">; }
+    type End = Scan<S, Start, Letter>;
+>End : Symbol(End, Decl(typeFunctionParent.ts, 22, 8))
+>Scan : Symbol(Scan, Decl(typeFunctionParent.ts, 1, 82))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 20, 12))
+>Start : Symbol(Start, Decl(typeFunctionParent.ts, 21, 8))
+>Letter : Symbol(Letter, Decl(typeFunctionParent.ts, 0, 0))
+
+    if (Start === End) { fail<"expected a name">; }
+>Start : Symbol(Start, Decl(typeFunctionParent.ts, 21, 8))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 22, 8))
 >fail : Symbol(fail)
 
-        case [infer Text, infer Next] { return [Text, Next]; }
->Text : Symbol(Text, Decl(typeFunctionParent.ts, 15, 19))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 15, 31))
->Text : Symbol(Text, Decl(typeFunctionParent.ts, 15, 19))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 15, 31))
-    }
+    return [string.slice<S, Start, End>, End];
+>string : Symbol(string)
+>slice : Symbol(string.slice)
+>S : Symbol(S, Decl(typeFunctionParent.ts, 20, 12))
+>Start : Symbol(Start, Decl(typeFunctionParent.ts, 21, 8))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 22, 8))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 22, 8))
 }
 typefn Scalar<S, Index> {
->Scalar : Symbol(Scalar, Decl(typeFunctionParent.ts, 17, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 18, 14))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 18, 16))
+>Scalar : Symbol(Scalar, Decl(typeFunctionParent.ts, 25, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 26, 14))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 26, 16))
 
     type [Name, Next] = Word<S, Index>;
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 19, 10))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 19, 15))
->Word : Symbol(Word, Decl(typeFunctionParent.ts, 11, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 18, 14))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 18, 16))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 27, 10))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 27, 15))
+>Word : Symbol(Word, Decl(typeFunctionParent.ts, 19, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 26, 14))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 26, 16))
 
     match Name {
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 19, 10))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 27, 10))
 
         case "number" { return [number, Next]; }
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 19, 15))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 27, 15))
 
         case "string" { return [string, Next]; }
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 19, 15))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 27, 15))
 
         else { fail<"unknown field type">; }
 >fail : Symbol(fail)
     }
 }
 typefn RecordFields<S, Index> {
->RecordFields : Symbol(RecordFields, Decl(typeFunctionParent.ts, 25, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 26, 22))
+>RecordFields : Symbol(RecordFields, Decl(typeFunctionParent.ts, 33, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 34, 22))
 
     type At = Index;
->At : Symbol(At, Decl(typeFunctionParent.ts, 27, 8))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 26, 22))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 35, 8))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 34, 22))
 
     type Out = {};
->Out : Symbol(Out, Decl(typeFunctionParent.ts, 28, 8))
+>Out : Symbol(Out, Decl(typeFunctionParent.ts, 36, 8))
 
     while (true) {
         match string.match<S, Skip<S, At>, "}"> {
 >string : Symbol(string)
 >match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->At : Symbol(At, Decl(typeFunctionParent.ts, 27, 8))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 35, 8))
 
             case undefined {} // Read the next field.
             case [infer Close, infer End] { return [Out, End]; }
->Close : Symbol(Close, Decl(typeFunctionParent.ts, 32, 23))
->End : Symbol(End, Decl(typeFunctionParent.ts, 32, 36))
->Out : Symbol(Out, Decl(typeFunctionParent.ts, 28, 8))
->End : Symbol(End, Decl(typeFunctionParent.ts, 32, 36))
+>Close : Symbol(Close, Decl(typeFunctionParent.ts, 40, 23))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 40, 36))
+>Out : Symbol(Out, Decl(typeFunctionParent.ts, 36, 8))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 40, 36))
         }
         type [Name, AfterName] = Word<S, At>;
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 34, 14))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 34, 19))
->Word : Symbol(Word, Decl(typeFunctionParent.ts, 11, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->At : Symbol(At, Decl(typeFunctionParent.ts, 27, 8))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 42, 14))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 42, 19))
+>Word : Symbol(Word, Decl(typeFunctionParent.ts, 19, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 35, 8))
 
         type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 35, 14))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 35, 20))
->Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 48, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 34, 19))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 43, 14))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 43, 20))
+>Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 56, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 13, 53))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 42, 19))
 
         Out = object.addField<Out, Name, { type: Value }>;
 >object : Symbol(object)
 >addField : Symbol(object.addField)
->Out : Symbol(Out, Decl(typeFunctionParent.ts, 28, 8))
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 34, 14))
->type : Symbol(type, Decl(typeFunctionParent.ts, 36, 42))
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 35, 14))
+>Out : Symbol(Out, Decl(typeFunctionParent.ts, 36, 8))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 42, 14))
+>type : Symbol(type, Decl(typeFunctionParent.ts, 44, 42))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 43, 14))
 
         match string.match<S, Skip<S, AfterValue>, ";"> {
 >string : Symbol(string)
 >match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 35, 20))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 43, 20))
 
             case undefined { return [Out, Expect<S, AfterValue, "}">]; }
->Out : Symbol(Out, Decl(typeFunctionParent.ts, 28, 8))
->Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 26, 20))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 35, 20))
+>Out : Symbol(Out, Decl(typeFunctionParent.ts, 36, 8))
+>Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 13, 53))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 43, 20))
 
             case [infer Sep, infer Next] { At = Next; }
->Sep : Symbol(Sep, Decl(typeFunctionParent.ts, 39, 23))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 39, 34))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 39, 34))
+>Sep : Symbol(Sep, Decl(typeFunctionParent.ts, 47, 23))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 47, 34))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 47, 34))
         }
     }
 }
 typefn Primary<S, Index> {
->Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 42, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 43, 15))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 43, 17))
+>Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 50, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 51, 17))
 
     match string.match<S, Skip<S, Index>, "{"> {
 >string : Symbol(string)
 >match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionParent.ts, 43, 15))
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 43, 15))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 43, 17))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 51, 17))
 
         case undefined { return Scalar<S, Index>; }
->Scalar : Symbol(Scalar, Decl(typeFunctionParent.ts, 17, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 43, 15))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 43, 17))
+>Scalar : Symbol(Scalar, Decl(typeFunctionParent.ts, 25, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 51, 17))
 
         case [infer Open, infer At] { return RecordFields<S, At>; }
->Open : Symbol(Open, Decl(typeFunctionParent.ts, 46, 19))
->At : Symbol(At, Decl(typeFunctionParent.ts, 46, 31))
->RecordFields : Symbol(RecordFields, Decl(typeFunctionParent.ts, 25, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 43, 15))
->At : Symbol(At, Decl(typeFunctionParent.ts, 46, 31))
+>Open : Symbol(Open, Decl(typeFunctionParent.ts, 54, 19))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 54, 31))
+>RecordFields : Symbol(RecordFields, Decl(typeFunctionParent.ts, 33, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 54, 31))
     }
 }
 typefn Annotation<S, Index> {
->Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 48, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 49, 18))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 49, 20))
+>Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 56, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 57, 18))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 57, 20))
 
     type [Value, At] = Primary<S, Index>;
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 50, 10))
->At : Symbol(At, Decl(typeFunctionParent.ts, 50, 16))
->Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 42, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 49, 18))
->Index : Symbol(Index, Decl(typeFunctionParent.ts, 49, 20))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 58, 10))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 58, 16))
+>Primary : Symbol(Primary, Decl(typeFunctionParent.ts, 50, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 57, 18))
+>Index : Symbol(Index, Decl(typeFunctionParent.ts, 57, 20))
 
     while (true) {
         match string.match<S, Skip<S, At>, "[]"> {
 >string : Symbol(string)
 >match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionParent.ts, 49, 18))
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 49, 18))
->At : Symbol(At, Decl(typeFunctionParent.ts, 50, 16))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 57, 18))
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 57, 18))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 58, 16))
 
             case undefined { return [Value, At]; }
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 50, 10))
->At : Symbol(At, Decl(typeFunctionParent.ts, 50, 16))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 58, 10))
+>At : Symbol(At, Decl(typeFunctionParent.ts, 58, 16))
 
             case [infer Suffix, infer Next] { Value = Value[]; At = Next; }
->Suffix : Symbol(Suffix, Decl(typeFunctionParent.ts, 54, 23))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 54, 37))
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 50, 10))
->Next : Symbol(Next, Decl(typeFunctionParent.ts, 54, 37))
+>Suffix : Symbol(Suffix, Decl(typeFunctionParent.ts, 62, 23))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 62, 37))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 58, 10))
+>Next : Symbol(Next, Decl(typeFunctionParent.ts, 62, 37))
         }
     }
 }
 typefn Parent<S> {
->Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 57, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
+>Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 65, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
 
     type [Name, AfterName] = Word<S, Expect<S, 0, "root(parent ">>;
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 59, 10))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 59, 15))
->Word : Symbol(Word, Decl(typeFunctionParent.ts, 11, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
->Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 67, 10))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 67, 15))
+>Word : Symbol(Word, Decl(typeFunctionParent.ts, 19, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
+>Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 13, 53))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
 
     type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 60, 10))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 60, 16))
->Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 48, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
->Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
->AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 59, 15))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 68, 10))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 68, 16))
+>Annotation : Symbol(Annotation, Decl(typeFunctionParent.ts, 56, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
+>Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 13, 53))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
+>AfterName : Symbol(AfterName, Decl(typeFunctionParent.ts, 67, 15))
 
     type End = Expect<S, AfterValue, ")">;
->End : Symbol(End, Decl(typeFunctionParent.ts, 61, 8))
->Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 5, 1))
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
->AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 60, 16))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 69, 8))
+>Expect : Symbol(Expect, Decl(typeFunctionParent.ts, 13, 53))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
+>AfterValue : Symbol(AfterValue, Decl(typeFunctionParent.ts, 68, 16))
 
     match string.read<S, Skip<S, End>> {
 >string : Symbol(string)
 >read : Symbol(string.read)
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
->Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 0, 0))
->S : Symbol(S, Decl(typeFunctionParent.ts, 58, 14))
->End : Symbol(End, Decl(typeFunctionParent.ts, 61, 8))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
+>Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
+>S : Symbol(S, Decl(typeFunctionParent.ts, 66, 14))
+>End : Symbol(End, Decl(typeFunctionParent.ts, 69, 8))
 
         case undefined { return object.addField<{}, Name, { type: Value }>; }
 >object : Symbol(object)
 >addField : Symbol(object.addField)
->Name : Symbol(Name, Decl(typeFunctionParent.ts, 59, 10))
->type : Symbol(type, Decl(typeFunctionParent.ts, 63, 59))
->Value : Symbol(Value, Decl(typeFunctionParent.ts, 60, 10))
+>Name : Symbol(Name, Decl(typeFunctionParent.ts, 67, 10))
+>type : Symbol(type, Decl(typeFunctionParent.ts, 71, 59))
+>Value : Symbol(Value, Decl(typeFunctionParent.ts, 68, 10))
 
         else { fail<"trailing input">; }
 >fail : Symbol(fail)
     }
 }
 declare const a: Parent<"root(parent account: { id: number; roles: string[] })">;
->a : Symbol(a, Decl(typeFunctionParent.ts, 67, 13))
->Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 57, 1))
+>a : Symbol(a, Decl(typeFunctionParent.ts, 75, 13))
+>Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 65, 1))
 
 declare const b: Parent<"root(parent owner: string)">;
->b : Symbol(b, Decl(typeFunctionParent.ts, 68, 13))
->Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 57, 1))
+>b : Symbol(b, Decl(typeFunctionParent.ts, 76, 13))
+>Parent : Symbol(Parent, Decl(typeFunctionParent.ts, 65, 1))
 
 const id: number = a.account.id;
->id : Symbol(id, Decl(typeFunctionParent.ts, 69, 5))
+>id : Symbol(id, Decl(typeFunctionParent.ts, 77, 5))
 >a.account.id : Symbol(id)
 >a.account : Symbol(account)
->a : Symbol(a, Decl(typeFunctionParent.ts, 67, 13))
+>a : Symbol(a, Decl(typeFunctionParent.ts, 75, 13))
 >account : Symbol(account)
 >id : Symbol(id)
 
 const role: string = a.account.roles[0];
->role : Symbol(role, Decl(typeFunctionParent.ts, 70, 5))
+>role : Symbol(role, Decl(typeFunctionParent.ts, 78, 5))
 >a.account.roles : Symbol(roles)
 >a.account : Symbol(account)
->a : Symbol(a, Decl(typeFunctionParent.ts, 67, 13))
+>a : Symbol(a, Decl(typeFunctionParent.ts, 75, 13))
 >account : Symbol(account)
 >roles : Symbol(roles)
 
 const owner: string = b.owner;
->owner : Symbol(owner, Decl(typeFunctionParent.ts, 71, 5))
+>owner : Symbol(owner, Decl(typeFunctionParent.ts, 79, 5))
 >b.owner : Symbol(owner)
->b : Symbol(b, Decl(typeFunctionParent.ts, 68, 13))
+>b : Symbol(b, Decl(typeFunctionParent.ts, 76, 13))
 >owner : Symbol(owner)
 
 // @ts-expect-error independent calculations have different named fields
 b.account;
->b : Symbol(b, Decl(typeFunctionParent.ts, 68, 13))
+>b : Symbol(b, Decl(typeFunctionParent.ts, 76, 13))
 

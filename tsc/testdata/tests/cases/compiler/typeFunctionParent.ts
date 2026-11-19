@@ -1,12 +1,20 @@
 // @strict: true
 // @target: esnext
 
-typefn Skip<S, Index> {
-    match string.match<S, Index, { run: [[" ", " "]] }> {
-        case undefined { return Index; }
-        case [infer Spaces, infer Next] { return Next; }
+type Letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+    | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
+
+typefn Scan<S, Index, Allowed> {
+    type At = Index;
+    while (true) {
+        match string.read<S, At> {
+            case undefined: { return At; }
+            case [Allowed, infer Next]: { At = Next; }
+            else: { return At; }
+        }
     }
 }
+typefn Skip<S, Index> { return Scan<S, Index, " ">; }
 typefn Expect<S, Index, Text> {
     match string.match<S, Skip<S, Index>, Text> {
         case undefined { fail<`expected ${Text & string}`>; }
@@ -14,10 +22,10 @@ typefn Expect<S, Index, Text> {
     }
 }
 typefn Word<S, Index> {
-    match string.match<S, Skip<S, Index>, { run: [["a", "z"]] }> {
-        case undefined { fail<"expected a name">; }
-        case [infer Text, infer Next] { return [Text, Next]; }
-    }
+    type Start = Skip<S, Index>;
+    type End = Scan<S, Start, Letter>;
+    if (Start === End) { fail<"expected a name">; }
+    return [string.slice<S, Start, End>, End];
 }
 typefn Scalar<S, Index> {
     type [Name, Next] = Word<S, Index>;

@@ -95,10 +95,8 @@ typefn LexicalFacts<S> {
 >string : any
 >string : any
 
-        string.match<S, 0, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
+        string.match<S, 0, "😀">, string.split<"a,,b,", ",">,
 >string : any
->run : [["😀", "😀"]]
->max : 1
 >string : any
 
         string.codePoint<"\ud800">, string.fromCodePoint<55296>,
@@ -133,21 +131,18 @@ typefn AtEnd<S, Index> {
 >string : any
 >string : any
 
-        string.match<S, Index, { run: [["0", "9"]]; min: 0 }>, string.find<S, Index, "">];
->string : any
->run : [["0", "9"]]
->min : 0
+        string.find<S, Index, "">];
 >string : any
 }
 declare const atEnd: AtEnd<"😀", 2>;
->atEnd : [undefined, undefined, ["", 2], ["", 2], { end: 2; source: "😀"; start: 2; }]
+>atEnd : [undefined, undefined, ["", 2], { end: 2; source: "😀"; start: 2; }]
 
-const end: [undefined, undefined, ["", 2], ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
->end : [undefined, undefined, ["", 2], ["", 2], { source: "😀"; start: 2; end: 2; }]
+const end: [undefined, undefined, ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
+>end : [undefined, undefined, ["", 2], { source: "😀"; start: 2; end: 2; }]
 >source : "😀"
 >start : 2
 >end : 2
->atEnd : [undefined, undefined, ["", 2], ["", 2], { end: 2; source: "😀"; start: 2; }]
+>atEnd : [undefined, undefined, ["", 2], { end: 2; source: "😀"; start: 2; }]
 
 typefn Search<S, Index> {
 >Search : Search<S, Index>

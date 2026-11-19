@@ -1,0 +1,33 @@
+//// [tests/cases/compiler/typeFunctionTemplatePatterns.ts] ////
+
+=== typeFunctionTemplatePatterns.ts ===
+export typefn Greeting<T extends string> {
+>Greeting : Greeting<T>
+
+    match T {
+        case `hello ${infer C}`: { return C; }
+        else: { return undefined; }
+    }
+}
+
+export declare const name: Greeting<"hello Ada">;
+>name : "Ada"
+
+export declare const empty: Greeting<"hello ">;
+>empty : ""
+
+export declare const absent: Greeting<"goodbye">;
+>absent : undefined
+
+const ada: "Ada" = name;
+>ada : "Ada"
+>name : "Ada"
+
+const nothing: "" = empty;
+>nothing : ""
+>empty : ""
+
+const missing: undefined = absent;
+>missing : undefined
+>absent : undefined
+

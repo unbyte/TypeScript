@@ -1,17 +1,32 @@
 //// [tests/cases/compiler/typeFunctionParent.ts] ////
 
 === typeFunctionParent.ts ===
-typefn Skip<S, Index> {
->Skip : Skip<S, Index>
+type Letter = "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m"
+>Letter : Letter
 
-    match string.match<S, Index, { run: [[" ", " "]] }> {
+    | "n" | "o" | "p" | "q" | "r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z";
+
+typefn Scan<S, Index, Allowed> {
+>Scan : Scan<S, Index, Allowed>
+
+    type At = Index;
+    while (true) {
+>true : true
+
+        match string.read<S, At> {
 >string : any
->run : [[" ", " "]]
 
-        case undefined { return Index; }
-        case [infer Spaces, infer Next] { return Next; }
+            case undefined: { return At; }
+            case [Allowed, infer Next]: { At = Next; }
+>At : error
+
+            else: { return At; }
+        }
     }
 }
+typefn Skip<S, Index> { return Scan<S, Index, " ">; }
+>Skip : Skip<S, Index>
+
 typefn Expect<S, Index, Text> {
 >Expect : Expect<S, Index, Text>
 
@@ -25,13 +40,11 @@ typefn Expect<S, Index, Text> {
 typefn Word<S, Index> {
 >Word : Word<S, Index>
 
-    match string.match<S, Skip<S, Index>, { run: [["a", "z"]] }> {
+    type Start = Skip<S, Index>;
+    type End = Scan<S, Start, Letter>;
+    if (Start === End) { fail<"expected a name">; }
+    return [string.slice<S, Start, End>, End];
 >string : any
->run : [["a", "z"]]
-
-        case undefined { fail<"expected a name">; }
-        case [infer Text, infer Next] { return [Text, Next]; }
-    }
 }
 typefn Scalar<S, Index> {
 >Scalar : Scalar<S, Index>

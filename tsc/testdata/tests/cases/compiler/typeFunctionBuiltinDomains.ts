@@ -18,7 +18,7 @@ const numbers: [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 900719925474
 typefn LexicalFacts<S> {
     return [
         string.length<S>, string.read<S, 0>, string.slice<S, 0, 2>, string.find<S, 2, "a">,
-        string.match<S, 0, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
+        string.match<S, 0, "😀">, string.split<"a,,b,", ",">,
         string.codePoint<"\ud800">, string.fromCodePoint<55296>,
         string.match<S, 0, "b">, string.find<S, 2, "b">
     ];
@@ -30,10 +30,10 @@ const lexical: [3, ["😀", 2], "😀",
 
 typefn AtEnd<S, Index> {
     return [string.read<S, Index>, string.match<S, Index, "a">, string.match<S, Index, "">,
-        string.match<S, Index, { run: [["0", "9"]]; min: 0 }>, string.find<S, Index, "">];
+        string.find<S, Index, "">];
 }
 declare const atEnd: AtEnd<"😀", 2>;
-const end: [undefined, undefined, ["", 2], ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
+const end: [undefined, undefined, ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
 
 typefn Search<S, Index> {
     return [string.match<S, Index, "+">, string.find<S, Index, "+">];

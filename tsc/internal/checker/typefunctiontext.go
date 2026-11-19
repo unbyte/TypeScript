@@ -146,83 +146,17 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 		}
 		return c.typeFunctionRecord(typeFunctionField{"source", source}, typeFunctionField{"start", c.typeFunctionInt(begin)}, typeFunctionField{"end", c.typeFunctionInt(pos.units)})
 	case "match":
-		pattern := args[2]
+		prefix, ok := typeFunctionString(args[2])
+		if !ok {
+			return nil
+		}
+		prefix = stringutil.CombineSurrogatePairs(prefix)
 		begin := pos.bytes
-		if exact, ok := typeFunctionString(pattern); ok {
-			exact = stringutil.CombineSurrogatePairs(exact)
-			if !strings.HasPrefix(s[begin:], exact) {
-				return c.undefinedType
-			}
-			for pos.bytes < begin+len(exact) {
-				pos.advance()
-			}
-		} else {
-			if pattern.flags&TypeFlagsObject == 0 {
-				return nil
-			}
-			run := c.getTypeOfPropertyOfType(pattern, "run")
-			if run == nil || !run.IsTupleType() || len(c.getTypeArguments(run)) == 0 {
-				return nil
-			}
-			var ranges [][2]rune
-			for _, pair := range c.getTypeArguments(run) {
-				if !pair.IsTupleType() || len(c.getTypeArguments(pair)) != 2 {
-					return nil
-				}
-				var interval [2]rune
-				for i, t := range c.getTypeArguments(pair) {
-					text, ok := typeFunctionString(t)
-					if !ok || text == "" {
-						return nil
-					}
-					text = stringutil.CombineSurrogatePairs(text)
-					ch, size := stringutil.DecodeJSStringRune(text)
-					if size != len(text) {
-						return nil
-					}
-					interval[i] = ch
-				}
-				if interval[0] > interval[1] {
-					return nil
-				}
-				ranges = append(ranges, interval)
-			}
-			minRun, maxRun := 1, math.MaxInt
-			for key, target := range map[string]*int{"min": &minRun, "max": &maxRun} {
-				if v := c.getTypeOfPropertyOfType(pattern, key); v != nil {
-					value, ok := typeFunctionOffset(v)
-					if !ok {
-						return nil
-					}
-					*target = value
-				}
-			}
-			if minRun > maxRun {
-				return nil
-			}
-			count := 0
-			for count < maxRun && pos.bytes < len(s) {
-				after := pos
-				ch := after.advance()
-				match := false
-				if !c.typeFunctionCharge(node, len(ranges)) {
-					return c.anyType
-				}
-				for _, r := range ranges {
-					if r[0] <= ch && ch <= r[1] {
-						match = true
-						break
-					}
-				}
-				if !match {
-					break
-				}
-				pos = after
-				count++
-			}
-			if count < minRun {
-				return c.undefinedType
-			}
+		if !strings.HasPrefix(s[begin:], prefix) {
+			return c.undefinedType
+		}
+		for pos.bytes < begin+len(prefix) {
+			pos.advance()
 		}
 		return matchedText(begin)
 	}

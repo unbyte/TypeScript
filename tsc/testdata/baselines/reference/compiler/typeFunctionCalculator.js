@@ -1,74 +1,81 @@
 //// [tests/cases/compiler/typeFunctionCalculator.ts] ////
 
 //// [typeFunctionCalculator.ts]
-typefn Skip<S, Index> {
-    match string.match<S, Index, { run: [[" ", " "]] }> {
-        case undefined { return Index; }
-        case [infer Text, infer Next] { return Next; }
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+
+typefn Skip<S> {
+    type Rest = S;
+    while (true) {
+        match Rest {
+            case ` ${infer Tail}`: { Rest = Tail; }
+            else: { return Rest; }
+        }
     }
 }
 
-typefn Atom<S, Index> {
-    type At = Skip<S, Index>;
-    match string.match<S, At, { run: [["0", "9"]] }> {
-        case undefined {} // Try a unary operator or a parenthesized expression.
-        case [infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
-    }
-    match string.read<S, At> {
-        case undefined { fail<"expected an integer or parenthesis">; }
-        case ["-", infer Next] {
-            type [Value, After] = Atom<S, Next>;
+typefn Atom<S> {
+    type Rest = Skip<S>;
+    match Rest {
+        case `-${infer Tail}`: {
+            type [Value, After] = Atom<Tail>;
             return [number.negate<Value>, After];
         }
-        case ["(", infer Next] {
-            type [Value, After] = Sum<S, Next>;
-            match string.match<S, Skip<S, After>, ")"> {
-                case undefined { fail<"expected closing parenthesis">; }
-                case [")", infer End] { return [Value, End]; }
+        case `(${infer Tail}`: {
+            type [Value, After] = Sum<Tail>;
+            match Skip<After> {
+                case `)${infer End}`: { return [Value, End]; }
+                else: { fail<"expected closing parenthesis">; }
             }
         }
-        else { fail<"expected an integer or parenthesis">; }
+        else: {} // Scan the integer at the start of Rest.
     }
+    type Digits = "";
+    while (true) {
+        match Rest {
+            case `${infer D extends Digit}${infer Tail}`: {
+                Digits = `${Digits}${D}`;
+                Rest = Tail;
+            }
+            else: { break; }
+        }
+    }
+    if (Digits === "") { fail<"expected an integer or parenthesis">; }
+    return [number.fromDecimal<Digits>, Rest];
 }
 
-typefn Product<S, Index> {
-    type [Value, At] = Atom<S, Index>;
+typefn Product<S> {
+    type [Value, Rest] = Atom<S>;
     while (true) {
-        match string.match<S, Skip<S, At>, "*"> {
-            case undefined { break; }
-            case ["*", infer Right] {
-                type [Term, Next] = Atom<S, Right>;
+        match Skip<Rest> {
+            case `*${infer Right}`: {
+                type [Term, Next] = Atom<Right>;
                 Value = number.multiply<Value, Term>;
-                At = Next;
+                Rest = Next;
             }
+            else: { return [Value, Rest]; }
         }
     }
-    return [Value, At];
 }
 
-typefn Sum<S, Index> {
-    type [Value, At] = Product<S, Index>;
+typefn Sum<S> {
+    type [Value, Rest] = Product<S>;
     while (true) {
-        match string.read<S, Skip<S, At>> {
-            case undefined { break; }
-            case [infer Op, infer Right] {
-                if (Op !== "+" && Op !== "-") { break; }
-                type [Term, Next] = Product<S, Right>;
+        match Skip<Rest> {
+            case `${infer Op extends "+" | "-"}${infer Right}`: {
+                type [Term, Next] = Product<Right>;
                 if (Op === "+") { Value = number.add<Value, Term>; }
                 else { Value = number.subtract<Value, Term>; }
-                At = Next;
+                Rest = Next;
             }
+            else: { return [Value, Rest]; }
         }
     }
-    return [Value, At];
 }
 
 typefn Calc<S extends string> {
-    type [Value, At] = Sum<S, 0>;
-    match string.read<S, Skip<S, At>> {
-        case undefined { return Value; }
-        else { fail<"trailing input">; }
-    }
+    type [Value, Rest] = Sum<S>;
+    if (Skip<Rest> !== "") { fail<"trailing input">; }
+    return Value;
 }
 declare const precedence: Calc<"2 + 3 * (8 - 5)">;
 declare const associativity: Calc<"10 - 3 - 2">;
@@ -78,6 +85,8 @@ const five: 5 = associativity;
 const negative: -20 = unary;
 // @ts-expect-error precedence yields the literal 11
 const wrong: 42 = precedence;
+declare const multiDigit: Calc<" 12 + 34 ">;
+const fortySix: 46 = multiDigit;
 
 
 //// [typeFunctionCalculator.js]
@@ -87,3 +96,4 @@ const five = associativity;
 const negative = unary;
 // @ts-expect-error precedence yields the literal 11
 const wrong = precedence;
+const fortySix = multiDigit;

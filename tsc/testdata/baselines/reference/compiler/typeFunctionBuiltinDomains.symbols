@@ -86,12 +86,10 @@ typefn LexicalFacts<S> {
 >find : Symbol(string.find)
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 
-        string.match<S, 0, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
+        string.match<S, 0, "😀">, string.split<"a,,b,", ",">,
 >string : Symbol(string)
 >match : Symbol(string.match)
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
->run : Symbol(run, Decl(typeFunctionBuiltinDomains.ts, 17, 28))
->max : Symbol(max, Decl(typeFunctionBuiltinDomains.ts, 17, 49))
 >string : Symbol(string)
 >split : Symbol(string.split)
 
@@ -145,13 +143,7 @@ typefn AtEnd<S, Index> {
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
 >Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
 
-        string.match<S, Index, { run: [["0", "9"]]; min: 0 }>, string.find<S, Index, "">];
->string : Symbol(string)
->match : Symbol(string.match)
->S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
->Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
->run : Symbol(run, Decl(typeFunctionBuiltinDomains.ts, 29, 32))
->min : Symbol(min, Decl(typeFunctionBuiltinDomains.ts, 29, 51))
+        string.find<S, Index, "">];
 >string : Symbol(string)
 >find : Symbol(string.find)
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
@@ -161,15 +153,15 @@ declare const atEnd: AtEnd<"😀", 2>;
 >atEnd : Symbol(atEnd, Decl(typeFunctionBuiltinDomains.ts, 31, 13))
 >AtEnd : Symbol(AtEnd, Decl(typeFunctionBuiltinDomains.ts, 25, 70))
 
-const end: [undefined, undefined, ["", 2], ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
+const end: [undefined, undefined, ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
 >end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 32, 5))
->source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 32, 53))
->start : Symbol(start, Decl(typeFunctionBuiltinDomains.ts, 32, 66))
->end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 32, 76))
+>source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 32, 44))
+>start : Symbol(start, Decl(typeFunctionBuiltinDomains.ts, 32, 57))
+>end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 32, 67))
 >atEnd : Symbol(atEnd, Decl(typeFunctionBuiltinDomains.ts, 31, 13))
 
 typefn Search<S, Index> {
->Search : Symbol(Search, Decl(typeFunctionBuiltinDomains.ts, 32, 94))
+>Search : Symbol(Search, Decl(typeFunctionBuiltinDomains.ts, 32, 85))
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 34, 14))
 >Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 34, 16))
 
@@ -185,7 +177,7 @@ typefn Search<S, Index> {
 }
 declare const search: Search<"+😀+", 1>;
 >search : Symbol(search, Decl(typeFunctionBuiltinDomains.ts, 37, 13))
->Search : Symbol(Search, Decl(typeFunctionBuiltinDomains.ts, 32, 94))
+>Search : Symbol(Search, Decl(typeFunctionBuiltinDomains.ts, 32, 85))
 
 const afterFirst: [undefined, {source: "+😀+"; start: 3; end: 4}] = search;
 >afterFirst : Symbol(afterFirst, Decl(typeFunctionBuiltinDomains.ts, 38, 5))

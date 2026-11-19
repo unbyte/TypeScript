@@ -1,0 +1,42 @@
+//// [tests/cases/compiler/typeFunctionTemplatePatterns.ts] ////
+
+=== typeFunctionTemplatePatterns.ts ===
+export typefn Greeting<T extends string> {
+>Greeting : Symbol(Greeting, Decl(typeFunctionTemplatePatterns.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionTemplatePatterns.ts, 0, 23))
+
+    match T {
+>T : Symbol(T, Decl(typeFunctionTemplatePatterns.ts, 0, 23))
+
+        case `hello ${infer C}`: { return C; }
+>C : Symbol(C, Decl(typeFunctionTemplatePatterns.ts, 2, 27))
+>C : Symbol(C, Decl(typeFunctionTemplatePatterns.ts, 2, 27))
+
+        else: { return undefined; }
+    }
+}
+
+export declare const name: Greeting<"hello Ada">;
+>name : Symbol(name, Decl(typeFunctionTemplatePatterns.ts, 7, 20))
+>Greeting : Symbol(Greeting, Decl(typeFunctionTemplatePatterns.ts, 0, 0))
+
+export declare const empty: Greeting<"hello ">;
+>empty : Symbol(empty, Decl(typeFunctionTemplatePatterns.ts, 8, 20))
+>Greeting : Symbol(Greeting, Decl(typeFunctionTemplatePatterns.ts, 0, 0))
+
+export declare const absent: Greeting<"goodbye">;
+>absent : Symbol(absent, Decl(typeFunctionTemplatePatterns.ts, 9, 20))
+>Greeting : Symbol(Greeting, Decl(typeFunctionTemplatePatterns.ts, 0, 0))
+
+const ada: "Ada" = name;
+>ada : Symbol(ada, Decl(typeFunctionTemplatePatterns.ts, 10, 5))
+>name : Symbol(name, Decl(typeFunctionTemplatePatterns.ts, 7, 20))
+
+const nothing: "" = empty;
+>nothing : Symbol(nothing, Decl(typeFunctionTemplatePatterns.ts, 11, 5))
+>empty : Symbol(empty, Decl(typeFunctionTemplatePatterns.ts, 8, 20))
+
+const missing: undefined = absent;
+>missing : Symbol(missing, Decl(typeFunctionTemplatePatterns.ts, 12, 5))
+>absent : Symbol(absent, Decl(typeFunctionTemplatePatterns.ts, 9, 20))
+

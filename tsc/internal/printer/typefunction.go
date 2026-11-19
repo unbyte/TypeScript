@@ -135,6 +135,7 @@ func (p *Printer) emitTypeFunctionStatement(node *ast.Node) {
 		} else {
 			p.writeKeyword("else")
 		}
+		p.writePunctuation(":")
 		p.writeSpace()
 		p.emitTypeFunctionBlock(arm.Block)
 	}

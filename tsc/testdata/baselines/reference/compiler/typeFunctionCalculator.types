@@ -1,91 +1,96 @@
 //// [tests/cases/compiler/typeFunctionCalculator.ts] ////
 
 === typeFunctionCalculator.ts ===
-typefn Skip<S, Index> {
->Skip : Skip<S, Index>
+type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
+>Digit : Digit
 
-    match string.match<S, Index, { run: [[" ", " "]] }> {
->string : any
->run : [[" ", " "]]
+typefn Skip<S> {
+>Skip : Skip<S>
 
-        case undefined { return Index; }
-        case [infer Text, infer Next] { return Next; }
-    }
-}
-
-typefn Atom<S, Index> {
->Atom : Atom<S, Index>
-
-    type At = Skip<S, Index>;
-    match string.match<S, At, { run: [["0", "9"]] }> {
->string : any
->run : [["0", "9"]]
-
-        case undefined {} // Try a unary operator or a parenthesized expression.
-        case [infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
->number : any
-    }
-    match string.read<S, At> {
->string : any
-
-        case undefined { fail<"expected an integer or parenthesis">; }
-        case ["-", infer Next] {
-            type [Value, After] = Atom<S, Next>;
-            return [number.negate<Value>, After];
->number : any
-        }
-        case ["(", infer Next] {
-            type [Value, After] = Sum<S, Next>;
-            match string.match<S, Skip<S, After>, ")"> {
->string : any
-
-                case undefined { fail<"expected closing parenthesis">; }
-                case [")", infer End] { return [Value, End]; }
-            }
-        }
-        else { fail<"expected an integer or parenthesis">; }
-    }
-}
-
-typefn Product<S, Index> {
->Product : Product<S, Index>
-
-    type [Value, At] = Atom<S, Index>;
+    type Rest = S;
     while (true) {
 >true : true
 
-        match string.match<S, Skip<S, At>, "*"> {
->string : any
+        match Rest {
+            case ` ${infer Tail}`: { Rest = Tail; }
+>Rest : error
 
-            case undefined { break; }
-            case ["*", infer Right] {
-                type [Term, Next] = Atom<S, Right>;
+            else: { return Rest; }
+        }
+    }
+}
+
+typefn Atom<S> {
+>Atom : Atom<S>
+
+    type Rest = Skip<S>;
+    match Rest {
+        case `-${infer Tail}`: {
+            type [Value, After] = Atom<Tail>;
+            return [number.negate<Value>, After];
+>number : any
+        }
+        case `(${infer Tail}`: {
+            type [Value, After] = Sum<Tail>;
+            match Skip<After> {
+                case `)${infer End}`: { return [Value, End]; }
+                else: { fail<"expected closing parenthesis">; }
+            }
+        }
+        else: {} // Scan the integer at the start of Rest.
+    }
+    type Digits = "";
+    while (true) {
+>true : true
+
+        match Rest {
+            case `${infer D extends Digit}${infer Tail}`: {
+                Digits = `${Digits}${D}`;
+>Digits : error
+
+                Rest = Tail;
+>Rest : error
+            }
+            else: { break; }
+        }
+    }
+    if (Digits === "") { fail<"expected an integer or parenthesis">; }
+    return [number.fromDecimal<Digits>, Rest];
+>number : any
+}
+
+typefn Product<S> {
+>Product : Product<S>
+
+    type [Value, Rest] = Atom<S>;
+    while (true) {
+>true : true
+
+        match Skip<Rest> {
+            case `*${infer Right}`: {
+                type [Term, Next] = Atom<Right>;
                 Value = number.multiply<Value, Term>;
 >Value : error
 >number : any
 
-                At = Next;
->At : error
+                Rest = Next;
+>Rest : error
             }
+            else: { return [Value, Rest]; }
         }
     }
-    return [Value, At];
 }
 
-typefn Sum<S, Index> {
->Sum : Sum<S, Index>
+typefn Sum<S> {
+>Sum : Sum<S>
 
-    type [Value, At] = Product<S, Index>;
+    type [Value, Rest] = Product<S>;
     while (true) {
 >true : true
 
-        match string.read<S, Skip<S, At>> {
->string : any
-
-            case undefined { break; }
-            case [infer Op, infer Right] {
-                if (Op !== "+" && Op !== "-") { break; }
-                type [Term, Next] = Product<S, Right>;
+        match Skip<Rest> {
+            case `${infer Op extends "+" | "-"}${infer Right}`: {
+                type [Term, Next] = Product<Right>;
                 if (Op === "+") { Value = number.add<Value, Term>; }
 >Value : error
 >number : any
@@ -94,24 +99,20 @@ typefn Sum<S, Index> {
 >Value : error
 >number : any
 
-                At = Next;
->At : error
+                Rest = Next;
+>Rest : error
             }
+            else: { return [Value, Rest]; }
         }
     }
-    return [Value, At];
 }
 
 typefn Calc<S extends string> {
 >Calc : Calc<S>
 
-    type [Value, At] = Sum<S, 0>;
-    match string.read<S, Skip<S, At>> {
->string : any
-
-        case undefined { return Value; }
-        else { fail<"trailing input">; }
-    }
+    type [Value, Rest] = Sum<S>;
+    if (Skip<Rest> !== "") { fail<"trailing input">; }
+    return Value;
 }
 declare const precedence: Calc<"2 + 3 * (8 - 5)">;
 >precedence : 11
@@ -140,4 +141,11 @@ const negative: -20 = unary;
 const wrong: 42 = precedence;
 >wrong : 42
 >precedence : 11
+
+declare const multiDigit: Calc<" 12 + 34 ">;
+>multiDigit : 46
+
+const fortySix: 46 = multiDigit;
+>fortySix : 46
+>multiDigit : 46
 
