@@ -16,7 +16,7 @@ typefn Scan<S, Index, Allowed> {
 }
 typefn Skip<S, Index> { return Scan<S, Index, " ">; }
 typefn Expect<S, Index, Text> {
-    match string.match<S, Skip<S, Index>, Text> {
+    match string.matchPrefix<S, Skip<S, Index>, Text> {
         case undefined { fail<`expected ${Text & string}`>; }
         case [infer Spelling, infer Next] { return Next; }
     }
@@ -39,21 +39,21 @@ typefn RecordFields<S, Index> {
     type At = Index;
     type Out = {};
     while (true) {
-        match string.match<S, Skip<S, At>, "}"> {
+        match string.matchPrefix<S, Skip<S, At>, "}"> {
             case undefined {} // Read the next field.
             case [infer Close, infer End] { return [Out, End]; }
         }
         type [Name, AfterName] = Word<S, At>;
         type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
         Out = object.addField<Out, Name, { type: Value }>;
-        match string.match<S, Skip<S, AfterValue>, ";"> {
+        match string.matchPrefix<S, Skip<S, AfterValue>, ";"> {
             case undefined { return [Out, Expect<S, AfterValue, "}">]; }
             case [infer Sep, infer Next] { At = Next; }
         }
     }
 }
 typefn Primary<S, Index> {
-    match string.match<S, Skip<S, Index>, "{"> {
+    match string.matchPrefix<S, Skip<S, Index>, "{"> {
         case undefined { return Scalar<S, Index>; }
         case [infer Open, infer At] { return RecordFields<S, At>; }
     }
@@ -61,7 +61,7 @@ typefn Primary<S, Index> {
 typefn Annotation<S, Index> {
     type [Value, At] = Primary<S, Index>;
     while (true) {
-        match string.match<S, Skip<S, At>, "[]"> {
+        match string.matchPrefix<S, Skip<S, At>, "[]"> {
             case undefined { return [Value, At]; }
             case [infer Suffix, infer Next] { Value = Value[]; At = Next; }
         }

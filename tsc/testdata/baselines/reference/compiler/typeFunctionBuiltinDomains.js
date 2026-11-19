@@ -5,8 +5,8 @@ typefn Arithmetic<> {
     return [
         number.add<9007199254740992, 1>, number.subtract<0, 3>, number.multiply<-2, 4>,
         number.divide<3, 2>, number.remainder<-5, 3>, number.negate<-1>, number.trunc<-1.75>,
-        number.lessThan<1, 2>, number.fromDecimal<"+007.5e1">, number.fromBigInt<9007199254740991n>,
-        bigint.fromDecimal<"00012345678901234567890">, bigint.fromNumber<-42>,
+        number.lessThan<1, 2>, number.parse<"+007.5e1">, number.fromBigInt<9007199254740991n>,
+        bigint.parse<"00012345678901234567890">, bigint.fromNumber<-42>,
         bigint.add<3n, 4n>, bigint.subtract<2n, 5n>, bigint.multiply<-3n, 4n>, bigint.negate<7n>,
         bigint.divide<-7n, 3n>, bigint.remainder<-7n, 3n>, bigint.lessThan<0n, 1n>
     ];
@@ -15,12 +15,17 @@ declare const math: Arithmetic<>;
 const numbers: [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 9007199254740991,
     12345678901234567890n, -42n, 7n, -3n, -12n, -7n, -2n, -1n, true] = math;
 
+typefn Parse<S> { return number.parse<S>; }
+type Later<S extends string> = Parse<S>;
+declare const parsed: [Later<"-12.5">, Later<"001">, Later<"+2e-3">, Later<"-0">];
+const literals: [-12.5, 1, 0.002, 0] = parsed;
+
 typefn LexicalFacts<S> {
     return [
         string.length<S>, string.read<S, 0>, string.slice<S, 0, 2>, string.find<S, 2, "a">,
-        string.match<S, 0, "😀">, string.split<"a,,b,", ",">,
-        string.codePoint<"\ud800">, string.fromCodePoint<55296>,
-        string.match<S, 0, "b">, string.find<S, 2, "b">
+        string.matchPrefix<S, 0, "😀">, string.split<"a,,b,", ",">,
+        string.toCodePoint<"\ud800">, string.fromCodePoint<55296>,
+        string.matchPrefix<S, 0, "b">, string.find<S, 2, "b">
     ];
 }
 declare const text: LexicalFacts<"😀a">;
@@ -29,14 +34,14 @@ const lexical: [3, ["😀", 2], "😀",
     ["a", "", "b", ""], 55296, "\ud800", undefined, undefined] = text;
 
 typefn AtEnd<S, Index> {
-    return [string.read<S, Index>, string.match<S, Index, "a">, string.match<S, Index, "">,
+    return [string.read<S, Index>, string.matchPrefix<S, Index, "a">, string.matchPrefix<S, Index, "">,
         string.find<S, Index, "">];
 }
 declare const atEnd: AtEnd<"😀", 2>;
 const end: [undefined, undefined, ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
 
 typefn Search<S, Index> {
-    return [string.match<S, Index, "+">, string.find<S, Index, "+">];
+    return [string.matchPrefix<S, Index, "+">, string.find<S, Index, "+">];
 }
 declare const search: Search<"+😀+", 1>;
 const afterFirst: [undefined, {source: "+😀+"; start: 3; end: 4}] = search;
@@ -51,11 +56,11 @@ declare const fractional: Read<"abc", 1.5>;
 const invalidReads: [undefined, undefined, undefined] = [insidePair, pastEnd, fractional];
 
 typefn Forms<T> {
-    type Copy = intersection.fromTuple<intersection.parts<T>>;
+    type Copy = intersection.fromTuple<intersection.toTuple<T>>;
     type Arr = array.compose<array.decompose<readonly T[]>>;
     type Template = template.compose<template.decompose<`id-${number}`>>;
     return [Copy, Arr, Template, type.kind<T>, type.kind<any>, type.kind<unknown>, type.kind<never>,
-        type.kind<[T]>, type.kind<T[]>, type.baseOfLiteral<"ok">,
+        type.kind<[T]>, type.kind<T[]>, type.literalBase<"ok">,
         type.isIdentical<1, number>, type.isAssignableTo<1, number>, tuple.count<[1, 2?]>];
 }
 declare const forms: Forms<{a: 1} & {b: 2}>;
@@ -91,6 +96,7 @@ const edited: [false, {n: 1}, {key: string; type: number; readonly: true}] = edi
 //// [typeFunctionBuiltinDomains.js]
 "use strict";
 const numbers = math;
+const literals = parsed;
 const lexical = text;
 const end = atEnd;
 const afterFirst = search;

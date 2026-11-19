@@ -37,15 +37,15 @@ typefn Recursive<T> { return Recursive<T>; }
 >Recursive : Symbol(Recursive, Decl(typeFunctionInvalidInputs.ts, 3, 81))
 >T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 4, 17))
 
-typefn Malformed<T> { return number.fromDecimal<T>; }
+typefn Malformed<T> { return number.parse<T>; }
 >Malformed : Symbol(Malformed, Decl(typeFunctionInvalidInputs.ts, 4, 44))
 >T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 5, 17))
 >number : Symbol(number)
->fromDecimal : Symbol(number.fromDecimal)
+>parse : Symbol(number.parse)
 >T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 5, 17))
 
 typefn Duplicate<T> { return object.addField<T, "name", {type: string}>; }
->Duplicate : Symbol(Duplicate, Decl(typeFunctionInvalidInputs.ts, 5, 53))
+>Duplicate : Symbol(Duplicate, Decl(typeFunctionInvalidInputs.ts, 5, 47))
 >T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 6, 17))
 >object : Symbol(object)
 >addField : Symbol(object.addField)
@@ -77,10 +77,22 @@ declare const malformed: Malformed<"1e">;
 >malformed : Symbol(malformed, Decl(typeFunctionInvalidInputs.ts, 12, 13))
 >Malformed : Symbol(Malformed, Decl(typeFunctionInvalidInputs.ts, 4, 44))
 
+declare const trailing: Malformed<"42px">;
+>trailing : Symbol(trailing, Decl(typeFunctionInvalidInputs.ts, 13, 13))
+>Malformed : Symbol(Malformed, Decl(typeFunctionInvalidInputs.ts, 4, 44))
+
+declare const overflow: Malformed<"1e999">;
+>overflow : Symbol(overflow, Decl(typeFunctionInvalidInputs.ts, 14, 13))
+>Malformed : Symbol(Malformed, Decl(typeFunctionInvalidInputs.ts, 4, 44))
+
+declare const broad: Malformed<string>;
+>broad : Symbol(broad, Decl(typeFunctionInvalidInputs.ts, 15, 13))
+>Malformed : Symbol(Malformed, Decl(typeFunctionInvalidInputs.ts, 4, 44))
+
 declare const duplicate: Duplicate<{name: string}>;
->duplicate : Symbol(duplicate, Decl(typeFunctionInvalidInputs.ts, 13, 13))
->Duplicate : Symbol(Duplicate, Decl(typeFunctionInvalidInputs.ts, 5, 53))
->name : Symbol(name, Decl(typeFunctionInvalidInputs.ts, 13, 36))
+>duplicate : Symbol(duplicate, Decl(typeFunctionInvalidInputs.ts, 16, 13))
+>Duplicate : Symbol(Duplicate, Decl(typeFunctionInvalidInputs.ts, 5, 47))
+>name : Symbol(name, Decl(typeFunctionInvalidInputs.ts, 16, 36))
 
 array.a; splitPair.a; zero.a; index.a; cycle.a; malformed.a; duplicate.a;
 >array : Symbol(array, Decl(typeFunctionInvalidInputs.ts, 7, 13))
@@ -89,11 +101,16 @@ array.a; splitPair.a; zero.a; index.a; cycle.a; malformed.a; duplicate.a;
 >index : Symbol(index, Decl(typeFunctionInvalidInputs.ts, 10, 13))
 >cycle : Symbol(cycle, Decl(typeFunctionInvalidInputs.ts, 11, 13))
 >malformed : Symbol(malformed, Decl(typeFunctionInvalidInputs.ts, 12, 13))
->duplicate : Symbol(duplicate, Decl(typeFunctionInvalidInputs.ts, 13, 13))
+>duplicate : Symbol(duplicate, Decl(typeFunctionInvalidInputs.ts, 16, 13))
+
+trailing.a; overflow.a; broad.a;
+>trailing : Symbol(trailing, Decl(typeFunctionInvalidInputs.ts, 13, 13))
+>overflow : Symbol(overflow, Decl(typeFunctionInvalidInputs.ts, 14, 13))
+>broad : Symbol(broad, Decl(typeFunctionInvalidInputs.ts, 15, 13))
 
 typefn Control<T> {
->Control : Symbol(Control, Decl(typeFunctionInvalidInputs.ts, 14, 73))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 16, 15))
+>Control : Symbol(Control, Decl(typeFunctionInvalidInputs.ts, 18, 32))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 20, 15))
 
     break;
     T = number;
@@ -101,133 +118,133 @@ typefn Control<T> {
 >fail : Symbol(fail)
 }
 type Outside = tuple.count<[1]>;
->Outside : Symbol(Outside, Decl(typeFunctionInvalidInputs.ts, 20, 1))
+>Outside : Symbol(Outside, Decl(typeFunctionInvalidInputs.ts, 24, 1))
 >tuple : Symbol(tuple)
 >count : Symbol(tuple.count)
 
 typefn Escape<> { return {ref: fn.ref<"missing">}; }
->Escape : Symbol(Escape, Decl(typeFunctionInvalidInputs.ts, 21, 32))
->ref : Symbol(ref, Decl(typeFunctionInvalidInputs.ts, 23, 26))
+>Escape : Symbol(Escape, Decl(typeFunctionInvalidInputs.ts, 25, 32))
+>ref : Symbol(ref, Decl(typeFunctionInvalidInputs.ts, 27, 26))
 >fn : Symbol(fn)
 >ref : Symbol(fn.ref)
 
 declare const escaped: Escape<>;
->escaped : Symbol(escaped, Decl(typeFunctionInvalidInputs.ts, 24, 13))
->Escape : Symbol(Escape, Decl(typeFunctionInvalidInputs.ts, 21, 32))
+>escaped : Symbol(escaped, Decl(typeFunctionInvalidInputs.ts, 28, 13))
+>Escape : Symbol(Escape, Decl(typeFunctionInvalidInputs.ts, 25, 32))
 
 escaped.anyProperty;
->escaped : Symbol(escaped, Decl(typeFunctionInvalidInputs.ts, 24, 13))
+>escaped : Symbol(escaped, Decl(typeFunctionInvalidInputs.ts, 28, 13))
 
 typefn WrongSlots<F<X>> { return 1; }
->WrongSlots : Symbol(WrongSlots, Decl(typeFunctionInvalidInputs.ts, 25, 20))
->F : Symbol(F, Decl(typeFunctionInvalidInputs.ts, 27, 18))
+>WrongSlots : Symbol(WrongSlots, Decl(typeFunctionInvalidInputs.ts, 29, 20))
+>F : Symbol(F, Decl(typeFunctionInvalidInputs.ts, 31, 18))
 
 typefn NestedConstructor<F<_>> { return {nested: [F]}; }
->NestedConstructor : Symbol(NestedConstructor, Decl(typeFunctionInvalidInputs.ts, 27, 37))
->F : Symbol(F, Decl(typeFunctionInvalidInputs.ts, 28, 25))
->nested : Symbol(nested, Decl(typeFunctionInvalidInputs.ts, 28, 41))
->F : Symbol(F, Decl(typeFunctionInvalidInputs.ts, 28, 25))
+>NestedConstructor : Symbol(NestedConstructor, Decl(typeFunctionInvalidInputs.ts, 31, 37))
+>F : Symbol(F, Decl(typeFunctionInvalidInputs.ts, 32, 25))
+>nested : Symbol(nested, Decl(typeFunctionInvalidInputs.ts, 32, 41))
+>F : Symbol(F, Decl(typeFunctionInvalidInputs.ts, 32, 25))
 
 typefn Parameter<T extends string> { return T; }
->Parameter : Symbol(Parameter, Decl(typeFunctionInvalidInputs.ts, 28, 56))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 29, 17))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 29, 17))
+>Parameter : Symbol(Parameter, Decl(typeFunctionInvalidInputs.ts, 32, 56))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 33, 17))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 33, 17))
 
 type BadConstraint = Parameter<5>;
->BadConstraint : Symbol(BadConstraint, Decl(typeFunctionInvalidInputs.ts, 29, 48))
->Parameter : Symbol(Parameter, Decl(typeFunctionInvalidInputs.ts, 28, 56))
+>BadConstraint : Symbol(BadConstraint, Decl(typeFunctionInvalidInputs.ts, 33, 48))
+>Parameter : Symbol(Parameter, Decl(typeFunctionInvalidInputs.ts, 32, 56))
 
 typefn BadUse<T> {
->BadUse : Symbol(BadUse, Decl(typeFunctionInvalidInputs.ts, 30, 34))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 31, 14))
+>BadUse : Symbol(BadUse, Decl(typeFunctionInvalidInputs.ts, 34, 34))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 35, 14))
 
     type A = Parameter<T, T>;
->A : Symbol(A, Decl(typeFunctionInvalidInputs.ts, 32, 8))
->Parameter : Symbol(Parameter, Decl(typeFunctionInvalidInputs.ts, 28, 56))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 31, 14))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 31, 14))
+>A : Symbol(A, Decl(typeFunctionInvalidInputs.ts, 36, 8))
+>Parameter : Symbol(Parameter, Decl(typeFunctionInvalidInputs.ts, 32, 56))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 35, 14))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 35, 14))
 
     42;
     match T { else { return 0; } case string { return 1; } }
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 31, 14))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 35, 14))
 }
 typefn Missing<T> { if (false) { return T; } }
->Missing : Symbol(Missing, Decl(typeFunctionInvalidInputs.ts, 35, 1))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 36, 15))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 36, 15))
+>Missing : Symbol(Missing, Decl(typeFunctionInvalidInputs.ts, 39, 1))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 40, 15))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 40, 15))
 
 declare const end: Missing<1>;
->end : Symbol(end, Decl(typeFunctionInvalidInputs.ts, 37, 13))
->Missing : Symbol(Missing, Decl(typeFunctionInvalidInputs.ts, 35, 1))
+>end : Symbol(end, Decl(typeFunctionInvalidInputs.ts, 41, 13))
+>Missing : Symbol(Missing, Decl(typeFunctionInvalidInputs.ts, 39, 1))
 
 end.recovered;
->end : Symbol(end, Decl(typeFunctionInvalidInputs.ts, 37, 13))
+>end : Symbol(end, Decl(typeFunctionInvalidInputs.ts, 41, 13))
 
 typefn InvalidDefault<> {
->InvalidDefault : Symbol(InvalidDefault, Decl(typeFunctionInvalidInputs.ts, 38, 14))
+>InvalidDefault : Symbol(InvalidDefault, Decl(typeFunctionInvalidInputs.ts, 42, 14))
 
     return fn.compose<{ members: {}; constructs: []; calls: [{
 >fn : Symbol(fn)
 >compose : Symbol(fn.compose)
->members : Symbol(members, Decl(typeFunctionInvalidInputs.ts, 41, 23))
->constructs : Symbol(constructs, Decl(typeFunctionInvalidInputs.ts, 41, 36))
->calls : Symbol(calls, Decl(typeFunctionInvalidInputs.ts, 41, 52))
+>members : Symbol(members, Decl(typeFunctionInvalidInputs.ts, 45, 23))
+>constructs : Symbol(constructs, Decl(typeFunctionInvalidInputs.ts, 45, 36))
+>calls : Symbol(calls, Decl(typeFunctionInvalidInputs.ts, 45, 52))
 
         typeParameters: [{name: "T"; key: "t"; constraint: string; default: 1}];
->typeParameters : Symbol(typeParameters, Decl(typeFunctionInvalidInputs.ts, 41, 62))
->name : Symbol(name, Decl(typeFunctionInvalidInputs.ts, 42, 26))
->key : Symbol(key, Decl(typeFunctionInvalidInputs.ts, 42, 36))
->constraint : Symbol(constraint, Decl(typeFunctionInvalidInputs.ts, 42, 46))
->default : Symbol(default, Decl(typeFunctionInvalidInputs.ts, 42, 66))
+>typeParameters : Symbol(typeParameters, Decl(typeFunctionInvalidInputs.ts, 45, 62))
+>name : Symbol(name, Decl(typeFunctionInvalidInputs.ts, 46, 26))
+>key : Symbol(key, Decl(typeFunctionInvalidInputs.ts, 46, 36))
+>constraint : Symbol(constraint, Decl(typeFunctionInvalidInputs.ts, 46, 46))
+>default : Symbol(default, Decl(typeFunctionInvalidInputs.ts, 46, 66))
 
         parameters: []; result: {kind: "return"; type: 0};
->parameters : Symbol(parameters, Decl(typeFunctionInvalidInputs.ts, 42, 80))
->result : Symbol(result, Decl(typeFunctionInvalidInputs.ts, 43, 23))
->kind : Symbol(kind, Decl(typeFunctionInvalidInputs.ts, 43, 33))
->type : Symbol(type, Decl(typeFunctionInvalidInputs.ts, 43, 48))
+>parameters : Symbol(parameters, Decl(typeFunctionInvalidInputs.ts, 46, 80))
+>result : Symbol(result, Decl(typeFunctionInvalidInputs.ts, 47, 23))
+>kind : Symbol(kind, Decl(typeFunctionInvalidInputs.ts, 47, 33))
+>type : Symbol(type, Decl(typeFunctionInvalidInputs.ts, 47, 48))
 
     }] }>;
 }
 declare const invalidDefault: InvalidDefault<>;
->invalidDefault : Symbol(invalidDefault, Decl(typeFunctionInvalidInputs.ts, 46, 13))
->InvalidDefault : Symbol(InvalidDefault, Decl(typeFunctionInvalidInputs.ts, 38, 14))
+>invalidDefault : Symbol(invalidDefault, Decl(typeFunctionInvalidInputs.ts, 50, 13))
+>InvalidDefault : Symbol(InvalidDefault, Decl(typeFunctionInvalidInputs.ts, 42, 14))
 
 invalidDefault.recovered;
->invalidDefault : Symbol(invalidDefault, Decl(typeFunctionInvalidInputs.ts, 46, 13))
+>invalidDefault : Symbol(invalidDefault, Decl(typeFunctionInvalidInputs.ts, 50, 13))
 
 typefn MatchOne<T> {
->MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 47, 25))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 49, 16))
+>MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 51, 25))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 53, 16))
 
     match T { case [infer X] { return X; } }
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 49, 16))
->X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 50, 25))
->X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 50, 25))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 53, 16))
+>X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 54, 25))
+>X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 54, 25))
 
     return "fell through";
 }
 typefn DuplicateCapture<T> { match T { case [infer X, infer X] { return X; } } }
->DuplicateCapture : Symbol(DuplicateCapture, Decl(typeFunctionInvalidInputs.ts, 52, 1))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 53, 24))
->T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 53, 24))
->X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 53, 50), Decl(typeFunctionInvalidInputs.ts, 53, 59))
->X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 53, 50), Decl(typeFunctionInvalidInputs.ts, 53, 59))
->X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 53, 50), Decl(typeFunctionInvalidInputs.ts, 53, 59))
+>DuplicateCapture : Symbol(DuplicateCapture, Decl(typeFunctionInvalidInputs.ts, 56, 1))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 57, 24))
+>T : Symbol(T, Decl(typeFunctionInvalidInputs.ts, 57, 24))
+>X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 57, 50), Decl(typeFunctionInvalidInputs.ts, 57, 59))
+>X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 57, 50), Decl(typeFunctionInvalidInputs.ts, 57, 59))
+>X : Symbol(X, Decl(typeFunctionInvalidInputs.ts, 57, 50), Decl(typeFunctionInvalidInputs.ts, 57, 59))
 
 declare const noArm: MatchOne<0>;
->noArm : Symbol(noArm, Decl(typeFunctionInvalidInputs.ts, 54, 13))
->MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 47, 25))
+>noArm : Symbol(noArm, Decl(typeFunctionInvalidInputs.ts, 58, 13))
+>MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 51, 25))
 
 declare const ambiguous: MatchOne<any>;
->ambiguous : Symbol(ambiguous, Decl(typeFunctionInvalidInputs.ts, 55, 13))
->MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 47, 25))
+>ambiguous : Symbol(ambiguous, Decl(typeFunctionInvalidInputs.ts, 59, 13))
+>MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 51, 25))
 
 declare const empty: MatchOne<never>;
->empty : Symbol(empty, Decl(typeFunctionInvalidInputs.ts, 56, 13))
->MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 47, 25))
+>empty : Symbol(empty, Decl(typeFunctionInvalidInputs.ts, 60, 13))
+>MatchOne : Symbol(MatchOne, Decl(typeFunctionInvalidInputs.ts, 51, 25))
 
 noArm.recovered; ambiguous.recovered; empty.recovered;
->noArm : Symbol(noArm, Decl(typeFunctionInvalidInputs.ts, 54, 13))
->ambiguous : Symbol(ambiguous, Decl(typeFunctionInvalidInputs.ts, 55, 13))
->empty : Symbol(empty, Decl(typeFunctionInvalidInputs.ts, 56, 13))
+>noArm : Symbol(noArm, Decl(typeFunctionInvalidInputs.ts, 58, 13))
+>ambiguous : Symbol(ambiguous, Decl(typeFunctionInvalidInputs.ts, 59, 13))
+>empty : Symbol(empty, Decl(typeFunctionInvalidInputs.ts, 60, 13))
 

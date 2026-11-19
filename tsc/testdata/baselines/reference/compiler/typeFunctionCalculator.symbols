@@ -103,9 +103,9 @@ typefn Atom<S> {
 >Digits : Symbol(Digits, Decl(typeFunctionCalculator.ts, 28, 8))
 >fail : Symbol(fail)
 
-    return [number.fromDecimal<Digits>, Rest];
+    return [number.parse<Digits>, Rest];
 >number : Symbol(number)
->fromDecimal : Symbol(number.fromDecimal)
+>parse : Symbol(number.parse)
 >Digits : Symbol(Digits, Decl(typeFunctionCalculator.ts, 28, 8))
 >Rest : Symbol(Rest, Decl(typeFunctionCalculator.ts, 13, 8))
 }

@@ -74,7 +74,7 @@ func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Ty
 		return c.typeFunctionBoolean(c.isTypeIdenticalTo(first, args[1]))
 	case "type.isAssignableTo":
 		return c.typeFunctionBoolean(c.isTypeAssignableTo(first, args[1]))
-	case "type.baseOfLiteral":
+	case "type.literalBase":
 		return c.getBaseTypeOfLiteralType(first)
 	case "tuple.count":
 		if first.flags&TypeFlagsNever != 0 {
@@ -88,7 +88,7 @@ func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Ty
 			counts = append(counts, c.getTypeOfPropertyOfType(part, "length"))
 		}
 		return c.getUnionType(counts)
-	case "intersection.parts":
+	case "intersection.toTuple":
 		if first.flags&TypeFlagsIntersection != 0 {
 			return c.createTupleType(first.Types())
 		}
@@ -129,7 +129,7 @@ func (c *Checker) typeFunctionArithmetic(group, op string, args []*Type) *Type {
 		a, ok := typeFunctionNumber(args[0])
 		var b float64
 		switch op {
-		case "fromDecimal":
+		case "parse":
 			s, valid := typeFunctionString(args[0])
 			if !valid || !typeFunctionDecimal.MatchString(s) {
 				return nil
@@ -177,7 +177,7 @@ func (c *Checker) typeFunctionArithmetic(group, op string, args []*Type) *Type {
 	}
 	var a *big.Int
 	switch op {
-	case "fromDecimal":
+	case "parse":
 		s, ok := typeFunctionString(args[0])
 		if !ok || !typeFunctionWhole.MatchString(s) {
 			return nil

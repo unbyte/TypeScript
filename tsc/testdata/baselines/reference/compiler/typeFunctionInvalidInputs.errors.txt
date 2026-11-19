@@ -3,34 +3,37 @@ typeFunctionInvalidInputs.ts(9,26): error TS18200: Type function: invalid operan
 typeFunctionInvalidInputs.ts(10,21): error TS18200: Type function: invalid operands for number.divide
 typeFunctionInvalidInputs.ts(11,22): error TS18200: Type function: invalid operands for object.withIndexes
 typeFunctionInvalidInputs.ts(12,22): error TS18200: Type function: recursive call with unchanged arguments
-typeFunctionInvalidInputs.ts(13,26): error TS18200: Type function: invalid operands for number.fromDecimal
-typeFunctionInvalidInputs.ts(14,26): error TS18200: Type function: invalid operands for object.addField
-typeFunctionInvalidInputs.ts(18,5): error TS18200: Type function: loop control requires an enclosing loop
-typeFunctionInvalidInputs.ts(19,5): error TS18200: Type function: only a calculation local may be rebound
-typeFunctionInvalidInputs.ts(20,5): error TS18200: Type function: fail requires a message and an optional span
-typeFunctionInvalidInputs.ts(22,16): error TS2503: Cannot find namespace 'tuple'.
-typeFunctionInvalidInputs.ts(25,24): error TS18200: Type function: an unbound signature reference escaped the calculation
-typeFunctionInvalidInputs.ts(28,20): error TS18200: Type function: constructor parameters require one or more underscore slots
-typeFunctionInvalidInputs.ts(29,51): error TS18200: Type function: a constructor input must be applied or passed with explicit holes
-typeFunctionInvalidInputs.ts(31,32): error TS2344: Type 'number' does not satisfy the constraint 'string'.
-typeFunctionInvalidInputs.ts(33,14): error TS18200: Type function: Parameter requires 1 explicit type arguments
-typeFunctionInvalidInputs.ts(34,5): error TS18200: Type function: expected an explicit type function call
-typeFunctionInvalidInputs.ts(35,15): error TS18200: Type function: the else arm must be last
-typeFunctionInvalidInputs.ts(38,20): error TS18200: Type function: execution reached the end without a return
-typeFunctionInvalidInputs.ts(47,31): error TS18200: Type function: invalid operands for fn.compose
-typeFunctionInvalidInputs.ts(54,61): error TS18200: Type function: duplicate pattern capture X
-typeFunctionInvalidInputs.ts(55,22): error TS18200: Type function: no match arm accepted the input
-typeFunctionInvalidInputs.ts(56,26): error TS18200: Type function: cannot capture structure from any or never
-typeFunctionInvalidInputs.ts(57,22): error TS18200: Type function: cannot capture structure from any or never
+typeFunctionInvalidInputs.ts(13,26): error TS18200: Type function: invalid operands for number.parse
+typeFunctionInvalidInputs.ts(14,25): error TS18200: Type function: invalid operands for number.parse
+typeFunctionInvalidInputs.ts(15,25): error TS18200: Type function: invalid operands for number.parse
+typeFunctionInvalidInputs.ts(16,22): error TS18200: Type function: invalid operands for number.parse
+typeFunctionInvalidInputs.ts(17,26): error TS18200: Type function: invalid operands for object.addField
+typeFunctionInvalidInputs.ts(22,5): error TS18200: Type function: loop control requires an enclosing loop
+typeFunctionInvalidInputs.ts(23,5): error TS18200: Type function: only a calculation local may be rebound
+typeFunctionInvalidInputs.ts(24,5): error TS18200: Type function: fail requires a message and an optional span
+typeFunctionInvalidInputs.ts(26,16): error TS2503: Cannot find namespace 'tuple'.
+typeFunctionInvalidInputs.ts(29,24): error TS18200: Type function: an unbound signature reference escaped the calculation
+typeFunctionInvalidInputs.ts(32,20): error TS18200: Type function: constructor parameters require one or more underscore slots
+typeFunctionInvalidInputs.ts(33,51): error TS18200: Type function: a constructor input must be applied or passed with explicit holes
+typeFunctionInvalidInputs.ts(35,32): error TS2344: Type 'number' does not satisfy the constraint 'string'.
+typeFunctionInvalidInputs.ts(37,14): error TS18200: Type function: Parameter requires 1 explicit type arguments
+typeFunctionInvalidInputs.ts(38,5): error TS18200: Type function: expected an explicit type function call
+typeFunctionInvalidInputs.ts(39,15): error TS18200: Type function: the else arm must be last
+typeFunctionInvalidInputs.ts(42,20): error TS18200: Type function: execution reached the end without a return
+typeFunctionInvalidInputs.ts(51,31): error TS18200: Type function: invalid operands for fn.compose
+typeFunctionInvalidInputs.ts(58,61): error TS18200: Type function: duplicate pattern capture X
+typeFunctionInvalidInputs.ts(59,22): error TS18200: Type function: no match arm accepted the input
+typeFunctionInvalidInputs.ts(60,26): error TS18200: Type function: cannot capture structure from any or never
+typeFunctionInvalidInputs.ts(61,22): error TS18200: Type function: cannot capture structure from any or never
 
 
-==== typeFunctionInvalidInputs.ts (24 errors) ====
+==== typeFunctionInvalidInputs.ts (27 errors) ====
     typefn Domain<T> { return tuple.count<T>; }
     typefn Slice<S> { return string.slice<S, 1, 2>; }
     typefn Div<N> { return number.divide<1, N>; }
     typefn BadIndex<T> { return object.withIndexes<T, {key: string; type: number}>; }
     typefn Recursive<T> { return Recursive<T>; }
-    typefn Malformed<T> { return number.fromDecimal<T>; }
+    typefn Malformed<T> { return number.parse<T>; }
     typefn Duplicate<T> { return object.addField<T, "name", {type: string}>; }
     declare const array: Domain<string[]>;
                          ~~~~~~~~~~~~~~~~
@@ -54,13 +57,26 @@ typeFunctionInvalidInputs.ts(57,22): error TS18200: Type function: cannot captur
 !!! related TS18200 typeFunctionInvalidInputs.ts:5:30: Type function: recursive call with unchanged arguments
     declare const malformed: Malformed<"1e">;
                              ~~~~~~~~~~~~~~~
-!!! error TS18200: Type function: invalid operands for number.fromDecimal
-!!! related TS18200 typeFunctionInvalidInputs.ts:6:30: Type function: invalid operands for number.fromDecimal
+!!! error TS18200: Type function: invalid operands for number.parse
+!!! related TS18200 typeFunctionInvalidInputs.ts:6:30: Type function: invalid operands for number.parse
+    declare const trailing: Malformed<"42px">;
+                            ~~~~~~~~~~~~~~~~~
+!!! error TS18200: Type function: invalid operands for number.parse
+!!! related TS18200 typeFunctionInvalidInputs.ts:6:30: Type function: invalid operands for number.parse
+    declare const overflow: Malformed<"1e999">;
+                            ~~~~~~~~~~~~~~~~~~
+!!! error TS18200: Type function: invalid operands for number.parse
+!!! related TS18200 typeFunctionInvalidInputs.ts:6:30: Type function: invalid operands for number.parse
+    declare const broad: Malformed<string>;
+                         ~~~~~~~~~~~~~~~~~
+!!! error TS18200: Type function: invalid operands for number.parse
+!!! related TS18200 typeFunctionInvalidInputs.ts:6:30: Type function: invalid operands for number.parse
     declare const duplicate: Duplicate<{name: string}>;
                              ~~~~~~~~~~~~~~~~~~~~~~~~~
 !!! error TS18200: Type function: invalid operands for object.addField
 !!! related TS18200 typeFunctionInvalidInputs.ts:7:30: Type function: invalid operands for object.addField
     array.a; splitPair.a; zero.a; index.a; cycle.a; malformed.a; duplicate.a;
+    trailing.a; overflow.a; broad.a;
     
     typefn Control<T> {
         break;
@@ -108,7 +124,7 @@ typeFunctionInvalidInputs.ts(57,22): error TS18200: Type function: cannot captur
     declare const end: Missing<1>;
                        ~~~~~~~~~~
 !!! error TS18200: Type function: execution reached the end without a return
-!!! related TS18200 typeFunctionInvalidInputs.ts:37:8: Type function: execution reached the end without a return
+!!! related TS18200 typeFunctionInvalidInputs.ts:41:8: Type function: execution reached the end without a return
     end.recovered;
     
     typefn InvalidDefault<> {
@@ -120,7 +136,7 @@ typeFunctionInvalidInputs.ts(57,22): error TS18200: Type function: cannot captur
     declare const invalidDefault: InvalidDefault<>;
                                   ~~~~~~~~~~~~~~~~
 !!! error TS18200: Type function: invalid operands for fn.compose
-!!! related TS18200 typeFunctionInvalidInputs.ts:42:12: Type function: invalid operands for fn.compose
+!!! related TS18200 typeFunctionInvalidInputs.ts:46:12: Type function: invalid operands for fn.compose
     invalidDefault.recovered;
     
     typefn MatchOne<T> {
@@ -133,14 +149,14 @@ typeFunctionInvalidInputs.ts(57,22): error TS18200: Type function: cannot captur
     declare const noArm: MatchOne<0>;
                          ~~~~~~~~~~~
 !!! error TS18200: Type function: no match arm accepted the input
-!!! related TS18200 typeFunctionInvalidInputs.ts:51:5: Type function: no match arm accepted the input
+!!! related TS18200 typeFunctionInvalidInputs.ts:55:5: Type function: no match arm accepted the input
     declare const ambiguous: MatchOne<any>;
                              ~~~~~~~~~~~~~
 !!! error TS18200: Type function: cannot capture structure from any or never
-!!! related TS18200 typeFunctionInvalidInputs.ts:51:20: Type function: cannot capture structure from any or never
+!!! related TS18200 typeFunctionInvalidInputs.ts:55:20: Type function: cannot capture structure from any or never
     declare const empty: MatchOne<never>;
                          ~~~~~~~~~~~~~~~
 !!! error TS18200: Type function: cannot capture structure from any or never
-!!! related TS18200 typeFunctionInvalidInputs.ts:51:20: Type function: cannot capture structure from any or never
+!!! related TS18200 typeFunctionInvalidInputs.ts:55:20: Type function: cannot capture structure from any or never
     noArm.recovered; ambiguous.recovered; empty.recovered;
     

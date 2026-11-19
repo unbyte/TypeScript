@@ -50,9 +50,9 @@ typefn Expect<S, Index, Text> {
 >Index : Symbol(Index, Decl(typeFunctionParent.ts, 14, 16))
 >Text : Symbol(Text, Decl(typeFunctionParent.ts, 14, 23))
 
-    match string.match<S, Skip<S, Index>, Text> {
+    match string.matchPrefix<S, Skip<S, Index>, Text> {
 >string : Symbol(string)
->match : Symbol(string.match)
+>matchPrefix : Symbol(string.matchPrefix)
 >S : Symbol(S, Decl(typeFunctionParent.ts, 14, 14))
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
 >S : Symbol(S, Decl(typeFunctionParent.ts, 14, 14))
@@ -138,9 +138,9 @@ typefn RecordFields<S, Index> {
 >Out : Symbol(Out, Decl(typeFunctionParent.ts, 36, 8))
 
     while (true) {
-        match string.match<S, Skip<S, At>, "}"> {
+        match string.matchPrefix<S, Skip<S, At>, "}"> {
 >string : Symbol(string)
->match : Symbol(string.match)
+>matchPrefix : Symbol(string.matchPrefix)
 >S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
 >S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
@@ -177,9 +177,9 @@ typefn RecordFields<S, Index> {
 >type : Symbol(type, Decl(typeFunctionParent.ts, 44, 42))
 >Value : Symbol(Value, Decl(typeFunctionParent.ts, 43, 14))
 
-        match string.match<S, Skip<S, AfterValue>, ";"> {
+        match string.matchPrefix<S, Skip<S, AfterValue>, ";"> {
 >string : Symbol(string)
->match : Symbol(string.match)
+>matchPrefix : Symbol(string.matchPrefix)
 >S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
 >S : Symbol(S, Decl(typeFunctionParent.ts, 34, 20))
@@ -203,9 +203,9 @@ typefn Primary<S, Index> {
 >S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
 >Index : Symbol(Index, Decl(typeFunctionParent.ts, 51, 17))
 
-    match string.match<S, Skip<S, Index>, "{"> {
+    match string.matchPrefix<S, Skip<S, Index>, "{"> {
 >string : Symbol(string)
->match : Symbol(string.match)
+>matchPrefix : Symbol(string.matchPrefix)
 >S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
 >S : Symbol(S, Decl(typeFunctionParent.ts, 51, 15))
@@ -237,9 +237,9 @@ typefn Annotation<S, Index> {
 >Index : Symbol(Index, Decl(typeFunctionParent.ts, 57, 20))
 
     while (true) {
-        match string.match<S, Skip<S, At>, "[]"> {
+        match string.matchPrefix<S, Skip<S, At>, "[]"> {
 >string : Symbol(string)
->match : Symbol(string.match)
+>matchPrefix : Symbol(string.matchPrefix)
 >S : Symbol(S, Decl(typeFunctionParent.ts, 57, 18))
 >Skip : Symbol(Skip, Decl(typeFunctionParent.ts, 12, 1))
 >S : Symbol(S, Decl(typeFunctionParent.ts, 57, 18))

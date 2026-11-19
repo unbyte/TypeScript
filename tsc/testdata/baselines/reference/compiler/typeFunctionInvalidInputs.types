@@ -22,7 +22,7 @@ typefn BadIndex<T> { return object.withIndexes<T, {key: string; type: number}>; 
 typefn Recursive<T> { return Recursive<T>; }
 >Recursive : Recursive<T>
 
-typefn Malformed<T> { return number.fromDecimal<T>; }
+typefn Malformed<T> { return number.parse<T>; }
 >Malformed : Malformed<T>
 >number : any
 
@@ -50,6 +50,15 @@ declare const cycle: Recursive<1>;
 declare const malformed: Malformed<"1e">;
 >malformed : any
 
+declare const trailing: Malformed<"42px">;
+>trailing : any
+
+declare const overflow: Malformed<"1e999">;
+>overflow : any
+
+declare const broad: Malformed<string>;
+>broad : any
+
 declare const duplicate: Duplicate<{name: string}>;
 >duplicate : any
 >name : string
@@ -75,6 +84,17 @@ array.a; splitPair.a; zero.a; index.a; cycle.a; malformed.a; duplicate.a;
 >a : any
 >duplicate.a : any
 >duplicate : any
+>a : any
+
+trailing.a; overflow.a; broad.a;
+>trailing.a : any
+>trailing : any
+>a : any
+>overflow.a : any
+>overflow : any
+>a : any
+>broad.a : any
+>broad : any
 >a : any
 
 typefn Control<T> {

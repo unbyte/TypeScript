@@ -30,7 +30,7 @@ typefn Skip<S, Index> { return Scan<S, Index, " ">; }
 typefn Expect<S, Index, Text> {
 >Expect : Expect<S, Index, Text>
 
-    match string.match<S, Skip<S, Index>, Text> {
+    match string.matchPrefix<S, Skip<S, Index>, Text> {
 >string : any
 
         case undefined { fail<`expected ${Text & string}`>; }
@@ -64,7 +64,7 @@ typefn RecordFields<S, Index> {
     while (true) {
 >true : true
 
-        match string.match<S, Skip<S, At>, "}"> {
+        match string.matchPrefix<S, Skip<S, At>, "}"> {
 >string : any
 
             case undefined {} // Read the next field.
@@ -77,7 +77,7 @@ typefn RecordFields<S, Index> {
 >object : any
 >type : Value
 
-        match string.match<S, Skip<S, AfterValue>, ";"> {
+        match string.matchPrefix<S, Skip<S, AfterValue>, ";"> {
 >string : any
 
             case undefined { return [Out, Expect<S, AfterValue, "}">]; }
@@ -89,7 +89,7 @@ typefn RecordFields<S, Index> {
 typefn Primary<S, Index> {
 >Primary : Primary<S, Index>
 
-    match string.match<S, Skip<S, Index>, "{"> {
+    match string.matchPrefix<S, Skip<S, Index>, "{"> {
 >string : any
 
         case undefined { return Scalar<S, Index>; }
@@ -103,7 +103,7 @@ typefn Annotation<S, Index> {
     while (true) {
 >true : true
 
-        match string.match<S, Skip<S, At>, "[]"> {
+        match string.matchPrefix<S, Skip<S, At>, "[]"> {
 >string : any
 
             case undefined { return [Value, At]; }

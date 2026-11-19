@@ -6,7 +6,7 @@ typefn Slice<S> { return string.slice<S, 1, 2>; }
 typefn Div<N> { return number.divide<1, N>; }
 typefn BadIndex<T> { return object.withIndexes<T, {key: string; type: number}>; }
 typefn Recursive<T> { return Recursive<T>; }
-typefn Malformed<T> { return number.fromDecimal<T>; }
+typefn Malformed<T> { return number.parse<T>; }
 typefn Duplicate<T> { return object.addField<T, "name", {type: string}>; }
 declare const array: Domain<string[]>;
 declare const splitPair: Slice<"😀">;
@@ -14,8 +14,12 @@ declare const zero: Div<0>;
 declare const index: BadIndex<{name: string}>;
 declare const cycle: Recursive<1>;
 declare const malformed: Malformed<"1e">;
+declare const trailing: Malformed<"42px">;
+declare const overflow: Malformed<"1e999">;
+declare const broad: Malformed<string>;
 declare const duplicate: Duplicate<{name: string}>;
 array.a; splitPair.a; zero.a; index.a; cycle.a; malformed.a; duplicate.a;
+trailing.a; overflow.a; broad.a;
 
 typefn Control<T> {
     break;

@@ -40,7 +40,7 @@ typefn Atom<S> {
         }
     }
     if (Digits === "") { fail<"expected an integer or parenthesis">; }
-    return [number.fromDecimal<Digits>, Rest];
+    return [number.parse<Digits>, Rest];
 }
 
 typefn Product<S> {

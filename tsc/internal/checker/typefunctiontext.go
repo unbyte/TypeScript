@@ -70,7 +70,7 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 	}
 	s = stringutil.CombineSurrogatePairs(s)
 	pos := typeFunctionTextPosition{text: s}
-	if op == "read" || op == "find" || op == "match" {
+	if op == "read" || op == "find" || op == "matchPrefix" {
 		index, ok := typeFunctionOffset(args[1])
 		if !ok || !pos.seek(index) {
 			return nil
@@ -93,7 +93,7 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 		before := pos.bytes
 		pos.advance()
 		return matchedText(before)
-	case "codePoint":
+	case "toCodePoint":
 		if len(s) == 0 {
 			return nil
 		}
@@ -145,7 +145,7 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 			pos.advance()
 		}
 		return c.typeFunctionRecord(typeFunctionField{"source", source}, typeFunctionField{"start", c.typeFunctionInt(begin)}, typeFunctionField{"end", c.typeFunctionInt(pos.units)})
-	case "match":
+	case "matchPrefix":
 		prefix, ok := typeFunctionString(args[2])
 		if !ok {
 			return nil
