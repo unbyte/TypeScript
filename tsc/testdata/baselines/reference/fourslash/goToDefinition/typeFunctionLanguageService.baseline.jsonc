@@ -1,0 +1,17 @@
+// === goToDefinition ===
+// === /typeFunctionLanguageService.ts ===
+// export typefn Count<T> {
+//     type [|Items|] = T;
+//     return tuple.count</*GOTO DEF*/Items>;
+// }
+// type Two = Count<[1, 2]>;
+
+
+
+// === goToDefinition ===
+// === /typeFunctionLanguageService.ts ===
+// <|export typefn [|Count|]<T> {
+//     type Items = T;
+//     return tuple.count<Items>;
+// }|>
+// type Two = /*GOTO DEF*/Count<[1, 2]>;

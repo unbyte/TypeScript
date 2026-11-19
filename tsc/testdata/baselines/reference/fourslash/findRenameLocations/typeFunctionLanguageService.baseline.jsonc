@@ -1,0 +1,17 @@
+// === findRenameLocations ===
+// === /typeFunctionLanguageService.ts ===
+// export typefn Count<T> {
+//     type [|ItemsRENAME|] = T;
+//     return tuple.count</*RENAME*/[|ItemsRENAME|]>;
+// }
+// type Two = Count<[1, 2]>;
+
+
+
+// === findRenameLocations ===
+// === /typeFunctionLanguageService.ts ===
+// export typefn [|CountRENAME|]<T> {
+//     type Items = T;
+//     return tuple.count<Items>;
+// }
+// type Two = /*RENAME*/[|CountRENAME|]<[1, 2]>;

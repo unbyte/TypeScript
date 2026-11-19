@@ -1,0 +1,85 @@
+//// [tests/cases/compiler/typeFunctionFailureAndScope.ts] ////
+
+=== typeFunctionFailureAndScope.ts ===
+typefn Failed<> { fail<"inner failure">; }
+>Failed : any
+
+typefn ExplicitAny<> { return any; }
+>ExplicitAny : any
+
+typefn After<T> { type A = T; return 1; }
+>After : After<T>
+
+typefn Outer<> { return { version: 1; bad: Failed<> }; }
+>Outer : any
+>version : 1
+>bad : any
+
+typefn First<T> { return 42; }
+>First : First<T>
+
+type Open<T extends unknown[]> = First<[42, ...T]>;
+>Open : First<[42, ...T]>
+
+typefn Identity<T> { return T; }
+>Identity : Identity<T>
+
+type Unused = Failed<>;
+>Unused : any
+
+function same<T>(x: Identity<T>): Identity<T> { return x; }
+>same : <T>(x: Identity<T>) => Identity<T>
+>x : Identity<T>
+>x : Identity<T>
+
+// @ts-expect-error an opaque generic computation cannot promise string
+function unsupported<T>(x: Identity<T>): string { return x; }
+>unsupported : <T>(x: Identity<T>) => string
+>x : Identity<T>
+>x : Identity<T>
+
+declare const good: After<ExplicitAny<>>;
+>good : 1
+
+const literal: 1 = good;
+>literal : 1
+>good : 1
+
+declare const bad: Outer<>;
+>bad : any
+
+bad.anyPropertyAfterRecovery;
+>bad.anyPropertyAfterRecovery : any
+>bad : any
+>anyPropertyAfterRecovery : any
+
+typefn Snapshots<> {
+>Snapshots : [{ read: () => "before"; }, "after"]
+
+    type X = "before";
+    type Saved = { read: () => X };
+>read : () => X
+
+    X = "after";
+>X : any
+
+    return [Saved, X];
+}
+declare const snapshot: Snapshots<>;
+>snapshot : [{ read: () => "before"; }, "after"]
+
+const before: "before" = snapshot[0].read();
+>before : "before"
+>snapshot[0].read() : "before"
+>snapshot[0].read : () => "before"
+>snapshot[0] : { read: () => "before"; }
+>snapshot : [{ read: () => "before"; }, "after"]
+>0 : 0
+>read : () => "before"
+
+const after: "after" = snapshot[1];
+>after : "after"
+>snapshot[1] : "after"
+>snapshot : [{ read: () => "before"; }, "after"]
+>1 : 1
+

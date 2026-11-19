@@ -1,0 +1,108 @@
+//// [tests/cases/compiler/typeFunctionFailureAndScope.ts] ////
+
+=== typeFunctionFailureAndScope.ts ===
+typefn Failed<> { fail<"inner failure">; }
+>Failed : Symbol(Failed, Decl(typeFunctionFailureAndScope.ts, 0, 0))
+>fail : Symbol(fail)
+
+typefn ExplicitAny<> { return any; }
+>ExplicitAny : Symbol(ExplicitAny, Decl(typeFunctionFailureAndScope.ts, 0, 42))
+
+typefn After<T> { type A = T; return 1; }
+>After : Symbol(After, Decl(typeFunctionFailureAndScope.ts, 1, 36))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 2, 13))
+>A : Symbol(A, Decl(typeFunctionFailureAndScope.ts, 2, 22))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 2, 13))
+
+typefn Outer<> { return { version: 1; bad: Failed<> }; }
+>Outer : Symbol(Outer, Decl(typeFunctionFailureAndScope.ts, 2, 41))
+>version : Symbol(version, Decl(typeFunctionFailureAndScope.ts, 3, 25))
+>bad : Symbol(bad, Decl(typeFunctionFailureAndScope.ts, 3, 37))
+>Failed : Symbol(Failed, Decl(typeFunctionFailureAndScope.ts, 0, 0))
+
+typefn First<T> { return 42; }
+>First : Symbol(First, Decl(typeFunctionFailureAndScope.ts, 3, 56))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 4, 13))
+
+type Open<T extends unknown[]> = First<[42, ...T]>;
+>Open : Symbol(Open, Decl(typeFunctionFailureAndScope.ts, 4, 30))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 5, 10))
+>First : Symbol(First, Decl(typeFunctionFailureAndScope.ts, 3, 56))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 5, 10))
+
+typefn Identity<T> { return T; }
+>Identity : Symbol(Identity, Decl(typeFunctionFailureAndScope.ts, 5, 51))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 6, 16))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 6, 16))
+
+type Unused = Failed<>;
+>Unused : Symbol(Unused, Decl(typeFunctionFailureAndScope.ts, 6, 32))
+>Failed : Symbol(Failed, Decl(typeFunctionFailureAndScope.ts, 0, 0))
+
+function same<T>(x: Identity<T>): Identity<T> { return x; }
+>same : Symbol(same, Decl(typeFunctionFailureAndScope.ts, 7, 23))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 8, 14))
+>x : Symbol(x, Decl(typeFunctionFailureAndScope.ts, 8, 17))
+>Identity : Symbol(Identity, Decl(typeFunctionFailureAndScope.ts, 5, 51))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 8, 14))
+>Identity : Symbol(Identity, Decl(typeFunctionFailureAndScope.ts, 5, 51))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 8, 14))
+>x : Symbol(x, Decl(typeFunctionFailureAndScope.ts, 8, 17))
+
+// @ts-expect-error an opaque generic computation cannot promise string
+function unsupported<T>(x: Identity<T>): string { return x; }
+>unsupported : Symbol(unsupported, Decl(typeFunctionFailureAndScope.ts, 8, 59))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 10, 21))
+>x : Symbol(x, Decl(typeFunctionFailureAndScope.ts, 10, 24))
+>Identity : Symbol(Identity, Decl(typeFunctionFailureAndScope.ts, 5, 51))
+>T : Symbol(T, Decl(typeFunctionFailureAndScope.ts, 10, 21))
+>x : Symbol(x, Decl(typeFunctionFailureAndScope.ts, 10, 24))
+
+declare const good: After<ExplicitAny<>>;
+>good : Symbol(good, Decl(typeFunctionFailureAndScope.ts, 12, 13))
+>After : Symbol(After, Decl(typeFunctionFailureAndScope.ts, 1, 36))
+>ExplicitAny : Symbol(ExplicitAny, Decl(typeFunctionFailureAndScope.ts, 0, 42))
+
+const literal: 1 = good;
+>literal : Symbol(literal, Decl(typeFunctionFailureAndScope.ts, 13, 5))
+>good : Symbol(good, Decl(typeFunctionFailureAndScope.ts, 12, 13))
+
+declare const bad: Outer<>;
+>bad : Symbol(bad, Decl(typeFunctionFailureAndScope.ts, 14, 13))
+>Outer : Symbol(Outer, Decl(typeFunctionFailureAndScope.ts, 2, 41))
+
+bad.anyPropertyAfterRecovery;
+>bad : Symbol(bad, Decl(typeFunctionFailureAndScope.ts, 14, 13))
+
+typefn Snapshots<> {
+>Snapshots : Symbol(Snapshots, Decl(typeFunctionFailureAndScope.ts, 15, 29))
+
+    type X = "before";
+>X : Symbol(X, Decl(typeFunctionFailureAndScope.ts, 18, 8))
+
+    type Saved = { read: () => X };
+>Saved : Symbol(Saved, Decl(typeFunctionFailureAndScope.ts, 19, 8))
+>read : Symbol(read, Decl(typeFunctionFailureAndScope.ts, 19, 18))
+>X : Symbol(X, Decl(typeFunctionFailureAndScope.ts, 18, 8))
+
+    X = "after";
+    return [Saved, X];
+>Saved : Symbol(Saved, Decl(typeFunctionFailureAndScope.ts, 19, 8))
+>X : Symbol(X, Decl(typeFunctionFailureAndScope.ts, 18, 8))
+}
+declare const snapshot: Snapshots<>;
+>snapshot : Symbol(snapshot, Decl(typeFunctionFailureAndScope.ts, 23, 13))
+>Snapshots : Symbol(Snapshots, Decl(typeFunctionFailureAndScope.ts, 15, 29))
+
+const before: "before" = snapshot[0].read();
+>before : Symbol(before, Decl(typeFunctionFailureAndScope.ts, 24, 5))
+>snapshot[0].read : Symbol(read, Decl(typeFunctionFailureAndScope.ts, 19, 18))
+>snapshot : Symbol(snapshot, Decl(typeFunctionFailureAndScope.ts, 23, 13))
+>0 : Symbol(0)
+>read : Symbol(read, Decl(typeFunctionFailureAndScope.ts, 19, 18))
+
+const after: "after" = snapshot[1];
+>after : Symbol(after, Decl(typeFunctionFailureAndScope.ts, 25, 5))
+>snapshot : Symbol(snapshot, Decl(typeFunctionFailureAndScope.ts, 23, 13))
+>1 : Symbol(1)
+

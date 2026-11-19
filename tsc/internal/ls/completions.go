@@ -30,6 +30,7 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/spanmap"
 	"github.com/microsoft/TypeScript/tsc/internal/stringutil"
 	"github.com/microsoft/TypeScript/tsc/internal/tspath"
+	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
 )
 
 var ErrNeedsAutoImports = errors.New("completion list needs auto imports")
@@ -429,6 +430,22 @@ func (l *LanguageService) getCompletionsAtPosition(
 
 	checker, done := l.GetProgram().GetTypeCheckerForFile(ctx, file)
 	defer done()
+
+	if token := astnav.GetTokenAtPosition(file, position); token != nil {
+		name := ast.FindAncestorKind(token, ast.KindQualifiedName)
+		if name == nil && previousToken != nil {
+			name = ast.FindAncestorKind(previousToken, ast.KindQualifiedName)
+		}
+		if name != nil && position > name.AsQualifiedName().Left.End() && name.Parent != nil && ast.IsTypeReferenceNode(name.Parent) {
+			if namespace := checker.TypeFunctionBuiltinNamespace(name.Parent); namespace != "" {
+				result := &CompletionList{}
+				for _, member := range typefunction.Members(namespace) {
+					result.Items = append(result.Items, &CompletionItem{CompletionItem: &lsproto.CompletionItem{Label: member, SortText: new(string(SortTextLocationPriority)), Kind: new(lsproto.CompletionItemKindFunction)}})
+				}
+				return result, nil
+			}
+		}
+	}
 
 	stringCompletions := l.getStringLiteralCompletions(
 		ctx,

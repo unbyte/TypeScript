@@ -564,3 +564,13 @@ func (f *typeFunctionFrame) match(value *Type, pattern *ast.Node) bool {
 	}
 	return true
 }
+
+func (c *Checker) TypeFunctionResultForDisplay(node *ast.Node) *Type {
+	return c.forceTypeFunction(c.getTypeFromTypeNode(node))
+}
+
+func sameOpenTypeFunction(a, b *Type) bool {
+	x := a.typeFunctionApplication()
+	y := b.typeFunctionApplication()
+	return x != nil && y != nil && x.declaration == y.declaration && x.builtin == y.builtin && slices.Equal(x.arguments, y.arguments)
+}

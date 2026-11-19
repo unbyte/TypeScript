@@ -17,6 +17,7 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/printer"
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 	"github.com/microsoft/TypeScript/tsc/internal/spanmap"
+	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
 )
 
 const (
@@ -172,6 +173,37 @@ func (l *LanguageService) ProvideHover(ctx context.Context, params *lsproto.Hove
 }
 
 func (l *LanguageService) getQuickInfoAndDocumentationForSymbol(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, contentFormat lsproto.MarkupKind, vc *checker.VerbosityContext, vsCapability bool) (string, string, string, []*lsproto.VSClassifiedTextRun) {
+	if q := node.Parent; q != nil && ast.IsQualifiedName(q) && q.AsQualifiedName().Right == node && q.Parent != nil {
+		if ns := c.TypeFunctionBuiltinNamespace(q.Parent); ns != "" {
+			if b, ok := typefunction.Lookup(ns + "." + node.Text()); ok {
+				return b.Name + "<" + b.Parameters + ">", "", "", nil
+			}
+		}
+	}
+	if symbol != nil {
+		target := symbol
+		if target.Flags()&ast.SymbolFlagsAlias != 0 {
+			target = c.GetAliasedSymbol(target)
+		}
+		if target != nil {
+			if decl := ast.GetDeclarationOfKind(target, ast.KindTypeFunctionDeclaration); decl != nil {
+				var params []string
+				file := ast.GetSourceFileOfNode(decl)
+				for _, p := range decl.TypeParameters() {
+					params = append(params, scanner.GetSourceTextOfNodeFromSourceFile(file, p, false))
+				}
+				header := "typefn " + decl.Name().Text() + "<" + strings.Join(params, ", ") + ">"
+				if use := node.Parent; use != nil && ast.IsTypeReferenceNode(use) && use.AsTypeReferenceNode().TypeName == node {
+					header += " = " + c.TypeToString(c.TypeFunctionResultForDisplay(use))
+				}
+				documentation := getDocumentationForSymbol(l.documentationLocationMapper(spanmap.FeatureHover), c, symbol, node, decl, contentFormat, false)
+				return header, documentation, documentation, nil
+			}
+			if d := ast.GetDeclarationOfKind(target, ast.KindTypeParameter); d != nil && d.Parent != nil && (ast.IsTypeFunctionBinding(d.Parent) || ast.IsTypeFunctionFor(d.Parent)) {
+				return "type " + d.Name().Text(), "", "", nil
+			}
+		}
+	}
 	info := getQuickInfoAndDeclarationAtLocation(c, symbol, node, vc, vsCapability, getMeaningFromLocation(node))
 	quickInfo := info.displayParts.String()
 	if quickInfo == "" {

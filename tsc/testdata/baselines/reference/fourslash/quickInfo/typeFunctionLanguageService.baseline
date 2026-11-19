@@ -1,0 +1,111 @@
+// === QuickInfo ===
+=== /typeFunctionLanguageService.ts ===
+// export typefn Count<T> {
+//     type Items = T;
+//     return tuple.count<Items>;
+//                  ^^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | tuple.count<T>
+// | ```
+// | 
+// | ----------------------------------------------------------------------
+//                        ^^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | type Items
+// | ```
+// | 
+// | ----------------------------------------------------------------------
+// }
+// type Two = Count<[1, 2]>;
+//            ^^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | typefn Count<T> = 2
+// | ```
+// | 
+// | ----------------------------------------------------------------------
+[
+  {
+    "marker": {
+      "Position": 62,
+      "LSPosition": {
+        "line": 2,
+        "character": 17
+      },
+      "Name": "members",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\ntuple.count<T>\n```\n"
+      },
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 17
+        },
+        "end": {
+          "line": 2,
+          "character": 22
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 68,
+      "LSPosition": {
+        "line": 2,
+        "character": 23
+      },
+      "Name": "local",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\ntype Items\n```\n"
+      },
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 23
+        },
+        "end": {
+          "line": 2,
+          "character": 28
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 89,
+      "LSPosition": {
+        "line": 4,
+        "character": 11
+      },
+      "Name": "call",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\ntypefn Count<T> = 2\n```\n"
+      },
+      "range": {
+        "start": {
+          "line": 4,
+          "character": 11
+        },
+        "end": {
+          "line": 4,
+          "character": 16
+        }
+      }
+    }
+  }
+]
