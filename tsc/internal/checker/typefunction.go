@@ -17,6 +17,7 @@ type typeFunctionApplication struct {
 	completed   *Type
 	use         *ast.Node
 	declaration *ast.Node
+	expression  *ast.Node // An operator nested in a native type captures its lexical bindings.
 	builtin     string
 	arguments   []*Type
 }
@@ -28,10 +29,10 @@ func (t *Type) typeFunctionApplication() *typeFunctionApplication {
 	return nil
 }
 
-func (c *Checker) newTypeFunctionApplication(use, declaration *ast.Node, builtin string, arguments []*Type) *Type {
+func (c *Checker) newTypeFunctionApplication(app typeFunctionApplication) *Type {
 	var symbol *ast.Symbol
-	if declaration != nil {
-		symbol = c.getSymbolOfDeclaration(declaration)
+	if app.declaration != nil {
+		symbol = c.getSymbolOfDeclaration(app.declaration)
 	}
 	t := c.newTypeParameter(symbol)
 	tp := t.AsTypeParameter()
@@ -39,9 +40,10 @@ func (c *Checker) newTypeFunctionApplication(use, declaration *ast.Node, builtin
 	if c.typeFunctionApplications == nil {
 		c.typeFunctionApplications = make(map[*Type]*typeFunctionApplication)
 	}
-	c.typeFunctionApplications[t] = &typeFunctionApplication{use: use, declaration: declaration, builtin: builtin, arguments: arguments}
+	app.completed = nil
+	c.typeFunctionApplications[t] = &app
 	if symbol != nil {
-		t.alias = &TypeAlias{symbol: symbol, typeArguments: arguments}
+		t.alias = &TypeAlias{symbol: symbol, typeArguments: app.arguments}
 	}
 	return t
 }
@@ -84,7 +86,7 @@ func (c *Checker) typeFunctionReference(node, decl *ast.Node) *Type {
 		parameters := core.Map(decl.TypeParameters(), func(p *ast.Node) *Type { return c.getDeclaredTypeOfTypeParameter(c.getSymbolOfDeclaration(p)) })
 		arguments = c.fillMissingTypeArguments(arguments, parameters, c.getMinTypeArgumentCount(parameters), false)
 	}
-	return c.newTypeFunctionApplication(node, decl, "", arguments)
+	return c.newTypeFunctionApplication(typeFunctionApplication{use: node, declaration: decl, arguments: arguments})
 }
 
 func (c *Checker) getTypeArgumentForParameter(argument, parameter *ast.Node) *Type {
@@ -322,12 +324,17 @@ func (c *Checker) forceTypeFunction(t *Type) (result *Type) {
 		return c.failTypeFunction(app.use, "call depth limit exceeded")
 	}
 	for _, active := range root.stack {
-		if active.declaration == app.declaration && active.builtin == app.builtin && slices.Equal(active.arguments, app.arguments) {
+		if active.declaration == app.declaration && active.expression == app.expression && active.builtin == app.builtin && slices.Equal(active.arguments, app.arguments) {
 			return c.failTypeFunction(app.use, "recursive call with unchanged arguments")
 		}
 	}
 	root.stack = append(root.stack, app)
 	defer func() { root.stack = root.stack[:len(root.stack)-1] }()
+	if app.expression != nil {
+		template := c.typeNodeLinks.Get(app.expression).resolvedType.typeFunctionApplication()
+		frame := typeFunctionFrame{c: c, sources: template.arguments, values: app.arguments}
+		return frame.operand(app.expression)
+	}
 	args := make([]*Type, len(app.arguments))
 	for i, arg := range app.arguments {
 		args[i] = c.forceTypeFunction(arg)
@@ -385,30 +392,14 @@ func (f *typeFunctionFrame) operand(node *ast.Node) *Type {
 			return c.failTypeFunction(node, "expected a boolean literal")
 		}
 		return f.boolean(v == c.regularFalseType)
-	case ast.KindTypeFunctionBinary:
-		b := node.AsTypeFunctionBinary()
-		left := f.operand(b.Left)
-		switch b.OperatorToken.Kind {
-		case ast.KindBarBarToken, ast.KindAmpersandAmpersandToken:
-			if left != c.regularTrueType && left != c.regularFalseType {
-				return c.failTypeFunction(b.Left, "expected a boolean literal")
-			}
-			if (left == c.regularTrueType) == (b.OperatorToken.Kind == ast.KindBarBarToken) {
-				return left
-			}
-			right := f.operand(b.Right)
-			if right != c.regularTrueType && right != c.regularFalseType {
-				return c.failTypeFunction(b.Right, "expected a boolean literal")
-			}
-			return right
-		default:
-			right := f.operand(b.Right)
-			const literals = TypeFlagsStringLiteral | TypeFlagsNumberLiteral | TypeFlagsBigIntLiteral | TypeFlagsBooleanLiteral | TypeFlagsNull | TypeFlagsUndefined
-			if left.flags&literals == 0 || right.flags&literals == 0 {
-				return c.failTypeFunction(node, "literal equality requires two primitive literals")
-			}
-			return f.boolean(c.isTypeIdenticalTo(left, right) == (b.OperatorToken.Kind == ast.KindEqualsEqualsEqualsToken))
+	case ast.KindTypeFunctionNegate:
+		args := []*Type{f.operand(node.AsTypeFunctionNegate().Operand)}
+		if !c.chargeTypeFunctionOperands(node, args) {
+			return c.anyType
 		}
+		return c.typeFunctionNumericOperator(node, "negate", args)
+	case ast.KindTypeFunctionBinary:
+		return f.binaryOperand(node.AsTypeFunctionBinary())
 	}
 	sources := slices.Clone(f.sources)
 	values := slices.Clone(f.values)
@@ -461,6 +452,8 @@ func (f *typeFunctionFrame) forceNestedOperand(node *ast.Node, sources, values *
 		if core.Some(node.TypeArguments(), typeFunctionHole) && c.typeFunctionConstructorArity(node) > 0 {
 			return false
 		}
+		fallthrough
+	case ast.KindTypeFunctionNot, ast.KindTypeFunctionNegate, ast.KindTypeFunctionBinary:
 		template := c.getTypeFromTypeNode(node)
 		if template.typeFunctionApplication() != nil {
 			t := template
@@ -689,7 +682,9 @@ func (c *Checker) instantiateTypeFunction(t *Type, app *typeFunctionApplication,
 	if core.Same(args, app.arguments) {
 		return t
 	}
-	return c.newTypeFunctionApplication(app.use, app.declaration, app.builtin, args)
+	instantiated := *app
+	instantiated.arguments = args
+	return c.newTypeFunctionApplication(instantiated)
 }
 
 // Inference binders inside a native conditional belong to that conditional.
@@ -742,5 +737,5 @@ func (c *Checker) TypeFunctionResultForDisplay(node *ast.Node) *Type {
 func sameOpenTypeFunction(a, b *Type) bool {
 	x := a.typeFunctionApplication()
 	y := b.typeFunctionApplication()
-	return x != nil && y != nil && x.declaration == y.declaration && x.builtin == y.builtin && slices.Equal(x.arguments, y.arguments)
+	return x != nil && y != nil && x.declaration == y.declaration && x.expression == y.expression && x.builtin == y.builtin && slices.Equal(x.arguments, y.arguments)
 }

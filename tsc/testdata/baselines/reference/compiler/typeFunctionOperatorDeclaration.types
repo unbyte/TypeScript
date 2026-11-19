@@ -1,0 +1,29 @@
+//// [tests/cases/compiler/typeFunctionOperatorDeclaration.ts] ////
+
+=== typeFunctionOperatorDeclaration.ts ===
+typefn Make<N> { return [<T>(arg: T) => T + N]; }
+>Make : Make<N>
+>arg : T
+
+declare const functions: Make<3>;
+>functions : [<T>(arg: T) => (T + 3)]
+
+export const named: Make<3>[0] = functions[0];
+>named : <T>(arg: T) => (T + 3)
+>functions[0] : <T>(arg: T) => (T + 3)
+>functions : [<T>(arg: T) => (T + 3)]
+>0 : 0
+
+export const inferred = functions[0];
+>inferred : <T>(arg: T) => (T + 3)
+>functions[0] : <T>(arg: T) => (T + 3)
+>functions : [<T>(arg: T) => (T + 3)]
+>0 : 0
+
+export const computed = named(4 as const);
+>computed : 7
+>named(4 as const) : 7
+>named : <T>(arg: T) => (T + 3)
+>4 as const : 4
+>4 : 4
+

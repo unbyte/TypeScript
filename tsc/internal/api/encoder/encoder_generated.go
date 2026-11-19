@@ -560,6 +560,9 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindTypeFunctionNot:
 		n := node.AsTypeFunctionNot()
 		return (boolToByte(n.Operand != nil) << 0)
+	case ast.KindTypeFunctionNegate:
+		n := node.AsTypeFunctionNegate()
+		return (boolToByte(n.Operand != nil) << 0)
 	case ast.KindTypeFunctionConstructorSlots:
 		n := node.AsTypeFunctionConstructorSlots()
 		return (boolToByte(n.Holes != nil) << 0)

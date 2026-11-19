@@ -375,6 +375,7 @@ export type ImportPhaseModifierSyntaxKind = SyntaxKind.TypeKeyword | SyntaxKind.
 export type PostfixUnaryOperator = SyntaxKind.PlusPlusToken | SyntaxKind.MinusMinusToken;
 export type PrefixUnaryOperator = SyntaxKind.PlusToken | SyntaxKind.MinusToken | SyntaxKind.TildeToken | SyntaxKind.ExclamationToken | SyntaxKind.PlusPlusToken | SyntaxKind.MinusMinusToken;
 export type AssignmentOperator = SyntaxKind.EqualsToken | CompoundAssignmentOperator;
+export type TypeFunctionBinaryOperator = SyntaxKind.BarBarToken | SyntaxKind.AmpersandAmpersandToken | SyntaxKind.IsKeyword | SyntaxKind.EqualsEqualsEqualsToken | SyntaxKind.ExclamationEqualsEqualsToken | AdditiveOperator | MultiplicativeOperator;
 export type BinaryOperator = AssignmentOperatorOrHigher | SyntaxKind.CommaToken;
 export type ExponentiationOperator = SyntaxKind.AsteriskAsteriskToken;
 export type MultiplicativeOperator = SyntaxKind.AsteriskToken | SyntaxKind.SlashToken | SyntaxKind.PercentToken;
@@ -1385,11 +1386,15 @@ export interface TypeFunctionArm extends NodeBase {
 export interface TypeFunctionBinary extends TypeNodeBase {
     readonly kind: SyntaxKind.TypeFunctionBinary;
     readonly left: TypeNode;
-    readonly operatorToken: BinaryOperatorToken;
+    readonly operatorToken: TypeFunctionBinaryOperatorToken;
     readonly right: TypeNode;
 }
 export interface TypeFunctionNot extends TypeNodeBase {
     readonly kind: SyntaxKind.TypeFunctionNot;
+    readonly operand: TypeNode;
+}
+export interface TypeFunctionNegate extends TypeNodeBase {
+    readonly kind: SyntaxKind.TypeFunctionNegate;
     readonly operand: TypeNode;
 }
 export interface TypeFunctionConstructorSlots extends ExpressionBase {
@@ -1568,6 +1573,7 @@ export type OutKeyword = Token<SyntaxKind.OutKeyword>;
 export type OverrideKeyword = Token<SyntaxKind.OverrideKeyword>;
 export type StaticKeyword = Token<SyntaxKind.StaticKeyword>;
 export type BinaryOperatorToken = Token<BinaryOperator>;
+export type TypeFunctionBinaryOperatorToken = Token<TypeFunctionBinaryOperator>;
 export type AssignmentOperatorToken = Token<AssignmentOperator>;
 export type NullLiteral = KeywordExpression<SyntaxKind.NullKeyword>;
 export type TrueLiteral = KeywordExpression<SyntaxKind.TrueKeyword>;

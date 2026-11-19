@@ -51,21 +51,8 @@ func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Ty
 		return c.failTypeFunction(node, "invalid builtin application "+name)
 	}
 	first := args[0]
-	// Charge work before parsing digits or allocating a larger numeric result.
-	for _, arg := range args {
-		size := 0
-		if v, ok := typeFunctionString(arg); ok {
-			size = len(v)
-		} else if arg.flags&TypeFlagsBigIntLiteral != 0 {
-			size = len(arg.AsLiteralType().value.(jsnum.PseudoBigInt).String())
-		} else if arg.IsTupleType() {
-			size = len(c.getTypeArguments(arg))
-		} else if arg.flags&TypeFlagsUnionOrIntersection != 0 {
-			size = len(arg.Types())
-		}
-		if !c.typeFunctionCharge(node, size) {
-			return c.anyType
-		}
+	if !c.chargeTypeFunctionOperands(node, args) {
+		return c.anyType
 	}
 	switch name {
 	case "type.kind":
@@ -118,6 +105,26 @@ func (c *Checker) runTypeFunctionBuiltin(node *ast.Node, name string, args []*Ty
 		}
 	}
 	return c.failTypeFunction(node, "invalid operands for "+name)
+}
+
+func (c *Checker) chargeTypeFunctionOperands(node *ast.Node, args []*Type) bool {
+	// Charge work before parsing digits or allocating a larger numeric result.
+	for _, arg := range args {
+		size := 0
+		if v, ok := typeFunctionString(arg); ok {
+			size = len(v)
+		} else if arg.flags&TypeFlagsBigIntLiteral != 0 {
+			size = len(arg.AsLiteralType().value.(jsnum.PseudoBigInt).String())
+		} else if arg.IsTupleType() {
+			size = len(c.getTypeArguments(arg))
+		} else if arg.flags&TypeFlagsUnionOrIntersection != 0 {
+			size = len(arg.Types())
+		}
+		if !c.typeFunctionCharge(node, size) {
+			return false
+		}
+	}
+	return true
 }
 
 func (c *Checker) typeFunctionArithmetic(group, op string, args []*Type) *Type {

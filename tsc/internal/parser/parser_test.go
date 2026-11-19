@@ -663,3 +663,19 @@ func TestCommonJSModuleIndicator(t *testing.T) {
 		})
 	}
 }
+
+func TestTypeFunctionOperatorGrammar(t *testing.T) {
+	t.Parallel()
+	for _, expression := range []string{"A == B", "A < B", "A > B", "A ** B", "A = B", "+A", "A++"} {
+		file := parsetestutil.ParseTypeScript("typefn F<A, B> { return "+expression+"; }", false)
+		if len(file.Diagnostics()) == 0 {
+			t.Errorf("expected a syntax error for %q in a typefn", expression)
+		}
+	}
+	for _, expression := range []string{"A is B", "A === B", "A + B", "A && B", "-A"} {
+		file := parsetestutil.ParseTypeScript("type F<A, B> = "+expression+";", false)
+		if len(file.Diagnostics()) == 0 {
+			t.Errorf("expected a syntax error for %q in a type alias", expression)
+		}
+	}
+}

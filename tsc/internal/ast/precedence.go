@@ -402,8 +402,33 @@ func GetLeftmostExpression(node *Expression, stopAtCallExpressions bool) *Expres
 
 type TypePrecedence int32
 
+// Returns -1 for tokens outside the typefn binary operator grammar.
+func GetTypeFunctionOperatorPrecedence(kind Kind) TypePrecedence {
+	switch kind {
+	case KindBarBarToken:
+		return TypePrecedenceTypeFunctionOr
+	case KindAmpersandAmpersandToken:
+		return TypePrecedenceTypeFunctionAnd
+	case KindIsKeyword, KindEqualsEqualsEqualsToken, KindExclamationEqualsEqualsToken:
+		return TypePrecedenceTypeFunctionComparison
+	case KindPlusToken, KindMinusToken:
+		return TypePrecedenceTypeFunctionAdditive
+	case KindAsteriskToken, KindSlashToken, KindPercentToken:
+		return TypePrecedenceTypeFunctionMultiplicative
+	}
+	return -1
+}
+
 const (
-	// Conditional precedence (lowest)
+	// A typefn operator accepts an entire native TypeScript type as an operand.
+	TypePrecedenceTypeFunctionOr TypePrecedence = iota
+	TypePrecedenceTypeFunctionAnd
+	TypePrecedenceTypeFunctionComparison
+	TypePrecedenceTypeFunctionAdditive
+	TypePrecedenceTypeFunctionMultiplicative
+	TypePrecedenceTypeFunctionPrefix
+
+	// Conditional precedence
 	//
 	//   Type[Extends]:
 	//       ConditionalTypeNode[?Extends]
@@ -411,7 +436,7 @@ const (
 	//   ConditionalTypeNode[Extends]:
 	//       [~Extends] UnionTypeNode `extends` Type[+Extends] `?` Type[~Extends] `:` Type[~Extends]
 	//
-	TypePrecedenceConditional TypePrecedence = iota
+	TypePrecedenceConditional
 
 	// JSDoc precedence (optional and variadic types)
 	//
@@ -647,7 +672,7 @@ const (
 	//
 	TypePrecedenceNonArray
 
-	TypePrecedenceLowest  = TypePrecedenceConditional
+	TypePrecedenceLowest  = TypePrecedenceTypeFunctionOr
 	TypePrecedenceHighest = TypePrecedenceNonArray
 )
 
@@ -680,7 +705,11 @@ func GetTypeNodePrecedence(n *TypeNode) TypePrecedence {
 		// precedence so that it is parenthesized when used in a PostfixType
 		// context (e.g., `(typeof C)[]` instead of `typeof C[]`)
 		return TypePrecedenceTypeOperator
-	case KindTypeFunctionBinary, KindTypeFunctionNot, KindTypeFunctionBlock:
+	case KindTypeFunctionBinary:
+		return GetTypeFunctionOperatorPrecedence(n.AsTypeFunctionBinary().OperatorToken.Kind)
+	case KindTypeFunctionNegate, KindTypeFunctionNot:
+		return TypePrecedenceTypeFunctionPrefix
+	case KindTypeFunctionBlock:
 		return TypePrecedenceNonArray
 	case KindAnyKeyword,
 		KindUnknownKeyword,

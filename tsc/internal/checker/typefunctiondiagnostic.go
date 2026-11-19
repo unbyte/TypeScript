@@ -26,7 +26,12 @@ func (c *Checker) failTypeFunctionAtSpan(node *ast.Node, message string, span *T
 	// Literal types are interned. Equal arguments at different positions cannot
 	// identify an occurrence, so keep the decoded offsets on the root in that case.
 	var literal *ast.Node
-	for _, arg := range root.site.TypeArguments() {
+	// A suspended operator in a generic signature can itself be the root.
+	var arguments []*ast.Node
+	if ast.IsTypeReferenceNode(root.site) {
+		arguments = root.site.TypeArguments()
+	}
+	for _, arg := range arguments {
 		if ast.IsLiteralTypeNode(arg) {
 			n := arg.AsLiteralTypeNode().Literal
 			if ast.IsStringLiteral(n) && n.Text() == source {

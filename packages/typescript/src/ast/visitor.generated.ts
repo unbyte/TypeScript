@@ -171,6 +171,7 @@ import type {
     TypeFunctionFor,
     TypeFunctionIf,
     TypeFunctionMatch,
+    TypeFunctionNegate,
     TypeFunctionNot,
     TypeFunctionReturn,
     TypeFunctionWhile,
@@ -357,6 +358,7 @@ import {
     updateTypeFunctionFor,
     updateTypeFunctionIf,
     updateTypeFunctionMatch,
+    updateTypeFunctionNegate,
     updateTypeFunctionNot,
     updateTypeFunctionReturn,
     updateTypeFunctionWhile,
@@ -428,6 +430,7 @@ import {
     isTemplateHead,
     isTemplateLiteral,
     isTemplateMiddleOrTail,
+    isTypeFunctionBinaryOperatorToken,
     isTypeFunctionBlock,
     isTypeLiteralNode,
     isTypeNode,
@@ -1477,13 +1480,17 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
     },
     [SyntaxKind.TypeFunctionBinary]: (node: TypeFunctionBinary, visitor: Visitor): TypeFunctionBinary => {
         const _left = visitNode(node.left, visitor, isTypeNode);
-        const _operatorToken = visitNode(node.operatorToken, visitor, isBinaryOperatorToken);
+        const _operatorToken = visitNode(node.operatorToken, visitor, isTypeFunctionBinaryOperatorToken);
         const _right = visitNode(node.right, visitor, isTypeNode);
         return updateTypeFunctionBinary(node, _left, _operatorToken, _right);
     },
     [SyntaxKind.TypeFunctionNot]: (node: TypeFunctionNot, visitor: Visitor): TypeFunctionNot => {
         const _operand = visitNode(node.operand, visitor, isTypeNode);
         return updateTypeFunctionNot(node, _operand);
+    },
+    [SyntaxKind.TypeFunctionNegate]: (node: TypeFunctionNegate, visitor: Visitor): TypeFunctionNegate => {
+        const _operand = visitNode(node.operand, visitor, isTypeNode);
+        return updateTypeFunctionNegate(node, _operand);
     },
     [SyntaxKind.TypeFunctionConstructorSlots]: (node: TypeFunctionConstructorSlots, visitor: Visitor): TypeFunctionConstructorSlots => {
         const _holes = visitNodes(node.holes, visitor);

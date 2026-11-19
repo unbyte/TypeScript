@@ -1,0 +1,64 @@
+typeFunctionOperatorErrors.ts(7,22): error TS18200: Type function: operator '+' requires numeric literals of the same kind
+typeFunctionOperatorErrors.ts(8,21): error TS18200: Type function: operator '+' requires numeric literals of the same kind
+typeFunctionOperatorErrors.ts(9,22): error TS18200: Type function: operator '-' requires a numeric literal
+typeFunctionOperatorErrors.ts(10,21): error TS18200: Type function: operator '/' has no finite numeric result
+typeFunctionOperatorErrors.ts(11,24): error TS18200: Type function: operator '%' has no finite numeric result
+typeFunctionOperatorErrors.ts(12,25): error TS18200: Type function: operator '*' has no finite numeric result
+typeFunctionOperatorErrors.ts(13,23): error TS18200: Type function: expected a boolean literal
+typeFunctionOperatorErrors.ts(15,42): error TS18200: Type function: parenthesize chained comparisons
+typeFunctionOperatorErrors.ts(21,63): error TS18200: Type function: unexpected token (decoded UTF-16 offsets 0..1)
+
+
+==== typeFunctionOperatorErrors.ts (9 errors) ====
+    typefn Sum<A, B> { return A + B; }
+    typefn Negate<T> { return -T; }
+    typefn Divide<A, B> { return A / B; }
+    typefn Remainder<A, B> { return A % B; }
+    typefn Overflow<N> { return N * N; }
+    typefn And<A, B> { return A && B; }
+    declare const mixed: Sum<1, 2n>;
+                         ~~~~~~~~~~
+!!! error TS18200: Type function: operator '+' requires numeric literals of the same kind
+!!! related TS18200 typeFunctionOperatorErrors.ts:1:29: Type function: operator '+' requires numeric literals of the same kind
+    declare const text: Sum<"1", "2">;
+                        ~~~~~~~~~~~~~
+!!! error TS18200: Type function: operator '+' requires numeric literals of the same kind
+!!! related TS18200 typeFunctionOperatorErrors.ts:1:29: Type function: operator '+' requires numeric literals of the same kind
+    declare const broad: Negate<number>;
+                         ~~~~~~~~~~~~~~
+!!! error TS18200: Type function: operator '-' requires a numeric literal
+!!! related TS18200 typeFunctionOperatorErrors.ts:2:27: Type function: operator '-' requires a numeric literal
+    declare const zero: Divide<3, 0>;
+                        ~~~~~~~~~~~~
+!!! error TS18200: Type function: operator '/' has no finite numeric result
+!!! related TS18200 typeFunctionOperatorErrors.ts:3:32: Type function: operator '/' has no finite numeric result
+    declare const bigZero: Remainder<3n, 0n>;
+                           ~~~~~~~~~~~~~~~~~
+!!! error TS18200: Type function: operator '%' has no finite numeric result
+!!! related TS18200 typeFunctionOperatorErrors.ts:4:35: Type function: operator '%' has no finite numeric result
+    declare const infinite: Overflow<1e300>;
+                            ~~~~~~~~~~~~~~~
+!!! error TS18200: Type function: operator '*' has no finite numeric result
+!!! related TS18200 typeFunctionOperatorErrors.ts:5:31: Type function: operator '*' has no finite numeric result
+    declare const truthy: And<true, 1>;
+                          ~~~~~~~~~~~~
+!!! error TS18200: Type function: expected a boolean literal
+!!! related TS18200 typeFunctionOperatorErrors.ts:6:32: Type function: expected a boolean literal
+    mixed.recovered; text.recovered; broad.recovered; zero.recovered; bigZero.recovered; infinite.recovered; truthy.recovered;
+    typefn Ungrouped<T> { return T is string === true; }
+                                             ~~~
+!!! error TS18200: Type function: parenthesize chained comparisons
+    typefn Grouped<T> { return (T is string) === true; }
+    declare const ok: Grouped<"x">;
+    const yes: true = ok;
+    
+    typefn Unexpected<S> { fail<"unexpected token", { source: S; start: 0; end: 1 }>; }
+    typefn CheckInput<> { return <S extends string>(input: S) => [false || Unexpected<S>]; }
+                                                                  ~~~~~~~~~~~~~~~~~~~~~~
+!!! error TS18200: Type function: unexpected token (decoded UTF-16 offsets 0..1)
+!!! related TS18200 typeFunctionOperatorErrors.ts:20:24: Type function: unexpected token (decoded UTF-16 offsets 0..1)
+!!! related TS18200 typeFunctionOperatorErrors.ts:21:72: Type function: called here
+    declare const check: CheckInput<>;
+    const delayed = check("x");
+    delayed[0].recovered;
+    

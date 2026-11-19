@@ -47,9 +47,7 @@ typefn Atom<S> {
 >Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 10, 1))
 >Tail : Symbol(Tail, Decl(typeFunctionCalculator.ts, 15, 22))
 
-            return [number.negate<Value>, After];
->number : Symbol(number)
->negate : Symbol(number.negate)
+            return [-Value, After];
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 16, 18))
 >After : Symbol(After, Decl(typeFunctionCalculator.ts, 16, 24))
         }
@@ -134,9 +132,7 @@ typefn Product<S> {
 >Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 10, 1))
 >Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 46, 26))
 
-                Value = number.multiply<Value, Term>;
->number : Symbol(number)
->multiply : Symbol(number.multiply)
+                Value = Value * Term;
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 43, 10))
 >Term : Symbol(Term, Decl(typeFunctionCalculator.ts, 47, 22))
 
@@ -175,16 +171,12 @@ typefn Sum<S> {
 >Product : Symbol(Product, Decl(typeFunctionCalculator.ts, 40, 1))
 >Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 60, 54))
 
-                if (Op === "+") { Value = number.add<Value, Term>; }
+                if (Op === "+") { Value = Value + Term; }
 >Op : Symbol(Op, Decl(typeFunctionCalculator.ts, 60, 25))
->number : Symbol(number)
->add : Symbol(number.add)
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 57, 10))
 >Term : Symbol(Term, Decl(typeFunctionCalculator.ts, 61, 22))
 
-                else { Value = number.subtract<Value, Term>; }
->number : Symbol(number)
->subtract : Symbol(number.subtract)
+                else { Value = Value - Term; }
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 57, 10))
 >Term : Symbol(Term, Decl(typeFunctionCalculator.ts, 61, 22))
 

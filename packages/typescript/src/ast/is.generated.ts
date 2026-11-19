@@ -312,6 +312,8 @@ import type {
     TypeFunctionArm,
     TypeFunctionAssignment,
     TypeFunctionBinary,
+    TypeFunctionBinaryOperator,
+    TypeFunctionBinaryOperatorToken,
     TypeFunctionBinding,
     TypeFunctionBlock,
     TypeFunctionCallStatement,
@@ -320,6 +322,7 @@ import type {
     TypeFunctionFor,
     TypeFunctionIf,
     TypeFunctionMatch,
+    TypeFunctionNegate,
     TypeFunctionNot,
     TypeFunctionReturn,
     TypeFunctionWhile,
@@ -2140,6 +2143,15 @@ export declare namespace isTypeFunctionNot {
 }
 isTypeFunctionNot.Handle = isTypeFunctionNot as any;
 
+export function isTypeFunctionNegate(node: Node): node is TypeFunctionNegate {
+    return node.kind === SyntaxKind.TypeFunctionNegate;
+}
+
+export declare namespace isTypeFunctionNegate {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionNegate>;
+}
+isTypeFunctionNegate.Handle = isTypeFunctionNegate as any;
+
 export function isTypeFunctionConstructorSlots(node: Node): node is TypeFunctionConstructorSlots {
     return node.kind === SyntaxKind.TypeFunctionConstructorSlots;
 }
@@ -2947,6 +2959,16 @@ export function isAssignmentOperator(kind: SyntaxKind): kind is AssignmentOperat
         || isCompoundAssignmentOperator(kind);
 }
 
+export function isTypeFunctionBinaryOperator(kind: SyntaxKind): kind is TypeFunctionBinaryOperator {
+    return kind === SyntaxKind.BarBarToken
+        || kind === SyntaxKind.AmpersandAmpersandToken
+        || kind === SyntaxKind.IsKeyword
+        || kind === SyntaxKind.EqualsEqualsEqualsToken
+        || kind === SyntaxKind.ExclamationEqualsEqualsToken
+        || isAdditiveOperator(kind)
+        || isMultiplicativeOperator(kind);
+}
+
 export function isBinaryOperator(kind: SyntaxKind): kind is BinaryOperator {
     return isAssignmentOperatorOrHigher(kind)
         || kind === SyntaxKind.CommaToken;
@@ -3404,6 +3426,16 @@ export declare namespace isBinaryOperatorToken {
 }
 
 isBinaryOperatorToken.Handle = isBinaryOperatorToken as any;
+
+export function isTypeFunctionBinaryOperatorToken(node: Node): node is TypeFunctionBinaryOperatorToken {
+    return isTypeFunctionBinaryOperator(node.kind);
+}
+
+export declare namespace isTypeFunctionBinaryOperatorToken {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionBinaryOperatorToken>;
+}
+
+isTypeFunctionBinaryOperatorToken.Handle = isTypeFunctionBinaryOperatorToken as any;
 
 export function isAssignmentOperatorToken(node: Node): node is AssignmentOperatorToken {
     return isAssignmentOperator(node.kind);

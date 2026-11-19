@@ -1,0 +1,32 @@
+//// [tests/cases/compiler/typeFunctionOperatorDeclaration.ts] ////
+
+=== typeFunctionOperatorDeclaration.ts ===
+typefn Make<N> { return [<T>(arg: T) => T + N]; }
+>Make : Symbol(Make, Decl(typeFunctionOperatorDeclaration.ts, 0, 0))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 0, 12))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 0, 26))
+>arg : Symbol(arg, Decl(typeFunctionOperatorDeclaration.ts, 0, 29))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 0, 26))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 0, 26))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 0, 12))
+
+declare const functions: Make<3>;
+>functions : Symbol(functions, Decl(typeFunctionOperatorDeclaration.ts, 1, 13))
+>Make : Symbol(Make, Decl(typeFunctionOperatorDeclaration.ts, 0, 0))
+
+export const named: Make<3>[0] = functions[0];
+>named : Symbol(named, Decl(typeFunctionOperatorDeclaration.ts, 2, 12))
+>Make : Symbol(Make, Decl(typeFunctionOperatorDeclaration.ts, 0, 0))
+>functions : Symbol(functions, Decl(typeFunctionOperatorDeclaration.ts, 1, 13))
+>0 : Symbol(0)
+
+export const inferred = functions[0];
+>inferred : Symbol(inferred, Decl(typeFunctionOperatorDeclaration.ts, 3, 12))
+>functions : Symbol(functions, Decl(typeFunctionOperatorDeclaration.ts, 1, 13))
+>0 : Symbol(0)
+
+export const computed = named(4 as const);
+>computed : Symbol(computed, Decl(typeFunctionOperatorDeclaration.ts, 4, 12))
+>named : Symbol(named, Decl(typeFunctionOperatorDeclaration.ts, 2, 12))
+>const : Symbol(const)
+

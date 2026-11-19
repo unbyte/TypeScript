@@ -773,7 +773,7 @@ func IsCatchClauseVariableDeclarationOrBindingElement(declaration *Node) bool {
 
 func IsTypeNodeKind(kind Kind) bool {
 	switch kind {
-	case KindTypeFunctionBlock, KindTypeFunctionNot, KindTypeFunctionBinary:
+	case KindTypeFunctionBlock, KindTypeFunctionNegate, KindTypeFunctionNot, KindTypeFunctionBinary:
 		return true
 	case KindAnyKeyword,
 		KindUnknownKeyword,

@@ -699,6 +699,7 @@ func main() {
 			"TypeFunctionBinary":                           toInt32(ast.KindTypeFunctionBinary),
 			"TypeFunctionNot":                              toInt32(ast.KindTypeFunctionNot),
 			"TypeFunctionConstructorSlots":                 toInt32(ast.KindTypeFunctionConstructorSlots),
+			"TypeFunctionNegate":                           toInt32(ast.KindTypeFunctionNegate),
 			"Count":                                        toInt32(ast.KindCount),
 			"FirstAssignment":                              toInt32(ast.KindFirstAssignment),
 			"LastAssignment":                               toInt32(ast.KindLastAssignment),

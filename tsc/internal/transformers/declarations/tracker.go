@@ -41,19 +41,10 @@ func (s *SymbolTrackerImpl) ReportCyclicStructureError() {
 	}
 }
 
-// ReportInaccessibleThisError implements checker.SymbolTracker.
-func (s *SymbolTrackerImpl) ReportInaccessibleThisError() {
+func (s *SymbolTrackerImpl) ReportInaccessibleTypeError(typeName string) {
 	location := s.errorLocation()
 	if location != nil {
-		s.state.addDiagnostic(createDiagnosticForNode(location, diagnostics.The_inferred_type_of_0_references_an_inaccessible_1_type_A_type_annotation_is_necessary, s.errorDeclarationNameWithFallback(), "this"))
-	}
-}
-
-// ReportInaccessibleUniqueSymbolError implements checker.SymbolTracker.
-func (s *SymbolTrackerImpl) ReportInaccessibleUniqueSymbolError() {
-	location := s.errorLocation()
-	if location != nil {
-		s.state.addDiagnostic(createDiagnosticForNode(location, diagnostics.The_inferred_type_of_0_references_an_inaccessible_1_type_A_type_annotation_is_necessary, s.errorDeclarationNameWithFallback(), "unique symbol"))
+		s.state.addDiagnostic(createDiagnosticForNode(location, diagnostics.The_inferred_type_of_0_references_an_inaccessible_1_type_A_type_annotation_is_necessary, s.errorDeclarationNameWithFallback(), typeName))
 	}
 }
 

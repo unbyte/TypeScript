@@ -1,0 +1,126 @@
+//// [tests/cases/compiler/typeFunctionOperatorErrors.ts] ////
+
+=== typeFunctionOperatorErrors.ts ===
+typefn Sum<A, B> { return A + B; }
+>Sum : Symbol(Sum, Decl(typeFunctionOperatorErrors.ts, 0, 0))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 0, 11))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 0, 13))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 0, 11))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 0, 13))
+
+typefn Negate<T> { return -T; }
+>Negate : Symbol(Negate, Decl(typeFunctionOperatorErrors.ts, 0, 34))
+>T : Symbol(T, Decl(typeFunctionOperatorErrors.ts, 1, 14))
+>T : Symbol(T, Decl(typeFunctionOperatorErrors.ts, 1, 14))
+
+typefn Divide<A, B> { return A / B; }
+>Divide : Symbol(Divide, Decl(typeFunctionOperatorErrors.ts, 1, 31))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 2, 14))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 2, 16))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 2, 14))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 2, 16))
+
+typefn Remainder<A, B> { return A % B; }
+>Remainder : Symbol(Remainder, Decl(typeFunctionOperatorErrors.ts, 2, 37))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 3, 17))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 3, 19))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 3, 17))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 3, 19))
+
+typefn Overflow<N> { return N * N; }
+>Overflow : Symbol(Overflow, Decl(typeFunctionOperatorErrors.ts, 3, 40))
+>N : Symbol(N, Decl(typeFunctionOperatorErrors.ts, 4, 16))
+>N : Symbol(N, Decl(typeFunctionOperatorErrors.ts, 4, 16))
+>N : Symbol(N, Decl(typeFunctionOperatorErrors.ts, 4, 16))
+
+typefn And<A, B> { return A && B; }
+>And : Symbol(And, Decl(typeFunctionOperatorErrors.ts, 4, 36))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 5, 11))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 5, 13))
+>A : Symbol(A, Decl(typeFunctionOperatorErrors.ts, 5, 11))
+>B : Symbol(B, Decl(typeFunctionOperatorErrors.ts, 5, 13))
+
+declare const mixed: Sum<1, 2n>;
+>mixed : Symbol(mixed, Decl(typeFunctionOperatorErrors.ts, 6, 13))
+>Sum : Symbol(Sum, Decl(typeFunctionOperatorErrors.ts, 0, 0))
+
+declare const text: Sum<"1", "2">;
+>text : Symbol(text, Decl(typeFunctionOperatorErrors.ts, 7, 13))
+>Sum : Symbol(Sum, Decl(typeFunctionOperatorErrors.ts, 0, 0))
+
+declare const broad: Negate<number>;
+>broad : Symbol(broad, Decl(typeFunctionOperatorErrors.ts, 8, 13))
+>Negate : Symbol(Negate, Decl(typeFunctionOperatorErrors.ts, 0, 34))
+
+declare const zero: Divide<3, 0>;
+>zero : Symbol(zero, Decl(typeFunctionOperatorErrors.ts, 9, 13))
+>Divide : Symbol(Divide, Decl(typeFunctionOperatorErrors.ts, 1, 31))
+
+declare const bigZero: Remainder<3n, 0n>;
+>bigZero : Symbol(bigZero, Decl(typeFunctionOperatorErrors.ts, 10, 13))
+>Remainder : Symbol(Remainder, Decl(typeFunctionOperatorErrors.ts, 2, 37))
+
+declare const infinite: Overflow<1e300>;
+>infinite : Symbol(infinite, Decl(typeFunctionOperatorErrors.ts, 11, 13))
+>Overflow : Symbol(Overflow, Decl(typeFunctionOperatorErrors.ts, 3, 40))
+
+declare const truthy: And<true, 1>;
+>truthy : Symbol(truthy, Decl(typeFunctionOperatorErrors.ts, 12, 13))
+>And : Symbol(And, Decl(typeFunctionOperatorErrors.ts, 4, 36))
+
+mixed.recovered; text.recovered; broad.recovered; zero.recovered; bigZero.recovered; infinite.recovered; truthy.recovered;
+>mixed : Symbol(mixed, Decl(typeFunctionOperatorErrors.ts, 6, 13))
+>text : Symbol(text, Decl(typeFunctionOperatorErrors.ts, 7, 13))
+>broad : Symbol(broad, Decl(typeFunctionOperatorErrors.ts, 8, 13))
+>zero : Symbol(zero, Decl(typeFunctionOperatorErrors.ts, 9, 13))
+>bigZero : Symbol(bigZero, Decl(typeFunctionOperatorErrors.ts, 10, 13))
+>infinite : Symbol(infinite, Decl(typeFunctionOperatorErrors.ts, 11, 13))
+>truthy : Symbol(truthy, Decl(typeFunctionOperatorErrors.ts, 12, 13))
+
+typefn Ungrouped<T> { return T is string === true; }
+>Ungrouped : Symbol(Ungrouped, Decl(typeFunctionOperatorErrors.ts, 13, 122))
+>T : Symbol(T, Decl(typeFunctionOperatorErrors.ts, 14, 17))
+>T : Symbol(T, Decl(typeFunctionOperatorErrors.ts, 14, 17))
+
+typefn Grouped<T> { return (T is string) === true; }
+>Grouped : Symbol(Grouped, Decl(typeFunctionOperatorErrors.ts, 14, 52))
+>T : Symbol(T, Decl(typeFunctionOperatorErrors.ts, 15, 15))
+>T : Symbol(T, Decl(typeFunctionOperatorErrors.ts, 15, 15))
+
+declare const ok: Grouped<"x">;
+>ok : Symbol(ok, Decl(typeFunctionOperatorErrors.ts, 16, 13))
+>Grouped : Symbol(Grouped, Decl(typeFunctionOperatorErrors.ts, 14, 52))
+
+const yes: true = ok;
+>yes : Symbol(yes, Decl(typeFunctionOperatorErrors.ts, 17, 5))
+>ok : Symbol(ok, Decl(typeFunctionOperatorErrors.ts, 16, 13))
+
+typefn Unexpected<S> { fail<"unexpected token", { source: S; start: 0; end: 1 }>; }
+>Unexpected : Symbol(Unexpected, Decl(typeFunctionOperatorErrors.ts, 17, 21))
+>S : Symbol(S, Decl(typeFunctionOperatorErrors.ts, 19, 18))
+>fail : Symbol(fail)
+>source : Symbol(source, Decl(typeFunctionOperatorErrors.ts, 19, 49))
+>S : Symbol(S, Decl(typeFunctionOperatorErrors.ts, 19, 18))
+>start : Symbol(start, Decl(typeFunctionOperatorErrors.ts, 19, 60))
+>end : Symbol(end, Decl(typeFunctionOperatorErrors.ts, 19, 70))
+
+typefn CheckInput<> { return <S extends string>(input: S) => [false || Unexpected<S>]; }
+>CheckInput : Symbol(CheckInput, Decl(typeFunctionOperatorErrors.ts, 19, 83))
+>S : Symbol(S, Decl(typeFunctionOperatorErrors.ts, 20, 30))
+>input : Symbol(input, Decl(typeFunctionOperatorErrors.ts, 20, 48))
+>S : Symbol(S, Decl(typeFunctionOperatorErrors.ts, 20, 30))
+>Unexpected : Symbol(Unexpected, Decl(typeFunctionOperatorErrors.ts, 17, 21))
+>S : Symbol(S, Decl(typeFunctionOperatorErrors.ts, 20, 30))
+
+declare const check: CheckInput<>;
+>check : Symbol(check, Decl(typeFunctionOperatorErrors.ts, 21, 13))
+>CheckInput : Symbol(CheckInput, Decl(typeFunctionOperatorErrors.ts, 19, 83))
+
+const delayed = check("x");
+>delayed : Symbol(delayed, Decl(typeFunctionOperatorErrors.ts, 22, 5))
+>check : Symbol(check, Decl(typeFunctionOperatorErrors.ts, 21, 13))
+
+delayed[0].recovered;
+>delayed : Symbol(delayed, Decl(typeFunctionOperatorErrors.ts, 22, 5))
+>0 : Symbol(0)
+

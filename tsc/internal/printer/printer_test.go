@@ -2622,3 +2622,31 @@ func TestOmitTrailingSemicolon(t *testing.T) {
 		t.Fatalf("omit EmitSourceFile(for) = %q, want %q", got, "for (;;) { }")
 	}
 }
+
+func TestTypeFunctionOperatorGrouping(t *testing.T) {
+	t.Parallel()
+	f := ast.NewNodeFactory(ast.NodeFactoryHooks{})
+	name := func(s string) *ast.Node { return f.NewTypeReferenceNode(f.NewIdentifier(s), nil) }
+	binary := func(left *ast.Node, op ast.Kind, right *ast.Node) *ast.Node {
+		return f.NewTypeFunctionBinary(left, f.NewToken(op), right)
+	}
+	sum := binary(name("A"), ast.KindPlusToken, name("B"))
+	equal := binary(name("A"), ast.KindIsKeyword, name("B"))
+	for _, tc := range []struct {
+		node *ast.Node
+		want string
+	}{
+		{binary(sum, ast.KindAsteriskToken, name("C")), "(A + B) * C"},
+		{binary(name("C"), ast.KindMinusToken, sum), "C - (A + B)"},
+		{binary(equal, ast.KindEqualsEqualsEqualsToken, name("C")), "(A is B) === C"},
+		{f.NewTypeFunctionNot(equal), "!(A is B)"},
+		{f.NewTypeFunctionNegate(f.NewTypeFunctionNegate(name("A"))), "- -A"},
+		{f.NewArrayTypeNode(sum), "(A + B)[]"},
+	} {
+		p := printer.NewPrinter(printer.PrinterOptions{}, printer.PrintHandlers{}, nil)
+		file := parsetestutil.ParseTypeScript("", false)
+		if got := p.Emit(tc.node, file); got != tc.want {
+			t.Errorf("Emit() = %q, want %q", got, tc.want)
+		}
+	}
+}

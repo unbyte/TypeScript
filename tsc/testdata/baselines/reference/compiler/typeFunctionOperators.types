@@ -1,0 +1,225 @@
+//// [tests/cases/compiler/typeFunctionOperators.ts] ////
+
+=== typeFunctionOperators.ts ===
+type Identity<T> = T;
+>Identity : T
+
+typefn Id<T> { return T; }
+>Id : Id<T>
+
+typefn Failed<> { fail<"unexpected evaluation">; }
+>Failed : any
+
+export typefn Relations<T, U> {
+>Relations : Relations<T, U>
+
+    return [T is U, T === U, T !== U, T is string | number && !(T === never)];
+}
+export typefn Arithmetic<A, B> {
+>Arithmetic : Arithmetic<A, B>
+
+    return [A + B * 3, (A + B) * 3, A - B - 1, -A, -(-A), A / B, A % B];
+}
+export typefn Nested<N> {
+>Nested : Nested<N>
+
+    type X = N;
+    type Saved = { value: Id<X + 1>; enabled: Identity<true || Failed<>> };
+>value : Id<X + 1>
+>enabled : true
+>true : true
+
+    X = X * 2;
+>X : error
+
+    return [Saved, Id<-X>, false && Failed<>, -1 | 1, true | false, true || false];
+>false : false
+>-1 : -1
+>1 : 1
+>true : true
+>false : false
+>true : true
+>false : false
+}
+export typefn Predicate<T> { return (x: unknown) => x is T; }
+>Predicate : Predicate<T>
+>x : unknown
+
+declare const a: Relations<"x" | 1, string>;
+>a : [false, false, true, true]
+
+const mixed: [false, false, true, true] = a;
+>mixed : [false, false, true, true]
+>false : false
+>false : false
+>true : true
+>true : true
+>a : [false, false, true, true]
+
+declare const b: Relations<{ id: 1; name: "x" }, { id: number }>;
+>b : [true, false, true, false]
+>id : 1
+>name : "x"
+>id : number
+
+const structural: [true, false, true, false] = b;
+>structural : [true, false, true, false]
+>true : true
+>false : false
+>true : true
+>false : false
+>b : [true, false, true, false]
+
+declare const c: Relations<never, string>;
+>c : [true, false, true, false]
+
+const bottom: [true, false, true, false] = c;
+>bottom : [true, false, true, false]
+>true : true
+>false : false
+>true : true
+>false : false
+>c : [true, false, true, false]
+
+declare const d: Relations<any, string>;
+>d : [true, false, true, true]
+
+const top: [true, false, true, true] = d;
+>top : [true, false, true, true]
+>true : true
+>false : false
+>true : true
+>true : true
+>d : [true, false, true, true]
+
+declare const e: Relations<{ a: 1 } & { b: 2 }, { a: 1 } & { b: 2 }>;
+>e : [true, true, false, false]
+>a : 1
+>b : 2
+>a : 1
+>b : 2
+
+const identity: [true, true, false, false] = e;
+>identity : [true, true, false, false]
+>true : true
+>true : true
+>false : false
+>false : false
+>e : [true, true, false, false]
+
+declare const numbers: Arithmetic<8, 2>;
+>numbers : [14, 30, 5, -8, 8, 4, 0]
+
+const precedence: [14, 30, 5, -8, 8, 4, 0] = numbers;
+>precedence : [14, 30, 5, -8, 8, 4, 0]
+>-8 : -8
+>8 : 8
+>numbers : [14, 30, 5, -8, 8, 4, 0]
+
+typefn Big<A, B> { return [A + B, A - B, A * B, A / B, A % B, -A]; }
+>Big : Big<A, B>
+
+declare const big: Big<-7n, 3n>;
+>big : [-4n, -10n, -21n, -2n, -1n, 7n]
+>-7n : -7n
+>7n : 7n
+
+const integers: [-4n, -10n, -21n, -2n, -1n, 7n] = big;
+>integers : [-4n, -10n, -21n, -2n, -1n, 7n]
+>-4n : -4n
+>4n : 4n
+>-10n : -10n
+>10n : 10n
+>-21n : -21n
+>21n : 21n
+>-2n : -2n
+>2n : 2n
+>-1n : -1n
+>1n : 1n
+>big : [-4n, -10n, -21n, -2n, -1n, 7n]
+
+declare const nested: Nested<4>;
+>nested : [{ value: 5; enabled: true; }, -8, false, -1 | 1, boolean, true]
+
+const snapshot: [{ value: 5; enabled: true }, -8, false, -1 | 1, boolean, true] = nested;
+>snapshot : [{ value: 5; enabled: true; }, -8, false, -1 | 1, boolean, true]
+>value : 5
+>enabled : true
+>true : true
+>-8 : -8
+>8 : 8
+>false : false
+>-1 : -1
+>1 : 1
+>true : true
+>nested : [{ value: 5; enabled: true; }, -8, false, -1 | 1, boolean, true]
+
+declare const pred: Predicate<number>;
+>pred : (x: unknown) => x is number
+
+const guard: (x: unknown) => x is number = pred;
+>guard : (x: unknown) => x is number
+>x : unknown
+>pred : (x: unknown) => x is number
+
+typefn Choose<T> { return T extends string ? (true || Failed<>) : (1 + 1); }
+>Choose : Choose<T>
+>true : true
+
+declare const chosen: Choose<"x">;
+>chosen : true
+
+const yes: true = chosen;
+>yes : true
+>true : true
+>chosen : true
+
+type Box<T> = { value: T };
+>Box : Box<T>
+>value : T
+
+typefn Constructor<F<_>, T> { return [F<T> is Box<string>]; }
+>Constructor : Constructor<F, T>
+>_ : error
+
+declare const constructed: Constructor<Box<_>, "x">;
+>constructed : [true]
+
+const fits: [true] = constructed;
+>fits : [true]
+>true : true
+>constructed : [true]
+
+typefn Deferred<N> { return <T>(arg: T) => [T is string, N + 1]; }
+>Deferred : Deferred<N>
+>arg : T
+
+declare const deferred: Deferred<3>;
+>deferred : <T>(arg: T) => [T is string, 4]
+
+const later: [true, 4] = deferred("hello");
+>later : [true, 4]
+>true : true
+>deferred("hello") : [true, 4]
+>deferred : <T>(arg: T) => [T is string, 4]
+>"hello" : "hello"
+
+const again: [false, 4] = deferred(0);
+>again : [false, 4]
+>false : false
+>deferred(0) : [false, 4]
+>deferred : <T>(arg: T) => [T is string, 4]
+>0 : 0
+
+typefn Short<S> { return Id<true || Failed<>["x"]>; }
+>Short : Short<S>
+>true : true
+
+declare const short: Short<0>;
+>short : true
+
+const skipped: true = short;
+>skipped : true
+>true : true
+>short : true
+

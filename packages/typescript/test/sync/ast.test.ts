@@ -111,16 +111,22 @@ describe("NodeObject + childrenIter", { concurrency }, () => {
 
 test("type function bodies retain distinct declaration and statement kinds", () => {
     using api = spawnAPI();
-    const file = api.createSourceFile("/repro.ts", "typefn Pick<T> { if (true) { return T; } }").sourceFile;
+    const file = api.createSourceFile("/repro.ts", "typefn Pick<T, F<_>> { if (T is number) { return -T; } return F<T>; }").sourceFile;
     const declaration = file.statements[0];
     assert.ok(astModule.isTypeFunctionDeclaration(declaration));
     assert.strictEqual(astModule.isTypeAliasDeclaration(declaration), false);
     assert.strictEqual(declaration.typeParameters[0].name.text, "T");
     const branch = declaration.body.statements[0];
     assert.ok(astModule.isTypeFunctionIf(branch));
-    assert.ok(astModule.isTypeFunctionReturn(branch.block.statements[0]));
-    const copy = getSynthesizedDeepClone(declaration);
-    assert.deepStrictEqual(collectKinds(copy), collectKinds(declaration));
+    assert.ok(astModule.isTypeFunctionBinary(branch.condition));
+    assert.strictEqual(branch.condition.operatorToken.kind, SyntaxKind.IsKeyword);
+    const result = branch.block.statements[0];
+    assert.ok(astModule.isTypeFunctionReturn(result));
+    assert.ok(astModule.isTypeFunctionNegate(result.operand));
+    assert.ok(astModule.isTypeNode(branch.condition));
+    assert.ok(astModule.isTypeNode(result.operand));
+    const copy = getSynthesizedDeepClone(file);
+    assert.deepStrictEqual(collectKinds(copy), collectKinds(file));
 });
 
 test("index signatures allow an omitted type", () => {

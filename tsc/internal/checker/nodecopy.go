@@ -149,12 +149,8 @@ func (w *wrappingTracker) ReportCyclicStructureError() {
 	w.bound.markError(w.wrapped.ReportCyclicStructureError)
 }
 
-func (w *wrappingTracker) ReportInaccessibleThisError() {
-	w.bound.markError(w.wrapped.ReportInaccessibleThisError)
-}
-
-func (w *wrappingTracker) ReportInaccessibleUniqueSymbolError() {
-	w.bound.markError(w.wrapped.ReportInaccessibleUniqueSymbolError)
+func (w *wrappingTracker) ReportInaccessibleTypeError(typeName string) {
+	w.bound.markError(func() { w.wrapped.ReportInaccessibleTypeError(typeName) })
 }
 
 func (w *wrappingTracker) ReportInferenceFallback(node *ast.Node) {
@@ -336,7 +332,7 @@ func getExistingNodeTreeVisitor(b *NodeBuilderImpl, bound *recoveryBoundary) *as
 			sym = b.ch.getSymbolOfDeclaration(b.ch.getThisContainer(leftmost, false, false))
 			if b.ch.IsSymbolAccessible(sym, leftmost, meaning, false).Accessibility != printer.SymbolAccessibilityAccessible {
 				introducesError = true
-				b.ctx.tracker.ReportInaccessibleThisError()
+				b.ctx.tracker.ReportInaccessibleTypeError("this")
 			}
 			return introducesError, attachSymbolToLeftmostIdentifier(leftmost, node, sym), nil
 		}

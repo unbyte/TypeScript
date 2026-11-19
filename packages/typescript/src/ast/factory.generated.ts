@@ -245,6 +245,7 @@ import type {
     TypeFunctionArm,
     TypeFunctionAssignment,
     TypeFunctionBinary,
+    TypeFunctionBinaryOperatorToken,
     TypeFunctionBinding,
     TypeFunctionBlock,
     TypeFunctionCallStatement,
@@ -253,6 +254,7 @@ import type {
     TypeFunctionFor,
     TypeFunctionIf,
     TypeFunctionMatch,
+    TypeFunctionNegate,
     TypeFunctionNot,
     TypeFunctionReturn,
     TypeFunctionWhile,
@@ -1206,6 +1208,8 @@ function cloneNodeData(node: Node): any {
             return { left: n.left, operatorToken: n.operatorToken, right: n.right };
         case SyntaxKind.TypeFunctionNot:
             return { operand: n.operand };
+        case SyntaxKind.TypeFunctionNegate:
+            return { operand: n.operand };
         case SyntaxKind.TypeFunctionConstructorSlots:
             return { holes: n.holes };
         case SyntaxKind.TypeFunctionDeclaration:
@@ -1780,6 +1784,7 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
         visitNode(cbNode, data.operatorToken) ||
         visitNode(cbNode, data.right),
     [SyntaxKind.TypeFunctionNot]: (data, cbNode, cbNodes) => visitNode(cbNode, data.operand),
+    [SyntaxKind.TypeFunctionNegate]: (data, cbNode, cbNodes) => visitNode(cbNode, data.operand),
     [SyntaxKind.TypeFunctionConstructorSlots]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.holes),
     [SyntaxKind.TypeFunctionDeclaration]: (data, cbNode, cbNodes) =>
         visitNodes(cbNode, cbNodes, data.modifiers) ||
@@ -4055,6 +4060,12 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
             if (res) return res;
         }
     },
+    [SyntaxKind.TypeFunctionNegate]: function* (data) {
+        if (data.operand) {
+            const res = yield data.operand;
+            if (res) return res;
+        }
+    },
     [SyntaxKind.TypeFunctionConstructorSlots]: function* (data) {
         for (const n of data.holes) {
             const res = yield n;
@@ -5630,7 +5641,7 @@ export function createTypeFunctionArm(pattern: TypeNode | undefined, block: Type
     }) as unknown as TypeFunctionArm;
 }
 
-export function createTypeFunctionBinary(left: TypeNode, operatorToken: BinaryOperatorToken, right: TypeNode): TypeFunctionBinary {
+export function createTypeFunctionBinary(left: TypeNode, operatorToken: TypeFunctionBinaryOperatorToken, right: TypeNode): TypeFunctionBinary {
     return new NodeObject(SyntaxKind.TypeFunctionBinary, {
         left,
         operatorToken,
@@ -5642,6 +5653,12 @@ export function createTypeFunctionNot(operand: TypeNode): TypeFunctionNot {
     return new NodeObject(SyntaxKind.TypeFunctionNot, {
         operand,
     }) as unknown as TypeFunctionNot;
+}
+
+export function createTypeFunctionNegate(operand: TypeNode): TypeFunctionNegate {
+    return new NodeObject(SyntaxKind.TypeFunctionNegate, {
+        operand,
+    }) as unknown as TypeFunctionNegate;
 }
 
 export function createTypeFunctionConstructorSlots(holes: readonly Identifier[]): TypeFunctionConstructorSlots {
@@ -6418,12 +6435,16 @@ export function updateTypeFunctionArm(node: TypeFunctionArm, pattern: TypeNode |
     return node.pattern !== pattern || node.block !== block ? createTypeFunctionArm(pattern, block) : node;
 }
 
-export function updateTypeFunctionBinary(node: TypeFunctionBinary, left: TypeNode, operatorToken: BinaryOperatorToken, right: TypeNode): TypeFunctionBinary {
+export function updateTypeFunctionBinary(node: TypeFunctionBinary, left: TypeNode, operatorToken: TypeFunctionBinaryOperatorToken, right: TypeNode): TypeFunctionBinary {
     return node.left !== left || node.operatorToken !== operatorToken || node.right !== right ? createTypeFunctionBinary(left, operatorToken, right) : node;
 }
 
 export function updateTypeFunctionNot(node: TypeFunctionNot, operand: TypeNode): TypeFunctionNot {
     return node.operand !== operand ? createTypeFunctionNot(operand) : node;
+}
+
+export function updateTypeFunctionNegate(node: TypeFunctionNegate, operand: TypeNode): TypeFunctionNegate {
+    return node.operand !== operand ? createTypeFunctionNegate(operand) : node;
 }
 
 export function updateTypeFunctionConstructorSlots(node: TypeFunctionConstructorSlots, holes: readonly Identifier[]): TypeFunctionConstructorSlots {

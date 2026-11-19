@@ -28,9 +28,9 @@ type Two = /*call*/Count<[1, 2]>;`
 func TestTypeFunctionRecheckAfterEdit(t *testing.T) {
 	t.Parallel()
 	defer testutil.RecoverAndFail(t, "update a type function input")
-	const content = `typefn Count<S> { return tuple.count<string.split<S, " ">>; }
+	const content = `typefn Count<S> { return tuple.count<string.split<S, " ">> * 2; }
 declare const count: Count<"a/*input*/ b">;
-const two: 2 = count;`
+const four: 4 = count;`
 	f, done := fourslash.NewFourslash(t, nil, content)
 	defer done()
 	f.VerifyNoErrors(t)

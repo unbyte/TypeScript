@@ -86,6 +86,10 @@ export function isTypeNode(node: Node): node is TypeNode {
 
 function isTypeNodeKind(kind: SyntaxKind): boolean {
     return kind >= SyntaxKind.FirstTypeNode && kind <= SyntaxKind.LastTypeNode
+        || kind === SyntaxKind.TypeFunctionBlock
+        || kind === SyntaxKind.TypeFunctionBinary
+        || kind === SyntaxKind.TypeFunctionNot
+        || kind === SyntaxKind.TypeFunctionNegate
         || kind === SyntaxKind.AnyKeyword
         || kind === SyntaxKind.UnknownKeyword
         || kind === SyntaxKind.NumberKeyword
@@ -126,12 +130,18 @@ export function isStatement(node: Node): node is Statement {
         || kind === SyntaxKind.ExportDeclaration || kind === SyntaxKind.ExportAssignment
         || kind === SyntaxKind.NamespaceExportDeclaration || kind === SyntaxKind.FunctionDeclaration
         || kind === SyntaxKind.ClassDeclaration || kind === SyntaxKind.MissingDeclaration
-        || kind === SyntaxKind.NotEmittedStatement || kind === SyntaxKind.Block;
+        || kind === SyntaxKind.NotEmittedStatement || kind === SyntaxKind.Block
+        || kind === SyntaxKind.TypeFunctionDeclaration || kind === SyntaxKind.TypeFunctionBinding
+        || kind === SyntaxKind.TypeFunctionAssignment || kind === SyntaxKind.TypeFunctionCallStatement
+        || kind === SyntaxKind.TypeFunctionReturn || kind === SyntaxKind.TypeFunctionIf
+        || kind === SyntaxKind.TypeFunctionWhile || kind === SyntaxKind.TypeFunctionFor
+        || kind === SyntaxKind.TypeFunctionMatch;
 }
 
 export function isExpression(node: Node): node is Expression {
     const kind = node.kind;
-    return kind === SyntaxKind.ConditionalExpression || kind === SyntaxKind.YieldExpression
+    return kind === SyntaxKind.TypeFunctionConstructorSlots
+        || kind === SyntaxKind.ConditionalExpression || kind === SyntaxKind.YieldExpression
         || kind === SyntaxKind.ArrowFunction || kind === SyntaxKind.BinaryExpression
         || kind === SyntaxKind.SpreadElement || kind === SyntaxKind.AsExpression
         || kind === SyntaxKind.OmittedExpression

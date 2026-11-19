@@ -147,7 +147,8 @@ func isBinaryOpContext(context *FormattingContext) bool {
 	switch context.contextNode.Kind {
 	case ast.KindBinaryExpression:
 		return context.contextNode.AsBinaryExpression().OperatorToken.Kind != ast.KindCommaToken
-	case ast.KindConditionalExpression,
+	case ast.KindTypeFunctionBinary,
+		ast.KindConditionalExpression,
 		ast.KindConditionalType,
 		ast.KindAsExpression,
 		ast.KindExportSpecifier,

@@ -18,7 +18,7 @@ typefn Atom<S> {
     match Rest {
         case `-${infer Tail}`: {
             type [Value, After] = Atom<Tail>;
-            return [number.negate<Value>, After];
+            return [-Value, After];
         }
         case `(${infer Tail}`: {
             type [Value, After] = Sum<Tail>;
@@ -49,7 +49,7 @@ typefn Product<S> {
         match Skip<Rest> {
             case `*${infer Right}`: {
                 type [Term, Next] = Atom<Right>;
-                Value = number.multiply<Value, Term>;
+                Value = Value * Term;
                 Rest = Next;
             }
             else: { return [Value, Rest]; }
@@ -63,8 +63,8 @@ typefn Sum<S> {
         match Skip<Rest> {
             case `${infer Op extends "+" | "-"}${infer Right}`: {
                 type [Term, Next] = Product<Right>;
-                if (Op === "+") { Value = number.add<Value, Term>; }
-                else { Value = number.subtract<Value, Term>; }
+                if (Op === "+") { Value = Value + Term; }
+                else { Value = Value - Term; }
                 Rest = Next;
             }
             else: { return [Value, Rest]; }

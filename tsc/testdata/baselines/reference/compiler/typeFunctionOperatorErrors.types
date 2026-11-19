@@ -1,0 +1,109 @@
+//// [tests/cases/compiler/typeFunctionOperatorErrors.ts] ////
+
+=== typeFunctionOperatorErrors.ts ===
+typefn Sum<A, B> { return A + B; }
+>Sum : Sum<A, B>
+
+typefn Negate<T> { return -T; }
+>Negate : Negate<T>
+
+typefn Divide<A, B> { return A / B; }
+>Divide : Divide<A, B>
+
+typefn Remainder<A, B> { return A % B; }
+>Remainder : Remainder<A, B>
+
+typefn Overflow<N> { return N * N; }
+>Overflow : Overflow<N>
+
+typefn And<A, B> { return A && B; }
+>And : And<A, B>
+
+declare const mixed: Sum<1, 2n>;
+>mixed : any
+
+declare const text: Sum<"1", "2">;
+>text : any
+
+declare const broad: Negate<number>;
+>broad : any
+
+declare const zero: Divide<3, 0>;
+>zero : any
+
+declare const bigZero: Remainder<3n, 0n>;
+>bigZero : any
+
+declare const infinite: Overflow<1e300>;
+>infinite : any
+
+declare const truthy: And<true, 1>;
+>truthy : any
+>true : true
+
+mixed.recovered; text.recovered; broad.recovered; zero.recovered; bigZero.recovered; infinite.recovered; truthy.recovered;
+>mixed.recovered : any
+>mixed : any
+>recovered : any
+>text.recovered : any
+>text : any
+>recovered : any
+>broad.recovered : any
+>broad : any
+>recovered : any
+>zero.recovered : any
+>zero : any
+>recovered : any
+>bigZero.recovered : any
+>bigZero : any
+>recovered : any
+>infinite.recovered : any
+>infinite : any
+>recovered : any
+>truthy.recovered : any
+>truthy : any
+>recovered : any
+
+typefn Ungrouped<T> { return T is string === true; }
+>Ungrouped : Ungrouped<T>
+>true : true
+
+typefn Grouped<T> { return (T is string) === true; }
+>Grouped : Grouped<T>
+>true : true
+
+declare const ok: Grouped<"x">;
+>ok : true
+
+const yes: true = ok;
+>yes : true
+>true : true
+>ok : true
+
+typefn Unexpected<S> { fail<"unexpected token", { source: S; start: 0; end: 1 }>; }
+>Unexpected : Unexpected<S>
+>source : S
+>start : 0
+>end : 1
+
+typefn CheckInput<> { return <S extends string>(input: S) => [false || Unexpected<S>]; }
+>CheckInput : <S extends string>(input: S) => [false || Unexpected<S>]
+>input : S
+>false : false
+
+declare const check: CheckInput<>;
+>check : <S extends string>(input: S) => [false || Unexpected<S>]
+
+const delayed = check("x");
+>delayed : [any]
+>check("x") : [any]
+>check : <S extends string>(input: S) => [false || Unexpected<S>]
+>"x" : "x"
+
+delayed[0].recovered;
+>delayed[0].recovered : any
+>delayed[0] : any
+>delayed : [any]
+>0 : 0
+>recovered : any
+

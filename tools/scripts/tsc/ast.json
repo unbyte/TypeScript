@@ -460,7 +460,8 @@
             "TypeFunctionArm",
             "TypeFunctionBinary",
             "TypeFunctionNot",
-            "TypeFunctionConstructorSlots"
+            "TypeFunctionConstructorSlots",
+            "TypeFunctionNegate"
         ],
         "markers": [
             {
@@ -711,6 +712,15 @@
             "AssignmentOperator": [
                 "EqualsToken",
                 "CompoundAssignmentOperator"
+            ],
+            "TypeFunctionBinaryOperator": [
+                "BarBarToken",
+                "AmpersandAmpersandToken",
+                "IsKeyword",
+                "EqualsEqualsEqualsToken",
+                "ExclamationEqualsEqualsToken",
+                "AdditiveOperator",
+                "MultiplicativeOperator"
             ],
             "BinaryOperator": [
                 "AssignmentOperatorOrHigher",
@@ -1252,6 +1262,7 @@
                     "OverrideKeyword": "OverrideKeyword",
                     "StaticKeyword": "StaticKeyword",
                     "BinaryOperatorToken": "BinaryOperator",
+                    "TypeFunctionBinaryOperatorToken": "TypeFunctionBinaryOperator",
                     "AssignmentOperatorToken": "AssignmentOperator"
                 }
             },
@@ -5300,7 +5311,7 @@
                     },
                     {
                         "name": "OperatorToken",
-                        "type": "BinaryOperatorToken"
+                        "type": "TypeFunctionBinaryOperatorToken"
                     },
                     {
                         "name": "Right",
@@ -5309,6 +5320,17 @@
                 ]
             },
             "TypeFunctionNot": {
+                "extends": [
+                    "TypeNodeBase"
+                ],
+                "members": [
+                    {
+                        "name": "Operand",
+                        "type": "TypeNode"
+                    }
+                ]
+            },
+            "TypeFunctionNegate": {
                 "extends": [
                     "TypeNodeBase"
                 ],

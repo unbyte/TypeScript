@@ -8,9 +8,8 @@ import (
 // TODO: previously all symboltracker methods were optional, but now they're required.
 type SymbolTracker interface {
 	TrackSymbol(symbol *ast.Symbol, enclosingDeclaration *ast.Node, meaning ast.SymbolFlags) bool
-	ReportInaccessibleThisError()
+	ReportInaccessibleTypeError(typeName string)
 	ReportPrivateInBaseOfClassExpression(propertyName string)
-	ReportInaccessibleUniqueSymbolError()
 	ReportCyclicStructureError()
 	ReportLikelyUnsafeImportRequiredError(specifier string, symbolName string)
 	ReportTruncationError()

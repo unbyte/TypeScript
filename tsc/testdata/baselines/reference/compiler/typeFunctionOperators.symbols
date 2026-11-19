@@ -1,0 +1,256 @@
+//// [tests/cases/compiler/typeFunctionOperators.ts] ////
+
+=== typeFunctionOperators.ts ===
+type Identity<T> = T;
+>Identity : Symbol(Identity, Decl(typeFunctionOperators.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 0, 14))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 0, 14))
+
+typefn Id<T> { return T; }
+>Id : Symbol(Id, Decl(typeFunctionOperators.ts, 0, 21))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 1, 10))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 1, 10))
+
+typefn Failed<> { fail<"unexpected evaluation">; }
+>Failed : Symbol(Failed, Decl(typeFunctionOperators.ts, 1, 26))
+>fail : Symbol(fail)
+
+export typefn Relations<T, U> {
+>Relations : Symbol(Relations, Decl(typeFunctionOperators.ts, 2, 50))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 3, 24))
+>U : Symbol(U, Decl(typeFunctionOperators.ts, 3, 26))
+
+    return [T is U, T === U, T !== U, T is string | number && !(T === never)];
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 3, 24))
+>U : Symbol(U, Decl(typeFunctionOperators.ts, 3, 26))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 3, 24))
+>U : Symbol(U, Decl(typeFunctionOperators.ts, 3, 26))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 3, 24))
+>U : Symbol(U, Decl(typeFunctionOperators.ts, 3, 26))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 3, 24))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 3, 24))
+}
+export typefn Arithmetic<A, B> {
+>Arithmetic : Symbol(Arithmetic, Decl(typeFunctionOperators.ts, 5, 1))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 6, 27))
+
+    return [A + B * 3, (A + B) * 3, A - B - 1, -A, -(-A), A / B, A % B];
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 6, 27))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 6, 27))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 6, 27))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 6, 27))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 6, 25))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 6, 27))
+}
+export typefn Nested<N> {
+>Nested : Symbol(Nested, Decl(typeFunctionOperators.ts, 8, 1))
+>N : Symbol(N, Decl(typeFunctionOperators.ts, 9, 21))
+
+    type X = N;
+>X : Symbol(X, Decl(typeFunctionOperators.ts, 10, 8))
+>N : Symbol(N, Decl(typeFunctionOperators.ts, 9, 21))
+
+    type Saved = { value: Id<X + 1>; enabled: Identity<true || Failed<>> };
+>Saved : Symbol(Saved, Decl(typeFunctionOperators.ts, 11, 8))
+>value : Symbol(value, Decl(typeFunctionOperators.ts, 11, 18))
+>Id : Symbol(Id, Decl(typeFunctionOperators.ts, 0, 21))
+>X : Symbol(X, Decl(typeFunctionOperators.ts, 10, 8))
+>enabled : Symbol(enabled, Decl(typeFunctionOperators.ts, 11, 36))
+>Identity : Symbol(Identity, Decl(typeFunctionOperators.ts, 0, 0))
+>Failed : Symbol(Failed, Decl(typeFunctionOperators.ts, 1, 26))
+
+    X = X * 2;
+>X : Symbol(X, Decl(typeFunctionOperators.ts, 10, 8))
+
+    return [Saved, Id<-X>, false && Failed<>, -1 | 1, true | false, true || false];
+>Saved : Symbol(Saved, Decl(typeFunctionOperators.ts, 11, 8))
+>Id : Symbol(Id, Decl(typeFunctionOperators.ts, 0, 21))
+>X : Symbol(X, Decl(typeFunctionOperators.ts, 10, 8))
+>Failed : Symbol(Failed, Decl(typeFunctionOperators.ts, 1, 26))
+}
+export typefn Predicate<T> { return (x: unknown) => x is T; }
+>Predicate : Symbol(Predicate, Decl(typeFunctionOperators.ts, 14, 1))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 15, 24))
+>x : Symbol(x, Decl(typeFunctionOperators.ts, 15, 37))
+>x : Symbol(x, Decl(typeFunctionOperators.ts, 15, 37))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 15, 24))
+
+declare const a: Relations<"x" | 1, string>;
+>a : Symbol(a, Decl(typeFunctionOperators.ts, 17, 13))
+>Relations : Symbol(Relations, Decl(typeFunctionOperators.ts, 2, 50))
+
+const mixed: [false, false, true, true] = a;
+>mixed : Symbol(mixed, Decl(typeFunctionOperators.ts, 18, 5))
+>a : Symbol(a, Decl(typeFunctionOperators.ts, 17, 13))
+
+declare const b: Relations<{ id: 1; name: "x" }, { id: number }>;
+>b : Symbol(b, Decl(typeFunctionOperators.ts, 19, 13))
+>Relations : Symbol(Relations, Decl(typeFunctionOperators.ts, 2, 50))
+>id : Symbol(id, Decl(typeFunctionOperators.ts, 19, 28))
+>name : Symbol(name, Decl(typeFunctionOperators.ts, 19, 35))
+>id : Symbol(id, Decl(typeFunctionOperators.ts, 19, 50))
+
+const structural: [true, false, true, false] = b;
+>structural : Symbol(structural, Decl(typeFunctionOperators.ts, 20, 5))
+>b : Symbol(b, Decl(typeFunctionOperators.ts, 19, 13))
+
+declare const c: Relations<never, string>;
+>c : Symbol(c, Decl(typeFunctionOperators.ts, 21, 13))
+>Relations : Symbol(Relations, Decl(typeFunctionOperators.ts, 2, 50))
+
+const bottom: [true, false, true, false] = c;
+>bottom : Symbol(bottom, Decl(typeFunctionOperators.ts, 22, 5))
+>c : Symbol(c, Decl(typeFunctionOperators.ts, 21, 13))
+
+declare const d: Relations<any, string>;
+>d : Symbol(d, Decl(typeFunctionOperators.ts, 23, 13))
+>Relations : Symbol(Relations, Decl(typeFunctionOperators.ts, 2, 50))
+
+const top: [true, false, true, true] = d;
+>top : Symbol(top, Decl(typeFunctionOperators.ts, 24, 5))
+>d : Symbol(d, Decl(typeFunctionOperators.ts, 23, 13))
+
+declare const e: Relations<{ a: 1 } & { b: 2 }, { a: 1 } & { b: 2 }>;
+>e : Symbol(e, Decl(typeFunctionOperators.ts, 25, 13))
+>Relations : Symbol(Relations, Decl(typeFunctionOperators.ts, 2, 50))
+>a : Symbol(a, Decl(typeFunctionOperators.ts, 25, 28))
+>b : Symbol(b, Decl(typeFunctionOperators.ts, 25, 39))
+>a : Symbol(a, Decl(typeFunctionOperators.ts, 25, 49))
+>b : Symbol(b, Decl(typeFunctionOperators.ts, 25, 60))
+
+const identity: [true, true, false, false] = e;
+>identity : Symbol(identity, Decl(typeFunctionOperators.ts, 26, 5))
+>e : Symbol(e, Decl(typeFunctionOperators.ts, 25, 13))
+
+declare const numbers: Arithmetic<8, 2>;
+>numbers : Symbol(numbers, Decl(typeFunctionOperators.ts, 27, 13))
+>Arithmetic : Symbol(Arithmetic, Decl(typeFunctionOperators.ts, 5, 1))
+
+const precedence: [14, 30, 5, -8, 8, 4, 0] = numbers;
+>precedence : Symbol(precedence, Decl(typeFunctionOperators.ts, 28, 5))
+>numbers : Symbol(numbers, Decl(typeFunctionOperators.ts, 27, 13))
+
+typefn Big<A, B> { return [A + B, A - B, A * B, A / B, A % B, -A]; }
+>Big : Symbol(Big, Decl(typeFunctionOperators.ts, 28, 53))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 29, 11))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 29, 13))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 29, 11))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 29, 13))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 29, 11))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 29, 13))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 29, 11))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 29, 13))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 29, 11))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 29, 13))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 29, 11))
+>B : Symbol(B, Decl(typeFunctionOperators.ts, 29, 13))
+>A : Symbol(A, Decl(typeFunctionOperators.ts, 29, 11))
+
+declare const big: Big<-7n, 3n>;
+>big : Symbol(big, Decl(typeFunctionOperators.ts, 30, 13))
+>Big : Symbol(Big, Decl(typeFunctionOperators.ts, 28, 53))
+
+const integers: [-4n, -10n, -21n, -2n, -1n, 7n] = big;
+>integers : Symbol(integers, Decl(typeFunctionOperators.ts, 31, 5))
+>big : Symbol(big, Decl(typeFunctionOperators.ts, 30, 13))
+
+declare const nested: Nested<4>;
+>nested : Symbol(nested, Decl(typeFunctionOperators.ts, 32, 13))
+>Nested : Symbol(Nested, Decl(typeFunctionOperators.ts, 8, 1))
+
+const snapshot: [{ value: 5; enabled: true }, -8, false, -1 | 1, boolean, true] = nested;
+>snapshot : Symbol(snapshot, Decl(typeFunctionOperators.ts, 33, 5))
+>value : Symbol(value, Decl(typeFunctionOperators.ts, 33, 18))
+>enabled : Symbol(enabled, Decl(typeFunctionOperators.ts, 33, 28))
+>nested : Symbol(nested, Decl(typeFunctionOperators.ts, 32, 13))
+
+declare const pred: Predicate<number>;
+>pred : Symbol(pred, Decl(typeFunctionOperators.ts, 34, 13))
+>Predicate : Symbol(Predicate, Decl(typeFunctionOperators.ts, 14, 1))
+
+const guard: (x: unknown) => x is number = pred;
+>guard : Symbol(guard, Decl(typeFunctionOperators.ts, 35, 5))
+>x : Symbol(x, Decl(typeFunctionOperators.ts, 35, 14))
+>x : Symbol(x, Decl(typeFunctionOperators.ts, 35, 14))
+>pred : Symbol(pred, Decl(typeFunctionOperators.ts, 34, 13))
+
+typefn Choose<T> { return T extends string ? (true || Failed<>) : (1 + 1); }
+>Choose : Symbol(Choose, Decl(typeFunctionOperators.ts, 35, 48))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 37, 14))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 37, 14))
+>Failed : Symbol(Failed, Decl(typeFunctionOperators.ts, 1, 26))
+
+declare const chosen: Choose<"x">;
+>chosen : Symbol(chosen, Decl(typeFunctionOperators.ts, 38, 13))
+>Choose : Symbol(Choose, Decl(typeFunctionOperators.ts, 35, 48))
+
+const yes: true = chosen;
+>yes : Symbol(yes, Decl(typeFunctionOperators.ts, 39, 5))
+>chosen : Symbol(chosen, Decl(typeFunctionOperators.ts, 38, 13))
+
+type Box<T> = { value: T };
+>Box : Symbol(Box, Decl(typeFunctionOperators.ts, 39, 25))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 41, 9))
+>value : Symbol(value, Decl(typeFunctionOperators.ts, 41, 15))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 41, 9))
+
+typefn Constructor<F<_>, T> { return [F<T> is Box<string>]; }
+>Constructor : Symbol(Constructor, Decl(typeFunctionOperators.ts, 41, 27))
+>F : Symbol(F, Decl(typeFunctionOperators.ts, 42, 19))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 42, 24))
+>F : Symbol(F, Decl(typeFunctionOperators.ts, 42, 19))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 42, 24))
+>Box : Symbol(Box, Decl(typeFunctionOperators.ts, 39, 25))
+
+declare const constructed: Constructor<Box<_>, "x">;
+>constructed : Symbol(constructed, Decl(typeFunctionOperators.ts, 43, 13))
+>Constructor : Symbol(Constructor, Decl(typeFunctionOperators.ts, 41, 27))
+>Box : Symbol(Box, Decl(typeFunctionOperators.ts, 39, 25))
+>_ : Symbol(_)
+
+const fits: [true] = constructed;
+>fits : Symbol(fits, Decl(typeFunctionOperators.ts, 44, 5))
+>constructed : Symbol(constructed, Decl(typeFunctionOperators.ts, 43, 13))
+
+typefn Deferred<N> { return <T>(arg: T) => [T is string, N + 1]; }
+>Deferred : Symbol(Deferred, Decl(typeFunctionOperators.ts, 44, 33))
+>N : Symbol(N, Decl(typeFunctionOperators.ts, 45, 16))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 45, 29))
+>arg : Symbol(arg, Decl(typeFunctionOperators.ts, 45, 32))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 45, 29))
+>T : Symbol(T, Decl(typeFunctionOperators.ts, 45, 29))
+>N : Symbol(N, Decl(typeFunctionOperators.ts, 45, 16))
+
+declare const deferred: Deferred<3>;
+>deferred : Symbol(deferred, Decl(typeFunctionOperators.ts, 46, 13))
+>Deferred : Symbol(Deferred, Decl(typeFunctionOperators.ts, 44, 33))
+
+const later: [true, 4] = deferred("hello");
+>later : Symbol(later, Decl(typeFunctionOperators.ts, 47, 5))
+>deferred : Symbol(deferred, Decl(typeFunctionOperators.ts, 46, 13))
+
+const again: [false, 4] = deferred(0);
+>again : Symbol(again, Decl(typeFunctionOperators.ts, 48, 5))
+>deferred : Symbol(deferred, Decl(typeFunctionOperators.ts, 46, 13))
+
+typefn Short<S> { return Id<true || Failed<>["x"]>; }
+>Short : Symbol(Short, Decl(typeFunctionOperators.ts, 48, 38))
+>S : Symbol(S, Decl(typeFunctionOperators.ts, 50, 13))
+>Id : Symbol(Id, Decl(typeFunctionOperators.ts, 0, 21))
+>Failed : Symbol(Failed, Decl(typeFunctionOperators.ts, 1, 26))
+
+declare const short: Short<0>;
+>short : Symbol(short, Decl(typeFunctionOperators.ts, 51, 13))
+>Short : Symbol(Short, Decl(typeFunctionOperators.ts, 48, 38))
+
+const skipped: true = short;
+>skipped : Symbol(skipped, Decl(typeFunctionOperators.ts, 52, 5))
+>short : Symbol(short, Decl(typeFunctionOperators.ts, 51, 13))
+

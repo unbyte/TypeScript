@@ -2745,6 +2745,13 @@ func (p *Parser) parseExportSpecifier() *ast.Node {
 // TYPES
 
 func (p *Parser) parseType() *ast.TypeNode {
+	if p.inTypeFunction {
+		return p.parseTypeFunctionOperand()
+	}
+	return p.parseNativeType()
+}
+
+func (p *Parser) parseNativeType() *ast.TypeNode {
 	saveContextFlags := p.contextFlags
 	p.setContextFlags(ast.NodeFlagsTypeExcludesFlags, false)
 	var typeNode *ast.TypeNode
@@ -2755,11 +2762,11 @@ func (p *Parser) parseType() *ast.TypeNode {
 		typeNode = p.parseUnionTypeOrHigher()
 		if !p.inDisallowConditionalTypesContext() && !p.hasPrecedingLineBreak() && p.parseOptional(ast.KindExtendsKeyword) {
 			// The type following 'extends' is not permitted to be another conditional type
-			extendsType := p.doInContext(ast.NodeFlagsDisallowConditionalTypesContext, true, (*Parser).parseType)
+			extendsType := p.doInContext(ast.NodeFlagsDisallowConditionalTypesContext, true, (*Parser).parseNativeType)
 			p.parseExpected(ast.KindQuestionToken)
-			trueType := p.doInContext(ast.NodeFlagsDisallowConditionalTypesContext, false, (*Parser).parseType)
+			trueType := p.doInContext(ast.NodeFlagsDisallowConditionalTypesContext, false, (*Parser).parseNativeType)
 			p.parseExpected(ast.KindColonToken)
-			falseType := p.doInContext(ast.NodeFlagsDisallowConditionalTypesContext, false, (*Parser).parseType)
+			falseType := p.doInContext(ast.NodeFlagsDisallowConditionalTypesContext, false, (*Parser).parseNativeType)
 			conditionalType := p.factory.NewConditionalTypeNode(typeNode, extendsType, trueType, falseType)
 			p.finishNode(conditionalType, pos)
 			typeNode = conditionalType
@@ -3154,9 +3161,6 @@ func (p *Parser) parseTypeArgumentsOfTypeReference() *ast.NodeList {
 
 func (p *Parser) parseTypeArguments() *ast.NodeList {
 	if p.token == ast.KindLessThanToken {
-		if p.inTypeFunction {
-			return p.parseBracketedList(PCTypeArguments, (*Parser).parseTypeFunctionOperand, ast.KindLessThanToken, ast.KindGreaterThanToken)
-		}
 		return p.parseBracketedList(PCTypeArguments, (*Parser).parseType, ast.KindLessThanToken, ast.KindGreaterThanToken)
 	}
 	return nil
@@ -3805,12 +3809,7 @@ func (p *Parser) parseTupleElementType() *ast.TypeNode {
 func (p *Parser) parseParenthesizedType() *ast.Node {
 	pos := p.nodePos()
 	p.parseExpected(ast.KindOpenParenToken)
-	var typeNode *ast.Node
-	if p.inTypeFunction {
-		typeNode = p.parseTypeFunctionOperand()
-	} else {
-		typeNode = p.parseType()
-	}
+	typeNode := p.parseType()
 	p.parseExpected(ast.KindCloseParenToken)
 	return p.finishNode(p.factory.NewParenthesizedTypeNode(typeNode), pos)
 }
@@ -6386,7 +6385,7 @@ func (p *Parser) isStartOfType(inStartOfParameter bool) bool {
 	case ast.KindFunctionKeyword:
 		return !inStartOfParameter
 	case ast.KindMinusToken:
-		return !inStartOfParameter && p.lookAhead((*Parser).nextTokenIsNumericOrBigIntLiteral)
+		return !inStartOfParameter && (p.inTypeFunction || p.lookAhead((*Parser).nextTokenIsNumericOrBigIntLiteral))
 	case ast.KindOpenParenToken:
 		// Only consider '(' the start of a type if followed by ')', '...', an identifier, a modifier,
 		// or something that starts a type. We don't want to consider things like '(1)' a type.

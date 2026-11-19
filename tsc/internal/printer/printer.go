@@ -1940,7 +1940,10 @@ func (p *Printer) emitReturnType(node *ast.TypeNode) {
 	}
 	p.writePunctuation("=>")
 	p.writeSpace()
-	if p.inExtends && node.Kind == ast.KindInferType && node.AsInferTypeNode().TypeParameter.AsTypeParameterDeclaration().Constraint != nil {
+	if ast.IsTypeFunctionBinary(node) {
+		// A leading “T is U” in a signature return type parses as a type predicate.
+		p.emitTypeNode(node, ast.TypePrecedenceConditional)
+	} else if p.inExtends && node.Kind == ast.KindInferType && node.AsInferTypeNode().TypeParameter.AsTypeParameterDeclaration().Constraint != nil {
 		// if the parent FunctionTypeNode or ConstructorTypeNode is in the `extends` clause of a ConditionalTypeNode,
 		// we must parenthesize `infer ... extends ...` so as not to result in an ambiguous parse.
 		//
@@ -2088,6 +2091,13 @@ func (p *Printer) emitIntersectionType(node *ast.IntersectionTypeNode) {
 	p.exitNode(node.AsNode(), state)
 }
 
+func (p *Printer) emitConditionalTypeBranch(node *ast.Node) {
+	saved := p.inExtends
+	p.inExtends = false
+	p.emitTypeNode(node, ast.TypePrecedenceConditional)
+	p.inExtends = saved
+}
+
 func (p *Printer) emitConditionalType(node *ast.ConditionalTypeNode) {
 	state := p.enterNode(node.AsNode())
 	p.emitTypeNode(node.CheckType, ast.TypePrecedenceUnion)
@@ -2098,11 +2108,11 @@ func (p *Printer) emitConditionalType(node *ast.ConditionalTypeNode) {
 	p.writeSpace()
 	p.writePunctuation("?")
 	p.writeSpace()
-	p.emitTypeNodeOutsideExtends(node.TrueType)
+	p.emitConditionalTypeBranch(node.TrueType)
 	p.writeSpace()
 	p.writePunctuation(":")
 	p.writeSpace()
-	p.emitTypeNodeOutsideExtends(node.FalseType)
+	p.emitConditionalTypeBranch(node.FalseType)
 	p.exitNode(node.AsNode(), state)
 }
 
@@ -2320,7 +2330,7 @@ func (p *Printer) emitTypeNode(node *ast.TypeNode, precedence ast.TypePrecedence
 	}
 
 	switch node.Kind {
-	case ast.KindTypeFunctionNot, ast.KindTypeFunctionBinary:
+	case ast.KindTypeFunctionNegate, ast.KindTypeFunctionNot, ast.KindTypeFunctionBinary:
 		p.emitTypeFunctionExpression(node)
 		// Keyword Types
 	case ast.KindAnyKeyword,

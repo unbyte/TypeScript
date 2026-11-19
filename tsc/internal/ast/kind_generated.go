@@ -402,6 +402,7 @@ const (
 	KindTypeFunctionBinary
 	KindTypeFunctionNot
 	KindTypeFunctionConstructorSlots
+	KindTypeFunctionNegate
 	KindCount
 	KindFirstAssignment         = KindEqualsToken
 	KindLastAssignment          = KindCaretEqualsToken
@@ -455,6 +456,7 @@ type (
 	PostfixUnaryOperator                  = Kind // KindPlusPlusToken | KindMinusMinusToken
 	PrefixUnaryOperator                   = Kind // KindPlusToken | KindMinusToken | KindTildeToken | KindExclamationToken | KindPlusPlusToken | KindMinusMinusToken
 	AssignmentOperator                    = Kind // KindEqualsToken | KindPlusEqualsToken | KindMinusEqualsToken | KindAsteriskAsteriskEqualsToken | KindAsteriskEqualsToken | KindSlashEqualsToken | KindPercentEqualsToken | KindAmpersandEqualsToken | KindBarEqualsToken | KindCaretEqualsToken | KindLessThanLessThanEqualsToken | KindGreaterThanGreaterThanGreaterThanEqualsToken | KindGreaterThanGreaterThanEqualsToken | KindBarBarEqualsToken | KindAmpersandAmpersandEqualsToken | KindQuestionQuestionEqualsToken
+	TypeFunctionBinaryOperator            = Kind // KindBarBarToken | KindAmpersandAmpersandToken | KindIsKeyword | KindEqualsEqualsEqualsToken | KindExclamationEqualsEqualsToken | KindPlusToken | KindMinusToken | KindAsteriskToken | KindSlashToken | KindPercentToken
 	BinaryOperator                        = Kind // KindQuestionQuestionToken | KindAsteriskAsteriskToken | KindAsteriskToken | KindSlashToken | KindPercentToken | KindPlusToken | KindMinusToken | KindLessThanLessThanToken | KindGreaterThanGreaterThanToken | KindGreaterThanGreaterThanGreaterThanToken | KindLessThanToken | KindLessThanEqualsToken | KindGreaterThanToken | KindGreaterThanEqualsToken | KindInstanceOfKeyword | KindInKeyword | KindEqualsEqualsToken | KindEqualsEqualsEqualsToken | KindExclamationEqualsEqualsToken | KindExclamationEqualsToken | KindAmpersandToken | KindBarToken | KindCaretToken | KindAmpersandAmpersandToken | KindBarBarToken | KindEqualsToken | KindPlusEqualsToken | KindMinusEqualsToken | KindAsteriskAsteriskEqualsToken | KindAsteriskEqualsToken | KindSlashEqualsToken | KindPercentEqualsToken | KindAmpersandEqualsToken | KindBarEqualsToken | KindCaretEqualsToken | KindLessThanLessThanEqualsToken | KindGreaterThanGreaterThanGreaterThanEqualsToken | KindGreaterThanGreaterThanEqualsToken | KindBarBarEqualsToken | KindAmpersandAmpersandEqualsToken | KindQuestionQuestionEqualsToken | KindCommaToken
 	ExponentiationOperator                = Kind // KindAsteriskAsteriskToken
 	MultiplicativeOperator                = Kind // KindAsteriskToken | KindSlashToken | KindPercentToken

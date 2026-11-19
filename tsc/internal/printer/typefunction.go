@@ -2,7 +2,6 @@ package printer
 
 import (
 	"github.com/microsoft/TypeScript/tsc/internal/ast"
-	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 )
 
 func (p *Printer) emitTypeFunctionDeclaration(node *ast.TypeFunctionDeclaration) {
@@ -144,16 +143,32 @@ func (p *Printer) emitTypeFunctionStatement(node *ast.Node) {
 
 func (p *Printer) emitTypeFunctionExpression(node *ast.Node) {
 	state := p.enterNode(node)
-	if ast.IsTypeFunctionNot(node) {
+	switch node.Kind {
+	case ast.KindTypeFunctionNot:
 		p.writePunctuation("!")
-		p.emitTypeNodeOutsideExtends(node.AsTypeFunctionNot().Operand)
-	} else {
+		p.emitTypeNode(node.AsTypeFunctionNot().Operand, ast.TypePrecedenceTypeFunctionPrefix)
+	case ast.KindTypeFunctionNegate:
+		operand := node.AsTypeFunctionNegate().Operand
+		p.writePunctuation("-")
+		if ast.IsTypeFunctionNegate(operand) || ast.IsLiteralTypeNode(operand) && ast.IsPrefixUnaryExpression(operand.AsLiteralTypeNode().Literal) {
+			p.writeSpace() // Keep the two minus tokens separate.
+		}
+		p.emitTypeNode(operand, ast.TypePrecedenceTypeFunctionPrefix)
+	case ast.KindTypeFunctionBinary:
 		binary := node.AsTypeFunctionBinary()
-		p.emitTypeNodeOutsideExtends(binary.Left)
+		precedence := ast.GetTypeFunctionOperatorPrecedence(binary.OperatorToken.Kind)
+		leftPrecedence := precedence
+		if precedence == ast.TypePrecedenceTypeFunctionComparison {
+			leftPrecedence++ // Comparisons require explicit grouping on either side.
+		}
+		if ast.IsFunctionTypeNode(binary.Left) || ast.IsConstructorTypeNode(binary.Left) {
+			leftPrecedence = ast.TypePrecedenceUnion // A signature's return type consumes the following operator.
+		}
+		p.emitTypeNode(binary.Left, leftPrecedence)
 		p.writeSpace()
-		p.writePunctuation(scanner.TokenToString(binary.OperatorToken.Kind))
+		p.emitTokenNode(binary.OperatorToken)
 		p.writeSpace()
-		p.emitTypeNodeOutsideExtends(binary.Right)
+		p.emitTypeNode(binary.Right, precedence+1)
 	}
 	p.exitNode(node, state)
 }

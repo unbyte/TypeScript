@@ -139,29 +139,28 @@ func (p *Parser) parseTypeFunctionStatement() *ast.Node {
 	return p.finishNode(result, pos)
 }
 
-func (p *Parser) parseTypeFunctionOperand() *ast.Node { return p.parseTypeFunctionBinary(1) }
-
-func typeFunctionPrecedence(kind ast.Kind) int {
-	switch kind {
-	case ast.KindBarBarToken:
-		return 1
-	case ast.KindAmpersandAmpersandToken:
-		return 2
-	case ast.KindEqualsEqualsEqualsToken, ast.KindExclamationEqualsEqualsToken:
-		return 3
-	}
-	return 0
+func (p *Parser) parseTypeFunctionOperand() *ast.Node {
+	return p.parseTypeFunctionBinary(ast.TypePrecedenceTypeFunctionOr)
 }
 
-func (p *Parser) parseTypeFunctionBinary(minPrecedence int) *ast.Node {
+func (p *Parser) parseTypeFunctionBinary(minPrecedence ast.TypePrecedence) *ast.Node {
 	pos := p.nodePos()
 	var left *ast.Node
-	if p.parseOptional(ast.KindExclamationToken) {
-		left = p.finishNode(p.factory.NewTypeFunctionNot(p.parseTypeFunctionBinary(4)), pos)
-	} else {
-		left = p.parseType()
+	switch {
+	case p.parseOptional(ast.KindExclamationToken):
+		left = p.finishNode(p.factory.NewTypeFunctionNot(p.parseTypeFunctionBinary(ast.TypePrecedenceTypeFunctionPrefix)), pos)
+	case p.token == ast.KindMinusToken && !p.lookAhead((*Parser).nextTokenIsNumericOrBigIntLiteral):
+		p.nextToken()
+		left = p.finishNode(p.factory.NewTypeFunctionNegate(p.parseTypeFunctionBinary(ast.TypePrecedenceTypeFunctionPrefix)), pos)
+	default:
+		// Signed literal types are native operands, including in unions such as -1 | 1.
+		left = p.parseNativeType()
 	}
-	for precedence := typeFunctionPrecedence(p.token); precedence >= minPrecedence; precedence = typeFunctionPrecedence(p.token) {
+	for precedence := ast.GetTypeFunctionOperatorPrecedence(p.token); precedence >= minPrecedence; precedence = ast.GetTypeFunctionOperatorPrecedence(p.token) {
+		if precedence == ast.TypePrecedenceTypeFunctionComparison && ast.IsTypeFunctionBinary(left) &&
+			ast.GetTypeFunctionOperatorPrecedence(left.AsTypeFunctionBinary().OperatorToken.Kind) == ast.TypePrecedenceTypeFunctionComparison {
+			p.parseErrorAtCurrentToken(diagnostics.Type_function_Colon_0, "parenthesize chained comparisons")
+		}
 		op := p.parseTokenNode()
 		right := p.parseTypeFunctionBinary(precedence + 1)
 		left = p.finishNode(p.factory.NewTypeFunctionBinary(left, op, right), pos)

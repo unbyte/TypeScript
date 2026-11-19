@@ -457,6 +457,7 @@ type (
 	TypeFunctionArmNode               = Node
 	TypeFunctionBinaryNode            = Node
 	TypeFunctionNotNode               = Node
+	TypeFunctionNegateNode            = Node
 	TypeFunctionConstructorSlotsNode  = Node
 	TypeFunctionDeclarationNode       = Node
 	TypeFunctionReturnNode            = Node
@@ -495,6 +496,7 @@ type (
 	OverrideKeyword                   = Node
 	StaticKeyword                     = Node
 	BinaryOperatorToken               = Node
+	TypeFunctionBinaryOperatorToken   = Node
 	AssignmentOperatorToken           = Node
 	NullLiteral                       = Node
 	TrueLiteral                       = Node
@@ -9074,11 +9076,11 @@ func IsTypeFunctionArm(node *Node) bool {
 type TypeFunctionBinary struct {
 	TypeNodeBase
 	Left          *TypeNode
-	OperatorToken *BinaryOperatorToken
+	OperatorToken *TypeFunctionBinaryOperatorToken
 	Right         *TypeNode
 }
 
-func (f *NodeFactory) NewTypeFunctionBinary(left *TypeNode, operatorToken *BinaryOperatorToken, right *TypeNode) *Node {
+func (f *NodeFactory) NewTypeFunctionBinary(left *TypeNode, operatorToken *TypeFunctionBinaryOperatorToken, right *TypeNode) *Node {
 	data := &TypeFunctionBinary{}
 	data.Left = left
 	data.OperatorToken = operatorToken
@@ -9086,7 +9088,7 @@ func (f *NodeFactory) NewTypeFunctionBinary(left *TypeNode, operatorToken *Binar
 	return f.newNode(KindTypeFunctionBinary, data.AsNode())
 }
 
-func (f *NodeFactory) UpdateTypeFunctionBinary(node *TypeFunctionBinary, left *TypeNode, operatorToken *BinaryOperatorToken, right *TypeNode) *Node {
+func (f *NodeFactory) UpdateTypeFunctionBinary(node *TypeFunctionBinary, left *TypeNode, operatorToken *TypeFunctionBinaryOperatorToken, right *TypeNode) *Node {
 	if left != node.Left || operatorToken != node.OperatorToken || right != node.Right {
 		return updateNode(f.NewTypeFunctionBinary(left, operatorToken, right), node.AsNode(), f.hooks)
 	}
@@ -9145,6 +9147,44 @@ func (node *TypeFunctionNot) Clone(f NodeFactoryCoercible) *Node {
 
 func IsTypeFunctionNot(node *Node) bool {
 	return node.Kind == KindTypeFunctionNot
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// TypeFunctionNegate
+// ──────────────────────────────────────────────────────────────────────
+
+type TypeFunctionNegate struct {
+	TypeNodeBase
+	Operand *TypeNode
+}
+
+func (f *NodeFactory) NewTypeFunctionNegate(operand *TypeNode) *Node {
+	data := &TypeFunctionNegate{}
+	data.Operand = operand
+	return f.newNode(KindTypeFunctionNegate, data.AsNode())
+}
+
+func (f *NodeFactory) UpdateTypeFunctionNegate(node *TypeFunctionNegate, operand *TypeNode) *Node {
+	if operand != node.Operand {
+		return updateNode(f.NewTypeFunctionNegate(operand), node.AsNode(), f.hooks)
+	}
+	return node.AsNode()
+}
+
+func (node *TypeFunctionNegate) ForEachChild(v Visitor) bool {
+	return visit(v, node.Operand)
+}
+
+func (node *TypeFunctionNegate) VisitEachChild(v *NodeVisitor) *Node {
+	return v.Factory.UpdateTypeFunctionNegate(node, requiredChild(node.Operand, v.visitNode(node.Operand)))
+}
+
+func (node *TypeFunctionNegate) Clone(f NodeFactoryCoercible) *Node {
+	return cloneNode(f.AsNodeFactory().NewTypeFunctionNegate(node.Operand), node.AsNode(), f.AsNodeFactory().hooks)
+}
+
+func IsTypeFunctionNegate(node *Node) bool {
+	return node.Kind == KindTypeFunctionNegate
 }
 
 // ──────────────────────────────────────────────────────────────────────
@@ -9932,6 +9972,9 @@ func (n *Node) ForEachChild(v Visitor) bool {
 	case KindTypeFunctionNot:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionNot, which embeds its Node header at offset zero.
 		return (*TypeFunctionNot)(unsafe.Pointer(n)).ForEachChild(v)
+	case KindTypeFunctionNegate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionNegate, which embeds its Node header at offset zero.
+		return (*TypeFunctionNegate)(unsafe.Pointer(n)).ForEachChild(v)
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).ForEachChild(v)
@@ -10489,6 +10532,9 @@ func (n *Node) VisitEachChild(v *NodeVisitor) *Node {
 	case KindTypeFunctionNot:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionNot, which embeds its Node header at offset zero.
 		return (*TypeFunctionNot)(unsafe.Pointer(n)).VisitEachChild(v)
+	case KindTypeFunctionNegate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionNegate, which embeds its Node header at offset zero.
+		return (*TypeFunctionNegate)(unsafe.Pointer(n)).VisitEachChild(v)
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).VisitEachChild(v)
@@ -11123,6 +11169,9 @@ func (n *Node) Clone(f NodeFactoryCoercible) *Node {
 	case KindTypeFunctionNot:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionNot, which embeds its Node header at offset zero.
 		return (*TypeFunctionNot)(unsafe.Pointer(n)).Clone(f)
+	case KindTypeFunctionNegate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionNegate, which embeds its Node header at offset zero.
+		return (*TypeFunctionNegate)(unsafe.Pointer(n)).Clone(f)
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).Clone(f)
@@ -11628,6 +11677,8 @@ func (n *Node) SubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionBinary:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionNot:
+		return n.computeSubtreeFacts()
+	case KindTypeFunctionNegate:
 		return n.computeSubtreeFacts()
 	case KindTypeFunctionConstructorSlots:
 		return n.computeSubtreeFacts()
@@ -12251,6 +12302,9 @@ func (n *Node) computeSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionNot:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionNot, which embeds its Node header at offset zero.
 		return (*TypeFunctionNot)(unsafe.Pointer(n)).computeSubtreeFacts()
+	case KindTypeFunctionNegate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionNegate, which embeds its Node header at offset zero.
+		return (*TypeFunctionNegate)(unsafe.Pointer(n)).computeSubtreeFacts()
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).computeSubtreeFacts()
@@ -12879,6 +12933,9 @@ func (n *Node) propagateSubtreeFacts() SubtreeFacts {
 	case KindTypeFunctionNot:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionNot, which embeds its Node header at offset zero.
 		return (*TypeFunctionNot)(unsafe.Pointer(n)).propagateSubtreeFacts()
+	case KindTypeFunctionNegate:
+		// SAFETY: This case only matches kinds allocated as a TypeFunctionNegate, which embeds its Node header at offset zero.
+		return (*TypeFunctionNegate)(unsafe.Pointer(n)).propagateSubtreeFacts()
 	case KindTypeFunctionConstructorSlots:
 		// SAFETY: This case only matches kinds allocated as a TypeFunctionConstructorSlots, which embeds its Node header at offset zero.
 		return (*TypeFunctionConstructorSlots)(unsafe.Pointer(n)).propagateSubtreeFacts()
@@ -14406,6 +14463,7 @@ var (
 	_ [0 - unsafe.Offsetof(TypeFunctionArm{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionBinary{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionNot{}.Node)]byte
+	_ [0 - unsafe.Offsetof(TypeFunctionNegate{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionConstructorSlots{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionDeclaration{}.Node)]byte
 	_ [0 - unsafe.Offsetof(TypeFunctionReturn{}.Node)]byte
@@ -16038,6 +16096,14 @@ func (n *Node) AsTypeFunctionNot() *TypeFunctionNot {
 	return (*TypeFunctionNot)(unsafe.Pointer(n))
 }
 
+func (n *Node) AsTypeFunctionNegate() *TypeFunctionNegate {
+	if n.Kind != KindTypeFunctionNegate {
+		panic("Invalid node cast to TypeFunctionNegate")
+	}
+	// SAFETY: The kind check guarantees n was allocated as a TypeFunctionNegate, which embeds its Node header at offset zero.
+	return (*TypeFunctionNegate)(unsafe.Pointer(n))
+}
+
 func (n *Node) AsTypeFunctionConstructorSlots() *TypeFunctionConstructorSlots {
 	if n.Kind != KindTypeFunctionConstructorSlots {
 		panic("Invalid node cast to TypeFunctionConstructorSlots")
@@ -16185,6 +16251,14 @@ func IsPrefixUnaryOperator(kind Kind) bool {
 func IsAssignmentOperator(kind Kind) bool {
 	switch kind {
 	case KindEqualsToken, KindPlusEqualsToken, KindMinusEqualsToken, KindAsteriskAsteriskEqualsToken, KindAsteriskEqualsToken, KindSlashEqualsToken, KindPercentEqualsToken, KindAmpersandEqualsToken, KindBarEqualsToken, KindCaretEqualsToken, KindLessThanLessThanEqualsToken, KindGreaterThanGreaterThanGreaterThanEqualsToken, KindGreaterThanGreaterThanEqualsToken, KindBarBarEqualsToken, KindAmpersandAmpersandEqualsToken, KindQuestionQuestionEqualsToken:
+		return true
+	}
+	return false
+}
+
+func IsTypeFunctionBinaryOperator(kind Kind) bool {
+	switch kind {
+	case KindBarBarToken, KindAmpersandAmpersandToken, KindIsKeyword, KindEqualsEqualsEqualsToken, KindExclamationEqualsEqualsToken, KindPlusToken, KindMinusToken, KindAsteriskToken, KindSlashToken, KindPercentToken:
 		return true
 	}
 	return false

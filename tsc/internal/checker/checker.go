@@ -23255,7 +23255,7 @@ func (c *Checker) isTypeParameterPossiblyReferenced(tp *Type, node *ast.Node) bo
 			return tp.AsTypeParameter().isThisType
 		case ast.KindTypeReference:
 			// use worker because we're looking for === equality
-			if !tp.AsTypeParameter().isThisType && len(node.TypeArguments()) == 0 && c.getSymbolFromTypeReference(node) == tp.symbol {
+			if !tp.AsTypeParameter().isThisType && (len(node.TypeArguments()) == 0 || typeFunctionConstructorParameter(tp.symbol) != 0) && c.getSymbolFromTypeReference(node) == tp.symbol {
 				return true
 			}
 		case ast.KindTypeQuery:
@@ -23292,6 +23292,9 @@ func (c *Checker) isTypeParameterPossiblyReferenced(tp *Type, node *ast.Node) bo
 	// we consider the type parameter possibly referenced.
 	if tp.symbol != nil && len(tp.symbol.Declarations()) == 1 {
 		container := tp.symbol.Declarations()[0].Parent
+		if ast.IsTypeFunctionBinding(container) {
+			container = container.Parent
+		}
 		for n := node; n != container; n = n.Parent {
 			if n == nil || ast.IsBlock(n) || ast.IsConditionalTypeNode(n) && containsReference(n.AsConditionalTypeNode().ExtendsType) {
 				return true
@@ -23659,10 +23662,12 @@ func (c *Checker) getTypeFromTypeNodeWorker(node *ast.Node) *Type {
 	if node != nil && ast.IsTypeFunctionBlock(node) {
 		if decl := node.Parent; ast.IsTypeFunctionDeclaration(decl) {
 			args := core.Map(decl.TypeParameters(), func(p *ast.Node) *Type { return c.getDeclaredTypeOfSymbol(c.getSymbolOfDeclaration(p)) })
-			return c.newTypeFunctionApplication(decl, decl, "", args)
+			return c.newTypeFunctionApplication(typeFunctionApplication{use: decl, declaration: decl, arguments: args})
 		}
 	}
 	switch node.Kind {
+	case ast.KindTypeFunctionNot, ast.KindTypeFunctionNegate, ast.KindTypeFunctionBinary:
+		return c.getTypeFromTypeFunctionExpression(node)
 	case ast.KindAnyKeyword, ast.KindJSDocAllType:
 		return c.anyType
 	case ast.KindJSDocNonNullableType:
@@ -23868,7 +23873,7 @@ func (c *Checker) getTypeFromTypeReference(node *ast.Node) *Type {
 					args = append(args, c.getTypeFromTypeNode(a))
 				}
 			}
-			links.resolvedType = c.newTypeFunctionApplication(node, nil, builtin, args)
+			links.resolvedType = c.newTypeFunctionApplication(typeFunctionApplication{use: node, builtin: builtin, arguments: args})
 		} else if isConstTypeReference(node) && ast.IsAssertionExpression(node.Parent) {
 			links.resolvedType = c.checkExpressionCached(node.Parent.Expression())
 		} else if t := c.getIntendedTypeFromJSDocTypeReference(node); t != nil {
@@ -23877,12 +23882,14 @@ func (c *Checker) getTypeFromTypeReference(node *ast.Node) *Type {
 			symbol := c.getSymbolFromTypeReference(node)
 			if typeFunctionConstructorParameter(symbol) > 0 && node.TypeArgumentList() != nil {
 				args := append([]*Type{c.getDeclaredTypeOfSymbol(symbol)}, c.getTypeArgumentsFromNode(node)...)
-				links.resolvedType = c.newTypeFunctionApplication(node, nil, "@apply", args)
+				links.resolvedType = c.newTypeFunctionApplication(typeFunctionApplication{use: node, builtin: "@apply", arguments: args})
 			} else {
 				value := c.getTypeReferenceType(node, symbol)
 				if app := value.typeFunctionApplication(); app != nil && app.use != node {
 					// Attribute an alias demand to its own occurrence, including cached aliases.
-					value = c.newTypeFunctionApplication(node, app.declaration, app.builtin, app.arguments)
+					occurrence := *app
+					occurrence.use = node
+					value = c.newTypeFunctionApplication(occurrence)
 				}
 				links.resolvedType = c.getDistributedTypeParameter(node, value)
 			}

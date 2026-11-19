@@ -54,10 +54,21 @@ export typefn Words<T, Sep = Space> { return PrivateCount<T, Sep>; }
 /** @internal */
 type Box<T> = { value: T };
 export typefn Wrapped<T, F<_> = Box<_>> { return F<T>; }
+export typefn Twice<N> { if (N is number) { return -(N + N); } return undefined; }
+typefn Functions<N> { return [<T>(arg: T) => T + N]; }
+export declare const plusThree: Functions<3>[0];
 typefn Empty<> { return 0; }
 export type Zero = Empty<>;`
-	const consumer = `import type { Words, Wrapped, Zero } from "words";
+	const consumer = `import type { Twice, Words, Wrapped, Zero } from "words";
+import { plusThree } from "words";
+const sum: 7 = plusThree(4 as const);
+// @ts-expect-error the emitted generic signature preserves its computation
+const wrongSum: 3 = plusThree(4 as const);
 type PrivateCount<T> = never;
+declare const twice: Twice<4>;
+const negativeEight: -8 = twice;
+// @ts-expect-error a numeric literal result retains its value in the consumer
+const wrongTwice: 8 = twice;
 declare const wrapped: Wrapped<7>;
 const seven: 7 = wrapped.value;
 // @ts-expect-error the default constructor retains the supplied literal

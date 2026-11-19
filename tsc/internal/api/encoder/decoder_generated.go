@@ -1180,6 +1180,8 @@ func (d *astDecoder) createChildrenNode(kind ast.Kind, data uint32, childIndices
 		return d.factory.NewTypeFunctionBinary(left, operatorToken, right), nil
 	case ast.KindTypeFunctionNot:
 		return d.factory.NewTypeFunctionNot(d.singleChild(childIndices)), nil
+	case ast.KindTypeFunctionNegate:
+		return d.factory.NewTypeFunctionNegate(d.singleChild(childIndices)), nil
 	case ast.KindTypeFunctionConstructorSlots:
 		return d.factory.NewTypeFunctionConstructorSlots(d.singleNodeListChild(childIndices)), nil
 	case ast.KindTypeFunctionDeclaration:

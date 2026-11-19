@@ -3457,6 +3457,12 @@ func (b *NodeBuilderImpl) typeToTypeNode(t *Type) *ast.TypeNode {
 			}
 			return b.symbolToTypeNode(ctor.target, ast.SymbolFlagsType, b.f.NewNodeList(args))
 		}
+		if app := t.typeFunctionApplication(); app != nil && app.expression != nil {
+			// This syntax is available for display, but only a named typefn
+			// application can represent an open calculation in an emitted type.
+			b.ctx.tracker.ReportInaccessibleTypeError("typefn operator")
+			return b.typeFunctionExpressionToNode(app)
+		}
 		if app := t.typeFunctionApplication(); app != nil && app.builtin != "" {
 			if app.builtin == "@apply" {
 				return b.f.NewTypeReferenceNode(b.f.DeepCloneNode(app.use.AsTypeReferenceNode().TypeName), b.mapToTypeNodes(app.arguments[1:], false))
@@ -3556,7 +3562,7 @@ func (b *NodeBuilderImpl) typeToTypeNode(t *Type) *ast.TypeNode {
 				b.ctx.approximateLength += 6
 				return b.symbolToTypeNode(t.symbol, ast.SymbolFlagsValue, nil)
 			}
-			b.ctx.tracker.ReportInaccessibleUniqueSymbolError()
+			b.ctx.tracker.ReportInaccessibleTypeError("unique symbol")
 		}
 		b.ctx.approximateLength += 13
 		return b.f.NewTypeOperatorNode(ast.KindUniqueKeyword, b.f.NewKeywordTypeNode(ast.KindSymbolKeyword))
@@ -3590,7 +3596,7 @@ func (b *NodeBuilderImpl) typeToTypeNode(t *Type) *ast.TypeNode {
 			if !b.ctx.encounteredError && b.ctx.flags&nodebuilder.FlagsAllowThisInObjectLiteral == 0 {
 				b.ctx.encounteredError = true
 			}
-			b.ctx.tracker.ReportInaccessibleThisError()
+			b.ctx.tracker.ReportInaccessibleTypeError("this")
 		}
 		b.ctx.approximateLength += 4
 		return b.f.NewThisTypeNode()

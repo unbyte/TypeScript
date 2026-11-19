@@ -39,12 +39,12 @@ func (this *SymbolTrackerImpl) TrackSymbol(symbol *ast.Symbol, enclosingDeclarat
 	return false
 }
 
-func (this *SymbolTrackerImpl) ReportInaccessibleThisError() {
+func (this *SymbolTrackerImpl) ReportInaccessibleTypeError(typeName string) {
 	this.onDiagnosticReported()
 	if this.inner == nil {
 		return
 	}
-	this.inner.ReportInaccessibleThisError()
+	this.inner.ReportInaccessibleTypeError(typeName)
 }
 
 func (this *SymbolTrackerImpl) ReportPrivateInBaseOfClassExpression(propertyName string) {
@@ -53,14 +53,6 @@ func (this *SymbolTrackerImpl) ReportPrivateInBaseOfClassExpression(propertyName
 		return
 	}
 	this.inner.ReportPrivateInBaseOfClassExpression(propertyName)
-}
-
-func (this *SymbolTrackerImpl) ReportInaccessibleUniqueSymbolError() {
-	this.onDiagnosticReported()
-	if this.inner == nil {
-		return
-	}
-	this.inner.ReportInaccessibleUniqueSymbolError()
 }
 
 func (this *SymbolTrackerImpl) ReportCyclicStructureError() {
