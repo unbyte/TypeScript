@@ -1,0 +1,437 @@
+//// [tests/cases/compiler/typeFunctionReturnBoundary.ts] ////
+
+=== typeFunctionReturnBoundary.ts ===
+typefn Add<A, B> { return A + B; }
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>A : Symbol(A, Decl(typeFunctionReturnBoundary.ts, 0, 11))
+>B : Symbol(B, Decl(typeFunctionReturnBoundary.ts, 0, 13))
+>A : Symbol(A, Decl(typeFunctionReturnBoundary.ts, 0, 11))
+>B : Symbol(B, Decl(typeFunctionReturnBoundary.ts, 0, 13))
+
+type Hidden<T> = { nested: Add<T, 1> };
+>Hidden : Symbol(Hidden, Decl(typeFunctionReturnBoundary.ts, 0, 34))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 1, 12))
+>nested : Symbol(nested, Decl(typeFunctionReturnBoundary.ts, 1, 18))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 1, 12))
+
+interface Container<T> { contents: Hidden<T>; }
+>Container : Symbol(Container, Decl(typeFunctionReturnBoundary.ts, 1, 39))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 2, 20))
+>contents : Symbol(Container.contents, Decl(typeFunctionReturnBoundary.ts, 2, 24))
+>Hidden : Symbol(Hidden, Decl(typeFunctionReturnBoundary.ts, 0, 34))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 2, 20))
+
+typefn WithNext<N> {
+>WithNext : Symbol(WithNext, Decl(typeFunctionReturnBoundary.ts, 2, 47))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 4, 16))
+
+    type Next = N + 1;
+>Next : Symbol(Next, Decl(typeFunctionReturnBoundary.ts, 5, 8))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 4, 16))
+
+    return <T>(x: T) => [T, Next];
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 6, 12))
+>x : Symbol(x, Decl(typeFunctionReturnBoundary.ts, 6, 15))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 6, 12))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 6, 12))
+>Next : Symbol(Next, Decl(typeFunctionReturnBoundary.ts, 5, 8))
+}
+typefn Inline<N> { return <T>(x: T) => [T, N + 1]; }
+>Inline : Symbol(Inline, Decl(typeFunctionReturnBoundary.ts, 7, 1))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 8, 14))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 8, 27))
+>x : Symbol(x, Decl(typeFunctionReturnBoundary.ts, 8, 30))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 8, 27))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 8, 27))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 8, 14))
+
+declare const saved: WithNext<3>;
+>saved : Symbol(saved, Decl(typeFunctionReturnBoundary.ts, 9, 13))
+>WithNext : Symbol(WithNext, Decl(typeFunctionReturnBoundary.ts, 2, 47))
+
+declare const inline: Inline<8>;
+>inline : Symbol(inline, Decl(typeFunctionReturnBoundary.ts, 10, 13))
+>Inline : Symbol(Inline, Decl(typeFunctionReturnBoundary.ts, 7, 1))
+
+const four: ["x", 4] = saved("x" as const);
+>four : Symbol(four, Decl(typeFunctionReturnBoundary.ts, 11, 5))
+>saved : Symbol(saved, Decl(typeFunctionReturnBoundary.ts, 9, 13))
+>const : Symbol(const)
+
+const nine: [false, 9] = inline(false as const);
+>nine : Symbol(nine, Decl(typeFunctionReturnBoundary.ts, 12, 5))
+>inline : Symbol(inline, Decl(typeFunctionReturnBoundary.ts, 10, 13))
+>const : Symbol(const)
+
+typefn Direct<N> { return <T>(value: T) => T + N; }
+>Direct : Symbol(Direct, Decl(typeFunctionReturnBoundary.ts, 12, 48))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 14, 14))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 14, 27))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 14, 30))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 14, 27))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 14, 27))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 14, 14))
+
+typefn Named<N> { return <T>(value: T) => Add<T, N>; }
+>Named : Symbol(Named, Decl(typeFunctionReturnBoundary.ts, 14, 51))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 15, 13))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 15, 26))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 15, 29))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 15, 26))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 15, 26))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 15, 13))
+
+typefn Aliased<> { type Local = <T>() => Container<T>; return Local; }
+>Aliased : Symbol(Aliased, Decl(typeFunctionReturnBoundary.ts, 15, 54))
+>Local : Symbol(Local, Decl(typeFunctionReturnBoundary.ts, 16, 23))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 16, 33))
+>Container : Symbol(Container, Decl(typeFunctionReturnBoundary.ts, 1, 39))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 16, 33))
+>Local : Symbol(Local, Decl(typeFunctionReturnBoundary.ts, 16, 23))
+
+typefn Builtin<> { return <S extends string>() => string.split<S, " ">; }
+>Builtin : Symbol(Builtin, Decl(typeFunctionReturnBoundary.ts, 16, 70))
+>S : Symbol(S, Decl(typeFunctionReturnBoundary.ts, 17, 27))
+>string : Symbol(string)
+>split : Symbol(string.split)
+>S : Symbol(S, Decl(typeFunctionReturnBoundary.ts, 17, 27))
+
+declare const direct: Direct<1>;
+>direct : Symbol(direct, Decl(typeFunctionReturnBoundary.ts, 18, 13))
+>Direct : Symbol(Direct, Decl(typeFunctionReturnBoundary.ts, 12, 48))
+
+declare const named: Named<1>;
+>named : Symbol(named, Decl(typeFunctionReturnBoundary.ts, 19, 13))
+>Named : Symbol(Named, Decl(typeFunctionReturnBoundary.ts, 14, 51))
+
+declare const aliased: Aliased<>;
+>aliased : Symbol(aliased, Decl(typeFunctionReturnBoundary.ts, 20, 13))
+>Aliased : Symbol(Aliased, Decl(typeFunctionReturnBoundary.ts, 15, 54))
+
+declare const builtin: Builtin<>;
+>builtin : Symbol(builtin, Decl(typeFunctionReturnBoundary.ts, 21, 13))
+>Builtin : Symbol(Builtin, Decl(typeFunctionReturnBoundary.ts, 16, 70))
+
+direct.recovered; named.recovered; aliased.recovered; builtin.recovered;
+>direct : Symbol(direct, Decl(typeFunctionReturnBoundary.ts, 18, 13))
+>named : Symbol(named, Decl(typeFunctionReturnBoundary.ts, 19, 13))
+>aliased : Symbol(aliased, Decl(typeFunctionReturnBoundary.ts, 20, 13))
+>builtin : Symbol(builtin, Decl(typeFunctionReturnBoundary.ts, 21, 13))
+
+// A helper may construct an intermediate signature whose result is later specialized.
+typefn Finish<N> { return fn.specialize<Direct<N>, [2]>; }
+>Finish : Symbol(Finish, Decl(typeFunctionReturnBoundary.ts, 22, 72))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 25, 14))
+>fn : Symbol(fn)
+>specialize : Symbol(fn.specialize)
+>Direct : Symbol(Direct, Decl(typeFunctionReturnBoundary.ts, 12, 48))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 25, 14))
+
+declare const finished: Finish<3>;
+>finished : Symbol(finished, Decl(typeFunctionReturnBoundary.ts, 26, 13))
+>Finish : Symbol(Finish, Decl(typeFunctionReturnBoundary.ts, 22, 72))
+
+const five: 5 = finished(2);
+>five : Symbol(five, Decl(typeFunctionReturnBoundary.ts, 27, 5))
+>finished : Symbol(finished, Decl(typeFunctionReturnBoundary.ts, 26, 13))
+
+typefn Echo<T> { return T; }
+>Echo : Symbol(Echo, Decl(typeFunctionReturnBoundary.ts, 27, 28))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 29, 12))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 29, 12))
+
+type Tree<T> = { value: T; children: Tree<T[]> };
+>Tree : Symbol(Tree, Decl(typeFunctionReturnBoundary.ts, 29, 28))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 30, 10))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 30, 16))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 30, 10))
+>children : Symbol(children, Decl(typeFunctionReturnBoundary.ts, 30, 26))
+>Tree : Symbol(Tree, Decl(typeFunctionReturnBoundary.ts, 29, 28))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 30, 10))
+
+declare const tree: Echo<Tree<1>>;
+>tree : Symbol(tree, Decl(typeFunctionReturnBoundary.ts, 31, 13))
+>Echo : Symbol(Echo, Decl(typeFunctionReturnBoundary.ts, 27, 28))
+>Tree : Symbol(Tree, Decl(typeFunctionReturnBoundary.ts, 29, 28))
+
+const treeValue: 1[] = tree.children.value;
+>treeValue : Symbol(treeValue, Decl(typeFunctionReturnBoundary.ts, 32, 5))
+>tree.children.value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 30, 16))
+>tree.children : Symbol(children, Decl(typeFunctionReturnBoundary.ts, 30, 26))
+>tree : Symbol(tree, Decl(typeFunctionReturnBoundary.ts, 31, 13))
+>children : Symbol(children, Decl(typeFunctionReturnBoundary.ts, 30, 26))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 30, 16))
+
+declare const promise: Echo<Promise<string[]>>;
+>promise : Symbol(promise, Decl(typeFunctionReturnBoundary.ts, 33, 13))
+>Echo : Symbol(Echo, Decl(typeFunctionReturnBoundary.ts, 27, 28))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+
+const standard: Promise<string[]> = promise;
+>standard : Symbol(standard, Decl(typeFunctionReturnBoundary.ts, 34, 5))
+>Promise : Symbol(Promise, Decl(lib.es5.d.ts, --, --), Decl(lib.es2015.iterable.d.ts, --, --), Decl(lib.es2015.promise.d.ts, --, --), Decl(lib.es2015.symbol.wellknown.d.ts, --, --), Decl(lib.es2018.promise.d.ts, --, --))
+>promise : Symbol(promise, Decl(typeFunctionReturnBoundary.ts, 33, 13))
+
+typefn Native<N> { return <T>(arg: T) => T extends string ? [T, N + 1] : T; }
+>Native : Symbol(Native, Decl(typeFunctionReturnBoundary.ts, 34, 44))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 36, 14))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 36, 27))
+>arg : Symbol(arg, Decl(typeFunctionReturnBoundary.ts, 36, 30))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 36, 27))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 36, 27))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 36, 27))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 36, 14))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 36, 27))
+
+declare const native: Native<4>;
+>native : Symbol(native, Decl(typeFunctionReturnBoundary.ts, 37, 13))
+>Native : Symbol(Native, Decl(typeFunctionReturnBoundary.ts, 34, 44))
+
+const selected: ["x", 5] = native("x" as const);
+>selected : Symbol(selected, Decl(typeFunctionReturnBoundary.ts, 38, 5))
+>native : Symbol(native, Decl(typeFunctionReturnBoundary.ts, 37, 13))
+>const : Symbol(const)
+
+const other: 0 = native(0 as const);
+>other : Symbol(other, Decl(typeFunctionReturnBoundary.ts, 39, 5))
+>native : Symbol(native, Decl(typeFunctionReturnBoundary.ts, 37, 13))
+>const : Symbol(const)
+
+typefn Conditional<> { return <T>() => T extends string ? Add<T, 1> : never; }
+>Conditional : Symbol(Conditional, Decl(typeFunctionReturnBoundary.ts, 39, 36))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 40, 31))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 40, 31))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 40, 31))
+
+typefn Mapped<> { return <T>() => { [K in keyof T]: Add<T[K], 1> }; }
+>Mapped : Symbol(Mapped, Decl(typeFunctionReturnBoundary.ts, 40, 78))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 41, 26))
+>K : Symbol(K, Decl(typeFunctionReturnBoundary.ts, 41, 37))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 41, 26))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 41, 26))
+>K : Symbol(K, Decl(typeFunctionReturnBoundary.ts, 41, 37))
+
+typefn Guard<> { return <T>(value: unknown) => value is Add<T, 1>; }
+>Guard : Symbol(Guard, Decl(typeFunctionReturnBoundary.ts, 41, 69))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 42, 25))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 42, 28))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 42, 28))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 42, 25))
+
+typefn Default<> { return <T, U = Add<T, 1>>() => U; }
+>Default : Symbol(Default, Decl(typeFunctionReturnBoundary.ts, 42, 68))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 43, 27))
+>U : Symbol(U, Decl(typeFunctionReturnBoundary.ts, 43, 29))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 43, 27))
+>U : Symbol(U, Decl(typeFunctionReturnBoundary.ts, 43, 29))
+
+declare const conditional: Conditional<>;
+>conditional : Symbol(conditional, Decl(typeFunctionReturnBoundary.ts, 44, 13))
+>Conditional : Symbol(Conditional, Decl(typeFunctionReturnBoundary.ts, 39, 36))
+
+declare const mapped: Mapped<>;
+>mapped : Symbol(mapped, Decl(typeFunctionReturnBoundary.ts, 45, 13))
+>Mapped : Symbol(Mapped, Decl(typeFunctionReturnBoundary.ts, 40, 78))
+
+declare const guard: Guard<>;
+>guard : Symbol(guard, Decl(typeFunctionReturnBoundary.ts, 46, 13))
+>Guard : Symbol(Guard, Decl(typeFunctionReturnBoundary.ts, 41, 69))
+
+declare const defaults: Default<>;
+>defaults : Symbol(defaults, Decl(typeFunctionReturnBoundary.ts, 47, 13))
+>Default : Symbol(Default, Decl(typeFunctionReturnBoundary.ts, 42, 68))
+
+conditional.recovered; mapped.recovered; guard.recovered; defaults.recovered;
+>conditional : Symbol(conditional, Decl(typeFunctionReturnBoundary.ts, 44, 13))
+>mapped : Symbol(mapped, Decl(typeFunctionReturnBoundary.ts, 45, 13))
+>guard : Symbol(guard, Decl(typeFunctionReturnBoundary.ts, 46, 13))
+>defaults : Symbol(defaults, Decl(typeFunctionReturnBoundary.ts, 47, 13))
+
+typefn RecordResult<N> { return <T>(arg: T) => { value: T; tag: N + 1 }; }
+>RecordResult : Symbol(RecordResult, Decl(typeFunctionReturnBoundary.ts, 48, 77))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 50, 20))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 50, 33))
+>arg : Symbol(arg, Decl(typeFunctionReturnBoundary.ts, 50, 36))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 50, 33))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 50, 48))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 50, 33))
+>tag : Symbol(tag, Decl(typeFunctionReturnBoundary.ts, 50, 58))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 50, 20))
+
+declare const recordResult: RecordResult<3>;
+>recordResult : Symbol(recordResult, Decl(typeFunctionReturnBoundary.ts, 51, 13))
+>RecordResult : Symbol(RecordResult, Decl(typeFunctionReturnBoundary.ts, 48, 77))
+
+const record: { value: "x"; tag: 4 } = recordResult("x" as const);
+>record : Symbol(record, Decl(typeFunctionReturnBoundary.ts, 52, 5))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 52, 15))
+>tag : Symbol(tag, Decl(typeFunctionReturnBoundary.ts, 52, 27))
+>recordResult : Symbol(recordResult, Decl(typeFunctionReturnBoundary.ts, 51, 13))
+>const : Symbol(const)
+
+typefn MapResult<N> { return <T>(arg: T) => { readonly [K in keyof T]: [T[K], N + 1] }; }
+>MapResult : Symbol(MapResult, Decl(typeFunctionReturnBoundary.ts, 52, 66))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 54, 17))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 54, 30))
+>arg : Symbol(arg, Decl(typeFunctionReturnBoundary.ts, 54, 33))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 54, 30))
+>K : Symbol(K, Decl(typeFunctionReturnBoundary.ts, 54, 56))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 54, 30))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 54, 30))
+>K : Symbol(K, Decl(typeFunctionReturnBoundary.ts, 54, 56))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 54, 17))
+
+declare const mapResult: MapResult<3>;
+>mapResult : Symbol(mapResult, Decl(typeFunctionReturnBoundary.ts, 55, 13))
+>MapResult : Symbol(MapResult, Decl(typeFunctionReturnBoundary.ts, 52, 66))
+
+const mappedResult: { readonly z: ["hi", 4] } = mapResult({ z: "hi" } as const);
+>mappedResult : Symbol(mappedResult, Decl(typeFunctionReturnBoundary.ts, 56, 5))
+>z : Symbol(z, Decl(typeFunctionReturnBoundary.ts, 56, 21))
+>mapResult : Symbol(mapResult, Decl(typeFunctionReturnBoundary.ts, 55, 13))
+>z : Symbol(z, Decl(typeFunctionReturnBoundary.ts, 56, 59))
+>const : Symbol(const)
+
+typefn DefaultResult<N> { return <T extends N + 1 = N + 1>(arg?: T) => T; }
+>DefaultResult : Symbol(DefaultResult, Decl(typeFunctionReturnBoundary.ts, 56, 80))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 58, 21))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 58, 34))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 58, 21))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 58, 21))
+>arg : Symbol(arg, Decl(typeFunctionReturnBoundary.ts, 58, 59))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 58, 34))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 58, 34))
+
+declare const defaultResult: DefaultResult<3>;
+>defaultResult : Symbol(defaultResult, Decl(typeFunctionReturnBoundary.ts, 59, 13))
+>DefaultResult : Symbol(DefaultResult, Decl(typeFunctionReturnBoundary.ts, 56, 80))
+
+const defaultFour: 4 = defaultResult();
+>defaultFour : Symbol(defaultFour, Decl(typeFunctionReturnBoundary.ts, 60, 5))
+>defaultResult : Symbol(defaultResult, Decl(typeFunctionReturnBoundary.ts, 59, 13))
+
+type Recursive<N> = { value: Add<N, 1>; next: Recursive<N> | null };
+>Recursive : Symbol(Recursive, Decl(typeFunctionReturnBoundary.ts, 60, 39))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 62, 15))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 62, 21))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 62, 15))
+>next : Symbol(next, Decl(typeFunctionReturnBoundary.ts, 62, 39))
+>Recursive : Symbol(Recursive, Decl(typeFunctionReturnBoundary.ts, 60, 39))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 62, 15))
+
+declare const recursive: Echo<Recursive<3>>;
+>recursive : Symbol(recursive, Decl(typeFunctionReturnBoundary.ts, 63, 13))
+>Echo : Symbol(Echo, Decl(typeFunctionReturnBoundary.ts, 27, 28))
+>Recursive : Symbol(Recursive, Decl(typeFunctionReturnBoundary.ts, 60, 39))
+
+const recursiveFour: 4 | undefined = recursive.next?.next?.value;
+>recursiveFour : Symbol(recursiveFour, Decl(typeFunctionReturnBoundary.ts, 64, 5))
+>recursive.next?.next?.value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 62, 21))
+>recursive.next?.next : Symbol(next, Decl(typeFunctionReturnBoundary.ts, 62, 39))
+>recursive.next : Symbol(next, Decl(typeFunctionReturnBoundary.ts, 62, 39))
+>recursive : Symbol(recursive, Decl(typeFunctionReturnBoundary.ts, 63, 13))
+>next : Symbol(next, Decl(typeFunctionReturnBoundary.ts, 62, 39))
+>next : Symbol(next, Decl(typeFunctionReturnBoundary.ts, 62, 39))
+>value : Symbol(value, Decl(typeFunctionReturnBoundary.ts, 62, 21))
+
+class Fluent { private brand = 0; self(): this { return this; } }
+>Fluent : Symbol(Fluent, Decl(typeFunctionReturnBoundary.ts, 64, 65))
+>brand : Symbol(Fluent.brand, Decl(typeFunctionReturnBoundary.ts, 66, 14))
+>self : Symbol(Fluent.self, Decl(typeFunctionReturnBoundary.ts, 66, 33))
+>this : Symbol(Fluent, Decl(typeFunctionReturnBoundary.ts, 64, 65))
+
+declare const fluent: Echo<Fluent>;
+>fluent : Symbol(fluent, Decl(typeFunctionReturnBoundary.ts, 67, 13))
+>Echo : Symbol(Echo, Decl(typeFunctionReturnBoundary.ts, 27, 28))
+>Fluent : Symbol(Fluent, Decl(typeFunctionReturnBoundary.ts, 64, 65))
+
+const ordinaryClass: Fluent = fluent.self();
+>ordinaryClass : Symbol(ordinaryClass, Decl(typeFunctionReturnBoundary.ts, 68, 5))
+>Fluent : Symbol(Fluent, Decl(typeFunctionReturnBoundary.ts, 64, 65))
+>fluent.self : Symbol(Fluent.self, Decl(typeFunctionReturnBoundary.ts, 66, 33))
+>fluent : Symbol(fluent, Decl(typeFunctionReturnBoundary.ts, 67, 13))
+>self : Symbol(Fluent.self, Decl(typeFunctionReturnBoundary.ts, 66, 33))
+
+type Path<N> = readonly [Add<N, 1>, Path<N>?];
+>Path : Symbol(Path, Decl(typeFunctionReturnBoundary.ts, 68, 44))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 70, 10))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 70, 10))
+>Path : Symbol(Path, Decl(typeFunctionReturnBoundary.ts, 68, 44))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 70, 10))
+
+declare const path: Echo<Path<3>>;
+>path : Symbol(path, Decl(typeFunctionReturnBoundary.ts, 71, 13))
+>Echo : Symbol(Echo, Decl(typeFunctionReturnBoundary.ts, 27, 28))
+>Path : Symbol(Path, Decl(typeFunctionReturnBoundary.ts, 68, 44))
+
+const step: 4 | undefined = path[1]?.[0];
+>step : Symbol(step, Decl(typeFunctionReturnBoundary.ts, 72, 5))
+>path : Symbol(path, Decl(typeFunctionReturnBoundary.ts, 71, 13))
+>1 : Symbol(1)
+
+// @ts-expect-error the recursive element keeps its computed literal
+const wrongStep: 5 | undefined = path[1]?.[1]?.[0];
+>wrongStep : Symbol(wrongStep, Decl(typeFunctionReturnBoundary.ts, 74, 5))
+>path : Symbol(path, Decl(typeFunctionReturnBoundary.ts, 71, 13))
+>1 : Symbol(1)
+
+declare const label: "value";
+>label : Symbol(label, Decl(typeFunctionReturnBoundary.ts, 76, 13))
+
+type Phantom<T> = { label: typeof label };
+>Phantom : Symbol(Phantom, Decl(typeFunctionReturnBoundary.ts, 76, 29))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 77, 13))
+>label : Symbol(label, Decl(typeFunctionReturnBoundary.ts, 77, 19))
+>label : Symbol(label, Decl(typeFunctionReturnBoundary.ts, 76, 13))
+
+typefn ThroughArgument<> { return <T>() => Phantom<Add<T, 1>>; }
+>ThroughArgument : Symbol(ThroughArgument, Decl(typeFunctionReturnBoundary.ts, 77, 42))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 78, 35))
+>Phantom : Symbol(Phantom, Decl(typeFunctionReturnBoundary.ts, 76, 29))
+>Add : Symbol(Add, Decl(typeFunctionReturnBoundary.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 78, 35))
+
+declare const phantom: ThroughArgument<>;
+>phantom : Symbol(phantom, Decl(typeFunctionReturnBoundary.ts, 79, 13))
+>ThroughArgument : Symbol(ThroughArgument, Decl(typeFunctionReturnBoundary.ts, 77, 42))
+
+phantom.recovered;
+>phantom : Symbol(phantom, Decl(typeFunctionReturnBoundary.ts, 79, 13))
+
+typefn InferResult<N> { return <T>(arg: T) => T extends { id: infer I } ? [I, N + 1] : never; }
+>InferResult : Symbol(InferResult, Decl(typeFunctionReturnBoundary.ts, 80, 18))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 82, 19))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 82, 32))
+>arg : Symbol(arg, Decl(typeFunctionReturnBoundary.ts, 82, 35))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 82, 32))
+>T : Symbol(T, Decl(typeFunctionReturnBoundary.ts, 82, 32))
+>id : Symbol(id, Decl(typeFunctionReturnBoundary.ts, 82, 57))
+>I : Symbol(I, Decl(typeFunctionReturnBoundary.ts, 82, 67))
+>I : Symbol(I, Decl(typeFunctionReturnBoundary.ts, 82, 67))
+>N : Symbol(N, Decl(typeFunctionReturnBoundary.ts, 82, 19))
+
+declare const inferResult: InferResult<3>;
+>inferResult : Symbol(inferResult, Decl(typeFunctionReturnBoundary.ts, 83, 13))
+>InferResult : Symbol(InferResult, Decl(typeFunctionReturnBoundary.ts, 80, 18))
+
+const inferredPair: ["x", 4] = inferResult({ id: "x" } as const);
+>inferredPair : Symbol(inferredPair, Decl(typeFunctionReturnBoundary.ts, 84, 5))
+>inferResult : Symbol(inferResult, Decl(typeFunctionReturnBoundary.ts, 83, 13))
+>id : Symbol(id, Decl(typeFunctionReturnBoundary.ts, 84, 44))
+>const : Symbol(const)
+
+// @ts-expect-error the native conditional still infers the id type
+const wrongId: [false, 4] = inferResult({ id: "x" } as const);
+>wrongId : Symbol(wrongId, Decl(typeFunctionReturnBoundary.ts, 86, 5))
+>inferResult : Symbol(inferResult, Decl(typeFunctionReturnBoundary.ts, 83, 13))
+>id : Symbol(id, Decl(typeFunctionReturnBoundary.ts, 86, 41))
+>const : Symbol(const)
+

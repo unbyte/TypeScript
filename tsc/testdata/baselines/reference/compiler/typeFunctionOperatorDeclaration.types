@@ -1,29 +1,61 @@
 //// [tests/cases/compiler/typeFunctionOperatorDeclaration.ts] ////
 
 === typeFunctionOperatorDeclaration.ts ===
-typefn Make<N> { return [<T>(arg: T) => T + N]; }
+typefn Make<N> { return [<T>(arg: T) => [T, N + 1]]; }
 >Make : Make<N>
 >arg : T
 
 declare const functions: Make<3>;
->functions : [<T>(arg: T) => (T + 3)]
-
-export const named: Make<3>[0] = functions[0];
->named : <T>(arg: T) => (T + 3)
->functions[0] : <T>(arg: T) => (T + 3)
->functions : [<T>(arg: T) => (T + 3)]
->0 : 0
+>functions : [<T>(arg: T) => [T, 4]]
 
 export const inferred = functions[0];
->inferred : <T>(arg: T) => (T + 3)
->functions[0] : <T>(arg: T) => (T + 3)
->functions : [<T>(arg: T) => (T + 3)]
+>inferred : <T>(arg: T) => [T, 4]
+>functions[0] : <T>(arg: T) => [T, 4]
+>functions : [<T>(arg: T) => [T, 4]]
 >0 : 0
 
-export const computed = named(4 as const);
->computed : 7
->named(4 as const) : 7
->named : <T>(arg: T) => (T + 3)
->4 as const : 4
->4 : 4
+export const computed = inferred("x" as const);
+>computed : ["x", 4]
+>inferred("x" as const) : ["x", 4]
+>inferred : <T>(arg: T) => [T, 4]
+>"x" as const : "x"
+>"x" : "x"
+
+typefn Increment<N> { return N + 1; }
+>Increment : Increment<N>
+
+type Hidden<N> = { value: Increment<N> };
+>Hidden : Hidden<N>
+>value : Increment<N>
+
+typefn Build<> { return [Hidden<3>]; }
+>Build : [{ value: 4; }]
+
+declare const wrapped: Build<>;
+>wrapped : [{ value: 4; }]
+
+export const object = wrapped[0];
+>object : { value: 4; }
+>wrapped[0] : { value: 4; }
+>wrapped : [{ value: 4; }]
+>0 : 0
+
+typefn Transform<N> {
+>Transform : Transform<N>
+
+    return [<T>(arg: T) => T extends string ? { text: T; tag: N + 1 }
+>arg : T
+>text : T
+>tag : N + 1
+
+                                                : { readonly [K in keyof T]: [T[K], N + 1] }];
+}
+declare const transforms: Transform<3>;
+>transforms : [<T>(arg: T) => T extends string ? { text: T; tag: 4; } : { readonly [K in keyof T]: [T[K], 4]; }]
+
+export const transform = transforms[0];
+>transform : <T>(arg: T) => T extends string ? { text: T; tag: 4; } : { readonly [K in keyof T]: [T[K], 4]; }
+>transforms[0] : <T>(arg: T) => T extends string ? { text: T; tag: 4; } : { readonly [K in keyof T]: [T[K], 4]; }
+>transforms : [<T>(arg: T) => T extends string ? { text: T; tag: 4; } : { readonly [K in keyof T]: [T[K], 4]; }]
+>0 : 0
 

@@ -238,14 +238,15 @@ func (c *Checker) typeFunctionClosed(t *Type, path, bound map[*Type]bool) bool {
 }
 
 type typeFunctionExecution struct {
-	records   map[*Type]bool
-	fragments bool
-	trace     []string
-	refs      map[*Type]*Type
-	site      *ast.Node
-	stack     []*typeFunctionApplication
-	steps     int
-	failed    bool
+	records        map[*Type]bool
+	selectedValues map[*Type]*Type // Explicit computations reached in selected conditional arms.
+	fragments      bool
+	trace          []string
+	refs           map[*Type]*Type
+	site           *ast.Node
+	stack          []*typeFunctionApplication
+	steps          int
+	failed         bool
 }
 
 func (c *Checker) failTypeFunction(node *ast.Node, message string) *Type {
@@ -359,8 +360,8 @@ func (c *Checker) forceTypeFunction(t *Type) (result *Type) {
 	if flow != typeFunctionReturned {
 		return c.failTypeFunction(app.declaration, "execution reached the end without a return")
 	}
-	if len(root.stack) == 1 && root.fragments && !c.typeFunctionClosed(value, map[*Type]bool{}, map[*Type]bool{}) {
-		return c.failTypeFunction(app.use, "an unbound signature reference escaped the calculation")
+	if len(root.stack) == 1 {
+		return c.finishTypeFunctionResult(value, app.use)
 	}
 	if c.typeFunctionConstructors[value] != nil {
 		return c.failTypeFunction(app.use, "a constructor cannot be returned as a type")
@@ -484,7 +485,15 @@ func (f *typeFunctionFrame) selectedOperand(node *ast.Node, sources, values []*T
 	var force func(*Type) *Type
 	force = func(v *Type) *Type {
 		if app := v.typeFunctionApplication(); app != nil {
-			return c.forceTypeFunction(v)
+			value := c.forceTypeFunction(v)
+			root := c.typeFunctionExecution
+			if value != v && !root.failed {
+				if root.selectedValues == nil {
+					root.selectedValues = make(map[*Type]*Type)
+				}
+				root.selectedValues[v] = value
+			}
+			return value
 		}
 		if visited[v] || c.typeFunctionExecution.failed {
 			return v

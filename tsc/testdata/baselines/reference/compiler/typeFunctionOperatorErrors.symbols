@@ -122,5 +122,4 @@ const delayed = check("x");
 
 delayed[0].recovered;
 >delayed : Symbol(delayed, Decl(typeFunctionOperatorErrors.ts, 22, 5))
->0 : Symbol(0)
 

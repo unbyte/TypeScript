@@ -596,6 +596,9 @@ var nextCheckerID atomic.Uint32
 type Checker struct {
 	typeFunctionApplications                    map[*Type]*typeFunctionApplication
 	typeFunctionConstructors                    map[*Type]*typeFunctionConstructor
+	typeFunctionResultParameters                map[*Type][]*Type
+	typeFunctionResultBranches                  map[*ConditionalRoot][2]*Type
+	typeFunctionNativeDeclarations              map[*ast.Symbol]bool
 	typeFunctionReportedTraces                  map[typeFunctionTraceKey]bool
 	typeFunctionOrigins                         map[*Type]*Signature
 	typeFunctionExecution                       *typeFunctionExecution
@@ -23149,6 +23152,12 @@ func (c *Checker) instantiateTypeWorker(t *Type, m *TypeMapper, alias *TypeAlias
 // InstantiationExpressionType (ObjectFlagsInstantiationExpressionType)
 // MappedType (ObjectFlagsMapped)
 func (c *Checker) getObjectTypeInstantiation(t *Type, m *TypeMapper, alias *TypeAlias) *Type {
+	if c.typeFunctionResultParameters != nil {
+		target := core.OrElse(t.AsObjectType().target, t)
+		if params, ok := c.typeFunctionResultParameters[target]; ok {
+			return c.instantiateObjectWithParameters(t, target, m, alias, params)
+		}
+	}
 	var declaration *ast.Node
 	var target *Type
 	var typeParameters []*Type
@@ -23194,6 +23203,10 @@ func (c *Checker) getObjectTypeInstantiation(t *Type, m *TypeMapper, alias *Type
 		}
 		links.setOuterTypeParameters(c, typeParameters)
 	}
+	return c.instantiateObjectWithParameters(t, target, m, alias, typeParameters)
+}
+
+func (c *Checker) instantiateObjectWithParameters(t, target *Type, m *TypeMapper, alias *TypeAlias, typeParameters []*Type) *Type {
 	if len(typeParameters) == 0 {
 		return t
 	}
@@ -23291,7 +23304,16 @@ func (c *Checker) isTypeParameterPossiblyReferenced(tp *Type, node *ast.Node) bo
 	// type parameter, or if the node contains type queries that we can't prove couldn't contain references to the type parameter,
 	// we consider the type parameter possibly referenced.
 	if tp.symbol != nil && len(tp.symbol.Declarations()) == 1 {
-		container := tp.symbol.Declarations()[0].Parent
+		decl := tp.symbol.Declarations()[0]
+		switch node.Kind {
+		case ast.KindTypeFunctionBinary, ast.KindTypeFunctionNegate, ast.KindTypeFunctionNot:
+			// A VM operand captures the bindings it reads. An intervening
+			// conditional's infer variables do not by themselves delay it.
+			if owner := ast.FindAncestor(decl, ast.IsTypeFunctionDeclaration); owner != nil && owner == ast.FindAncestor(node, ast.IsTypeFunctionDeclaration) {
+				return containsReference(node)
+			}
+		}
+		container := decl.Parent
 		if ast.IsTypeFunctionBinding(container) {
 			container = container.Parent
 		}
@@ -23528,6 +23550,10 @@ func (c *Checker) getTypeParameterFromMappedType(t *Type) *Type {
 func (c *Checker) getConstraintTypeFromMappedType(t *Type) *Type {
 	m := t.AsMappedType()
 	if m.constraintType == nil {
+		if _, ok := c.typeFunctionResultParameters[m.target]; ok {
+			m.constraintType = c.instantiateType(m.target.AsMappedType().constraintType, m.mapper)
+			return m.constraintType
+		}
 		m.constraintType = core.OrElse(c.getConstraintOfTypeParameter(c.getTypeParameterFromMappedType(t)), c.errorType)
 	}
 	return m.constraintType
@@ -23539,6 +23565,10 @@ func (c *Checker) getNameTypeFromMappedType(t *Type) *Type {
 		return nil
 	}
 	if m.nameType == nil {
+		if _, ok := c.typeFunctionResultParameters[m.target]; ok {
+			m.nameType = c.instantiateType(m.target.AsMappedType().nameType, m.mapper)
+			return m.nameType
+		}
 		m.nameType = c.instantiateType(c.getTypeFromTypeNode(m.declaration.NameType), m.mapper)
 	}
 	return m.nameType
@@ -23547,6 +23577,10 @@ func (c *Checker) getNameTypeFromMappedType(t *Type) *Type {
 func (c *Checker) getTemplateTypeFromMappedType(t *Type) *Type {
 	m := t.AsMappedType()
 	if m.templateType == nil {
+		if _, ok := c.typeFunctionResultParameters[m.target]; ok {
+			m.templateType = c.instantiateType(m.target.AsMappedType().templateType, m.mapper)
+			return m.templateType
+		}
 		if m.declaration.Type != nil {
 			m.templateType = c.instantiateType(c.addOptionalityEx(c.getTypeFromTypeNode(m.declaration.Type) /*isProperty*/, true, getMappedTypeModifiers(t)&MappedTypeModifiersIncludeOptional != 0), m.mapper)
 		} else {
@@ -25332,11 +25366,11 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 				if checkType.flags&TypeFlagsAny != 0 || forConstraint && inferredExtendsType.flags&TypeFlagsNever == 0 && someType(c.getPermissiveInstantiation(inferredExtendsType), func(t *Type) bool {
 					return c.isTypeAssignableTo(t, c.getPermissiveInstantiation(checkType))
 				}) {
-					extraTypes = append(extraTypes, c.instantiateType(c.getTypeFromTypeNode(root.node.TrueType), core.OrElse(combinedMapper, mapper)))
+					extraTypes = append(extraTypes, c.instantiateType(c.getConditionalBranch(root, true), core.OrElse(combinedMapper, mapper)))
 				}
 				// If falseType is an immediately nested conditional type that isn't distributive or has an
 				// identical checkType, switch to that type and loop.
-				falseType := c.getTypeFromTypeNode(root.node.FalseType)
+				falseType := c.getConditionalBranch(root, false)
 				if falseType.flags&TypeFlagsConditional != 0 {
 					newRoot := falseType.AsConditionalType().root
 					if newRoot.node.Parent == root.node.AsNode() && (!newRoot.isDistributive || newRoot.checkType == root.checkType) {
@@ -25362,7 +25396,7 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 			//   type Foo<T extends { x: any }> = T extends { x: string } ? string : number
 			// doesn't immediately resolve to 'string' instead of being deferred.
 			if inferredExtendsType.flags&TypeFlagsAnyOrUnknown != 0 || c.isTypeAssignableTo(c.getRestrictiveInstantiation(checkType), c.getRestrictiveInstantiation(inferredExtendsType)) {
-				trueType := c.getTypeFromTypeNode(root.node.TrueType)
+				trueType := c.getConditionalBranch(root, true)
 				trueMapper := core.OrElse(combinedMapper, mapper)
 				if newRoot, newRootMapper := c.getTailRecursionRoot(trueType, trueMapper); newRoot != nil {
 					root = newRoot
@@ -25485,10 +25519,25 @@ func (c *Checker) permissiveMapperWorker(t *Type) *Type {
 	return t
 }
 
+// A computed conditional has native branch types; its declaration still
+// supplies source locations and the syntax used by conditional inference.
+func (c *Checker) getConditionalBranch(root *ConditionalRoot, whenTrue bool) *Type {
+	if branches, ok := c.typeFunctionResultBranches[root]; ok {
+		if whenTrue {
+			return branches[0]
+		}
+		return branches[1]
+	}
+	if whenTrue {
+		return c.getTypeFromTypeNode(root.node.TrueType)
+	}
+	return c.getTypeFromTypeNode(root.node.FalseType)
+}
+
 func (c *Checker) getTrueTypeFromConditionalType(t *Type) *Type {
 	d := t.AsConditionalType()
 	if d.resolvedTrueType == nil {
-		d.resolvedTrueType = c.instantiateType(c.getTypeFromTypeNode(d.root.node.TrueType), d.mapper)
+		d.resolvedTrueType = c.instantiateType(c.getConditionalBranch(d.root, true), d.mapper)
 	}
 	return d.resolvedTrueType
 }
@@ -25496,7 +25545,7 @@ func (c *Checker) getTrueTypeFromConditionalType(t *Type) *Type {
 func (c *Checker) getFalseTypeFromConditionalType(t *Type) *Type {
 	d := t.AsConditionalType()
 	if d.resolvedFalseType == nil {
-		d.resolvedFalseType = c.instantiateType(c.getTypeFromTypeNode(d.root.node.FalseType), d.mapper)
+		d.resolvedFalseType = c.instantiateType(c.getConditionalBranch(d.root, false), d.mapper)
 	}
 	return d.resolvedFalseType
 }
@@ -25505,7 +25554,7 @@ func (c *Checker) getInferredTrueTypeFromConditionalType(t *Type) *Type {
 	d := t.AsConditionalType()
 	if d.resolvedInferredTrueType == nil {
 		if d.combinedMapper != nil {
-			d.resolvedInferredTrueType = c.instantiateType(c.getTypeFromTypeNode(d.root.node.TrueType), d.combinedMapper)
+			d.resolvedInferredTrueType = c.instantiateType(c.getConditionalBranch(d.root, true), d.combinedMapper)
 		} else {
 			d.resolvedInferredTrueType = c.getTrueTypeFromConditionalType(t)
 		}
@@ -29130,6 +29179,10 @@ func (c *Checker) getSingleBaseForNonAugmentingSubtype(t *Type) *Type {
 func (c *Checker) getModifiersTypeFromMappedType(t *Type) *Type {
 	m := t.AsMappedType()
 	if m.modifiersType == nil {
+		if _, ok := c.typeFunctionResultParameters[m.target]; ok {
+			m.modifiersType = c.instantiateType(m.target.AsMappedType().modifiersType, m.mapper)
+			return m.modifiersType
+		}
 		if c.isMappedTypeWithKeyofConstraintDeclaration(t) {
 			// If the constraint declaration is a 'keyof T' node, the modifiers type is T. We check
 			// AST nodes here because, when T is a non-generic type, the logic below eagerly resolves

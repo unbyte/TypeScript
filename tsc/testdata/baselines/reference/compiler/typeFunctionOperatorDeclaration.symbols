@@ -1,7 +1,7 @@
 //// [tests/cases/compiler/typeFunctionOperatorDeclaration.ts] ////
 
 === typeFunctionOperatorDeclaration.ts ===
-typefn Make<N> { return [<T>(arg: T) => T + N]; }
+typefn Make<N> { return [<T>(arg: T) => [T, N + 1]]; }
 >Make : Symbol(Make, Decl(typeFunctionOperatorDeclaration.ts, 0, 0))
 >N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 0, 12))
 >T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 0, 26))
@@ -14,19 +14,68 @@ declare const functions: Make<3>;
 >functions : Symbol(functions, Decl(typeFunctionOperatorDeclaration.ts, 1, 13))
 >Make : Symbol(Make, Decl(typeFunctionOperatorDeclaration.ts, 0, 0))
 
-export const named: Make<3>[0] = functions[0];
->named : Symbol(named, Decl(typeFunctionOperatorDeclaration.ts, 2, 12))
->Make : Symbol(Make, Decl(typeFunctionOperatorDeclaration.ts, 0, 0))
->functions : Symbol(functions, Decl(typeFunctionOperatorDeclaration.ts, 1, 13))
->0 : Symbol(0)
-
 export const inferred = functions[0];
->inferred : Symbol(inferred, Decl(typeFunctionOperatorDeclaration.ts, 3, 12))
+>inferred : Symbol(inferred, Decl(typeFunctionOperatorDeclaration.ts, 2, 12))
 >functions : Symbol(functions, Decl(typeFunctionOperatorDeclaration.ts, 1, 13))
 >0 : Symbol(0)
 
-export const computed = named(4 as const);
->computed : Symbol(computed, Decl(typeFunctionOperatorDeclaration.ts, 4, 12))
->named : Symbol(named, Decl(typeFunctionOperatorDeclaration.ts, 2, 12))
+export const computed = inferred("x" as const);
+>computed : Symbol(computed, Decl(typeFunctionOperatorDeclaration.ts, 3, 12))
+>inferred : Symbol(inferred, Decl(typeFunctionOperatorDeclaration.ts, 2, 12))
 >const : Symbol(const)
+
+typefn Increment<N> { return N + 1; }
+>Increment : Symbol(Increment, Decl(typeFunctionOperatorDeclaration.ts, 3, 47))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 5, 17))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 5, 17))
+
+type Hidden<N> = { value: Increment<N> };
+>Hidden : Symbol(Hidden, Decl(typeFunctionOperatorDeclaration.ts, 5, 37))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 6, 12))
+>value : Symbol(value, Decl(typeFunctionOperatorDeclaration.ts, 6, 18))
+>Increment : Symbol(Increment, Decl(typeFunctionOperatorDeclaration.ts, 3, 47))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 6, 12))
+
+typefn Build<> { return [Hidden<3>]; }
+>Build : Symbol(Build, Decl(typeFunctionOperatorDeclaration.ts, 6, 41))
+>Hidden : Symbol(Hidden, Decl(typeFunctionOperatorDeclaration.ts, 5, 37))
+
+declare const wrapped: Build<>;
+>wrapped : Symbol(wrapped, Decl(typeFunctionOperatorDeclaration.ts, 8, 13))
+>Build : Symbol(Build, Decl(typeFunctionOperatorDeclaration.ts, 6, 41))
+
+export const object = wrapped[0];
+>object : Symbol(object, Decl(typeFunctionOperatorDeclaration.ts, 9, 12))
+>wrapped : Symbol(wrapped, Decl(typeFunctionOperatorDeclaration.ts, 8, 13))
+>0 : Symbol(0)
+
+typefn Transform<N> {
+>Transform : Symbol(Transform, Decl(typeFunctionOperatorDeclaration.ts, 9, 33))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 11, 17))
+
+    return [<T>(arg: T) => T extends string ? { text: T; tag: N + 1 }
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 12, 13))
+>arg : Symbol(arg, Decl(typeFunctionOperatorDeclaration.ts, 12, 16))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 12, 13))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 12, 13))
+>text : Symbol(text, Decl(typeFunctionOperatorDeclaration.ts, 12, 47))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 12, 13))
+>tag : Symbol(tag, Decl(typeFunctionOperatorDeclaration.ts, 12, 56))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 11, 17))
+
+                                                : { readonly [K in keyof T]: [T[K], N + 1] }];
+>K : Symbol(K, Decl(typeFunctionOperatorDeclaration.ts, 13, 62))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 12, 13))
+>T : Symbol(T, Decl(typeFunctionOperatorDeclaration.ts, 12, 13))
+>K : Symbol(K, Decl(typeFunctionOperatorDeclaration.ts, 13, 62))
+>N : Symbol(N, Decl(typeFunctionOperatorDeclaration.ts, 11, 17))
+}
+declare const transforms: Transform<3>;
+>transforms : Symbol(transforms, Decl(typeFunctionOperatorDeclaration.ts, 15, 13))
+>Transform : Symbol(Transform, Decl(typeFunctionOperatorDeclaration.ts, 9, 33))
+
+export const transform = transforms[0];
+>transform : Symbol(transform, Decl(typeFunctionOperatorDeclaration.ts, 16, 12))
+>transforms : Symbol(transforms, Decl(typeFunctionOperatorDeclaration.ts, 15, 13))
+>0 : Symbol(0)
 

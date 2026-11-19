@@ -59,3 +59,17 @@ typefn Match<S> { return string.matchPrefix<S, /*index*/0, /*prefix*/" ">; }`
 	f.GoToMarker(t, "prefix")
 	f.VerifySignatureHelp(t, fourslash.VerifySignatureHelpOptions{Text: signature, ParameterCount: 3, ParameterName: "Prefix"})
 }
+
+func TestTypeFunctionReturnBoundaryAfterEdit(t *testing.T) {
+	t.Parallel()
+	const content = `typefn Make<N> { return <T>(arg: T) => [T, /*operand*/T + 1]; }
+declare const make: Make<3>;
+const pair: ["x", 4] = make("x" as const);`
+	f, done := fourslash.NewFourslash(t, nil, content)
+	defer done()
+	f.VerifyNumberOfErrorsInCurrentFile(t, 1)
+	f.GoToMarker(t, "operand")
+	f.DeleteAtCaret(t, 1)
+	f.Insert(t, "N")
+	f.VerifyNoErrors(t)
+}

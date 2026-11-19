@@ -3045,6 +3045,9 @@ func (b *NodeBuilderImpl) createAnonymousTypeNodeEx(t *Type, forceClassExpansion
 		return b.visitAndTransformType(t, (*NodeBuilderImpl).createTypeNodeFromObjectType)
 	} else {
 		// Reverse mapped types use property and index signature placeholders for display.
+		if _, computed := b.ch.typeFunctionResultParameters[core.OrElse(t.AsObjectType().target, t)]; computed {
+			return b.visitAndTransformType(t, (*NodeBuilderImpl).createTypeNodeFromObjectType)
+		}
 		return b.createTypeNodeFromObjectType(t)
 	}
 }
@@ -3102,8 +3105,11 @@ func (b *NodeBuilderImpl) conditionalTypeToTypeNode(_t *Type) *ast.TypeNode {
 		b.ctx.inferTypeParameters = t.root.inferTypeParameters
 		extendsTypeNode := b.typeToTypeNode(b.ch.instantiateType(t.root.extendsType, newMapper))
 		b.ctx.inferTypeParameters = saveInferTypeParameters
-		trueTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.instantiateType(b.getTypeFromTypeNode(t.root.node.TrueType, false), newMapper))
-		falseTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.instantiateType(b.getTypeFromTypeNode(t.root.node.FalseType, false), newMapper))
+		branchNode := func(whenTrue bool) *ast.TypeNode {
+			branch := b.ch.instantiateType(b.ch.getConditionalBranch(t.root, whenTrue), b.ctx.mapper)
+			return b.typeToTypeNodeOrCircularityElision(b.ch.instantiateType(branch, newMapper))
+		}
+		trueTypeNode, falseTypeNode := branchNode(true), branchNode(false)
 
 		// outermost conditional makes `T` a type parameter, allowing the inner conditionals to be distributive
 		// second conditional makes `T` have `T & checkType` substitution, so it is correctly usable as the checkType
@@ -3458,9 +3464,6 @@ func (b *NodeBuilderImpl) typeToTypeNode(t *Type) *ast.TypeNode {
 			return b.symbolToTypeNode(ctor.target, ast.SymbolFlagsType, b.f.NewNodeList(args))
 		}
 		if app := t.typeFunctionApplication(); app != nil && app.expression != nil {
-			// This syntax is available for display, but only a named typefn
-			// application can represent an open calculation in an emitted type.
-			b.ctx.tracker.ReportInaccessibleTypeError("typefn operator")
 			return b.typeFunctionExpressionToNode(app)
 		}
 		if app := t.typeFunctionApplication(); app != nil && app.builtin != "" {

@@ -6,7 +6,7 @@ typeFunctionOperatorErrors.ts(11,24): error TS18200: Type function: operator '%'
 typeFunctionOperatorErrors.ts(12,25): error TS18200: Type function: operator '*' has no finite numeric result
 typeFunctionOperatorErrors.ts(13,23): error TS18200: Type function: expected a boolean literal
 typeFunctionOperatorErrors.ts(15,42): error TS18200: Type function: parenthesize chained comparisons
-typeFunctionOperatorErrors.ts(21,63): error TS18200: Type function: unexpected token (decoded UTF-16 offsets 0..1)
+typeFunctionOperatorErrors.ts(22,22): error TS18200: Type function: the returned type contains a typefn calculation that still needs a concrete argument
 
 
 ==== typeFunctionOperatorErrors.ts (9 errors) ====
@@ -54,11 +54,10 @@ typeFunctionOperatorErrors.ts(21,63): error TS18200: Type function: unexpected t
     
     typefn Unexpected<S> { fail<"unexpected token", { source: S; start: 0; end: 1 }>; }
     typefn CheckInput<> { return <S extends string>(input: S) => [false || Unexpected<S>]; }
-                                                                  ~~~~~~~~~~~~~~~~~~~~~~
-!!! error TS18200: Type function: unexpected token (decoded UTF-16 offsets 0..1)
-!!! related TS18200 typeFunctionOperatorErrors.ts:20:24: Type function: unexpected token (decoded UTF-16 offsets 0..1)
-!!! related TS18200 typeFunctionOperatorErrors.ts:21:72: Type function: called here
     declare const check: CheckInput<>;
+                         ~~~~~~~~~~~~
+!!! error TS18200: Type function: the returned type contains a typefn calculation that still needs a concrete argument
+!!! related TS18200 typeFunctionOperatorErrors.ts:21:63: Type function: the returned type contains a typefn calculation that still needs a concrete argument
     const delayed = check("x");
     delayed[0].recovered;
     

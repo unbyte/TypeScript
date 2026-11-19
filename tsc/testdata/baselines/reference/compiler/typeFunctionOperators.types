@@ -190,25 +190,27 @@ const fits: [true] = constructed;
 >true : true
 >constructed : [true]
 
-typefn Deferred<N> { return <T>(arg: T) => [T is string, N + 1]; }
->Deferred : Deferred<N>
+typefn NativeSignature<N> { return <T>(arg: T) => [T extends string ? true : false, N + 1]; }
+>NativeSignature : NativeSignature<N>
 >arg : T
+>true : true
+>false : false
 
-declare const deferred: Deferred<3>;
->deferred : <T>(arg: T) => [T is string, 4]
+declare const deferred: NativeSignature<3>;
+>deferred : <T>(arg: T) => [T extends string ? true : false, 4]
 
 const later: [true, 4] = deferred("hello");
 >later : [true, 4]
 >true : true
 >deferred("hello") : [true, 4]
->deferred : <T>(arg: T) => [T is string, 4]
+>deferred : <T>(arg: T) => [T extends string ? true : false, 4]
 >"hello" : "hello"
 
 const again: [false, 4] = deferred(0);
 >again : [false, 4]
 >false : false
 >deferred(0) : [false, 4]
->deferred : <T>(arg: T) => [T is string, 4]
+>deferred : <T>(arg: T) => [T extends string ? true : false, 4]
 >0 : 0
 
 typefn Short<S> { return Id<true || Failed<>["x"]>; }

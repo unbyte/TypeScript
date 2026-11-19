@@ -1,0 +1,340 @@
+//// [tests/cases/compiler/typeFunctionReturnBoundary.ts] ////
+
+=== typeFunctionReturnBoundary.ts ===
+typefn Add<A, B> { return A + B; }
+>Add : Add<A, B>
+
+type Hidden<T> = { nested: Add<T, 1> };
+>Hidden : Hidden<T>
+>nested : Add<T, 1>
+
+interface Container<T> { contents: Hidden<T>; }
+>contents : Hidden<T>
+
+typefn WithNext<N> {
+>WithNext : WithNext<N>
+
+    type Next = N + 1;
+    return <T>(x: T) => [T, Next];
+>x : T
+}
+typefn Inline<N> { return <T>(x: T) => [T, N + 1]; }
+>Inline : Inline<N>
+>x : T
+
+declare const saved: WithNext<3>;
+>saved : <T>(x: T) => [T, 4]
+
+declare const inline: Inline<8>;
+>inline : <T>(x: T) => [T, 9]
+
+const four: ["x", 4] = saved("x" as const);
+>four : ["x", 4]
+>saved("x" as const) : ["x", 4]
+>saved : <T>(x: T) => [T, 4]
+>"x" as const : "x"
+>"x" : "x"
+
+const nine: [false, 9] = inline(false as const);
+>nine : [false, 9]
+>false : false
+>inline(false as const) : [false, 9]
+>inline : <T>(x: T) => [T, 9]
+>false as const : false
+>false : false
+
+typefn Direct<N> { return <T>(value: T) => T + N; }
+>Direct : Direct<N>
+>value : T
+
+typefn Named<N> { return <T>(value: T) => Add<T, N>; }
+>Named : Named<N>
+>value : T
+
+typefn Aliased<> { type Local = <T>() => Container<T>; return Local; }
+>Aliased : any
+
+typefn Builtin<> { return <S extends string>() => string.split<S, " ">; }
+>Builtin : any
+>string : any
+
+declare const direct: Direct<1>;
+>direct : any
+
+declare const named: Named<1>;
+>named : any
+
+declare const aliased: Aliased<>;
+>aliased : any
+
+declare const builtin: Builtin<>;
+>builtin : any
+
+direct.recovered; named.recovered; aliased.recovered; builtin.recovered;
+>direct.recovered : any
+>direct : any
+>recovered : any
+>named.recovered : any
+>named : any
+>recovered : any
+>aliased.recovered : any
+>aliased : any
+>recovered : any
+>builtin.recovered : any
+>builtin : any
+>recovered : any
+
+// A helper may construct an intermediate signature whose result is later specialized.
+typefn Finish<N> { return fn.specialize<Direct<N>, [2]>; }
+>Finish : Finish<N>
+>fn : any
+
+declare const finished: Finish<3>;
+>finished : (value: 2) => 5
+
+const five: 5 = finished(2);
+>five : 5
+>finished(2) : 5
+>finished : (value: 2) => 5
+>2 : 2
+
+typefn Echo<T> { return T; }
+>Echo : Echo<T>
+
+type Tree<T> = { value: T; children: Tree<T[]> };
+>Tree : Tree<T>
+>value : T
+>children : Tree<T[]>
+
+declare const tree: Echo<Tree<1>>;
+>tree : Tree<1>
+
+const treeValue: 1[] = tree.children.value;
+>treeValue : 1[]
+>tree.children.value : 1[]
+>tree.children : Tree<1[]>
+>tree : Tree<1>
+>children : Tree<1[]>
+>value : 1[]
+
+declare const promise: Echo<Promise<string[]>>;
+>promise : Promise<string[]>
+
+const standard: Promise<string[]> = promise;
+>standard : Promise<string[]>
+>promise : Promise<string[]>
+
+typefn Native<N> { return <T>(arg: T) => T extends string ? [T, N + 1] : T; }
+>Native : Native<N>
+>arg : T
+
+declare const native: Native<4>;
+>native : <T>(arg: T) => T extends string ? [T, 5] : T
+
+const selected: ["x", 5] = native("x" as const);
+>selected : ["x", 5]
+>native("x" as const) : ["x", 5]
+>native : <T>(arg: T) => T extends string ? [T, 5] : T
+>"x" as const : "x"
+>"x" : "x"
+
+const other: 0 = native(0 as const);
+>other : 0
+>native(0 as const) : 0
+>native : <T>(arg: T) => T extends string ? [T, 5] : T
+>0 as const : 0
+>0 : 0
+
+typefn Conditional<> { return <T>() => T extends string ? Add<T, 1> : never; }
+>Conditional : any
+
+typefn Mapped<> { return <T>() => { [K in keyof T]: Add<T[K], 1> }; }
+>Mapped : any
+
+typefn Guard<> { return <T>(value: unknown) => value is Add<T, 1>; }
+>Guard : any
+>value : unknown
+
+typefn Default<> { return <T, U = Add<T, 1>>() => U; }
+>Default : any
+
+declare const conditional: Conditional<>;
+>conditional : any
+
+declare const mapped: Mapped<>;
+>mapped : any
+
+declare const guard: Guard<>;
+>guard : any
+
+declare const defaults: Default<>;
+>defaults : any
+
+conditional.recovered; mapped.recovered; guard.recovered; defaults.recovered;
+>conditional.recovered : any
+>conditional : any
+>recovered : any
+>mapped.recovered : any
+>mapped : any
+>recovered : any
+>guard.recovered : any
+>guard : any
+>recovered : any
+>defaults.recovered : any
+>defaults : any
+>recovered : any
+
+typefn RecordResult<N> { return <T>(arg: T) => { value: T; tag: N + 1 }; }
+>RecordResult : RecordResult<N>
+>arg : T
+>value : T
+>tag : N + 1
+
+declare const recordResult: RecordResult<3>;
+>recordResult : <T>(arg: T) => { value: T; tag: 4; }
+
+const record: { value: "x"; tag: 4 } = recordResult("x" as const);
+>record : { value: "x"; tag: 4; }
+>value : "x"
+>tag : 4
+>recordResult("x" as const) : { value: "x"; tag: 4; }
+>recordResult : <T>(arg: T) => { value: T; tag: 4; }
+>"x" as const : "x"
+>"x" : "x"
+
+typefn MapResult<N> { return <T>(arg: T) => { readonly [K in keyof T]: [T[K], N + 1] }; }
+>MapResult : MapResult<N>
+>arg : T
+
+declare const mapResult: MapResult<3>;
+>mapResult : <T>(arg: T) => { readonly [K in keyof T]: [T[K], 4]; }
+
+const mappedResult: { readonly z: ["hi", 4] } = mapResult({ z: "hi" } as const);
+>mappedResult : { readonly z: ["hi", 4]; }
+>z : ["hi", 4]
+>mapResult({ z: "hi" } as const) : { readonly z: ["hi", 4]; }
+>mapResult : <T>(arg: T) => { readonly [K in keyof T]: [T[K], 4]; }
+>{ z: "hi" } as const : { readonly z: "hi"; }
+>{ z: "hi" } : { readonly z: "hi"; }
+>z : "hi"
+>"hi" : "hi"
+
+typefn DefaultResult<N> { return <T extends N + 1 = N + 1>(arg?: T) => T; }
+>DefaultResult : DefaultResult<N>
+>arg : T | undefined
+
+declare const defaultResult: DefaultResult<3>;
+>defaultResult : <T extends 4 = 4>(arg?: T | undefined) => T
+
+const defaultFour: 4 = defaultResult();
+>defaultFour : 4
+>defaultResult() : 4
+>defaultResult : <T extends 4 = 4>(arg?: T | undefined) => T
+
+type Recursive<N> = { value: Add<N, 1>; next: Recursive<N> | null };
+>Recursive : Recursive<N>
+>value : Add<N, 1>
+>next : Recursive<N> | null
+
+declare const recursive: Echo<Recursive<3>>;
+>recursive : { value: 4; next: any | null; }
+
+const recursiveFour: 4 | undefined = recursive.next?.next?.value;
+>recursiveFour : 4 | undefined
+>recursive.next?.next?.value : 4 | undefined
+>recursive.next?.next : { value: 4; next: any | null; } | null | undefined
+>recursive.next : { value: 4; next: any | null; } | null
+>recursive : { value: 4; next: any | null; }
+>next : { value: 4; next: any | null; } | null
+>next : { value: 4; next: any | null; } | null | undefined
+>value : 4 | undefined
+
+class Fluent { private brand = 0; self(): this { return this; } }
+>Fluent : Fluent
+>brand : number
+>0 : 0
+>self : () => this
+>this : this
+
+declare const fluent: Echo<Fluent>;
+>fluent : Fluent
+
+const ordinaryClass: Fluent = fluent.self();
+>ordinaryClass : Fluent
+>fluent.self() : Fluent
+>fluent.self : () => Fluent
+>fluent : Fluent
+>self : () => Fluent
+
+type Path<N> = readonly [Add<N, 1>, Path<N>?];
+>Path : Path<N>
+
+declare const path: Echo<Path<3>>;
+>path : readonly [4, (any | undefined)?]
+
+const step: 4 | undefined = path[1]?.[0];
+>step : 4 | undefined
+>path[1]?.[0] : 4 | undefined
+>path[1] : readonly [4, (any | undefined)?] | undefined
+>path : readonly [4, (any | undefined)?]
+>1 : 1
+>0 : 0
+
+// @ts-expect-error the recursive element keeps its computed literal
+const wrongStep: 5 | undefined = path[1]?.[1]?.[0];
+>wrongStep : 5 | undefined
+>path[1]?.[1]?.[0] : 4 | undefined
+>path[1]?.[1] : readonly [4, (any | undefined)?] | undefined
+>path[1] : readonly [4, (any | undefined)?] | undefined
+>path : readonly [4, (any | undefined)?]
+>1 : 1
+>1 : 1
+>0 : 0
+
+declare const label: "value";
+>label : "value"
+
+type Phantom<T> = { label: typeof label };
+>Phantom : Phantom<T>
+>label : "value"
+>label : "value"
+
+typefn ThroughArgument<> { return <T>() => Phantom<Add<T, 1>>; }
+>ThroughArgument : any
+
+declare const phantom: ThroughArgument<>;
+>phantom : any
+
+phantom.recovered;
+>phantom.recovered : any
+>phantom : any
+>recovered : any
+
+typefn InferResult<N> { return <T>(arg: T) => T extends { id: infer I } ? [I, N + 1] : never; }
+>InferResult : InferResult<N>
+>arg : T
+>id : I
+
+declare const inferResult: InferResult<3>;
+>inferResult : <T>(arg: T) => T extends { id: infer I; } ? [I, 4] : never
+
+const inferredPair: ["x", 4] = inferResult({ id: "x" } as const);
+>inferredPair : ["x", 4]
+>inferResult({ id: "x" } as const) : ["x", 4]
+>inferResult : <T>(arg: T) => T extends { id: infer I; } ? [I, 4] : never
+>{ id: "x" } as const : { readonly id: "x"; }
+>{ id: "x" } : { readonly id: "x"; }
+>id : "x"
+>"x" : "x"
+
+// @ts-expect-error the native conditional still infers the id type
+const wrongId: [false, 4] = inferResult({ id: "x" } as const);
+>wrongId : [false, 4]
+>false : false
+>inferResult({ id: "x" } as const) : ["x", 4]
+>inferResult : <T>(arg: T) => T extends { id: infer I; } ? [I, 4] : never
+>{ id: "x" } as const : { readonly id: "x"; }
+>{ id: "x" } : { readonly id: "x"; }
+>id : "x"
+>"x" : "x"
+

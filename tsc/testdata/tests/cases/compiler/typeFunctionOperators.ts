@@ -47,8 +47,8 @@ type Box<T> = { value: T };
 typefn Constructor<F<_>, T> { return [F<T> is Box<string>]; }
 declare const constructed: Constructor<Box<_>, "x">;
 const fits: [true] = constructed;
-typefn Deferred<N> { return <T>(arg: T) => [T is string, N + 1]; }
-declare const deferred: Deferred<3>;
+typefn NativeSignature<N> { return <T>(arg: T) => [T extends string ? true : false, N + 1]; }
+declare const deferred: NativeSignature<3>;
 const later: [true, 4] = deferred("hello");
 const again: [false, 4] = deferred(0);
 
