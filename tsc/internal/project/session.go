@@ -67,12 +67,14 @@ const watchRequestTimeout = time.Second
 // SessionOptions are the immutable initialization options for a session.
 // Snapshots may reference them as a pointer since they never change.
 type SessionOptions struct {
-	CurrentDirectory       tspath.RootedDirectoryPath
-	DefaultLibraryPath     tspath.RootedDirectoryPath
-	TypingsLocation        tspath.RootedDirectoryPath
-	PositionEncoding       lsproto.PositionEncodingKind
-	WatchEnabled           bool
-	LoggingEnabled         bool
+	CurrentDirectory   tspath.RootedDirectoryPath
+	DefaultLibraryPath tspath.RootedDirectoryPath
+	TypingsLocation    tspath.RootedDirectoryPath
+	PositionEncoding   lsproto.PositionEncodingKind
+	WatchEnabled       bool
+	LoggingEnabled     bool
+	// TypeFunctionLog receives user-requested trace output from a checked snapshot.
+	TypeFunctionLog        func(string)
 	TelemetryEnabled       bool
 	PushDiagnosticsEnabled bool
 	// RunExternalCode allows configured content mappers to run their (external) processes,

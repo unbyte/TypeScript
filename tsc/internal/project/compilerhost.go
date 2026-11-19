@@ -164,3 +164,10 @@ func (c *compilerHost) ContentMapperProject() contentmapper.Project {
 func (c *compilerHost) Trace(msg *diagnostics.Message, args ...any) {
 	c.logger.Log(msg.Localize(locale.Default, args...))
 }
+
+// Type function execution happens after freeze, when the build log has closed.
+func (c *compilerHost) TraceTypeFunction(event string) {
+	if log := c.sessionOptions.TypeFunctionLog; log != nil {
+		log(diagnostics.Type_function_log_Colon_0.Localize(locale.Default, event))
+	}
+}

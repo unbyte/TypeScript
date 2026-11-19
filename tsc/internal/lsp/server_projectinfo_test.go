@@ -26,6 +26,11 @@ func expectedCodeActionKinds() []lsproto.CodeActionKind {
 
 func initProjectInfoClient(t *testing.T, files map[string]string) *lsptestutil.LSPClient {
 	t.Helper()
+	return initProjectClientWithNotifications(t, files, nil)
+}
+
+func initProjectClientWithNotifications(t *testing.T, files map[string]string, onNotification lsptestutil.ServerNotificationHandler) *lsptestutil.LSPClient {
+	t.Helper()
 
 	fs := bundled.WrapFS(vfstest.FromMap(files, tspath.CaseInsensitive))
 
@@ -49,6 +54,7 @@ func initProjectInfoClient(t *testing.T, files map[string]string) *lsptestutil.L
 		DefaultLibraryPath: bundled.LibPath(),
 	}, onServerRequest)
 	t.Cleanup(func() { _ = closeClient() })
+	client.OnServerNotification = onNotification
 
 	initMsg, _, ok := client.SendRequest(t, lsproto.InitializeInfo, &lsproto.InitializeParams{
 		Capabilities: &lsproto.ClientCapabilities{},

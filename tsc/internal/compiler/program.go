@@ -612,6 +612,10 @@ func (p *Program) ContentMapperExtensionRewrites() []tspath.ExtensionRewrite {
 }
 func (p *Program) CommandLine() *tsoptions.ParsedCommandLine { return p.opts.Config }
 func (p *Program) TraceTypeFunction(event string) {
+	if host, ok := p.Host().(interface{ TraceTypeFunction(event string) }); ok {
+		host.TraceTypeFunction(event)
+		return
+	}
 	p.Host().Trace(diagnostics.Type_function_log_Colon_0, event)
 }
 

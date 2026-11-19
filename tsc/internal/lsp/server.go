@@ -1809,6 +1809,7 @@ func (s *Server) handleInitialized(ctx context.Context, params *lsproto.Initiali
 			PositionEncoding:        s.positionEncoding,
 			WatchEnabled:            s.watchEnabled,
 			LoggingEnabled:          true,
+			TypeFunctionLog:         func(message string) { s.logger.Info(message) },
 			TelemetryEnabled:        enableTelemetry,
 			DebounceDelay:           500 * time.Millisecond,
 			PushDiagnosticsEnabled:  !disablePushDiagnostics,

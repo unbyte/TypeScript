@@ -16,6 +16,7 @@ import (
 	"github.com/microsoft/TypeScript/tsc/internal/printer"
 	"github.com/microsoft/TypeScript/tsc/internal/scanner"
 	"github.com/microsoft/TypeScript/tsc/internal/spanmap"
+	"github.com/microsoft/TypeScript/tsc/internal/typefunction"
 )
 
 // SignatureHelpTriggerCharacters and SignatureHelpRetriggerCharacters are the characters that trigger and
@@ -133,6 +134,10 @@ func (l *LanguageService) GetSignatureHelpItems(
 		return nil
 	}
 
+	if help := typeFunctionSignatureHelp(ctx, startingToken, position, typeChecker); help != nil {
+		return help
+	}
+
 	isManuallyInvoked := triggerReasonKind == signatureHelpTriggerReasonKindInvoked
 	argumentInfo := getContainingArgumentInfo(startingToken, sourceFile, typeChecker, isManuallyInvoked, position)
 	if argumentInfo == nil {
@@ -166,6 +171,41 @@ func (l *LanguageService) GetSignatureHelpItems(
 	return createTypeHelpItems(ctx, candidateInfo.typeInfo, argumentInfo, sourceFile, typeChecker)
 }
 
+func typeFunctionSignatureHelp(ctx context.Context, token *ast.Node, position int, c *checker.Checker) *lsproto.SignatureHelp {
+	for node := token; node != nil && !ast.IsStatement(node); node = node.Parent {
+		if !ast.IsTypeReferenceNode(node) {
+			continue
+		}
+		list := node.TypeArgumentList()
+		if list == nil || position < list.Pos() || position > list.End() {
+			continue
+		}
+		ns := c.TypeFunctionBuiltinNamespace(node)
+		if ns == "" {
+			continue
+		}
+		name := ns + "." + node.AsTypeReferenceNode().TypeName.AsQualifiedName().Right.Text()
+		op, ok := typefunction.Lookup(name)
+		if !ok {
+			return nil
+		}
+		labels := strings.Split(op.Parameters, ", ")
+		params := make([]*lsproto.ParameterInformation, len(labels))
+		for i, label := range labels {
+			params[i] = &lsproto.ParameterInformation{Label: lsproto.StringOrTuple{String: new(label)}}
+		}
+		active := 0
+		for _, arg := range list.Nodes {
+			if position <= arg.End() {
+				break
+			}
+			active++
+		}
+		return singleTypeSignatureHelp(ctx, name+"<"+op.Parameters+">", params, active)
+	}
+	return nil
+}
+
 func createTypeHelpItems(ctx context.Context, symbol *ast.Symbol, argumentInfo *argumentListInfo, sourceFile *ast.SourceFile, c *checker.Checker) *lsproto.SignatureHelp {
 	typeParameters := c.GetLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
 	if typeParameters == nil {
@@ -173,26 +213,30 @@ func createTypeHelpItems(ctx context.Context, symbol *ast.Symbol, argumentInfo *
 	}
 	item := getTypeHelpItem(symbol, typeParameters, getEnclosingDeclarationFromInvocation(argumentInfo.invocation), sourceFile, c)
 
-	// Check client capabilities for activeParameter handling
-	caps := lsproto.GetClientCapabilities(ctx)
-	sigInfoCaps := caps.TextDocument.SignatureHelp.SignatureInformation
-	supportsPerSignatureActiveParam := sigInfoCaps.ActiveParameterSupport
-
 	// Converting signatureHelpParameter to *lsproto.ParameterInformation
 	parameters := make([]*lsproto.ParameterInformation, len(item.Parameters))
 	for i, param := range item.Parameters {
 		parameters[i] = param.parameterInfo
 	}
 
+	return singleTypeSignatureHelp(ctx, item.Label, parameters, argumentInfo.argumentIndex)
+}
+
+func singleTypeSignatureHelp(ctx context.Context, label string, parameters []*lsproto.ParameterInformation, active int) *lsproto.SignatureHelp {
+	// Check client capabilities for activeParameter handling
+	caps := lsproto.GetClientCapabilities(ctx)
+	sigInfoCaps := caps.TextDocument.SignatureHelp.SignatureInformation
+	supportsPerSignatureActiveParam := sigInfoCaps.ActiveParameterSupport
+
 	sigInfo := &lsproto.SignatureInformation{
-		Label:         item.Label,
+		Label:         label,
 		Documentation: nil,
 		Parameters:    &parameters,
 	}
 
 	// If client supports per-signature activeParameter, set it on SignatureInformation
-	if supportsPerSignatureActiveParam && len(item.Parameters) > 0 {
-		sigInfo.ActiveParameter = &lsproto.UintegerOrNull{Uinteger: new(uint32(argumentInfo.argumentIndex))}
+	if supportsPerSignatureActiveParam && len(parameters) > 0 {
+		sigInfo.ActiveParameter = &lsproto.UintegerOrNull{Uinteger: new(uint32(active))}
 	}
 
 	help := &lsproto.SignatureHelp{
@@ -201,8 +245,8 @@ func createTypeHelpItems(ctx context.Context, symbol *ast.Symbol, argumentInfo *
 	}
 
 	// If client doesn't support per-signature activeParameter, set it on the top-level SignatureHelp
-	if !supportsPerSignatureActiveParam && len(item.Parameters) > 0 {
-		help.ActiveParameter = &lsproto.UintegerOrNull{Uinteger: new(uint32(argumentInfo.argumentIndex))}
+	if !supportsPerSignatureActiveParam && len(parameters) > 0 {
+		help.ActiveParameter = &lsproto.UintegerOrNull{Uinteger: new(uint32(active))}
 	}
 
 	return help
