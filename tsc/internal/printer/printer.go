@@ -1922,7 +1922,9 @@ func (p *Printer) emitTypeArguments(parentNode *ast.Node, nodes *ast.TypeArgumen
 func (p *Printer) emitTypeReference(node *ast.TypeReferenceNode) {
 	state := p.enterNode(node.AsNode())
 	p.emitEntityName(node.TypeName)
-	if node.TypeArguments != nil && len(node.TypeArguments.Nodes) == 0 {
+	// Preserve a written zero-argument application. The node builder can also
+	// synthesize an empty list when all of a generic's defaults were omitted.
+	if args := node.TypeArguments; args != nil && len(args.Nodes) == 0 && args.Pos() >= 0 && node.End() > args.End() {
 		p.writePunctuation("<")
 		p.writePunctuation(">")
 	} else {

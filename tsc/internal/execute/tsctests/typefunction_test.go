@@ -48,9 +48,15 @@ typefn PrivateCount<T> {
     log<"split", Words>;
     return tuple.count<Words>;
 }
-export typefn Words<T> { return PrivateCount<T>; }`
-	const consumer = `import type { Words } from "words";
+export typefn Words<T> { return PrivateCount<T>; }
+typefn Empty<> { return 0; }
+export type Zero = Empty<>;`
+	const consumer = `import type { Words, Zero } from "words";
 type PrivateCount<T> = never;
+declare const zero: Zero;
+const verifiedZero: 0 = zero;
+// @ts-expect-error the published zero-argument application returns literal 0
+const wrongZero: 1 = zero;
 declare const n: Words<"one two three">;
 const three: 3 = n;
 // @ts-expect-error
