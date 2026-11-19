@@ -54,7 +54,13 @@ loop:
 			result = r.lookup(locals, name, meaning)
 			if result != nil {
 				useResult := true
-				if isModuleAttributes {
+				if ast.IsTypeFunctionBlock(location) && lastLocation != nil {
+					if d := ast.GetDeclarationOfKind(result, ast.KindTypeParameter); d != nil && ast.IsTypeFunctionBinding(d.Parent) {
+						useResult = lastLocation.Pos() >= d.Parent.End()
+					}
+				} else if ast.IsTypeFunctionFor(location) {
+					useResult = lastLocation == location.AsTypeFunctionFor().Block
+				} else if isModuleAttributes {
 					useResult = false
 				} else if ast.IsFunctionLike(location) && lastLocation != nil && lastLocation != location.Body() {
 					// symbol lookup restrictions for function-like declarations
@@ -501,7 +507,7 @@ func isSelfReferenceLocation(node *ast.Node, lastLocation *ast.Node) bool {
 	case ast.KindParameter:
 		return lastLocation != nil && lastLocation == node.Name()
 	case ast.KindFunctionDeclaration, ast.KindClassDeclaration, ast.KindInterfaceDeclaration, ast.KindEnumDeclaration,
-		ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindModuleDeclaration: // For `namespace N { N; }`
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindModuleDeclaration: // For `namespace N { N; }`
 		return true
 	}
 	return false

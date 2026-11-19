@@ -41,7 +41,7 @@ func getOpenTokenForList(node *ast.Node, list *ast.NodeList) ast.Kind {
 	case ast.KindClassDeclaration,
 		ast.KindClassExpression,
 		ast.KindInterfaceDeclaration,
-		ast.KindTypeAliasDeclaration:
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		if node.TypeParameterList() == list {
 			return ast.KindLessThanToken
 		}

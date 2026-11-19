@@ -404,7 +404,7 @@ func tokenFromDeclarationMapping(kind ast.Kind) tokenType {
 		return tokenTypeProperty
 	case ast.KindInterfaceDeclaration:
 		return tokenTypeInterface
-	case ast.KindTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		return tokenTypeType
 	case ast.KindTypeParameter:
 		return tokenTypeTypeParameter

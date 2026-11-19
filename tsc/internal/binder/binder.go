@@ -447,7 +447,7 @@ func (b *Binder) declareSymbolAndAddToSymbolTable(node *ast.Node, symbolFlags as
 	case ast.KindFunctionType, ast.KindConstructorType, ast.KindCallSignature, ast.KindConstructSignature,
 		ast.KindIndexSignature, ast.KindMethodDeclaration, ast.KindMethodSignature, ast.KindConstructor, ast.KindGetAccessor,
 		ast.KindSetAccessor, ast.KindFunctionDeclaration, ast.KindFunctionExpression, ast.KindArrowFunction,
-		ast.KindClassStaticBlockDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindMappedType:
+		ast.KindClassStaticBlockDeclaration, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeFunctionBlock, ast.KindTypeFunctionFor, ast.KindTypeFunctionArm, ast.KindJSTypeAliasDeclaration, ast.KindMappedType:
 		return b.declareSymbol(ast.GetLocals(b.container), nil /*parent*/, node, symbolFlags, symbolExcludes)
 	}
 	panic("Unhandled case in declareSymbolAndAddToSymbolTable")
@@ -696,7 +696,7 @@ func (b *Binder) bind(node *ast.Node) bool {
 		if ast.IsInJSFile(node) {
 			b.bindCallExpression(node)
 		}
-	case ast.KindTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		b.bindBlockScopedDeclaration(node, ast.SymbolFlagsTypeAlias, ast.SymbolFlagsTypeAliasExcludes)
 	case ast.KindJSTypeAliasDeclaration:
 		// Top-level JSTypeAliasDeclaration nodes are processed in bindContainer
@@ -1242,7 +1242,7 @@ func (b *Binder) bindFunctionDeclaration(node *ast.Node) {
 func (b *Binder) getInferTypeContainer(node *ast.Node) *ast.Node {
 	extendsType := ast.FindAncestor(node, func(n *ast.Node) bool {
 		parent := n.Parent
-		return parent != nil && ast.IsConditionalTypeNode(parent) && parent.AsConditionalTypeNode().ExtendsType == n
+		return parent != nil && (ast.IsConditionalTypeNode(parent) && parent.AsConditionalTypeNode().ExtendsType == n || ast.IsTypeFunctionArm(parent) && parent.AsTypeFunctionArm().Pattern == n)
 	})
 	if extendsType != nil {
 		return extendsType.Parent
@@ -2600,7 +2600,7 @@ func GetContainerFlags(node *ast.Node) ContainerFlags {
 		return ContainerFlagsIsContainer
 	case ast.KindInterfaceDeclaration:
 		return ContainerFlagsIsContainer | ContainerFlagsIsInterface
-	case ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindMappedType, ast.KindIndexSignature:
+	case ast.KindTypeFunctionBlock, ast.KindTypeFunctionFor, ast.KindTypeFunctionArm, ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindMappedType, ast.KindIndexSignature:
 		return ContainerFlagsIsContainer | ContainerFlagsHasLocals
 	case ast.KindSourceFile:
 		return ContainerFlagsIsContainer | ContainerFlagsIsControlFlowContainer | ContainerFlagsHasLocals

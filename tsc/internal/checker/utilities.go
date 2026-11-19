@@ -188,7 +188,7 @@ func canHaveLocals(node *ast.Node) bool {
 		ast.KindFunctionExpression, ast.KindFunctionType, ast.KindGetAccessor, ast.KindIndexSignature,
 		ast.KindJSDocSignature, ast.KindMappedType,
 		ast.KindMethodDeclaration, ast.KindMethodSignature, ast.KindModuleDeclaration, ast.KindSetAccessor, ast.KindSourceFile,
-		ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration:
 		return true
 	}
 	return false
@@ -1393,7 +1393,7 @@ func forEachYieldExpression(body *ast.Node, visitor func(expr *ast.Node) bool) b
 				return false
 			}
 			return traverse(operand)
-		case ast.KindEnumDeclaration, ast.KindInterfaceDeclaration, ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration:
+		case ast.KindEnumDeclaration, ast.KindInterfaceDeclaration, ast.KindModuleDeclaration, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 			// These are not allowed inside a generator now, but eventually they may be allowed
 			// as local types. Regardless, skip them to avoid the work.
 		default:

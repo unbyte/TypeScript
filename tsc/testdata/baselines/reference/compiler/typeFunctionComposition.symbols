@@ -1,0 +1,148 @@
+//// [tests/cases/compiler/typeFunctionComposition.ts] ////
+
+=== typeFunctionComposition.ts ===
+export typefn Flags<Base extends object, Names extends readonly string[]> {
+>Flags : Symbol(Flags, Decl(typeFunctionComposition.ts, 0, 0))
+>Base : Symbol(Base, Decl(typeFunctionComposition.ts, 0, 20))
+>Names : Symbol(Names, Decl(typeFunctionComposition.ts, 0, 40))
+
+    type Out = Base;
+>Out : Symbol(Out, Decl(typeFunctionComposition.ts, 1, 8))
+>Base : Symbol(Base, Decl(typeFunctionComposition.ts, 0, 20))
+
+    for (type Name of Names) {
+>Name : Symbol(Name, Decl(typeFunctionComposition.ts, 2, 13))
+>Names : Symbol(Names, Decl(typeFunctionComposition.ts, 0, 40))
+
+        Out = object.setField<Out, Name, { type: boolean; readonly: true; optional: true }>;
+>object : Symbol(object)
+>setField : Symbol(object.setField)
+>Out : Symbol(Out, Decl(typeFunctionComposition.ts, 1, 8))
+>Name : Symbol(Name, Decl(typeFunctionComposition.ts, 2, 13))
+>type : Symbol(type, Decl(typeFunctionComposition.ts, 3, 42))
+>readonly : Symbol(readonly, Decl(typeFunctionComposition.ts, 3, 57))
+>optional : Symbol(optional, Decl(typeFunctionComposition.ts, 3, 73))
+    }
+    return Out;
+>Out : Symbol(Out, Decl(typeFunctionComposition.ts, 1, 8))
+}
+declare const flags: Flags<{ id: 1 }, ["debug", "trace"]>;
+>flags : Symbol(flags, Decl(typeFunctionComposition.ts, 7, 13))
+>Flags : Symbol(Flags, Decl(typeFunctionComposition.ts, 0, 0))
+>id : Symbol(id, Decl(typeFunctionComposition.ts, 7, 28))
+
+const id: 1 = flags.id;
+>id : Symbol(id, Decl(typeFunctionComposition.ts, 8, 5))
+>flags.id : Symbol(id, Decl(typeFunctionComposition.ts, 7, 28))
+>flags : Symbol(flags, Decl(typeFunctionComposition.ts, 7, 13))
+>id : Symbol(id, Decl(typeFunctionComposition.ts, 7, 28))
+
+const debug: boolean | undefined = flags.debug;
+>debug : Symbol(debug, Decl(typeFunctionComposition.ts, 9, 5))
+>flags.debug : Symbol(debug)
+>flags : Symbol(flags, Decl(typeFunctionComposition.ts, 7, 13))
+>debug : Symbol(debug)
+
+// @ts-expect-error field must be readonly
+flags.trace = false;
+>flags.trace : Symbol(trace)
+>flags : Symbol(flags, Decl(typeFunctionComposition.ts, 7, 13))
+>trace : Symbol(trace)
+
+type Box<T> = { value: T };
+>Box : Symbol(Box, Decl(typeFunctionComposition.ts, 11, 20))
+>T : Symbol(T, Decl(typeFunctionComposition.ts, 13, 9))
+>value : Symbol(value, Decl(typeFunctionComposition.ts, 13, 15))
+>T : Symbol(T, Decl(typeFunctionComposition.ts, 13, 9))
+
+typefn Apply<F<_>, X> { return F<X>; }
+>Apply : Symbol(Apply, Decl(typeFunctionComposition.ts, 13, 27))
+>F : Symbol(F, Decl(typeFunctionComposition.ts, 14, 13))
+>X : Symbol(X, Decl(typeFunctionComposition.ts, 14, 18))
+>F : Symbol(F, Decl(typeFunctionComposition.ts, 14, 13))
+>X : Symbol(X, Decl(typeFunctionComposition.ts, 14, 18))
+
+declare const box: Apply<Box<_>, "boxed">;
+>box : Symbol(box, Decl(typeFunctionComposition.ts, 15, 13))
+>Apply : Symbol(Apply, Decl(typeFunctionComposition.ts, 13, 27))
+>Box : Symbol(Box, Decl(typeFunctionComposition.ts, 11, 20))
+>_ : Symbol(_)
+
+const boxed: "boxed" = box.value;
+>boxed : Symbol(boxed, Decl(typeFunctionComposition.ts, 16, 5))
+>box.value : Symbol(value, Decl(typeFunctionComposition.ts, 13, 15))
+>box : Symbol(box, Decl(typeFunctionComposition.ts, 15, 13))
+>value : Symbol(value, Decl(typeFunctionComposition.ts, 13, 15))
+
+typefn WrapResult<F> {
+>WrapResult : Symbol(WrapResult, Decl(typeFunctionComposition.ts, 16, 33))
+>F : Symbol(F, Decl(typeFunctionComposition.ts, 18, 18))
+
+    type Parts = fn.decompose<F>;
+>Parts : Symbol(Parts, Decl(typeFunctionComposition.ts, 19, 8))
+>fn : Symbol(fn)
+>decompose : Symbol(fn.decompose)
+>F : Symbol(F, Decl(typeFunctionComposition.ts, 18, 18))
+
+    type Call = Parts["calls"][0];
+>Call : Symbol(Call, Decl(typeFunctionComposition.ts, 20, 8))
+>Parts : Symbol(Parts, Decl(typeFunctionComposition.ts, 19, 8))
+
+    return fn.compose<{
+>fn : Symbol(fn)
+>compose : Symbol(fn.compose)
+
+        members: {};
+>members : Symbol(members, Decl(typeFunctionComposition.ts, 21, 23))
+
+        calls: [{ parameters: Call["parameters"]; result: { kind: "return"; type: [Call["result"]["type"]] } }];
+>calls : Symbol(calls, Decl(typeFunctionComposition.ts, 22, 20))
+>parameters : Symbol(parameters, Decl(typeFunctionComposition.ts, 23, 17))
+>Call : Symbol(Call, Decl(typeFunctionComposition.ts, 20, 8))
+>result : Symbol(result, Decl(typeFunctionComposition.ts, 23, 49))
+>kind : Symbol(kind, Decl(typeFunctionComposition.ts, 23, 59))
+>type : Symbol(type, Decl(typeFunctionComposition.ts, 23, 75))
+>Call : Symbol(Call, Decl(typeFunctionComposition.ts, 20, 8))
+
+        constructs: [];
+>constructs : Symbol(constructs, Decl(typeFunctionComposition.ts, 23, 112))
+
+    }>;
+}
+export declare const wrapped: WrapResult<(id: number) => string>;
+>wrapped : Symbol(wrapped, Decl(typeFunctionComposition.ts, 27, 20))
+>WrapResult : Symbol(WrapResult, Decl(typeFunctionComposition.ts, 16, 33))
+>id : Symbol(id, Decl(typeFunctionComposition.ts, 27, 42))
+
+const reply: [string] = wrapped(42);
+>reply : Symbol(reply, Decl(typeFunctionComposition.ts, 28, 5))
+>wrapped : Symbol(wrapped, Decl(typeFunctionComposition.ts, 27, 20))
+
+// @ts-expect-error parameter type must survive recomposition
+wrapped("wrong");
+>wrapped : Symbol(wrapped, Decl(typeFunctionComposition.ts, 27, 20))
+
+typefn ExtractId<T> {
+>ExtractId : Symbol(ExtractId, Decl(typeFunctionComposition.ts, 30, 17))
+>T : Symbol(T, Decl(typeFunctionComposition.ts, 32, 17))
+
+    match T {
+>T : Symbol(T, Decl(typeFunctionComposition.ts, 32, 17))
+
+        case { id: infer I } { return I; }
+>id : Symbol(id, Decl(typeFunctionComposition.ts, 34, 14))
+>I : Symbol(I, Decl(typeFunctionComposition.ts, 34, 24))
+>I : Symbol(I, Decl(typeFunctionComposition.ts, 34, 24))
+
+        else { return never; }
+    }
+}
+declare const ref: ExtractId<{ id: 42 }>;
+>ref : Symbol(ref, Decl(typeFunctionComposition.ts, 38, 13))
+>ExtractId : Symbol(ExtractId, Decl(typeFunctionComposition.ts, 30, 17))
+>id : Symbol(id, Decl(typeFunctionComposition.ts, 38, 30))
+
+const n: 42 = ref;
+>n : Symbol(n, Decl(typeFunctionComposition.ts, 39, 5))
+>ref : Symbol(ref, Decl(typeFunctionComposition.ts, 38, 13))
+

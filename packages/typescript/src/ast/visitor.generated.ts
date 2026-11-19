@@ -160,6 +160,17 @@ import type {
     TupleTypeNode,
     TypeAliasDeclaration,
     TypeAssertion,
+    TypeFunctionArm,
+    TypeFunctionAssignment,
+    TypeFunctionBinary,
+    TypeFunctionBinding,
+    TypeFunctionBlock,
+    TypeFunctionBranch,
+    TypeFunctionConstructorSlots,
+    TypeFunctionFor,
+    TypeFunctionMatch,
+    TypeFunctionNot,
+    TypeFunctionOperandStatement,
     TypeLiteralNode,
     TypeOfExpression,
     TypeOperatorNode,
@@ -332,6 +343,17 @@ import {
     updateTupleTypeNode,
     updateTypeAliasDeclaration,
     updateTypeAssertion,
+    updateTypeFunctionArm,
+    updateTypeFunctionAssignment,
+    updateTypeFunctionBinary,
+    updateTypeFunctionBinding,
+    updateTypeFunctionBlock,
+    updateTypeFunctionBranch,
+    updateTypeFunctionConstructorSlots,
+    updateTypeFunctionFor,
+    updateTypeFunctionMatch,
+    updateTypeFunctionNot,
+    updateTypeFunctionOperandStatement,
     updateTypeLiteralNode,
     updateTypeOfExpression,
     updateTypeOperatorNode,
@@ -400,6 +422,7 @@ import {
     isTemplateHead,
     isTemplateLiteral,
     isTemplateMiddleOrTail,
+    isTypeFunctionBlock,
     isTypeLiteralNode,
     isTypeNode,
     isTypeParameterDeclaration,
@@ -1415,6 +1438,60 @@ const visitEachChildTable: Record<number, VisitEachChildFunction> = {
     [SyntaxKind.JSDocTypeLiteral]: (node: JSDocTypeLiteral, visitor: Visitor): JSDocTypeLiteral => {
         const _jsdocPropertyTags = visitNodesArray(node.jsdocPropertyTags, visitor);
         return updateJSDocTypeLiteral(node, _jsdocPropertyTags);
+    },
+    [SyntaxKind.TypeFunctionBlock]: (node: TypeFunctionBlock, visitor: Visitor): TypeFunctionBlock => {
+        const _statements = visitNodes(node.statements, visitor);
+        return updateTypeFunctionBlock(node, _statements);
+    },
+    [SyntaxKind.TypeFunctionBinding]: (node: TypeFunctionBinding, visitor: Visitor): TypeFunctionBinding => {
+        const _bindings = visitNodes(node.bindings, visitor);
+        const _initializer = visitNode(node.initializer, visitor, isTypeNode);
+        return updateTypeFunctionBinding(node, _bindings, _initializer);
+    },
+    [SyntaxKind.TypeFunctionAssignment]: (node: TypeFunctionAssignment, visitor: Visitor): TypeFunctionAssignment => {
+        const _target = visitNode(node.target, visitor, isIdentifier);
+        const _value = visitNode(node.value, visitor, isTypeNode);
+        return updateTypeFunctionAssignment(node, _target, _value);
+    },
+    [SyntaxKind.TypeFunctionReturn]: (node: TypeFunctionOperandStatement, visitor: Visitor): TypeFunctionOperandStatement => {
+        const _operand = visitNode(node.operand, visitor, isTypeNode);
+        return updateTypeFunctionOperandStatement(node, _operand);
+    },
+    [SyntaxKind.TypeFunctionIf]: (node: TypeFunctionBranch, visitor: Visitor): TypeFunctionBranch => {
+        const _condition = visitNode(node.condition, visitor, isTypeNode);
+        const _block = visitNode(node.block, visitor, isTypeFunctionBlock);
+        const _elseBranch = visitNode(node.elseBranch, visitor);
+        return updateTypeFunctionBranch(node, _condition, _block, _elseBranch);
+    },
+    [SyntaxKind.TypeFunctionFor]: (node: TypeFunctionFor, visitor: Visitor): TypeFunctionFor => {
+        const _binding = visitNode(node.binding, visitor, isTypeParameterDeclaration);
+        const _sequence = visitNode(node.sequence, visitor, isTypeNode);
+        const _block = visitNode(node.block, visitor, isTypeFunctionBlock);
+        return updateTypeFunctionFor(node, _binding, _sequence, _block);
+    },
+    [SyntaxKind.TypeFunctionMatch]: (node: TypeFunctionMatch, visitor: Visitor): TypeFunctionMatch => {
+        const _operand = visitNode(node.operand, visitor, isTypeNode);
+        const _arms = visitNodes(node.arms, visitor);
+        return updateTypeFunctionMatch(node, _operand, _arms);
+    },
+    [SyntaxKind.TypeFunctionArm]: (node: TypeFunctionArm, visitor: Visitor): TypeFunctionArm => {
+        const _pattern = visitNode(node.pattern, visitor, isTypeNode);
+        const _block = visitNode(node.block, visitor, isTypeFunctionBlock);
+        return updateTypeFunctionArm(node, _pattern, _block);
+    },
+    [SyntaxKind.TypeFunctionBinary]: (node: TypeFunctionBinary, visitor: Visitor): TypeFunctionBinary => {
+        const _left = visitNode(node.left, visitor, isTypeNode);
+        const _operatorToken = visitNode(node.operatorToken, visitor, isBinaryOperatorToken);
+        const _right = visitNode(node.right, visitor, isTypeNode);
+        return updateTypeFunctionBinary(node, _left, _operatorToken, _right);
+    },
+    [SyntaxKind.TypeFunctionNot]: (node: TypeFunctionNot, visitor: Visitor): TypeFunctionNot => {
+        const _operand = visitNode(node.operand, visitor, isTypeNode);
+        return updateTypeFunctionNot(node, _operand);
+    },
+    [SyntaxKind.TypeFunctionConstructorSlots]: (node: TypeFunctionConstructorSlots, visitor: Visitor): TypeFunctionConstructorSlots => {
+        const _holes = visitNodes(node.holes, visitor);
+        return updateTypeFunctionConstructorSlots(node, _holes);
     },
     [SyntaxKind.ForInStatement]: (node: ForInStatement, visitor: Visitor): ForInStatement => {
         const _awaitModifier = visitNode(node.awaitModifier, visitor, isAwaitKeyword);

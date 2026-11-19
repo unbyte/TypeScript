@@ -88,6 +88,13 @@ var commonOptionsWithBuild = []*CommandLineOption{
 		DefaultValueDescription: false,
 	},
 	{
+		Name:                    "traceTypeFunctions",
+		Kind:                    CommandLineOptionTypeBoolean,
+		Category:                diagnostics.Compiler_Diagnostics,
+		Description:             diagnostics.Print_log_statements_from_type_function_evaluations,
+		DefaultValueDescription: false,
+	},
+	{
 		Name:                    "diagnostics",
 		Kind:                    CommandLineOptionTypeBoolean,
 		Category:                diagnostics.Compiler_Diagnostics,

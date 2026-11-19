@@ -679,7 +679,7 @@ func isDeclarationStatementKind(kind Kind) bool {
 		KindMissingDeclaration,
 		KindClassDeclaration,
 		KindInterfaceDeclaration,
-		KindTypeAliasDeclaration,
+		KindTypeAliasDeclaration, KindTypeFunctionDeclaration,
 		KindJSTypeAliasDeclaration,
 		KindEnumDeclaration,
 		KindModuleDeclaration,
@@ -773,6 +773,7 @@ func IsCatchClauseVariableDeclarationOrBindingElement(declaration *Node) bool {
 
 func IsTypeNodeKind(kind Kind) bool {
 	switch kind {
+	case KindTypeFunctionBlock, KindTypeFunctionNot, KindTypeFunctionBinary: return true
 	case KindAnyKeyword,
 		KindUnknownKeyword,
 		KindNumberKeyword,
@@ -1111,7 +1112,7 @@ func CanHaveSymbol(node *Node) bool {
 		KindNamespaceImport, KindNewExpression, KindNoSubstitutionTemplateLiteral, KindNumericLiteral, KindObjectLiteralExpression,
 		KindParameter, KindPropertyAccessExpression, KindPropertyAssignment, KindPropertyDeclaration, KindPropertySignature,
 		KindSetAccessor, KindShorthandPropertyAssignment, KindSourceFile, KindSpreadAssignment, KindStringLiteral,
-		KindTypeAliasDeclaration, KindTypeLiteral, KindTypeParameter, KindVariableDeclaration:
+		KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindTypeLiteral, KindTypeParameter, KindVariableDeclaration:
 		return true
 	}
 	return false
@@ -1123,7 +1124,7 @@ func CanHaveIllegalDecorators(node *Node) bool {
 		KindFunctionDeclaration, KindConstructor,
 		KindIndexSignature, KindClassStaticBlockDeclaration,
 		KindMissingDeclaration, KindVariableStatement,
-		KindInterfaceDeclaration, KindTypeAliasDeclaration,
+		KindInterfaceDeclaration, KindTypeAliasDeclaration, KindTypeFunctionDeclaration,
 		KindEnumDeclaration, KindModuleDeclaration,
 		KindImportEqualsDeclaration, KindImportDeclaration, KindJSImportDeclaration,
 		KindNamespaceExportDeclaration, KindExportDeclaration,
@@ -1165,7 +1166,7 @@ func CanHaveModifiers(node *Node) bool {
 		KindFunctionDeclaration,
 		KindClassDeclaration,
 		KindInterfaceDeclaration,
-		KindTypeAliasDeclaration,
+		KindTypeAliasDeclaration, KindTypeFunctionDeclaration,
 		KindEnumDeclaration,
 		KindModuleDeclaration,
 		KindImportEqualsDeclaration,
@@ -2338,7 +2339,7 @@ func GetMeaningFromDeclaration(node *Node) SemanticMeaning {
 
 	case KindTypeParameter,
 		KindInterfaceDeclaration,
-		KindTypeAliasDeclaration,
+		KindTypeAliasDeclaration, KindTypeFunctionDeclaration,
 		KindJSTypeAliasDeclaration,
 		KindTypeLiteral:
 		return SemanticMeaningType
@@ -2468,7 +2469,7 @@ func getModuleInstanceStateCached(node *Node, ancestors []*Node, visited map[Nod
 func getModuleInstanceStateWorker(node *Node, ancestors []*Node, visited map[NodeId]ModuleInstanceState) ModuleInstanceState {
 	// A module is uninstantiated if it contains only
 	switch node.Kind {
-	case KindInterfaceDeclaration, KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
+	case KindInterfaceDeclaration, KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration:
 		return ModuleInstanceStateNonInstantiated
 	case KindEnumDeclaration:
 		if IsEnumConst(node) {
@@ -3174,7 +3175,7 @@ func GetTypeAnnotationNode(node *Node) *TypeNode {
 	switch node.Kind {
 	case KindVariableDeclaration, KindParameter, KindPropertySignature, KindPropertyDeclaration,
 		KindTypePredicate, KindParenthesizedType, KindTypeOperator, KindMappedType, KindTypeAssertionExpression,
-		KindAsExpression, KindSatisfiesExpression, KindTypeAliasDeclaration, KindJSTypeAliasDeclaration,
+		KindAsExpression, KindSatisfiesExpression, KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration,
 		KindNamedTupleMember, KindOptionalType, KindRestType, KindTemplateLiteralTypeSpan, KindJSDocTypeExpression,
 		KindJSDocParameterTag, KindJSDocPropertyTag, KindJSDocNullableType, KindJSDocNonNullableType, KindJSDocOptionalType:
 		return node.Type()
@@ -3593,7 +3594,7 @@ func ReplaceModifiers(factory *NodeFactory, node *Node, modifierArray *ModifierL
 			node.AsInterfaceDeclaration().HeritageClauses,
 			node.MemberList(),
 		)
-	case KindTypeAliasDeclaration:
+	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration:
 		return factory.UpdateTypeAliasDeclaration(
 			node.AsTypeAliasDeclaration(),
 			modifierArray,
@@ -3663,7 +3664,7 @@ func IsLateVisibilityPaintedStatement(node *Node) bool {
 		KindClassDeclaration,
 		KindFunctionDeclaration,
 		KindModuleDeclaration,
-		KindTypeAliasDeclaration,
+		KindTypeAliasDeclaration, KindTypeFunctionDeclaration,
 		KindJSTypeAliasDeclaration,
 		KindInterfaceDeclaration,
 		KindEnumDeclaration:
@@ -3693,7 +3694,7 @@ func GetNonAugmentationDeclaration(symbol *Symbol) *Node {
 
 func IsTypeDeclaration(node *Node) bool {
 	switch node.Kind {
-	case KindTypeParameter, KindClassDeclaration, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindJSTypeAliasDeclaration, KindEnumDeclaration:
+	case KindTypeParameter, KindClassDeclaration, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration, KindEnumDeclaration:
 		return true
 	case KindImportClause:
 		return node.IsTypeOnly() && node.AsImportClause().Name() != nil

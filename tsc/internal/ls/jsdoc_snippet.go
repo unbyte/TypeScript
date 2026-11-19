@@ -224,7 +224,7 @@ func getCommentOwnerInfoWorker(commentOwner *ast.Node, generateReturnInDocTempla
 		return &commentOwnerInfo{commentOwner: commentOwner, parameters: commentOwner.Parameters(), hasReturn: hasReturn(commentOwner, generateReturnInDocTemplate)}, false
 	case ast.KindPropertyAssignment:
 		return getCommentOwnerInfoWorker(commentOwner.AsPropertyAssignment().Initializer, generateReturnInDocTemplate)
-	case ast.KindClassDeclaration, ast.KindInterfaceDeclaration, ast.KindEnumDeclaration, ast.KindEnumMember, ast.KindTypeAliasDeclaration:
+	case ast.KindClassDeclaration, ast.KindInterfaceDeclaration, ast.KindEnumDeclaration, ast.KindEnumMember, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		return &commentOwnerInfo{commentOwner: commentOwner}, false
 	case ast.KindPropertySignature:
 		if typeNode := commentOwner.AsPropertySignatureDeclaration().Type; typeNode != nil && ast.IsFunctionTypeNode(typeNode) {

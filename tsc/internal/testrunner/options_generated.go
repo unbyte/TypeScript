@@ -93,6 +93,7 @@ var compilerVaryBy = collections.NewSetFromItems(
 	"stripinternal",
 	"target",
 	"traceresolution",
+	"tracetypefunctions",
 	"usedefineforclassfields",
 	"useunknownincatchvariables",
 	"verbatimmodulesyntax",

@@ -309,6 +309,17 @@ import type {
     TupleTypeNode,
     TypeAliasDeclaration,
     TypeAssertion,
+    TypeFunctionArm,
+    TypeFunctionAssignment,
+    TypeFunctionBinary,
+    TypeFunctionBinding,
+    TypeFunctionBlock,
+    TypeFunctionBranch,
+    TypeFunctionConstructorSlots,
+    TypeFunctionFor,
+    TypeFunctionMatch,
+    TypeFunctionNot,
+    TypeFunctionOperandStatement,
     TypeLiteralNode,
     TypeOfExpression,
     TypeOperatorNode,
@@ -669,6 +680,7 @@ export function isTypeAliasDeclaration(node: Node): node is TypeAliasDeclaration
     switch (node.kind) {
         case SyntaxKind.TypeAliasDeclaration:
         case SyntaxKind.JSTypeAliasDeclaration:
+        case SyntaxKind.TypeFunctionDeclaration:
             return true;
         default:
             return false;
@@ -2053,6 +2065,117 @@ export declare namespace isJSDocTypeLiteral {
     function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, JSDocTypeLiteral>;
 }
 isJSDocTypeLiteral.Handle = isJSDocTypeLiteral as any;
+
+export function isTypeFunctionBlock(node: Node): node is TypeFunctionBlock {
+    return node.kind === SyntaxKind.TypeFunctionBlock;
+}
+
+export declare namespace isTypeFunctionBlock {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionBlock>;
+}
+isTypeFunctionBlock.Handle = isTypeFunctionBlock as any;
+
+export function isTypeFunctionBinding(node: Node): node is TypeFunctionBinding {
+    return node.kind === SyntaxKind.TypeFunctionBinding;
+}
+
+export declare namespace isTypeFunctionBinding {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionBinding>;
+}
+isTypeFunctionBinding.Handle = isTypeFunctionBinding as any;
+
+export function isTypeFunctionAssignment(node: Node): node is TypeFunctionAssignment {
+    return node.kind === SyntaxKind.TypeFunctionAssignment;
+}
+
+export declare namespace isTypeFunctionAssignment {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionAssignment>;
+}
+isTypeFunctionAssignment.Handle = isTypeFunctionAssignment as any;
+
+export function isTypeFunctionOperandStatement(node: Node): node is TypeFunctionOperandStatement {
+    switch (node.kind) {
+        case SyntaxKind.TypeFunctionReturn:
+        case SyntaxKind.TypeFunctionCallStatement:
+            return true;
+        default:
+            return false;
+    }
+}
+
+export declare namespace isTypeFunctionOperandStatement {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionOperandStatement>;
+}
+isTypeFunctionOperandStatement.Handle = isTypeFunctionOperandStatement as any;
+
+export function isTypeFunctionBranch(node: Node): node is TypeFunctionBranch {
+    switch (node.kind) {
+        case SyntaxKind.TypeFunctionIf:
+        case SyntaxKind.TypeFunctionWhile:
+            return true;
+        default:
+            return false;
+    }
+}
+
+export declare namespace isTypeFunctionBranch {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionBranch>;
+}
+isTypeFunctionBranch.Handle = isTypeFunctionBranch as any;
+
+export function isTypeFunctionFor(node: Node): node is TypeFunctionFor {
+    return node.kind === SyntaxKind.TypeFunctionFor;
+}
+
+export declare namespace isTypeFunctionFor {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionFor>;
+}
+isTypeFunctionFor.Handle = isTypeFunctionFor as any;
+
+export function isTypeFunctionMatch(node: Node): node is TypeFunctionMatch {
+    return node.kind === SyntaxKind.TypeFunctionMatch;
+}
+
+export declare namespace isTypeFunctionMatch {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionMatch>;
+}
+isTypeFunctionMatch.Handle = isTypeFunctionMatch as any;
+
+export function isTypeFunctionArm(node: Node): node is TypeFunctionArm {
+    return node.kind === SyntaxKind.TypeFunctionArm;
+}
+
+export declare namespace isTypeFunctionArm {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionArm>;
+}
+isTypeFunctionArm.Handle = isTypeFunctionArm as any;
+
+export function isTypeFunctionBinary(node: Node): node is TypeFunctionBinary {
+    return node.kind === SyntaxKind.TypeFunctionBinary;
+}
+
+export declare namespace isTypeFunctionBinary {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionBinary>;
+}
+isTypeFunctionBinary.Handle = isTypeFunctionBinary as any;
+
+export function isTypeFunctionNot(node: Node): node is TypeFunctionNot {
+    return node.kind === SyntaxKind.TypeFunctionNot;
+}
+
+export declare namespace isTypeFunctionNot {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionNot>;
+}
+isTypeFunctionNot.Handle = isTypeFunctionNot as any;
+
+export function isTypeFunctionConstructorSlots(node: Node): node is TypeFunctionConstructorSlots {
+    return node.kind === SyntaxKind.TypeFunctionConstructorSlots;
+}
+
+export declare namespace isTypeFunctionConstructorSlots {
+    function Handle<T extends NodeHandleLike<Node>>(node: T): node is SpecializeNodeHandle<T, TypeFunctionConstructorSlots>;
+}
+isTypeFunctionConstructorSlots.Handle = isTypeFunctionConstructorSlots as any;
 
 export function isForInStatement(node: Node): node is ForInStatement {
     return node.kind === SyntaxKind.ForInStatement;

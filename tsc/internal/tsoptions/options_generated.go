@@ -216,6 +216,8 @@ func parseCompilerOptions(key string, value any, allOptions *core.CompilerOption
 		allOptions.Target = floatOrInt32ToFlag[core.ScriptTarget](value)
 	case "traceResolution":
 		allOptions.TraceResolution = ParseTristate(value)
+	case "traceTypeFunctions":
+		allOptions.TraceTypeFunctions = ParseTristate(value)
 	case "tsBuildInfoFile":
 		allOptions.TsBuildInfoFile = parseFileName(value)
 	case "typeRoots":
@@ -1492,6 +1494,11 @@ func mergeCompilerOptionFields(targetOptions, sourceOptions *core.CompilerOption
 	} else if sourceOptions.TraceResolution != core.TSUnknown {
 		targetOptions.TraceResolution = sourceOptions.TraceResolution
 	}
+	if explicitNullFields.Has("traceTypeFunctions") {
+		targetOptions.TraceTypeFunctions = core.TSUnknown
+	} else if sourceOptions.TraceTypeFunctions != core.TSUnknown {
+		targetOptions.TraceTypeFunctions = sourceOptions.TraceTypeFunctions
+	}
 	if explicitNullFields.Has("tsBuildInfoFile") {
 		targetOptions.TsBuildInfoFile = ""
 	} else if sourceOptions.TsBuildInfoFile != "" {
@@ -1996,6 +2003,9 @@ func serializeCompilerOptions(options *core.CompilerOptions, configFilePath tspa
 	}
 	if options.TraceResolution == core.TSTrue || options.TraceResolution == core.TSFalse {
 		result.Set("traceResolution", options.TraceResolution == core.TSTrue)
+	}
+	if options.TraceTypeFunctions == core.TSTrue || options.TraceTypeFunctions == core.TSFalse {
+		result.Set("traceTypeFunctions", options.TraceTypeFunctions == core.TSTrue)
 	}
 	if options.TsBuildInfoFile != "" {
 		result.Set("tsBuildInfoFile", serializeCompilerOptionPath(options.TsBuildInfoFile.AsPath(), configFilePath, caseSensitivity))

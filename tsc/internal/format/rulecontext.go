@@ -162,7 +162,7 @@ func isBinaryOpContext(context *FormattingContext) bool {
 	case ast.KindBindingElement:
 		// equals in type X = ...
 		fallthrough
-	case ast.KindTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		// equal in import a = module('a');
 		fallthrough
 	case ast.KindImportEqualsDeclaration:
@@ -486,7 +486,7 @@ func isTypeArgumentOrParameterOrAssertion(token TextRangeWithKind, parent *ast.N
 	switch parent.Kind {
 	case ast.KindTypeReference,
 		ast.KindTypeAssertionExpression,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindClassDeclaration,
 		ast.KindClassExpression,
 		ast.KindInterfaceDeclaration,

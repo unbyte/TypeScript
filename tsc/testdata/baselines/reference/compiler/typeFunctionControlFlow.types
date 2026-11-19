@@ -1,0 +1,82 @@
+//// [tests/cases/compiler/typeFunctionControlFlow.ts] ////
+
+=== typeFunctionControlFlow.ts ===
+typefn Sum<Items extends readonly number[]> {
+>Sum : Sum<Items>
+
+    type Total = 0;
+    for (type Item of Items) {
+        if (Item === 0) { continue; }
+        Total = number.add<Total, Item>;
+>Total : error
+>number : any
+    }
+    return Total;
+}
+
+typefn Countdown<N> {
+>Countdown : Countdown<N>
+
+    type Remaining = N;
+    while (number.lessThan<0, Remaining>) {
+>number : any
+
+        Remaining = number.subtract<Remaining, 1>;
+>Remaining : error
+>number : any
+    }
+    return Remaining;
+}
+
+typefn Classify<T> {
+>Classify : Classify<T>
+
+    match T {
+        case [string, number] { return "pair"; }
+        else { return "other"; }
+    }
+}
+typefn Problem<> { fail<"deliberate">; }
+>Problem : any
+
+typefn ShortCircuit<> {
+>ShortCircuit : 1
+
+    if (true || Problem<>) { return 1; }
+>true : true
+
+    return 2;
+}
+declare const sum: Sum<[1, 0, 2]>;
+>sum : 3
+
+declare const countdown: Countdown<4>;
+>countdown : 0
+
+declare const pair: Classify<["ok", 42]>;
+>pair : "pair"
+
+declare const short: ShortCircuit<>;
+>short : 1
+
+const three: 3 = sum;
+>three : 3
+>sum : 3
+
+const zero: 0 = countdown;
+>zero : 0
+>countdown : 0
+
+const label: "pair" = pair;
+>label : "pair"
+>pair : "pair"
+
+const one: 1 = short;
+>one : 1
+>short : 1
+
+// @ts-expect-error
+const wrong: 6 = sum;
+>wrong : 6
+>sum : 3
+

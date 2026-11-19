@@ -9023,5 +9023,17 @@
     "File '{0}' has a registered content mapper extension but does not match any content mapper's 'include'.": {
         "category": "Error",
         "code": 18140
+    },
+    "Type function: {0}": {
+        "category": "Error",
+        "code": 18200
+    },
+    "Print log statements from type function evaluations.": {
+        "category": "Message",
+        "code": 18201
+    },
+    "Type function log: {0}": {
+        "category": "Message",
+        "code": 18202
     }
 }

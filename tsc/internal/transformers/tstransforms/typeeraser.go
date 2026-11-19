@@ -114,7 +114,7 @@ func (tx *TypeEraserTransformer) visit(node *ast.Node) *ast.Node {
 	case ast.KindJSImportDeclaration:
 		// reparsed commonjs are elided
 		return nil
-	case ast.KindTypeAliasDeclaration,
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindJSTypeAliasDeclaration,
 		ast.KindInterfaceDeclaration:
 		// TypeScript type-only declarations are elided.

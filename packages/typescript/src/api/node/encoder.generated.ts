@@ -22,6 +22,7 @@ import type {
     PostfixUnaryExpression,
     PrefixUnaryExpression,
     SyntheticExpression,
+    TypeFunctionBinding,
     TypeOperatorNode,
 } from "../../ast/index.ts";
 import { SyntaxKind } from "../../ast/index.ts";
@@ -99,6 +100,8 @@ export function getNodeCommonData(node: Node): number {
         case SyntaxKind.JSDocParameterTag:
         case SyntaxKind.JSDocPropertyTag:
             return ((node as JSDocParameterOrPropertyTag).isBracketed ? 1 : 0) << 24 | ((node as JSDocParameterOrPropertyTag).isNameFirst ? 1 : 0) << 25;
+        case SyntaxKind.TypeFunctionBinding:
+            return ((node as TypeFunctionBinding).destructured ? 1 : 0) << 24;
     }
     return 0;
 }

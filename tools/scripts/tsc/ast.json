@@ -446,7 +446,21 @@
             "NotEmittedStatement",
             "PartiallyEmittedExpression",
             "SyntheticReferenceExpression",
-            "NotEmittedTypeElement"
+            "NotEmittedTypeElement",
+            "TypeFunctionDeclaration",
+            "TypeFunctionBlock",
+            "TypeFunctionBinding",
+            "TypeFunctionAssignment",
+            "TypeFunctionReturn",
+            "TypeFunctionCallStatement",
+            "TypeFunctionIf",
+            "TypeFunctionWhile",
+            "TypeFunctionFor",
+            "TypeFunctionMatch",
+            "TypeFunctionArm",
+            "TypeFunctionBinary",
+            "TypeFunctionNot",
+            "TypeFunctionConstructorSlots"
         ],
         "markers": [
             {
@@ -2022,7 +2036,8 @@
             "TypeAliasDeclaration": {
                 "kind": [
                     "TypeAliasDeclaration",
-                    "JSTypeAliasDeclaration"
+                    "JSTypeAliasDeclaration",
+                    "TypeFunctionDeclaration"
                 ],
                 "extends": [
                     "StatementBase",
@@ -5171,6 +5186,188 @@
                     {
                         "name": "Comment",
                         "inherited": true
+                    }
+                ]
+            },
+            "TypeFunctionBlock": {
+                "extends": [
+                    "TypeNodeBase",
+                    "LocalsContainerBase"
+                ],
+                "members": [
+                    {
+                        "name": "Statements",
+                        "type": "Statement",
+                        "list": "NodeList"
+                    }
+                ]
+            },
+            "TypeFunctionBinding": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Bindings",
+                        "type": "TypeParameterDeclaration",
+                        "list": "NodeList"
+                    },
+                    {
+                        "name": "Destructured",
+                        "type": "bool"
+                    },
+                    {
+                        "name": "Initializer",
+                        "type": "TypeNode"
+                    }
+                ]
+            },
+            "TypeFunctionAssignment": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Target",
+                        "type": "Identifier"
+                    },
+                    {
+                        "name": "Value",
+                        "type": "TypeNode"
+                    }
+                ]
+            },
+            "TypeFunctionOperandStatement": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Operand",
+                        "type": "TypeNode"
+                    }
+                ],
+                "kind": [
+                    "TypeFunctionReturn",
+                    "TypeFunctionCallStatement"
+                ]
+            },
+            "TypeFunctionBranch": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Condition",
+                        "type": "TypeNode"
+                    },
+                    {
+                        "name": "Block",
+                        "type": "TypeFunctionBlock"
+                    },
+                    {
+                        "name": "ElseBranch",
+                        "type": "Node",
+                        "optional": true
+                    }
+                ],
+                "kind": [
+                    "TypeFunctionIf",
+                    "TypeFunctionWhile"
+                ]
+            },
+            "TypeFunctionFor": {
+                "extends": [
+                    "StatementBase",
+                    "LocalsContainerBase"
+                ],
+                "members": [
+                    {
+                        "name": "Binding",
+                        "type": "TypeParameterDeclaration"
+                    },
+                    {
+                        "name": "Sequence",
+                        "type": "TypeNode"
+                    },
+                    {
+                        "name": "Block",
+                        "type": "TypeFunctionBlock"
+                    }
+                ]
+            },
+            "TypeFunctionMatch": {
+                "extends": [
+                    "StatementBase"
+                ],
+                "members": [
+                    {
+                        "name": "Operand",
+                        "type": "TypeNode"
+                    },
+                    {
+                        "name": "Arms",
+                        "type": "TypeFunctionArm",
+                        "list": "NodeList"
+                    }
+                ]
+            },
+            "TypeFunctionArm": {
+                "extends": [
+                    "NodeBase",
+                    "LocalsContainerBase"
+                ],
+                "members": [
+                    {
+                        "name": "Pattern",
+                        "type": "TypeNode",
+                        "optional": true
+                    },
+                    {
+                        "name": "Block",
+                        "type": "TypeFunctionBlock"
+                    }
+                ]
+            },
+            "TypeFunctionBinary": {
+                "extends": [
+                    "TypeNodeBase"
+                ],
+                "members": [
+                    {
+                        "name": "Left",
+                        "type": "TypeNode"
+                    },
+                    {
+                        "name": "OperatorToken",
+                        "type": "BinaryOperatorToken"
+                    },
+                    {
+                        "name": "Right",
+                        "type": "TypeNode"
+                    }
+                ]
+            },
+            "TypeFunctionNot": {
+                "extends": [
+                    "TypeNodeBase"
+                ],
+                "members": [
+                    {
+                        "name": "Operand",
+                        "type": "TypeNode"
+                    }
+                ]
+            },
+            "TypeFunctionConstructorSlots": {
+                "extends": [
+                    "ExpressionBase"
+                ],
+                "members": [
+                    {
+                        "name": "Holes",
+                        "type": "Identifier",
+                        "list": "NodeList"
                     }
                 ]
             }

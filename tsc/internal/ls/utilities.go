@@ -851,7 +851,7 @@ func getMeaningFromDeclaration(node *ast.Node) ast.SemanticMeaning {
 		ast.KindFunctionDeclaration, ast.KindFunctionExpression, ast.KindArrowFunction, ast.KindCatchClause, ast.KindJsxAttribute:
 		return ast.SemanticMeaningValue
 
-	case ast.KindTypeParameter, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeLiteral:
+	case ast.KindTypeParameter, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeLiteral:
 		return ast.SemanticMeaningType
 
 	case ast.KindEnumMember, ast.KindClassDeclaration:

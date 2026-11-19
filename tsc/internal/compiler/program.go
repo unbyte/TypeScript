@@ -611,8 +611,12 @@ func (p *Program) ContentMapperExtensionRewrites() []tspath.ExtensionRewrite {
 	return p.opts.Config.ContentMapperExtensionRewrites()
 }
 func (p *Program) CommandLine() *tsoptions.ParsedCommandLine { return p.opts.Config }
-func (p *Program) Host() CompilerHost                        { return p.hosts.Host }
-func (p *Program) Tracing() *tracing.Tracing                 { return p.hosts.Tracing }
+func (p *Program) TraceTypeFunction(event string) {
+	p.Host().Trace(diagnostics.Type_function_log_Colon_0, event)
+}
+
+func (p *Program) Host() CompilerHost        { return p.hosts.Host }
+func (p *Program) Tracing() *tracing.Tracing { return p.hosts.Tracing }
 func (p *Program) GetConfigFileParsingDiagnostics() []*ast.Diagnostic {
 	return slices.Clip(p.opts.Config.GetConfigFileParsingDiagnostics())
 }

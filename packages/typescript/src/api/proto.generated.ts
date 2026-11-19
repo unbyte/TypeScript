@@ -1987,6 +1987,7 @@ export interface RawCompilerOptions {
     suppressOutputPathCheck?: boolean | undefined;
     target?: ScriptTarget | undefined;
     traceResolution?: boolean | undefined;
+    traceTypeFunctions?: boolean | undefined;
     tsBuildInfoFile?: string | undefined;
     typeRoots?: string[] | undefined;
     types?: string[] | undefined;

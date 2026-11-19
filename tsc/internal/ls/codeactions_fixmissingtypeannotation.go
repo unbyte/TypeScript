@@ -1349,7 +1349,7 @@ func isNamedDeclarationKind(node *ast.Node) bool {
 		ast.KindNamespaceExportDeclaration, ast.KindNamespaceImport, ast.KindNamespaceExport,
 		ast.KindParameter, ast.KindPropertyAssignment, ast.KindPropertyDeclaration,
 		ast.KindPropertySignature, ast.KindSetAccessor, ast.KindShorthandPropertyAssignment,
-		ast.KindTypeAliasDeclaration, ast.KindTypeParameter, ast.KindVariableDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindTypeParameter, ast.KindVariableDeclaration,
 		ast.KindJSDocTypedefTag, ast.KindJSDocCallbackTag, ast.KindJSDocPropertyTag,
 		ast.KindNamedTupleMember:
 		return true

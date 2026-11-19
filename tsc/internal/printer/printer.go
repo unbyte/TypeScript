@@ -886,7 +886,7 @@ func (p *Printer) shouldAllowTrailingComma(node *ast.Node, list *ast.NodeList) b
 		ast.KindConstructor,
 		ast.KindGetAccessor,
 		ast.KindSetAccessor,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindJSTypeAliasDeclaration,
 		ast.KindFunctionType,
 		ast.KindConstructorType,
@@ -1445,6 +1445,17 @@ func (p *Printer) emitTypeParameter(node *ast.TypeParameterDeclaration) {
 	state := p.enterNode(node.AsNode())
 	p.emitModifierList(node.AsNode(), node.Modifiers(), false /*allowDecorators*/)
 	p.emitBindingIdentifier(node.Name().AsIdentifier())
+	if slots := node.Expression; slots != nil && ast.IsTypeFunctionConstructorSlots(slots) {
+		p.writePunctuation("<")
+		for i, hole := range slots.AsTypeFunctionConstructorSlots().Holes.Nodes {
+			if i != 0 {
+				p.writePunctuation(",")
+				p.writeSpace()
+			}
+			p.emitBindingIdentifier(hole.AsIdentifier())
+		}
+		p.writePunctuation(">")
+	}
 	if node.Constraint != nil {
 		p.writeSpace()
 		p.writeKeyword("extends")
@@ -2302,7 +2313,9 @@ func (p *Printer) emitTypeNode(node *ast.TypeNode, precedence ast.TypePrecedence
 	}
 
 	switch node.Kind {
-	// Keyword Types
+	case ast.KindTypeFunctionNot, ast.KindTypeFunctionBinary:
+		p.emitTypeFunctionExpression(node)
+		// Keyword Types
 	case ast.KindAnyKeyword,
 		ast.KindUnknownKeyword,
 		ast.KindNumberKeyword,
@@ -3799,6 +3812,20 @@ func (p *Printer) emitInterfaceDeclaration(node *ast.InterfaceDeclaration) {
 func (p *Printer) emitTypeAliasDeclaration(node *ast.TypeAliasDeclaration) {
 	state := p.enterNode(node.AsNode())
 	p.emitModifierList(node.AsNode(), node.Modifiers(), false /*allowDecorators*/)
+	if node.Kind == ast.KindTypeFunctionDeclaration {
+		p.writeKeyword("typefn")
+		p.writeSpace()
+		p.emitBindingIdentifier(node.Name().AsIdentifier())
+		if len(node.TypeParameters.Nodes) == 0 {
+			p.writePunctuation("<>")
+		} else {
+			p.emitTypeParameters(node.AsNode(), node.TypeParameters)
+		}
+		p.writeSpace()
+		p.emitTypeFunctionBlock(node.Type)
+		p.exitNode(node.AsNode(), state)
+		return
+	}
 	p.writeKeyword("type")
 	p.writeSpace()
 	p.emitBindingIdentifier(node.Name().AsIdentifier())
@@ -4209,7 +4236,7 @@ func (p *Printer) emitStatement(node *ast.Statement) {
 		p.emitClassDeclaration(node.AsClassDeclaration())
 	case ast.KindInterfaceDeclaration:
 		p.emitInterfaceDeclaration(node.AsInterfaceDeclaration())
-	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration:
 		p.emitTypeAliasDeclaration(node.AsTypeAliasDeclaration())
 	case ast.KindEnumDeclaration:
 		p.emitEnumDeclaration(node.AsEnumDeclaration())
@@ -4850,7 +4877,7 @@ func (p *Printer) hasTrailingComma(parentNode *ast.Node, children *ast.NodeList)
 		case parentNode.ParameterList():
 			originalList = originalParent.ParameterList()
 		}
-	case ast.KindClassDeclaration, ast.KindClassExpression, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
+	case ast.KindClassDeclaration, ast.KindClassExpression, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration:
 		switch children {
 		case parentNode.TypeParameterList():
 			originalList = originalParent.TypeParameterList()

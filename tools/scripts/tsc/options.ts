@@ -1253,6 +1253,16 @@ export const options: OptionsModel = {
             },
         },
         {
+            name: "traceTypeFunctions",
+            type: "Tristate",
+            declaration: {
+                group: "commonOptionsWithBuild",
+                category: diagnostic("Compiler Diagnostics"),
+                description: diagnostic("Print log statements from type function evaluations."),
+                defaultValueDescription: false,
+            },
+        },
+        {
             name: "tsBuildInfoFile",
             transpile: { value: "clear" },
             type: "string",
@@ -1713,6 +1723,7 @@ export const options: OptionsModel = {
             "listEmittedFiles",
             "pretty",
             "traceResolution",
+            "traceTypeFunctions",
             "diagnostics",
             "extendedDiagnostics",
             "generateCpuProfile",

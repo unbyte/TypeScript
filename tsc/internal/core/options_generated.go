@@ -114,6 +114,7 @@ type CompilerOptions struct {
 	SuppressOutputPathCheck                Tristate                     `json:"suppressOutputPathCheck,omitzero"`
 	Target                                 ScriptTarget                 `json:"target,omitzero"`
 	TraceResolution                        Tristate                     `json:"traceResolution,omitzero"`
+	TraceTypeFunctions                     Tristate                     `json:"traceTypeFunctions,omitzero"`
 	TsBuildInfoFile                        tspath.RootedFilePath        `json:"tsBuildInfoFile,omitzero"`
 	TypeRoots                              []tspath.RootedDirectoryPath `json:"typeRoots,omitzero"`
 	Types                                  []string                     `json:"types,omitzero"`
@@ -261,6 +262,7 @@ func (options *CompilerOptions) Clone() *CompilerOptions {
 		SuppressOutputPathCheck:                 options.SuppressOutputPathCheck,
 		Target:                                  options.Target,
 		TraceResolution:                         options.TraceResolution,
+		TraceTypeFunctions:                      options.TraceTypeFunctions,
 		TsBuildInfoFile:                         options.TsBuildInfoFile,
 		TypeRoots:                               options.TypeRoots,
 		Types:                                   options.Types,
@@ -596,6 +598,9 @@ func (options *CompilerOptions) Equals(other *CompilerOptions) bool {
 		return false
 	}
 	if options.TraceResolution != other.TraceResolution {
+		return false
+	}
+	if options.TraceTypeFunctions != other.TraceTypeFunctions {
 		return false
 	}
 	if options.TsBuildInfoFile != other.TsBuildInfoFile {

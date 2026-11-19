@@ -388,6 +388,20 @@ const (
 	KindPartiallyEmittedExpression
 	KindSyntheticReferenceExpression
 	KindNotEmittedTypeElement
+	KindTypeFunctionDeclaration
+	KindTypeFunctionBlock
+	KindTypeFunctionBinding
+	KindTypeFunctionAssignment
+	KindTypeFunctionReturn
+	KindTypeFunctionCallStatement
+	KindTypeFunctionIf
+	KindTypeFunctionWhile
+	KindTypeFunctionFor
+	KindTypeFunctionMatch
+	KindTypeFunctionArm
+	KindTypeFunctionBinary
+	KindTypeFunctionNot
+	KindTypeFunctionConstructorSlots
 	KindCount
 	KindFirstAssignment         = KindEqualsToken
 	KindLastAssignment          = KindCaretEqualsToken

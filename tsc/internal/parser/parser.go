@@ -79,6 +79,7 @@ type Parser struct {
 	sourceFlags                 ast.NodeFlags
 	contextFlags                ast.NodeFlags
 	parsingContexts             ParsingContexts
+	inTypeFunction              bool
 	statementHasAwaitIdentifier bool
 	hasDeprecatedTag            bool
 	hasParseError               bool
@@ -1120,6 +1121,9 @@ func (p *Parser) parseOptionalTokenJSDoc(kind ast.Kind) *ast.Node {
 }
 
 func (p *Parser) parseStatement() *ast.Statement {
+	if p.isTypeFunctionStart() {
+		return p.parseDeclaration()
+	}
 	switch p.token {
 	case ast.KindSemicolonToken:
 		return p.parseEmptyStatement()
@@ -1208,6 +1212,9 @@ func (p *Parser) parseDeclaration() *ast.Statement {
 }
 
 func (p *Parser) parseDeclarationWorker(pos int, jsdoc jsdocScannerInfo, modifiers *ast.ModifierList) *ast.Statement {
+	if p.isTypeFunctionStart() {
+		return p.parseTypeFunction(pos, jsdoc, modifiers)
+	}
 	switch p.token {
 	case ast.KindVarKeyword, ast.KindLetKeyword, ast.KindConstKeyword, ast.KindUsingKeyword:
 		return p.parseVariableStatement(pos, jsdoc, modifiers)
@@ -3147,6 +3154,9 @@ func (p *Parser) parseTypeArgumentsOfTypeReference() *ast.NodeList {
 
 func (p *Parser) parseTypeArguments() *ast.NodeList {
 	if p.token == ast.KindLessThanToken {
+		if p.inTypeFunction {
+			return p.parseBracketedList(PCTypeArguments, (*Parser).parseTypeFunctionOperand, ast.KindLessThanToken, ast.KindGreaterThanToken)
+		}
 		return p.parseBracketedList(PCTypeArguments, (*Parser).parseType, ast.KindLessThanToken, ast.KindGreaterThanToken)
 	}
 	return nil
@@ -3795,7 +3805,12 @@ func (p *Parser) parseTupleElementType() *ast.TypeNode {
 func (p *Parser) parseParenthesizedType() *ast.Node {
 	pos := p.nodePos()
 	p.parseExpected(ast.KindOpenParenToken)
-	typeNode := p.parseType()
+	var typeNode *ast.Node
+	if p.inTypeFunction {
+		typeNode = p.parseTypeFunctionOperand()
+	} else {
+		typeNode = p.parseType()
+	}
 	p.parseExpected(ast.KindCloseParenToken)
 	return p.finishNode(p.factory.NewParenthesizedTypeNode(typeNode), pos)
 }
@@ -6246,6 +6261,9 @@ func (p *Parser) isStartOfDeclaration() bool {
 
 func (p *Parser) scanStartOfDeclaration() bool {
 	for {
+		if p.isTypeFunctionStart() {
+			return true
+		}
 		switch p.token {
 		case ast.KindVarKeyword, ast.KindLetKeyword, ast.KindConstKeyword, ast.KindFunctionKeyword, ast.KindClassKeyword,
 			ast.KindEnumKeyword:
@@ -6933,7 +6951,7 @@ func (p *Parser) checkJSSyntax(node *ast.Node) *ast.Node {
 		p.jsErrorAtRange(node.Name().Loc, diagnostics.X_0_declarations_can_only_be_used_in_TypeScript_files, "interface")
 	case ast.KindModuleDeclaration:
 		p.jsErrorAtRange(node.Name().Loc, diagnostics.X_0_declarations_can_only_be_used_in_TypeScript_files, scanner.TokenToString(node.AsModuleDeclaration().Keyword))
-	case ast.KindTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		p.jsErrorAtRange(node.Name().Loc, diagnostics.Type_aliases_can_only_be_used_in_TypeScript_files)
 	case ast.KindEnumDeclaration:
 		p.jsErrorAtRange(node.Name().Loc, diagnostics.X_0_declarations_can_only_be_used_in_TypeScript_files, "enum")

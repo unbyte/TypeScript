@@ -168,6 +168,8 @@ func (c *Checker) areTypesComparable(type1 *Type, type2 *Type) bool {
 }
 
 func (c *Checker) isTypeRelatedTo(source *Type, target *Type, relation *Relation) bool {
+	source = c.forceTypeFunction(source)
+	target = c.forceTypeFunction(target)
 	if isFreshLiteralType(source) {
 		source = source.AsLiteralType().regularType
 	}
@@ -2638,6 +2640,8 @@ func (r *Relater) isRelatedTo(source *Type, target *Type, recursionFlags Recursi
 }
 
 func (r *Relater) isRelatedToEx(originalSource *Type, originalTarget *Type, recursionFlags RecursionFlags, reportErrors bool, headMessage *diagnostics.Message, intersectionState IntersectionState) Ternary {
+	originalSource = r.c.forceTypeFunction(originalSource)
+	originalTarget = r.c.forceTypeFunction(originalTarget)
 	if originalSource == originalTarget {
 		return TernaryTrue
 	}

@@ -65,7 +65,7 @@ func isDeclarationAndNotVisible(emitContext *printer.EmitContext, resolver print
 		ast.KindModuleDeclaration,
 		ast.KindInterfaceDeclaration,
 		ast.KindClassDeclaration,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindJSTypeAliasDeclaration,
 		ast.KindEnumDeclaration:
 		return !resolver.IsDeclarationVisible(node)

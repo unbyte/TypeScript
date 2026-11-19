@@ -1351,6 +1351,61 @@ export interface JSDocTypeLiteral extends JSDocTypeBase, DeclarationBase {
     readonly jsdocPropertyTags?: readonly JSDocTag[];
     readonly isArrayType: boolean;
 }
+export interface TypeFunctionBlock extends TypeNodeBase {
+    readonly kind: SyntaxKind.TypeFunctionBlock;
+    readonly statements: NodeArray<Statement>;
+}
+export interface TypeFunctionBinding extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionBinding;
+    readonly bindings: NodeArray<TypeParameterDeclaration>;
+    readonly destructured: boolean;
+    readonly initializer: TypeNode;
+}
+export interface TypeFunctionAssignment extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionAssignment;
+    readonly target: Identifier;
+    readonly value: TypeNode;
+}
+export interface TypeFunctionOperandStatement extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionReturn;
+    readonly operand: TypeNode;
+}
+export interface TypeFunctionBranch extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionIf;
+    readonly condition: TypeNode;
+    readonly block: TypeFunctionBlock;
+    readonly elseBranch?: Node;
+}
+export interface TypeFunctionFor extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionFor;
+    readonly binding: TypeParameterDeclaration;
+    readonly sequence: TypeNode;
+    readonly block: TypeFunctionBlock;
+}
+export interface TypeFunctionMatch extends StatementBase {
+    readonly kind: SyntaxKind.TypeFunctionMatch;
+    readonly operand: TypeNode;
+    readonly arms: NodeArray<TypeFunctionArm>;
+}
+export interface TypeFunctionArm extends NodeBase {
+    readonly kind: SyntaxKind.TypeFunctionArm;
+    readonly pattern?: TypeNode;
+    readonly block: TypeFunctionBlock;
+}
+export interface TypeFunctionBinary extends TypeNodeBase {
+    readonly kind: SyntaxKind.TypeFunctionBinary;
+    readonly left: TypeNode;
+    readonly operatorToken: BinaryOperatorToken;
+    readonly right: TypeNode;
+}
+export interface TypeFunctionNot extends TypeNodeBase {
+    readonly kind: SyntaxKind.TypeFunctionNot;
+    readonly operand: TypeNode;
+}
+export interface TypeFunctionConstructorSlots extends ExpressionBase {
+    readonly kind: SyntaxKind.TypeFunctionConstructorSlots;
+    readonly holes: NodeArray<Identifier>;
+}
 
 export type Expression = ExpressionBase;
 export type Statement = StatementBase;

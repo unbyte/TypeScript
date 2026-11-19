@@ -1,0 +1,119 @@
+//// [tests/cases/compiler/typeFunctionComposition.ts] ////
+
+=== typeFunctionComposition.ts ===
+export typefn Flags<Base extends object, Names extends readonly string[]> {
+>Flags : Flags<Base, Names>
+
+    type Out = Base;
+    for (type Name of Names) {
+        Out = object.setField<Out, Name, { type: boolean; readonly: true; optional: true }>;
+>Out : error
+>object : any
+>type : boolean
+>readonly : true
+>true : true
+>optional : true
+>true : true
+    }
+    return Out;
+}
+declare const flags: Flags<{ id: 1 }, ["debug", "trace"]>;
+>flags : { id: 1; readonly debug?: boolean | undefined; readonly trace?: boolean | undefined; }
+>id : 1
+
+const id: 1 = flags.id;
+>id : 1
+>flags.id : 1
+>flags : { id: 1; readonly debug?: boolean | undefined; readonly trace?: boolean | undefined; }
+>id : 1
+
+const debug: boolean | undefined = flags.debug;
+>debug : boolean | undefined
+>flags.debug : boolean | undefined
+>flags : { id: 1; readonly debug?: boolean | undefined; readonly trace?: boolean | undefined; }
+>debug : boolean | undefined
+
+// @ts-expect-error field must be readonly
+flags.trace = false;
+>flags.trace = false : false
+>flags.trace : error
+>flags : { id: 1; readonly debug?: boolean | undefined; readonly trace?: boolean | undefined; }
+>trace : any
+>false : false
+
+type Box<T> = { value: T };
+>Box : Box<T>
+>value : T
+
+typefn Apply<F<_>, X> { return F<X>; }
+>Apply : Apply<F, X>
+>_ : error
+
+declare const box: Apply<Box<_>, "boxed">;
+>box : Box<"boxed">
+
+const boxed: "boxed" = box.value;
+>boxed : "boxed"
+>box.value : "boxed"
+>box : Box<"boxed">
+>value : "boxed"
+
+typefn WrapResult<F> {
+>WrapResult : WrapResult<F>
+
+    type Parts = fn.decompose<F>;
+>fn : any
+
+    type Call = Parts["calls"][0];
+    return fn.compose<{
+>fn : any
+
+        members: {};
+>members : {}
+
+        calls: [{ parameters: Call["parameters"]; result: { kind: "return"; type: [Call["result"]["type"]] } }];
+>calls : [{ parameters: Call["parameters"]; result: { kind: "return"; type: [Call["result"]["type"]]; }; }]
+>parameters : Call["parameters"]
+>result : { kind: "return"; type: [Call["result"]["type"]]; }
+>kind : "return"
+>type : [Call["result"]["type"]]
+
+        constructs: [];
+>constructs : []
+
+    }>;
+}
+export declare const wrapped: WrapResult<(id: number) => string>;
+>wrapped : (id: number) => [string]
+>id : number
+
+const reply: [string] = wrapped(42);
+>reply : [string]
+>wrapped(42) : [string]
+>wrapped : (id: number) => [string]
+>42 : 42
+
+// @ts-expect-error parameter type must survive recomposition
+wrapped("wrong");
+>wrapped("wrong") : [string]
+>wrapped : (id: number) => [string]
+>"wrong" : "wrong"
+
+typefn ExtractId<T> {
+>ExtractId : ExtractId<T>
+
+    match T {
+        case { id: infer I } { return I; }
+>id : I
+
+        else { return never; }
+    }
+}
+declare const ref: ExtractId<{ id: 42 }>;
+>ref : 42
+>id : 42
+
+const n: 42 = ref;
+>n : 42
+>ref : 42
+

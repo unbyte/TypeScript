@@ -519,6 +519,10 @@ export class RemoteNode extends RemoteNodeBase implements Node {
         return (this.data & (1 << 24)) !== 0;
     }
 
+    get destructured(): boolean {
+        return (this.data & (1 << 24)) !== 0;
+    }
+
     get isArrayType(): boolean {
         return (this.data & (1 << 24)) !== 0;
     }
@@ -638,6 +642,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get arguments(): RemoteNodeList | undefined {
         return this.getNamedChild("arguments") as RemoteNodeList;
     }
+    get arms(): RemoteNodeList | undefined {
+        return this.getNamedChild("arms") as RemoteNodeList;
+    }
     get assertsModifier(): RemoteNode | undefined {
         return this.getNamedChild("assertsModifier") as RemoteNode;
     }
@@ -649,6 +656,12 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     }
     get awaitModifier(): RemoteNode | undefined {
         return this.getNamedChild("awaitModifier") as RemoteNode;
+    }
+    get binding(): RemoteNode | undefined {
+        return this.getNamedChild("binding") as RemoteNode;
+    }
+    get bindings(): RemoteNodeList | undefined {
+        return this.getNamedChild("bindings") as RemoteNodeList;
     }
     get block(): RemoteNode | undefined {
         return this.getNamedChild("block") as RemoteNode;
@@ -710,6 +723,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get elementType(): RemoteNode | undefined {
         return this.getNamedChild("elementType") as RemoteNode;
     }
+    get elseBranch(): RemoteNode | undefined {
+        return this.getNamedChild("elseBranch") as RemoteNode;
+    }
     get elseStatement(): RemoteNode | undefined {
         return this.getNamedChild("elseStatement") as RemoteNode;
     }
@@ -748,6 +764,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     }
     get heritageClauses(): RemoteNodeList | undefined {
         return this.getNamedChild("heritageClauses") as RemoteNodeList;
+    }
+    get holes(): RemoteNodeList | undefined {
+        return this.getNamedChild("holes") as RemoteNodeList;
     }
     get importClause(): RemoteNode | undefined {
         return this.getNamedChild("importClause") as RemoteNode;
@@ -824,6 +843,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get parameters(): RemoteNodeList | undefined {
         return this.getNamedChild("parameters") as RemoteNodeList;
     }
+    get pattern(): RemoteNode | undefined {
+        return this.getNamedChild("pattern") as RemoteNode;
+    }
     get postfixToken(): RemoteNode | undefined {
         return this.getNamedChild("postfixToken") as RemoteNode;
     }
@@ -848,6 +870,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     get right(): RemoteNode | undefined {
         return this.getNamedChild("right") as RemoteNode;
     }
+    get sequence(): RemoteNode | undefined {
+        return this.getNamedChild("sequence") as RemoteNode;
+    }
     get statement(): RemoteNode | undefined {
         return this.getNamedChild("statement") as RemoteNode;
     }
@@ -862,6 +887,9 @@ export class RemoteNode extends RemoteNodeBase implements Node {
     }
     get tags(): RemoteNodeList | undefined {
         return this.getNamedChild("tags") as RemoteNodeList;
+    }
+    get target(): RemoteNode | undefined {
+        return this.getNamedChild("target") as RemoteNode;
     }
     get template(): RemoteNode | undefined {
         return this.getNamedChild("template") as RemoteNode;

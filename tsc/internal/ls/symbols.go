@@ -198,7 +198,7 @@ func (l *LanguageService) getDocumentSymbolsForChildren(ctx context.Context, nod
 		case ast.KindSpreadAssignment:
 			addSymbolForNode(node, node.Expression(), nil /*children*/)
 		case ast.KindMethodSignature, ast.KindPropertySignature, ast.KindCallSignature, ast.KindConstructSignature, ast.KindIndexSignature,
-			ast.KindEnumMember, ast.KindShorthandPropertyAssignment, ast.KindTypeAliasDeclaration, ast.KindImportEqualsDeclaration, ast.KindExportSpecifier:
+			ast.KindEnumMember, ast.KindShorthandPropertyAssignment, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindImportEqualsDeclaration, ast.KindExportSpecifier:
 			addSymbolForNode(node, nil /*name*/, nil /*children*/)
 		case ast.KindImportClause:
 			// Handle default import case e.g.:
@@ -683,7 +683,7 @@ func getSymbolKindFromNode(node *ast.Node) lsproto.SymbolKind {
 		return lsproto.SymbolKindClass
 	case ast.KindInterfaceDeclaration:
 		return lsproto.SymbolKindInterface
-	case ast.KindTypeAliasDeclaration, ast.KindJSDocTypedefTag, ast.KindJSDocCallbackTag:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSDocTypedefTag, ast.KindJSDocCallbackTag:
 		return lsproto.SymbolKindClass
 	case ast.KindEnumDeclaration:
 		return lsproto.SymbolKindEnum

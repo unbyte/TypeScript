@@ -237,7 +237,7 @@ func (tx *DeclarationTransformer) visit(node *ast.Node) *ast.Node {
 		ast.KindInterfaceDeclaration,
 		ast.KindClassDeclaration,
 		ast.KindJSTypeAliasDeclaration,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindEnumDeclaration,
 		ast.KindVariableStatement,
 		ast.KindImportDeclaration,
@@ -1793,7 +1793,7 @@ func (tx *DeclarationTransformer) transformTopLevelDeclaration(input *ast.Node) 
 
 	var result *ast.Node
 	switch input.Kind {
-	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration:
 		result = tx.transformTypeAliasDeclaration(input.AsTypeAliasDeclaration())
 	case ast.KindInterfaceDeclaration:
 		result = tx.transformInterfaceDeclaration(input.AsInterfaceDeclaration())

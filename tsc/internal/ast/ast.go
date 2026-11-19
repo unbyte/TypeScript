@@ -507,7 +507,7 @@ func (n *Node) TypeParameterList() *NodeList {
 		return n.AsClassExpression().TypeParameters
 	case KindInterfaceDeclaration:
 		return n.AsInterfaceDeclaration().TypeParameters
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
+	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration:
 		return n.AsTypeAliasDeclaration().TypeParameters
 	case KindJSDocTemplateTag:
 		return n.AsJSDocTemplateTag().TypeParameters
@@ -629,7 +629,7 @@ func (n *Node) Type() *Node {
 		return n.AsAsExpression().Type
 	case KindSatisfiesExpression:
 		return n.AsSatisfiesExpression().Type
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
+	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration:
 		return n.AsTypeAliasDeclaration().Type
 	case KindNamedTupleMember:
 		return n.AsNamedTupleMember().Type
@@ -690,7 +690,7 @@ func (m *MutableNode) SetType(t *Node) {
 		n.AsAsExpression().Type = t
 	case KindSatisfiesExpression:
 		n.AsSatisfiesExpression().Type = t
-	case KindTypeAliasDeclaration, KindJSTypeAliasDeclaration:
+	case KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindJSTypeAliasDeclaration:
 		n.AsTypeAliasDeclaration().Type = t
 	case KindNamedTupleMember:
 		n.AsNamedTupleMember().Type = t
@@ -1285,7 +1285,7 @@ func declarationIsWriteAccess(decl *Node) bool {
 		KindNamespaceExport,
 		KindParameter,
 		KindShorthandPropertyAssignment,
-		KindTypeAliasDeclaration,
+		KindTypeAliasDeclaration, KindTypeFunctionDeclaration,
 		KindJSTypeAliasDeclaration,
 		KindTypeParameter:
 		return true
@@ -1764,7 +1764,7 @@ func (node *HeritageClause) computeSubtreeFacts() SubtreeFacts {
 }
 
 func IsTypeOrJSTypeAliasDeclaration(node *Node) bool {
-	return node.Kind == KindTypeAliasDeclaration || node.Kind == KindJSTypeAliasDeclaration
+	return node.Kind == KindTypeAliasDeclaration || node.Kind == KindJSTypeAliasDeclaration || node.Kind == KindTypeFunctionDeclaration
 }
 
 func (node *EnumMember) computeSubtreeFacts() SubtreeFacts {
@@ -2942,7 +2942,7 @@ func (node *SourceFile) computeDeclarationMap() map[string][]*Node {
 				}
 			}
 			node.ForEachChild(visit)
-		case KindClassDeclaration, KindClassExpression, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindEnumDeclaration, KindModuleDeclaration,
+		case KindClassDeclaration, KindClassExpression, KindInterfaceDeclaration, KindTypeAliasDeclaration, KindTypeFunctionDeclaration, KindEnumDeclaration, KindModuleDeclaration,
 			KindImportEqualsDeclaration, KindImportClause, KindNamespaceImport, KindGetAccessor, KindSetAccessor, KindTypeLiteral:
 			addDeclaration(node)
 			node.ForEachChild(visit)

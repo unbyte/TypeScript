@@ -559,7 +559,7 @@ func getListByRange(start int, end int, node *ast.Node, sourceFile *ast.SourceFi
 	case ast.KindClassDeclaration,
 		ast.KindClassExpression,
 		ast.KindInterfaceDeclaration,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindJSDocTemplateTag:
 		return getList(node.TypeParameterList(), r, node, sourceFile)
 	case ast.KindNewExpression, ast.KindCallExpression:
@@ -655,7 +655,7 @@ func NodeWillIndentChild(settings lsutil.FormatCodeSettings, parent *ast.Node, c
 		ast.KindClassExpression,
 		ast.KindInterfaceDeclaration,
 		ast.KindEnumDeclaration,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindArrayLiteralExpression,
 		ast.KindBlock,
 		ast.KindModuleBlock,

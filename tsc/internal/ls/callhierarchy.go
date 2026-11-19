@@ -833,7 +833,7 @@ func (c *callSiteCollector) collect(node *ast.Node) {
 		ast.KindImportDeclaration,
 		ast.KindExportDeclaration,
 		ast.KindInterfaceDeclaration,
-		ast.KindTypeAliasDeclaration:
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		// do not descend into nodes that cannot contain callable nodes
 		return
 	case ast.KindClassStaticBlockDeclaration:

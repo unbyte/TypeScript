@@ -1,0 +1,109 @@
+//// [tests/cases/compiler/typeFunctionControlFlow.ts] ////
+
+=== typeFunctionControlFlow.ts ===
+typefn Sum<Items extends readonly number[]> {
+>Sum : Symbol(Sum, Decl(typeFunctionControlFlow.ts, 0, 0))
+>Items : Symbol(Items, Decl(typeFunctionControlFlow.ts, 0, 11))
+
+    type Total = 0;
+>Total : Symbol(Total, Decl(typeFunctionControlFlow.ts, 1, 8))
+
+    for (type Item of Items) {
+>Item : Symbol(Item, Decl(typeFunctionControlFlow.ts, 2, 13))
+>Items : Symbol(Items, Decl(typeFunctionControlFlow.ts, 0, 11))
+
+        if (Item === 0) { continue; }
+>Item : Symbol(Item, Decl(typeFunctionControlFlow.ts, 2, 13))
+
+        Total = number.add<Total, Item>;
+>number : Symbol(number)
+>add : Symbol(number.add)
+>Total : Symbol(Total, Decl(typeFunctionControlFlow.ts, 1, 8))
+>Item : Symbol(Item, Decl(typeFunctionControlFlow.ts, 2, 13))
+    }
+    return Total;
+>Total : Symbol(Total, Decl(typeFunctionControlFlow.ts, 1, 8))
+}
+
+typefn Countdown<N> {
+>Countdown : Symbol(Countdown, Decl(typeFunctionControlFlow.ts, 7, 1))
+>N : Symbol(N, Decl(typeFunctionControlFlow.ts, 9, 17))
+
+    type Remaining = N;
+>Remaining : Symbol(Remaining, Decl(typeFunctionControlFlow.ts, 10, 8))
+>N : Symbol(N, Decl(typeFunctionControlFlow.ts, 9, 17))
+
+    while (number.lessThan<0, Remaining>) {
+>number : Symbol(number)
+>lessThan : Symbol(number.lessThan)
+>Remaining : Symbol(Remaining, Decl(typeFunctionControlFlow.ts, 10, 8))
+
+        Remaining = number.subtract<Remaining, 1>;
+>number : Symbol(number)
+>subtract : Symbol(number.subtract)
+>Remaining : Symbol(Remaining, Decl(typeFunctionControlFlow.ts, 10, 8))
+    }
+    return Remaining;
+>Remaining : Symbol(Remaining, Decl(typeFunctionControlFlow.ts, 10, 8))
+}
+
+typefn Classify<T> {
+>Classify : Symbol(Classify, Decl(typeFunctionControlFlow.ts, 15, 1))
+>T : Symbol(T, Decl(typeFunctionControlFlow.ts, 17, 16))
+
+    match T {
+>T : Symbol(T, Decl(typeFunctionControlFlow.ts, 17, 16))
+
+        case [string, number] { return "pair"; }
+        else { return "other"; }
+    }
+}
+typefn Problem<> { fail<"deliberate">; }
+>Problem : Symbol(Problem, Decl(typeFunctionControlFlow.ts, 22, 1))
+>fail : Symbol(fail)
+
+typefn ShortCircuit<> {
+>ShortCircuit : Symbol(ShortCircuit, Decl(typeFunctionControlFlow.ts, 23, 40))
+
+    if (true || Problem<>) { return 1; }
+>Problem : Symbol(Problem, Decl(typeFunctionControlFlow.ts, 22, 1))
+
+    return 2;
+}
+declare const sum: Sum<[1, 0, 2]>;
+>sum : Symbol(sum, Decl(typeFunctionControlFlow.ts, 28, 13))
+>Sum : Symbol(Sum, Decl(typeFunctionControlFlow.ts, 0, 0))
+
+declare const countdown: Countdown<4>;
+>countdown : Symbol(countdown, Decl(typeFunctionControlFlow.ts, 29, 13))
+>Countdown : Symbol(Countdown, Decl(typeFunctionControlFlow.ts, 7, 1))
+
+declare const pair: Classify<["ok", 42]>;
+>pair : Symbol(pair, Decl(typeFunctionControlFlow.ts, 30, 13))
+>Classify : Symbol(Classify, Decl(typeFunctionControlFlow.ts, 15, 1))
+
+declare const short: ShortCircuit<>;
+>short : Symbol(short, Decl(typeFunctionControlFlow.ts, 31, 13))
+>ShortCircuit : Symbol(ShortCircuit, Decl(typeFunctionControlFlow.ts, 23, 40))
+
+const three: 3 = sum;
+>three : Symbol(three, Decl(typeFunctionControlFlow.ts, 32, 5))
+>sum : Symbol(sum, Decl(typeFunctionControlFlow.ts, 28, 13))
+
+const zero: 0 = countdown;
+>zero : Symbol(zero, Decl(typeFunctionControlFlow.ts, 33, 5))
+>countdown : Symbol(countdown, Decl(typeFunctionControlFlow.ts, 29, 13))
+
+const label: "pair" = pair;
+>label : Symbol(label, Decl(typeFunctionControlFlow.ts, 34, 5))
+>pair : Symbol(pair, Decl(typeFunctionControlFlow.ts, 30, 13))
+
+const one: 1 = short;
+>one : Symbol(one, Decl(typeFunctionControlFlow.ts, 35, 5))
+>short : Symbol(short, Decl(typeFunctionControlFlow.ts, 31, 13))
+
+// @ts-expect-error
+const wrong: 6 = sum;
+>wrong : Symbol(wrong, Decl(typeFunctionControlFlow.ts, 37, 5))
+>sum : Symbol(sum, Decl(typeFunctionControlFlow.ts, 28, 13))
+

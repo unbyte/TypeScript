@@ -1,0 +1,55 @@
+//// [tests/cases/compiler/typeFunctionEvaluation.ts] ////
+
+=== library.ts ===
+export typefn Echo<T> {
+>Echo : Echo<T>
+
+    return T;
+}
+
+export typefn CountWords<S extends string> {
+>CountWords : CountWords<S>
+
+    type Words = string.split<S, " ">;
+>string : any
+
+    return tuple.count<Words>;
+>tuple : any
+}
+
+=== consumer.ts ===
+import type { Echo, CountWords } from "./library";
+>Echo : Echo<T>
+>CountWords : CountWords<S>
+
+type Later<T> = Echo<{ value: T }>;
+>Later : Echo<{ value: T; }>
+>value : T
+
+declare const first: Later<"first">;
+>first : { value: "first"; }
+
+declare const second: Later<42>;
+>second : { value: 42; }
+
+const a: "first" = first.value;
+>a : "first"
+>first.value : "first"
+>first : { value: "first"; }
+>value : "first"
+
+const b: 42 = second.value;
+>b : 42
+>second.value : 42
+>second : { value: 42; }
+>value : 42
+
+const count: CountWords<"a b c"> = 3;
+>count : 3
+>3 : 3
+
+// @ts-expect-error a literal count must survive substitution
+const badCount: CountWords<"a b c"> = 4;
+>badCount : 3
+>4 : 4
+

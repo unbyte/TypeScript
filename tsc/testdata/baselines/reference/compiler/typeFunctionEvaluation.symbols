@@ -1,0 +1,68 @@
+//// [tests/cases/compiler/typeFunctionEvaluation.ts] ////
+
+=== library.ts ===
+export typefn Echo<T> {
+>Echo : Symbol(Echo, Decl(library.ts, 0, 0))
+>T : Symbol(T, Decl(library.ts, 0, 19))
+
+    return T;
+>T : Symbol(T, Decl(library.ts, 0, 19))
+}
+
+export typefn CountWords<S extends string> {
+>CountWords : Symbol(CountWords, Decl(library.ts, 2, 1))
+>S : Symbol(S, Decl(library.ts, 4, 25))
+
+    type Words = string.split<S, " ">;
+>Words : Symbol(Words, Decl(library.ts, 5, 8))
+>string : Symbol(string)
+>split : Symbol(string.split)
+>S : Symbol(S, Decl(library.ts, 4, 25))
+
+    return tuple.count<Words>;
+>tuple : Symbol(tuple)
+>count : Symbol(tuple.count)
+>Words : Symbol(Words, Decl(library.ts, 5, 8))
+}
+
+=== consumer.ts ===
+import type { Echo, CountWords } from "./library";
+>Echo : Symbol(Echo, Decl(consumer.ts, 0, 13))
+>CountWords : Symbol(CountWords, Decl(consumer.ts, 0, 19))
+
+type Later<T> = Echo<{ value: T }>;
+>Later : Symbol(Later, Decl(consumer.ts, 0, 50))
+>T : Symbol(T, Decl(consumer.ts, 2, 11))
+>Echo : Symbol(Echo, Decl(consumer.ts, 0, 13))
+>value : Symbol(value, Decl(consumer.ts, 2, 22))
+>T : Symbol(T, Decl(consumer.ts, 2, 11))
+
+declare const first: Later<"first">;
+>first : Symbol(first, Decl(consumer.ts, 3, 13))
+>Later : Symbol(Later, Decl(consumer.ts, 0, 50))
+
+declare const second: Later<42>;
+>second : Symbol(second, Decl(consumer.ts, 4, 13))
+>Later : Symbol(Later, Decl(consumer.ts, 0, 50))
+
+const a: "first" = first.value;
+>a : Symbol(a, Decl(consumer.ts, 5, 5))
+>first.value : Symbol(value, Decl(consumer.ts, 2, 22))
+>first : Symbol(first, Decl(consumer.ts, 3, 13))
+>value : Symbol(value, Decl(consumer.ts, 2, 22))
+
+const b: 42 = second.value;
+>b : Symbol(b, Decl(consumer.ts, 6, 5))
+>second.value : Symbol(value, Decl(consumer.ts, 2, 22))
+>second : Symbol(second, Decl(consumer.ts, 4, 13))
+>value : Symbol(value, Decl(consumer.ts, 2, 22))
+
+const count: CountWords<"a b c"> = 3;
+>count : Symbol(count, Decl(consumer.ts, 7, 5))
+>CountWords : Symbol(CountWords, Decl(consumer.ts, 0, 19))
+
+// @ts-expect-error a literal count must survive substitution
+const badCount: CountWords<"a b c"> = 4;
+>badCount : Symbol(badCount, Decl(consumer.ts, 9, 5))
+>CountWords : Symbol(CountWords, Decl(consumer.ts, 0, 19))
+

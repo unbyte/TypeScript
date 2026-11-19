@@ -1,0 +1,146 @@
+//// [tests/cases/compiler/typeFunctionCalculator.ts] ////
+
+=== typeFunctionCalculator.ts ===
+type Cursor<S extends string, I extends number = 0> = { source: S; offset: I };
+>Cursor : Cursor<S, I>
+>source : S
+>offset : I
+
+typefn Skip<C> {
+>Skip : Skip<C>
+
+    match string.match<C, { run: [[" ", " "]] }> {
+>string : any
+>run : [[" ", " "]]
+
+        case ["hit", infer Text, infer Next] { return Next; }
+        else { return C; }
+    }
+}
+
+typefn Atom<C> {
+>Atom : Atom<C>
+
+    type At = Skip<C>;
+    match string.match<At, { run: [["0", "9"]] }> {
+>string : any
+>run : [["0", "9"]]
+
+        case ["hit", infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
+>number : any
+    }
+    match string.read<At> {
+>string : any
+
+        case ["hit", "-", infer Next] {
+            type [Value, After] = Atom<Next>;
+            return [number.negate<Value>, After];
+>number : any
+        }
+        case ["hit", "(", infer Next] {
+            type [Value, After] = Sum<Next>;
+            match string.match<Skip<After>, ")"> {
+>string : any
+
+                case ["hit", ")", infer End] { return [Value, End]; }
+            }
+            fail<"expected closing parenthesis">;
+        }
+    }
+    fail<"expected an integer or parenthesis">;
+}
+
+typefn Product<C> {
+>Product : Product<C>
+
+    type [Value, At] = Atom<C>;
+    while (true) {
+>true : true
+
+        match string.match<Skip<At>, "*"> {
+>string : any
+
+            case ["hit", "*", infer Right] {
+                type [Term, Next] = Atom<Right>;
+                Value = number.multiply<Value, Term>;
+>Value : error
+>number : any
+
+                At = Next;
+>At : error
+            }
+            else { break; }
+        }
+    }
+    return [Value, At];
+}
+
+typefn Sum<C> {
+>Sum : Sum<C>
+
+    type [Value, At] = Product<C>;
+    while (true) {
+>true : true
+
+        match string.read<Skip<At>> {
+>string : any
+
+            case ["hit", infer Op, infer Right] {
+                if (Op !== "+" && Op !== "-") { break; }
+                type [Term, Next] = Product<Right>;
+                if (Op === "+") { Value = number.add<Value, Term>; }
+>Value : error
+>number : any
+
+                else { Value = number.subtract<Value, Term>; }
+>Value : error
+>number : any
+
+                At = Next;
+>At : error
+            }
+            else { break; }
+        }
+    }
+    return [Value, At];
+}
+
+typefn Calc<S extends string> {
+>Calc : Calc<S>
+
+    type [Value, At] = Sum<Cursor<S>>;
+    match string.read<Skip<At>> {
+>string : any
+
+        case ["eof"] { return Value; }
+        else { fail<"trailing input">; }
+    }
+}
+declare const precedence: Calc<"2 + 3 * (8 - 5)">;
+>precedence : 11
+
+declare const associativity: Calc<"10 - 3 - 2">;
+>associativity : 5
+
+declare const unary: Calc<"-(2 + 3) * 4">;
+>unary : -20
+
+const eleven: 11 = precedence;
+>eleven : 11
+>precedence : 11
+
+const five: 5 = associativity;
+>five : 5
+>associativity : 5
+
+const negative: -20 = unary;
+>negative : -20
+>-20 : -20
+>20 : 20
+>unary : -20
+
+// @ts-expect-error precedence yields the literal 11
+const wrong: 42 = precedence;
+>wrong : 42
+>precedence : 11
+

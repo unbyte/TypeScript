@@ -460,7 +460,7 @@ func getTypeParameterConstraintVisibilityDiagnosticMessage(node *ast.Node, symbo
 	case ast.KindInferType:
 		return diagnostics.Extends_clause_for_inferred_type_0_has_or_is_using_private_name_1
 
-	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindJSTypeAliasDeclaration:
 		return diagnostics.Type_parameter_0_of_exported_type_alias_has_or_is_using_private_name_1
 
 	default:

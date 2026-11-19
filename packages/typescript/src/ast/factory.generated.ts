@@ -242,6 +242,17 @@ import type {
     TypeAliasDeclaration,
     TypeAssertion,
     TypeElement,
+    TypeFunctionArm,
+    TypeFunctionAssignment,
+    TypeFunctionBinary,
+    TypeFunctionBinding,
+    TypeFunctionBlock,
+    TypeFunctionBranch,
+    TypeFunctionConstructorSlots,
+    TypeFunctionFor,
+    TypeFunctionMatch,
+    TypeFunctionNot,
+    TypeFunctionOperandStatement,
     TypeLiteralNode,
     TypeNode,
     TypeOfExpression,
@@ -301,6 +312,9 @@ export class NodeObject {
     get arguments(): any {
         return this._data?.arguments;
     }
+    get arms(): any {
+        return this._data?.arms;
+    }
     get assertsModifier(): any {
         return this._data?.assertsModifier;
     }
@@ -312,6 +326,12 @@ export class NodeObject {
     }
     get awaitModifier(): any {
         return this._data?.awaitModifier;
+    }
+    get binding(): any {
+        return this._data?.binding;
+    }
+    get bindings(): any {
+        return this._data?.bindings;
     }
     get block(): any {
         return this._data?.block;
@@ -373,6 +393,9 @@ export class NodeObject {
     get defaultType(): any {
         return this._data?.defaultType;
     }
+    get destructured(): any {
+        return this._data?.destructured;
+    }
     get diagnosticDirectives(): any {
         return this._data?.diagnosticDirectives;
     }
@@ -384,6 +407,9 @@ export class NodeObject {
     }
     get elements(): any {
         return this._data?.elements;
+    }
+    get elseBranch(): any {
+        return this._data?.elseBranch;
     }
     get elseStatement(): any {
         return this._data?.elseStatement;
@@ -429,6 +455,9 @@ export class NodeObject {
     }
     get heritageClauses(): any {
         return this._data?.heritageClauses;
+    }
+    get holes(): any {
+        return this._data?.holes;
     }
     get importClause(): any {
         return this._data?.importClause;
@@ -559,6 +588,9 @@ export class NodeObject {
     get path(): any {
         return this._data?.path;
     }
+    get pattern(): any {
+        return this._data?.pattern;
+    }
     get phaseModifier(): any {
         return this._data?.phaseModifier;
     }
@@ -595,6 +627,9 @@ export class NodeObject {
     get scriptKind(): any {
         return this._data?.scriptKind;
     }
+    get sequence(): any {
+        return this._data?.sequence;
+    }
     get spanMap(): any {
         return this._data?.spanMap;
     }
@@ -615,6 +650,9 @@ export class NodeObject {
     }
     get tags(): any {
         return this._data?.tags;
+    }
+    get target(): any {
+        return this._data?.target;
     }
     get template(): any {
         return this._data?.template;
@@ -865,6 +903,7 @@ function cloneNodeData(node: Node): any {
             return { modifiers: n.modifiers, name: n.name, typeParameters: n.typeParameters, heritageClauses: n.heritageClauses, members: n.members };
         case SyntaxKind.TypeAliasDeclaration:
         case SyntaxKind.JSTypeAliasDeclaration:
+        case SyntaxKind.TypeFunctionDeclaration:
             return { modifiers: n.modifiers, name: n.name, typeParameters: n.typeParameters, type: n.type };
         case SyntaxKind.EnumMember:
             return { name: n.name, initializer: n.initializer };
@@ -1149,6 +1188,30 @@ function cloneNodeData(node: Node): any {
             return { expression: n.expression, thisArg: n.thisArg };
         case SyntaxKind.JSDocTypeLiteral:
             return { jsdocPropertyTags: n.jsdocPropertyTags, isArrayType: n.isArrayType };
+        case SyntaxKind.TypeFunctionBlock:
+            return { statements: n.statements };
+        case SyntaxKind.TypeFunctionBinding:
+            return { bindings: n.bindings, destructured: n.destructured, initializer: n.initializer };
+        case SyntaxKind.TypeFunctionAssignment:
+            return { target: n.target, value: n.value };
+        case SyntaxKind.TypeFunctionReturn:
+        case SyntaxKind.TypeFunctionCallStatement:
+            return { operand: n.operand };
+        case SyntaxKind.TypeFunctionIf:
+        case SyntaxKind.TypeFunctionWhile:
+            return { condition: n.condition, block: n.block, elseBranch: n.elseBranch };
+        case SyntaxKind.TypeFunctionFor:
+            return { binding: n.binding, sequence: n.sequence, block: n.block };
+        case SyntaxKind.TypeFunctionMatch:
+            return { operand: n.operand, arms: n.arms };
+        case SyntaxKind.TypeFunctionArm:
+            return { pattern: n.pattern, block: n.block };
+        case SyntaxKind.TypeFunctionBinary:
+            return { left: n.left, operatorToken: n.operatorToken, right: n.right };
+        case SyntaxKind.TypeFunctionNot:
+            return { operand: n.operand };
+        case SyntaxKind.TypeFunctionConstructorSlots:
+            return { holes: n.holes };
         case SyntaxKind.ForInStatement:
             return { awaitModifier: n.awaitModifier, initializer: n.initializer, expression: n.expression, statement: n.statement };
         case SyntaxKind.ForOfStatement:
@@ -1273,6 +1336,11 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
         visitNodes(cbNode, cbNodes, data.typeParameters) ||
         visitNode(cbNode, data.type),
     [SyntaxKind.JSTypeAliasDeclaration]: (data, cbNode, cbNodes) =>
+        visitNodes(cbNode, cbNodes, data.modifiers) ||
+        visitNode(cbNode, data.name) ||
+        visitNodes(cbNode, cbNodes, data.typeParameters) ||
+        visitNode(cbNode, data.type),
+    [SyntaxKind.TypeFunctionDeclaration]: (data, cbNode, cbNodes) =>
         visitNodes(cbNode, cbNodes, data.modifiers) ||
         visitNode(cbNode, data.name) ||
         visitNodes(cbNode, cbNodes, data.typeParameters) ||
@@ -1689,6 +1757,39 @@ const forEachChildTable: Record<number, ForEachChildFunction> = {
         visitNode(cbNode, data.expression) ||
         visitNode(cbNode, data.thisArg),
     [SyntaxKind.JSDocTypeLiteral]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.jsdocPropertyTags),
+    [SyntaxKind.TypeFunctionBlock]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.statements),
+    [SyntaxKind.TypeFunctionBinding]: (data, cbNode, cbNodes) =>
+        visitNodes(cbNode, cbNodes, data.bindings) ||
+        visitNode(cbNode, data.initializer),
+    [SyntaxKind.TypeFunctionAssignment]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.target) ||
+        visitNode(cbNode, data.value),
+    [SyntaxKind.TypeFunctionReturn]: (data, cbNode, cbNodes) => visitNode(cbNode, data.operand),
+    [SyntaxKind.TypeFunctionCallStatement]: (data, cbNode, cbNodes) => visitNode(cbNode, data.operand),
+    [SyntaxKind.TypeFunctionIf]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.condition) ||
+        visitNode(cbNode, data.block) ||
+        visitNode(cbNode, data.elseBranch),
+    [SyntaxKind.TypeFunctionWhile]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.condition) ||
+        visitNode(cbNode, data.block) ||
+        visitNode(cbNode, data.elseBranch),
+    [SyntaxKind.TypeFunctionFor]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.binding) ||
+        visitNode(cbNode, data.sequence) ||
+        visitNode(cbNode, data.block),
+    [SyntaxKind.TypeFunctionMatch]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.operand) ||
+        visitNodes(cbNode, cbNodes, data.arms),
+    [SyntaxKind.TypeFunctionArm]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.pattern) ||
+        visitNode(cbNode, data.block),
+    [SyntaxKind.TypeFunctionBinary]: (data, cbNode, cbNodes) =>
+        visitNode(cbNode, data.left) ||
+        visitNode(cbNode, data.operatorToken) ||
+        visitNode(cbNode, data.right),
+    [SyntaxKind.TypeFunctionNot]: (data, cbNode, cbNodes) => visitNode(cbNode, data.operand),
+    [SyntaxKind.TypeFunctionConstructorSlots]: (data, cbNode, cbNodes) => visitNodes(cbNode, cbNodes, data.holes),
     [SyntaxKind.ForInStatement]: (data, cbNode, cbNodes) =>
         visitNode(cbNode, data.awaitModifier) ||
         visitNode(cbNode, data.initializer) ||
@@ -2138,6 +2239,28 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
         }
     },
     [SyntaxKind.JSTypeAliasDeclaration]: function* (data) {
+        if (data.modifiers) {
+            for (const n of data.modifiers) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+        if (data.name) {
+            const res = yield data.name;
+            if (res) return res;
+        }
+        if (data.typeParameters) {
+            for (const n of data.typeParameters) {
+                const res = yield n;
+                if (res) return res;
+            }
+        }
+        if (data.type) {
+            const res = yield data.type;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionDeclaration]: function* (data) {
         if (data.modifiers) {
             for (const n of data.modifiers) {
                 const res = yield n;
@@ -3869,6 +3992,132 @@ const yieldEachChildTable: Record<number, YieldEachChildFunction> = {
             }
         }
     },
+    [SyntaxKind.TypeFunctionBlock]: function* (data) {
+        for (const n of data.statements) {
+            const res = yield n;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionBinding]: function* (data) {
+        for (const n of data.bindings) {
+            const res = yield n;
+            if (res) return res;
+        }
+        if (data.initializer) {
+            const res = yield data.initializer;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionAssignment]: function* (data) {
+        if (data.target) {
+            const res = yield data.target;
+            if (res) return res;
+        }
+        if (data.value) {
+            const res = yield data.value;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionReturn]: function* (data) {
+        if (data.operand) {
+            const res = yield data.operand;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionCallStatement]: function* (data) {
+        if (data.operand) {
+            const res = yield data.operand;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionIf]: function* (data) {
+        if (data.condition) {
+            const res = yield data.condition;
+            if (res) return res;
+        }
+        if (data.block) {
+            const res = yield data.block;
+            if (res) return res;
+        }
+        if (data.elseBranch) {
+            const res = yield data.elseBranch;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionWhile]: function* (data) {
+        if (data.condition) {
+            const res = yield data.condition;
+            if (res) return res;
+        }
+        if (data.block) {
+            const res = yield data.block;
+            if (res) return res;
+        }
+        if (data.elseBranch) {
+            const res = yield data.elseBranch;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionFor]: function* (data) {
+        if (data.binding) {
+            const res = yield data.binding;
+            if (res) return res;
+        }
+        if (data.sequence) {
+            const res = yield data.sequence;
+            if (res) return res;
+        }
+        if (data.block) {
+            const res = yield data.block;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionMatch]: function* (data) {
+        if (data.operand) {
+            const res = yield data.operand;
+            if (res) return res;
+        }
+        for (const n of data.arms) {
+            const res = yield n;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionArm]: function* (data) {
+        if (data.pattern) {
+            const res = yield data.pattern;
+            if (res) return res;
+        }
+        if (data.block) {
+            const res = yield data.block;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionBinary]: function* (data) {
+        if (data.left) {
+            const res = yield data.left;
+            if (res) return res;
+        }
+        if (data.operatorToken) {
+            const res = yield data.operatorToken;
+            if (res) return res;
+        }
+        if (data.right) {
+            const res = yield data.right;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionNot]: function* (data) {
+        if (data.operand) {
+            const res = yield data.operand;
+            if (res) return res;
+        }
+    },
+    [SyntaxKind.TypeFunctionConstructorSlots]: function* (data) {
+        for (const n of data.holes) {
+            const res = yield n;
+            if (res) return res;
+        }
+    },
     [SyntaxKind.ForInStatement]: function* (data) {
         if (data.awaitModifier) {
             const res = yield data.awaitModifier;
@@ -5339,6 +5588,83 @@ export function createJSDocTypeLiteral(jsdocPropertyTags?: readonly JSDocTag[], 
     }) as unknown as JSDocTypeLiteral;
 }
 
+export function createTypeFunctionBlock(statements: readonly Statement[]): TypeFunctionBlock {
+    return new NodeObject(SyntaxKind.TypeFunctionBlock, {
+        statements: createNodeArray(statements),
+    }) as unknown as TypeFunctionBlock;
+}
+
+export function createTypeFunctionBinding(bindings: readonly TypeParameterDeclaration[], destructured: boolean = false, initializer: TypeNode): TypeFunctionBinding {
+    return new NodeObject(SyntaxKind.TypeFunctionBinding, {
+        bindings: createNodeArray(bindings),
+        destructured,
+        initializer,
+    }) as unknown as TypeFunctionBinding;
+}
+
+export function createTypeFunctionAssignment(target: Identifier, value: TypeNode): TypeFunctionAssignment {
+    return new NodeObject(SyntaxKind.TypeFunctionAssignment, {
+        target,
+        value,
+    }) as unknown as TypeFunctionAssignment;
+}
+
+export function createTypeFunctionOperandStatement(operand: TypeNode): TypeFunctionOperandStatement {
+    return new NodeObject(SyntaxKind.TypeFunctionReturn, {
+        operand,
+    }) as unknown as TypeFunctionOperandStatement;
+}
+
+export function createTypeFunctionBranch(condition: TypeNode, block: TypeFunctionBlock, elseBranch?: Node): TypeFunctionBranch {
+    return new NodeObject(SyntaxKind.TypeFunctionIf, {
+        condition,
+        block,
+        elseBranch,
+    }) as unknown as TypeFunctionBranch;
+}
+
+export function createTypeFunctionFor(binding: TypeParameterDeclaration, sequence: TypeNode, block: TypeFunctionBlock): TypeFunctionFor {
+    return new NodeObject(SyntaxKind.TypeFunctionFor, {
+        binding,
+        sequence,
+        block,
+    }) as unknown as TypeFunctionFor;
+}
+
+export function createTypeFunctionMatch(operand: TypeNode, arms: readonly TypeFunctionArm[]): TypeFunctionMatch {
+    return new NodeObject(SyntaxKind.TypeFunctionMatch, {
+        operand,
+        arms: createNodeArray(arms),
+    }) as unknown as TypeFunctionMatch;
+}
+
+export function createTypeFunctionArm(pattern: TypeNode | undefined, block: TypeFunctionBlock): TypeFunctionArm {
+    return new NodeObject(SyntaxKind.TypeFunctionArm, {
+        pattern,
+        block,
+    }) as unknown as TypeFunctionArm;
+}
+
+export function createTypeFunctionBinary(left: TypeNode, operatorToken: BinaryOperatorToken, right: TypeNode): TypeFunctionBinary {
+    return new NodeObject(SyntaxKind.TypeFunctionBinary, {
+        left,
+        operatorToken,
+        right,
+    }) as unknown as TypeFunctionBinary;
+}
+
+export function createTypeFunctionNot(operand: TypeNode): TypeFunctionNot {
+    return new NodeObject(SyntaxKind.TypeFunctionNot, {
+        operand,
+    }) as unknown as TypeFunctionNot;
+}
+
+export function createTypeFunctionConstructorSlots(holes: readonly Identifier[]): TypeFunctionConstructorSlots {
+    return new NodeObject(SyntaxKind.TypeFunctionConstructorSlots, {
+        holes: createNodeArray(holes),
+    }) as unknown as TypeFunctionConstructorSlots;
+}
+
 export function createForInStatement(awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {
     return new NodeObject(SyntaxKind.ForInStatement, {
         awaitModifier,
@@ -6045,6 +6371,50 @@ export function updateSyntheticReferenceExpression(node: SyntheticReferenceExpre
 
 export function updateJSDocTypeLiteral(node: JSDocTypeLiteral, jsdocPropertyTags?: readonly JSDocTag[]): JSDocTypeLiteral {
     return node.jsdocPropertyTags !== jsdocPropertyTags ? createJSDocTypeLiteral(jsdocPropertyTags, node.isArrayType) : node;
+}
+
+export function updateTypeFunctionBlock(node: TypeFunctionBlock, statements: readonly Statement[]): TypeFunctionBlock {
+    return node.statements !== statements ? createTypeFunctionBlock(statements) : node;
+}
+
+export function updateTypeFunctionBinding(node: TypeFunctionBinding, bindings: readonly TypeParameterDeclaration[], initializer: TypeNode): TypeFunctionBinding {
+    return node.bindings !== bindings || node.initializer !== initializer ? createTypeFunctionBinding(bindings, node.destructured, initializer) : node;
+}
+
+export function updateTypeFunctionAssignment(node: TypeFunctionAssignment, target: Identifier, value: TypeNode): TypeFunctionAssignment {
+    return node.target !== target || node.value !== value ? createTypeFunctionAssignment(target, value) : node;
+}
+
+export function updateTypeFunctionOperandStatement(node: TypeFunctionOperandStatement, operand: TypeNode): TypeFunctionOperandStatement {
+    return node.operand !== operand ? createTypeFunctionOperandStatement(operand) : node;
+}
+
+export function updateTypeFunctionBranch(node: TypeFunctionBranch, condition: TypeNode, block: TypeFunctionBlock, elseBranch?: Node): TypeFunctionBranch {
+    return node.condition !== condition || node.block !== block || node.elseBranch !== elseBranch ? createTypeFunctionBranch(condition, block, elseBranch) : node;
+}
+
+export function updateTypeFunctionFor(node: TypeFunctionFor, binding: TypeParameterDeclaration, sequence: TypeNode, block: TypeFunctionBlock): TypeFunctionFor {
+    return node.binding !== binding || node.sequence !== sequence || node.block !== block ? createTypeFunctionFor(binding, sequence, block) : node;
+}
+
+export function updateTypeFunctionMatch(node: TypeFunctionMatch, operand: TypeNode, arms: readonly TypeFunctionArm[]): TypeFunctionMatch {
+    return node.operand !== operand || node.arms !== arms ? createTypeFunctionMatch(operand, arms) : node;
+}
+
+export function updateTypeFunctionArm(node: TypeFunctionArm, pattern: TypeNode | undefined, block: TypeFunctionBlock): TypeFunctionArm {
+    return node.pattern !== pattern || node.block !== block ? createTypeFunctionArm(pattern, block) : node;
+}
+
+export function updateTypeFunctionBinary(node: TypeFunctionBinary, left: TypeNode, operatorToken: BinaryOperatorToken, right: TypeNode): TypeFunctionBinary {
+    return node.left !== left || node.operatorToken !== operatorToken || node.right !== right ? createTypeFunctionBinary(left, operatorToken, right) : node;
+}
+
+export function updateTypeFunctionNot(node: TypeFunctionNot, operand: TypeNode): TypeFunctionNot {
+    return node.operand !== operand ? createTypeFunctionNot(operand) : node;
+}
+
+export function updateTypeFunctionConstructorSlots(node: TypeFunctionConstructorSlots, holes: readonly Identifier[]): TypeFunctionConstructorSlots {
+    return node.holes !== holes ? createTypeFunctionConstructorSlots(holes) : node;
 }
 
 export function updateForInStatement(node: ForInStatement, awaitModifier: AwaitKeyword | undefined, initializer: ForInitializer, expression: Expression, statement: Statement): ForInStatement {

@@ -2141,6 +2141,7 @@ func (b *NodeBuilderImpl) tryGetThisParameterDeclaration(signature *Signature) *
 * Serializes the return type of the signature by first trying to use the syntactic printer if possible and falling back to the checker type if not.
  */
 func (b *NodeBuilderImpl) serializeReturnTypeForSignature(signature *Signature, tryReuse bool) *ast.Node {
+	tryReuse = tryReuse && !signature.typeFunctionComposed
 	suppressAny := b.ctx.flags&nodebuilder.FlagsSuppressAnyReturnType != 0
 	restoreFlags := b.saveRestoreFlags()
 	if suppressAny {

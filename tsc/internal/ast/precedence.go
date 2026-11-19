@@ -680,6 +680,8 @@ func GetTypeNodePrecedence(n *TypeNode) TypePrecedence {
 		// precedence so that it is parenthesized when used in a PostfixType
 		// context (e.g., `(typeof C)[]` instead of `typeof C[]`)
 		return TypePrecedenceTypeOperator
+	case KindTypeFunctionBinary, KindTypeFunctionNot, KindTypeFunctionBlock:
+		return TypePrecedenceNonArray
 	case KindAnyKeyword,
 		KindUnknownKeyword,
 		KindStringKeyword,

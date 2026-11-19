@@ -137,7 +137,7 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindInterfaceDeclaration:
 		n := node.AsInterfaceDeclaration()
 		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.HeritageClauses != nil) << 3) | (boolToByte(n.Members != nil) << 4)
-	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration:
+	case ast.KindTypeAliasDeclaration, ast.KindJSTypeAliasDeclaration, ast.KindTypeFunctionDeclaration:
 		n := node.AsTypeAliasDeclaration()
 		return (boolToByte(hasModifiers(n.Modifiers())) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeParameters != nil) << 2) | (boolToByte(n.Type != nil) << 3)
 	case ast.KindEnumMember:
@@ -536,6 +536,39 @@ func getChildrenPropertyMask(node *ast.Node) uint8 {
 	case ast.KindJSDocParameterTag, ast.KindJSDocPropertyTag:
 		n := node.AsJSDocParameterOrPropertyTag()
 		return (boolToByte(n.TagName != nil) << 0) | (boolToByte(n.Name() != nil) << 1) | (boolToByte(n.TypeExpression != nil) << 2) | (boolToByte(n.Comment != nil) << 3)
+	case ast.KindTypeFunctionBlock:
+		n := node.AsTypeFunctionBlock()
+		return (boolToByte(n.Statements != nil) << 0)
+	case ast.KindTypeFunctionBinding:
+		n := node.AsTypeFunctionBinding()
+		return (boolToByte(n.Bindings != nil) << 0) | (boolToByte(n.Initializer != nil) << 1)
+	case ast.KindTypeFunctionAssignment:
+		n := node.AsTypeFunctionAssignment()
+		return (boolToByte(n.Target != nil) << 0) | (boolToByte(n.Value != nil) << 1)
+	case ast.KindTypeFunctionReturn, ast.KindTypeFunctionCallStatement:
+		n := node.AsTypeFunctionOperandStatement()
+		return (boolToByte(n.Operand != nil) << 0)
+	case ast.KindTypeFunctionIf, ast.KindTypeFunctionWhile:
+		n := node.AsTypeFunctionBranch()
+		return (boolToByte(n.Condition != nil) << 0) | (boolToByte(n.Block != nil) << 1) | (boolToByte(n.ElseBranch != nil) << 2)
+	case ast.KindTypeFunctionFor:
+		n := node.AsTypeFunctionFor()
+		return (boolToByte(n.Binding != nil) << 0) | (boolToByte(n.Sequence != nil) << 1) | (boolToByte(n.Block != nil) << 2)
+	case ast.KindTypeFunctionMatch:
+		n := node.AsTypeFunctionMatch()
+		return (boolToByte(n.Operand != nil) << 0) | (boolToByte(n.Arms != nil) << 1)
+	case ast.KindTypeFunctionArm:
+		n := node.AsTypeFunctionArm()
+		return (boolToByte(n.Pattern != nil) << 0) | (boolToByte(n.Block != nil) << 1)
+	case ast.KindTypeFunctionBinary:
+		n := node.AsTypeFunctionBinary()
+		return (boolToByte(n.Left != nil) << 0) | (boolToByte(n.OperatorToken != nil) << 1) | (boolToByte(n.Right != nil) << 2)
+	case ast.KindTypeFunctionNot:
+		n := node.AsTypeFunctionNot()
+		return (boolToByte(n.Operand != nil) << 0)
+	case ast.KindTypeFunctionConstructorSlots:
+		n := node.AsTypeFunctionConstructorSlots()
+		return (boolToByte(n.Holes != nil) << 0)
 	default:
 		return 0
 	}
@@ -659,6 +692,9 @@ func getNodeCommonData(node *ast.Node) uint32 {
 	case ast.KindJSDocParameterTag, ast.KindJSDocPropertyTag:
 		n := node.AsJSDocParameterOrPropertyTag()
 		return uint32(boolToByte(n.IsBracketed))<<24 | uint32(boolToByte(n.IsNameFirst))<<25
+	case ast.KindTypeFunctionBinding:
+		n := node.AsTypeFunctionBinding()
+		return uint32(boolToByte(n.Destructured)) << 24
 	}
 	return 0
 }

@@ -3956,6 +3956,12 @@ var File_0_has_a_registered_content_mapper_extension_but_does_not_match_any_cont
 
 var Content_mapper_0_must_specify_extensions_in_tsconfig_or_its_package_manifest = &Message{code: 18141, category: CategoryError, key: "Content_mapper_0_must_specify_extensions_in_tsconfig_or_its_package_manifest_18141", text: "Content mapper '{0}' must specify 'extensions' in tsconfig or its package manifest."}
 
+var Type_function_Colon_0 = &Message{code: 18200, category: CategoryError, key: "Type_function_Colon_0_18200", text: "Type function: {0}"}
+
+var Print_log_statements_from_type_function_evaluations = &Message{code: 18201, category: CategoryMessage, key: "Print_log_statements_from_type_function_evaluations_18201", text: "Print log statements from type function evaluations."}
+
+var Type_function_log_Colon_0 = &Message{code: 18202, category: CategoryMessage, key: "Type_function_log_Colon_0_18202", text: "Type function log: {0}"}
+
 var X_nodenext_if_module_is_nodenext_node16_if_module_is_node16_or_node18_otherwise_bundler = &Message{code: 69010, category: CategoryMessage, key: "nodenext_if_module_is_nodenext_node16_if_module_is_node16_or_node18_otherwise_bundler_69010", text: "`nodenext` if `module` is `nodenext`; `node16` if `module` is `node16` or `node18`; otherwise, `bundler`."}
 
 var File_is_a_CommonJS_module_it_may_be_converted_to_an_ES_module = &Message{code: 80001, category: CategorySuggestion, key: "File_is_a_CommonJS_module_it_may_be_converted_to_an_ES_module_80001", text: "File is a CommonJS module; it may be converted to an ES module."}
@@ -6474,6 +6480,9 @@ var allMessages = [...]**Message{
 	&This_relative_import_path_is_unsafe_to_rewrite_because_it_appears_not_to_match_the_content_mapper_s_include_but_does_after_resolution_with_rootDirs_and_moduleSuffixes,
 	&File_0_has_a_registered_content_mapper_extension_but_does_not_match_any_content_mapper_s_include,
 	&Content_mapper_0_must_specify_extensions_in_tsconfig_or_its_package_manifest,
+	&Type_function_Colon_0,
+	&Print_log_statements_from_type_function_evaluations,
+	&Type_function_log_Colon_0,
 	&X_nodenext_if_module_is_nodenext_node16_if_module_is_node16_or_node18_otherwise_bundler,
 	&File_is_a_CommonJS_module_it_may_be_converted_to_an_ES_module,
 	&This_constructor_function_may_be_converted_to_a_class_declaration,

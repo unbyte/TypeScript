@@ -41,6 +41,7 @@ export const childProperties: Readonly<Partial<Record<SyntaxKind, readonly (stri
     [SyntaxKind.InterfaceDeclaration]: ["modifiers", "name", "typeParameters", "heritageClauses", "members"],
     [SyntaxKind.TypeAliasDeclaration]: ["modifiers", "name", "typeParameters", "type"],
     [SyntaxKind.JSTypeAliasDeclaration]: ["modifiers", "name", "typeParameters", "type"],
+    [SyntaxKind.TypeFunctionDeclaration]: ["modifiers", "name", "typeParameters", "type"],
     [SyntaxKind.EnumMember]: ["name", "initializer"],
     [SyntaxKind.EnumDeclaration]: ["modifiers", "name", "members"],
     [SyntaxKind.ModuleBlock]: ["statements"],
@@ -176,6 +177,19 @@ export const childProperties: Readonly<Partial<Record<SyntaxKind, readonly (stri
     [SyntaxKind.JSDocTypeLiteral]: ["jsdocPropertyTags"],
     [SyntaxKind.JSDocParameterTag]: ["tagName", "name", "typeExpression", "comment"],
     [SyntaxKind.JSDocPropertyTag]: ["tagName", "name", "typeExpression", "comment"],
+    [SyntaxKind.TypeFunctionBlock]: ["statements"],
+    [SyntaxKind.TypeFunctionBinding]: ["bindings", "initializer"],
+    [SyntaxKind.TypeFunctionAssignment]: ["target", "value"],
+    [SyntaxKind.TypeFunctionReturn]: ["operand"],
+    [SyntaxKind.TypeFunctionCallStatement]: ["operand"],
+    [SyntaxKind.TypeFunctionIf]: ["condition", "block", "elseBranch"],
+    [SyntaxKind.TypeFunctionWhile]: ["condition", "block", "elseBranch"],
+    [SyntaxKind.TypeFunctionFor]: ["binding", "sequence", "block"],
+    [SyntaxKind.TypeFunctionMatch]: ["operand", "arms"],
+    [SyntaxKind.TypeFunctionArm]: ["pattern", "block"],
+    [SyntaxKind.TypeFunctionBinary]: ["left", "operatorToken", "right"],
+    [SyntaxKind.TypeFunctionNot]: ["operand"],
+    [SyntaxKind.TypeFunctionConstructorSlots]: ["holes"],
 };
 
 export const singleChildNodePropertyNames: Readonly<Partial<Record<SyntaxKind, string>>> = {
@@ -241,4 +255,9 @@ export const singleChildNodePropertyNames: Readonly<Partial<Record<SyntaxKind, s
     [SyntaxKind.JSDocLinkPlain]: "name",
     [SyntaxKind.JSDocLinkCode]: "name",
     [SyntaxKind.JSDocTypeLiteral]: "jsdocPropertyTags",
+    [SyntaxKind.TypeFunctionBlock]: "statements",
+    [SyntaxKind.TypeFunctionReturn]: "operand",
+    [SyntaxKind.TypeFunctionCallStatement]: "operand",
+    [SyntaxKind.TypeFunctionNot]: "operand",
+    [SyntaxKind.TypeFunctionConstructorSlots]: "holes",
 };

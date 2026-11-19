@@ -2745,7 +2745,7 @@ func (c *Checker) markNodeAssignmentsWorker(node *ast.Node) bool {
 		}
 		return false
 	case ast.KindInterfaceDeclaration,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindJSTypeAliasDeclaration,
 		ast.KindEnumDeclaration:
 		return false

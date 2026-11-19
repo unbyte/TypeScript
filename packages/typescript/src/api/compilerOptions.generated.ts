@@ -117,6 +117,7 @@ export interface CompilerOptions {
     suppressOutputPathCheck?: boolean | undefined;
     target?: ScriptTarget | undefined;
     traceResolution?: boolean | undefined;
+    traceTypeFunctions?: boolean | undefined;
     tsBuildInfoFile?: RootedFilePath | undefined;
     typeRoots?: RootedDirectoryPath[] | undefined;
     types?: string[] | undefined;

@@ -223,7 +223,7 @@ func isValidReferenceLensNode(node *ast.Node, userPrefs lsutil.CodeLensUserPrefe
 	case ast.KindVariableDeclaration:
 		return ast.GetCombinedModifierFlags(node)&ast.ModifierFlagsExport != 0
 
-	case ast.KindClassDeclaration, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindEnumDeclaration, ast.KindEnumMember:
+	case ast.KindClassDeclaration, ast.KindInterfaceDeclaration, ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration, ast.KindEnumDeclaration, ast.KindEnumMember:
 		return true
 
 	case ast.KindMethodDeclaration, ast.KindMethodSignature, ast.KindConstructor,

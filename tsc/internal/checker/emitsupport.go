@@ -42,7 +42,7 @@ func (c *Checker) determineIfDeclarationIsVisible(node *ast.Node) bool {
 		ast.KindModuleDeclaration,
 		ast.KindClassDeclaration,
 		ast.KindInterfaceDeclaration,
-		ast.KindTypeAliasDeclaration,
+		ast.KindTypeAliasDeclaration, ast.KindTypeFunctionDeclaration,
 		ast.KindJSTypeAliasDeclaration,
 		ast.KindFunctionDeclaration,
 		ast.KindEnumDeclaration,

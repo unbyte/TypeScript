@@ -1503,6 +1503,8 @@ type IntersectionType struct {
 
 type TypeParameter struct {
 	ConstrainedType
+	constructor         *typeFunctionConstructor
+	application         *typeFunctionApplication
 	constraint          *Type
 	target              *Type
 	mapper              *TypeMapper
@@ -1628,6 +1630,7 @@ const (
 // Signature
 
 type Signature struct {
+	typeFunctionComposed     bool
 	id                       SignatureId
 	flags                    SignatureFlags
 	minArgumentCount         int32
