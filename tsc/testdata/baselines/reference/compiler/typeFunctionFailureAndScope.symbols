@@ -3,7 +3,6 @@
 === typeFunctionFailureAndScope.ts ===
 typefn Failed<> { fail<"inner failure">; }
 >Failed : Symbol(Failed, Decl(typeFunctionFailureAndScope.ts, 0, 0))
->fail : Symbol(fail)
 
 typefn ExplicitAny<> { return any; }
 >ExplicitAny : Symbol(ExplicitAny, Decl(typeFunctionFailureAndScope.ts, 0, 42))
@@ -123,7 +122,6 @@ const one: 1 = selected;
 typefn Span<S> { fail<"unexpected token", { source: S; start: 2; end: 3 }>; }
 >Span : Symbol(Span, Decl(typeFunctionFailureAndScope.ts, 29, 24))
 >S : Symbol(S, Decl(typeFunctionFailureAndScope.ts, 31, 12))
->fail : Symbol(fail)
 >source : Symbol(source, Decl(typeFunctionFailureAndScope.ts, 31, 43))
 >S : Symbol(S, Decl(typeFunctionFailureAndScope.ts, 31, 12))
 >start : Symbol(start, Decl(typeFunctionFailureAndScope.ts, 31, 54))

@@ -60,7 +60,6 @@ typefn Classify<T> {
 }
 typefn Problem<> { fail<"deliberate">; }
 >Problem : Symbol(Problem, Decl(typeFunctionControlFlow.ts, 22, 1))
->fail : Symbol(fail)
 
 typefn ShortCircuit<> {
 >ShortCircuit : Symbol(ShortCircuit, Decl(typeFunctionControlFlow.ts, 23, 40))

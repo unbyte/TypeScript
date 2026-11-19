@@ -172,13 +172,29 @@ func (l *LanguageService) ProvideHover(ctx context.Context, params *lsproto.Hove
 	return lsproto.HoverOrNull{Hover: combined}, nil
 }
 
-func (l *LanguageService) getQuickInfoAndDocumentationForSymbol(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, contentFormat lsproto.MarkupKind, vc *checker.VerbosityContext, vsCapability bool) (string, string, string, []*lsproto.VSClassifiedTextRun) {
-	if q := node.Parent; q != nil && ast.IsQualifiedName(q) && q.AsQualifiedName().Right == node && q.Parent != nil {
+func typeFunctionPrimitiveHover(c *checker.Checker, node *ast.Node) (signature, documentation string) {
+	if ast.IsTypeFunctionBuiltinStatementName(node) {
+		if node.Text() == "log" {
+			return "log<>;\nlog<Value>;\nlog<\"label\", Value>;", "Typefn statement. Records the current location when traceTypeFunctions is enabled. Pass binding names to include their types, with an optional leading string literal to label the entry."
+		}
+		return "fail<Message>;\nfail<Message, Span>;", "Typefn statement. Stops the current type computation with a string-literal diagnostic message. Pass a span with source, start, and end to identify the input text. The outermost failed call yields any."
+	}
+	if q := node.Parent; q != nil && ast.IsQualifiedName(q) && q.Parent != nil {
 		if ns := c.TypeFunctionBuiltinNamespace(q.Parent); ns != "" {
-			if b, ok := typefunction.Lookup(ns + "." + node.Text()); ok {
-				return b.Name + "<" + b.Parameters + ">", "", "", nil
+			if b, ok := typefunction.Lookup(ns + "." + q.AsQualifiedName().Right.Text()); ok {
+				return b.Name + "<" + b.Parameters + ">", b.Documentation
 			}
 		}
+	}
+	return "", ""
+}
+
+func (l *LanguageService) getQuickInfoAndDocumentationForSymbol(c *checker.Checker, symbol *ast.Symbol, node *ast.Node, contentFormat lsproto.MarkupKind, vc *checker.VerbosityContext, vsCapability bool) (string, string, string, []*lsproto.VSClassifiedTextRun) {
+	if header, doc := typeFunctionPrimitiveHover(c, node); header != "" {
+		if contentFormat == lsproto.MarkupKindPlainText {
+			return header, "\n\n" + doc, doc, nil
+		}
+		return header, doc, doc, nil
 	}
 	if symbol != nil {
 		target := symbol

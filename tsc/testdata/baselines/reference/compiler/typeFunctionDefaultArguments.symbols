@@ -224,7 +224,6 @@ const literal: "native" = native.value;
 
 typefn Unused<> { fail<"overridden default was evaluated">; }
 >Unused : Symbol(Unused, Decl(typeFunctionDefaultArguments.ts, 42, 39))
->fail : Symbol(fail)
 
 typefn Select<T = Unused<>> { return T; }
 >Select : Symbol(Select, Decl(typeFunctionDefaultArguments.ts, 44, 61))

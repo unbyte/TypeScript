@@ -13,7 +13,6 @@ typefn Id<T> { return T; }
 
 typefn Failed<> { fail<"unexpected evaluation">; }
 >Failed : Symbol(Failed, Decl(typeFunctionOperators.ts, 1, 26))
->fail : Symbol(fail)
 
 export typefn Relations<T, U> {
 >Relations : Symbol(Relations, Decl(typeFunctionOperators.ts, 2, 50))

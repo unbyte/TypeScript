@@ -98,7 +98,6 @@ const yes: true = ok;
 typefn Unexpected<S> { fail<"unexpected token", { source: S; start: 0; end: 1 }>; }
 >Unexpected : Symbol(Unexpected, Decl(typeFunctionOperatorErrors.ts, 17, 21))
 >S : Symbol(S, Decl(typeFunctionOperatorErrors.ts, 19, 18))
->fail : Symbol(fail)
 >source : Symbol(source, Decl(typeFunctionOperatorErrors.ts, 19, 49))
 >S : Symbol(S, Decl(typeFunctionOperatorErrors.ts, 19, 18))
 >start : Symbol(start, Decl(typeFunctionOperatorErrors.ts, 19, 60))

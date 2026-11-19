@@ -54,7 +54,7 @@ func (c *Checker) checkTypeFunctionBlock(node *ast.Node, loopDepth int) {
 			return
 		}
 		name := node.AsTypeReferenceNode().TypeName
-		if ast.IsIdentifier(name) && ast.IsTypeFunctionCallStatement(node.Parent) && (name.Text() == "log" || name.Text() == "fail") {
+		if ast.IsTypeFunctionBuiltinStatementName(name) {
 			if name.Text() == "fail" && (len(node.TypeArguments()) < 1 || len(node.TypeArguments()) > 2) {
 				c.error(node, diagnostics.Type_function_Colon_0, "fail requires a message and an optional span")
 			}

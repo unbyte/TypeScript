@@ -73,3 +73,42 @@ const pair: ["x", 4] = make("x" as const);`
 	f.Insert(t, "N")
 	f.VerifyNoErrors(t)
 }
+
+func TestTypeFunctionPrimitiveHover(t *testing.T) {
+	t.Parallel()
+	const source = `typefn Inspect<T> {
+    lo/*log*/g<>;
+    fa/*fail*/il<"bad input">;
+    return str/*namespace*/ing.sp/*split*/lit<"x y", " ">;
+}
+namespace custom {
+    type log<T> = { value: T };
+    type fail = "ordinary type";
+    export namespace tuple { export type count<T> = T; }
+    export typefn Count<T> {
+        lo/*statement*/g<T>;
+        type Box = lo/*alias*/g<fa/*argument*/il>;
+        return tuple.co/*shadow*/unt<T>;
+    }
+    type Outside = lo/*outside*/g<string>;
+}`
+	f, done := fourslash.NewFourslash(t, nil, source)
+	defer done()
+	f.VerifyBaselineHover(t)
+	f.VerifyBaselineGoToDefinition(t, true, "statement", "alias")
+}
+
+func TestTypeFunctionStatementSemanticTokens(t *testing.T) {
+	t.Parallel()
+	const source = `type log = "alias";
+typefn Check<> { log<>; fail<log>; }`
+	f, done := fourslash.NewFourslash(t, nil, source)
+	defer done()
+	f.VerifySemanticTokens(t, []fourslash.SemanticToken{
+		{Type: "type.declaration", Text: "log"},
+		{Type: "type.declaration", Text: "Check"},
+		{Type: "keyword", Text: "log"},
+		{Type: "keyword", Text: "fail"},
+		{Type: "type", Text: "log"},
+	})
+}

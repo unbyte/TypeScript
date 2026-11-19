@@ -8,7 +8,7 @@
 // | ```typescript
 // | tuple.count<T>
 // | ```
-// | 
+// | Returns the possible lengths of a tuple. Optional elements can yield a union of lengths, and an unbounded rest element yields number.
 // | ----------------------------------------------------------------------
 //                        ^^^^^
 // | ----------------------------------------------------------------------
@@ -40,7 +40,7 @@
     "item": {
       "contents": {
         "kind": "markdown",
-        "value": "```typescript\ntuple.count<T>\n```\n"
+        "value": "```typescript\ntuple.count<T>\n```\nReturns the possible lengths of a tuple. Optional elements can yield a union of lengths, and an unbounded rest element yields number."
       },
       "range": {
         "start": {

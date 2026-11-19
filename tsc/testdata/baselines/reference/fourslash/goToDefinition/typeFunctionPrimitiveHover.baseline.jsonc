@@ -1,0 +1,31 @@
+// === goToDefinition ===
+// === /typeFunctionPrimitiveHover.ts ===
+// --- (line: 7) skipped ---
+//     type fail = "ordinary type";
+//     export namespace tuple { export type count<T> = T; }
+//     export typefn Count<T> {
+//         lo/*GOTO DEF*/g<T>;
+//         type Box = log<fail>;
+//         return tuple.count<T>;
+//     }
+//     type Outside = log<string>;
+// }
+
+
+
+// === goToDefinition ===
+// === /typeFunctionPrimitiveHover.ts ===
+// --- (line: 3) skipped ---
+//     return string.split<"x y", " ">;
+// }
+// namespace custom {
+//     <|type [|log|]<T> = { value: T };|>
+//     type fail = "ordinary type";
+//     export namespace tuple { export type count<T> = T; }
+//     export typefn Count<T> {
+//         log<T>;
+//         type Box = lo/*GOTO DEF*/g<fail>;
+//         return tuple.count<T>;
+//     }
+//     type Outside = log<string>;
+// }

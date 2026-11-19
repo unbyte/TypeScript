@@ -19,7 +19,6 @@ typefn Calc<S extends string> {
     if (Tokens[End] !== undefined) { fail<"unexpected token after expression">; }
 >Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 1, 8))
 >End : Symbol(End, Decl(typeFunctionCalculator.ts, 2, 16))
->fail : Symbol(fail)
 
     return Value;
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 2, 10))
@@ -229,14 +228,12 @@ typefn Atom<Tokens, At> {
         if (Tokens[Close] !== ")") { fail<"expected closing parenthesis">; }
 >Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 53, 12))
 >Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 61, 20))
->fail : Symbol(fail)
 
         return [Value, Close + 1];
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 61, 14))
 >Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 61, 20))
     }
     fail<"expected an integer or parenthesis">;
->fail : Symbol(fail)
 }
 
 declare const precedence: Calc<"2 + 3 * (8 - 5)">;

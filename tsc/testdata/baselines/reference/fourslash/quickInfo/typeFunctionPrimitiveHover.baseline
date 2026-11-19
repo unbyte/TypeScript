@@ -1,0 +1,335 @@
+// === QuickInfo ===
+=== /typeFunctionPrimitiveHover.ts ===
+// typefn Inspect<T> {
+//     log<>;
+//     ^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | log<>;
+// | log<Value>;
+// | log<"label", Value>;
+// | ```
+// | Typefn statement. Records the current location when traceTypeFunctions is enabled. Pass binding names to include their types, with an optional leading string literal to label the entry.
+// | ----------------------------------------------------------------------
+//     fail<"bad input">;
+//     ^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | fail<Message>;
+// | fail<Message, Span>;
+// | ```
+// | Typefn statement. Stops the current type computation with a string-literal diagnostic message. Pass a span with source, start, and end to identify the input text. The outermost failed call yields any.
+// | ----------------------------------------------------------------------
+//     return string.split<"x y", " ">;
+//            ^^^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | string.split<S, Separator>
+// | ```
+// | Splits a string literal at each occurrence of a nonempty separator and returns a tuple of string literals, preserving empty pieces.
+// | ----------------------------------------------------------------------
+//                   ^^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | string.split<S, Separator>
+// | ```
+// | Splits a string literal at each occurrence of a nonempty separator and returns a tuple of string literals, preserving empty pieces.
+// | ----------------------------------------------------------------------
+// }
+// namespace custom {
+//     type log<T> = { value: T };
+//     type fail = "ordinary type";
+//     export namespace tuple { export type count<T> = T; }
+//     export typefn Count<T> {
+//         log<T>;
+//         ^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | log<>;
+// | log<Value>;
+// | log<"label", Value>;
+// | ```
+// | Typefn statement. Records the current location when traceTypeFunctions is enabled. Pass binding names to include their types, with an optional leading string literal to label the entry.
+// | ----------------------------------------------------------------------
+//         type Box = log<fail>;
+//                    ^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | type log<T> = {
+// |     value: T;
+// | }
+// | ```
+// | 
+// | ----------------------------------------------------------------------
+//                        ^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | type fail = "ordinary type"
+// | ```
+// | 
+// | ----------------------------------------------------------------------
+//         return tuple.count<T>;
+//                      ^^^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | type tuple.count<T> = T
+// | ```
+// | 
+// | ----------------------------------------------------------------------
+//     }
+//     type Outside = log<string>;
+//                    ^^^
+// | ----------------------------------------------------------------------
+// | ```typescript
+// | type log<T> = {
+// |     value: T;
+// | }
+// | ```
+// | 
+// | ----------------------------------------------------------------------
+// }
+[
+  {
+    "marker": {
+      "Position": 26,
+      "LSPosition": {
+        "line": 1,
+        "character": 6
+      },
+      "Name": "log",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\nlog<>;\nlog<Value>;\nlog<\"label\", Value>;\n```\nTypefn statement. Records the current location when traceTypeFunctions is enabled. Pass binding names to include their types, with an optional leading string literal to label the entry."
+      },
+      "range": {
+        "start": {
+          "line": 1,
+          "character": 4
+        },
+        "end": {
+          "line": 1,
+          "character": 7
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 37,
+      "LSPosition": {
+        "line": 2,
+        "character": 6
+      },
+      "Name": "fail",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\nfail<Message>;\nfail<Message, Span>;\n```\nTypefn statement. Stops the current type computation with a string-literal diagnostic message. Pass a span with source, start, and end to identify the input text. The outermost failed call yields any."
+      },
+      "range": {
+        "start": {
+          "line": 2,
+          "character": 4
+        },
+        "end": {
+          "line": 2,
+          "character": 8
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 68,
+      "LSPosition": {
+        "line": 3,
+        "character": 14
+      },
+      "Name": "namespace",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\nstring.split<S, Separator>\n```\nSplits a string literal at each occurrence of a nonempty separator and returns a tuple of string literals, preserving empty pieces."
+      },
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 11
+        },
+        "end": {
+          "line": 3,
+          "character": 17
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 74,
+      "LSPosition": {
+        "line": 3,
+        "character": 20
+      },
+      "Name": "split",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\nstring.split<S, Separator>\n```\nSplits a string literal at each occurrence of a nonempty separator and returns a tuple of string literals, preserving empty pieces."
+      },
+      "range": {
+        "start": {
+          "line": 3,
+          "character": 18
+        },
+        "end": {
+          "line": 3,
+          "character": 23
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 273,
+      "LSPosition": {
+        "line": 10,
+        "character": 10
+      },
+      "Name": "statement",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\nlog<>;\nlog<Value>;\nlog<\"label\", Value>;\n```\nTypefn statement. Records the current location when traceTypeFunctions is enabled. Pass binding names to include their types, with an optional leading string literal to label the entry."
+      },
+      "range": {
+        "start": {
+          "line": 10,
+          "character": 8
+        },
+        "end": {
+          "line": 10,
+          "character": 11
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 300,
+      "LSPosition": {
+        "line": 11,
+        "character": 21
+      },
+      "Name": "alias",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\ntype log<T> = {\n    value: T;\n}\n```\n"
+      },
+      "range": {
+        "start": {
+          "line": 11,
+          "character": 19
+        },
+        "end": {
+          "line": 11,
+          "character": 22
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 304,
+      "LSPosition": {
+        "line": 11,
+        "character": 25
+      },
+      "Name": "argument",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\ntype fail = \"ordinary type\"\n```\n"
+      },
+      "range": {
+        "start": {
+          "line": 11,
+          "character": 23
+        },
+        "end": {
+          "line": 11,
+          "character": 27
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 332,
+      "LSPosition": {
+        "line": 12,
+        "character": 23
+      },
+      "Name": "shadow",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\ntype tuple.count<T> = T\n```\n"
+      },
+      "range": {
+        "start": {
+          "line": 12,
+          "character": 21
+        },
+        "end": {
+          "line": 12,
+          "character": 26
+        }
+      }
+    }
+  },
+  {
+    "marker": {
+      "Position": 367,
+      "LSPosition": {
+        "line": 14,
+        "character": 21
+      },
+      "Name": "outside",
+      "Data": {}
+    },
+    "item": {
+      "contents": {
+        "kind": "markdown",
+        "value": "```typescript\ntype log<T> = {\n    value: T;\n}\n```\n"
+      },
+      "range": {
+        "start": {
+          "line": 14,
+          "character": 19
+        },
+        "end": {
+          "line": 14,
+          "character": 22
+        }
+      }
+    }
+  }
+]

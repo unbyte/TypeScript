@@ -115,7 +115,6 @@ typefn Control<T> {
     break;
     T = number;
     fail<"too", "many", "args">;
->fail : Symbol(fail)
 }
 type Outside = tuple.count<[1]>;
 >Outside : Symbol(Outside, Decl(typeFunctionInvalidInputs.ts, 24, 1))

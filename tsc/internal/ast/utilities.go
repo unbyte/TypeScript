@@ -4701,6 +4701,13 @@ func IsStringLiteralLikeType(node *Node) bool {
 		IsStringLiteralLike(node.AsLiteralTypeNode().Literal)
 }
 
+// IsTypeFunctionBuiltinStatementName reports whether an identifier names a log or fail statement.
+func IsTypeFunctionBuiltinStatementName(node *Node) bool {
+	ref := node.Parent
+	return IsIdentifier(node) && ref != nil && IsTypeReferenceNode(ref) && ref.AsTypeReferenceNode().TypeName == node &&
+		ref.Parent != nil && IsTypeFunctionCallStatement(ref.Parent) && (node.Text() == "log" || node.Text() == "fail")
+}
+
 // TypeFunctionBranchParts exposes the common operands of if and while.
 func TypeFunctionBranchParts(node *Node) (condition, block, alternative *Node) {
 	if IsTypeFunctionWhile(node) {

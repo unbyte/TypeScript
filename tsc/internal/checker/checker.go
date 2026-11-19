@@ -32685,6 +32685,9 @@ func (c *Checker) getSymbolAtLocation(node *ast.Node, ignoreErrors bool) *ast.Sy
 		return nil
 	}
 
+	if ast.IsTypeFunctionBuiltinStatementName(node) {
+		return nil
+	}
 	if ast.IsDeclarationNameOrImportPropertyName(node) {
 		// This is a declaration, call getSymbolOfNode
 		parentSymbol := c.getSymbolOfDeclaration(parent)

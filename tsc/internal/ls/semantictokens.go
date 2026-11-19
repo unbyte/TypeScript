@@ -253,7 +253,9 @@ func (l *LanguageService) collectSemanticTokensInRange(ctx context.Context, c *c
 			inJSXElement = false
 		}
 
-		if (ast.IsIdentifier(node) || ast.IsPrivateIdentifier(node)) && node.Text() != "" && !inJSXElement && !isInImportClause(node) && !isInfinityOrNaNString(node.Text()) {
+		if ast.IsTypeFunctionBuiltinStatementName(node) {
+			tokens = append(tokens, semanticToken{node: node, tokenType: tokenTypeKeyword})
+		} else if (ast.IsIdentifier(node) || ast.IsPrivateIdentifier(node)) && node.Text() != "" && !inJSXElement && !isInImportClause(node) && !isInfinityOrNaNString(node.Text()) {
 			symbol := c.GetSymbolAtLocation(node)
 			if symbol != nil {
 				// Resolve aliases
