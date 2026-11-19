@@ -71,33 +71,27 @@ typefn LexicalFacts<S> {
 >LexicalFacts : Symbol(LexicalFacts, Decl(typeFunctionBuiltinDomains.ts, 12, 76))
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 
-    type Cursor = { source: S; offset: 0 };
->Cursor : Symbol(Cursor, Decl(typeFunctionBuiltinDomains.ts, 15, 8))
->source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 15, 19))
->S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
->offset : Symbol(offset, Decl(typeFunctionBuiltinDomains.ts, 15, 30))
-
     return [
-        string.length<S>, string.read<Cursor>, string.slice<S, 0, 2>, string.find<Cursor, "a">,
+        string.length<S>, string.read<S, 0>, string.slice<S, 0, 2>, string.find<S, 2, "a">,
 >string : Symbol(string)
 >length : Symbol(string.length)
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 >string : Symbol(string)
 >read : Symbol(string.read)
->Cursor : Symbol(Cursor, Decl(typeFunctionBuiltinDomains.ts, 15, 8))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 >string : Symbol(string)
 >slice : Symbol(string.slice)
 >S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 >string : Symbol(string)
 >find : Symbol(string.find)
->Cursor : Symbol(Cursor, Decl(typeFunctionBuiltinDomains.ts, 15, 8))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 
-        string.match<Cursor, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
+        string.match<S, 0, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
 >string : Symbol(string)
 >match : Symbol(string.match)
->Cursor : Symbol(Cursor, Decl(typeFunctionBuiltinDomains.ts, 15, 8))
->run : Symbol(run, Decl(typeFunctionBuiltinDomains.ts, 18, 30))
->max : Symbol(max, Decl(typeFunctionBuiltinDomains.ts, 18, 51))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
+>run : Symbol(run, Decl(typeFunctionBuiltinDomains.ts, 17, 28))
+>max : Symbol(max, Decl(typeFunctionBuiltinDomains.ts, 17, 49))
 >string : Symbol(string)
 >split : Symbol(string.split)
 
@@ -107,69 +101,163 @@ typefn LexicalFacts<S> {
 >string : Symbol(string)
 >fromCodePoint : Symbol(string.fromCodePoint)
 
-        string.match<Cursor, "b">, string.find<Cursor, "b">
+        string.match<S, 0, "b">, string.find<S, 2, "b">
 >string : Symbol(string)
 >match : Symbol(string.match)
->Cursor : Symbol(Cursor, Decl(typeFunctionBuiltinDomains.ts, 15, 8))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 >string : Symbol(string)
 >find : Symbol(string.find)
->Cursor : Symbol(Cursor, Decl(typeFunctionBuiltinDomains.ts, 15, 8))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 14, 20))
 
     ];
 }
 declare const text: LexicalFacts<"😀a">;
->text : Symbol(text, Decl(typeFunctionBuiltinDomains.ts, 23, 13))
+>text : Symbol(text, Decl(typeFunctionBuiltinDomains.ts, 22, 13))
 >LexicalFacts : Symbol(LexicalFacts, Decl(typeFunctionBuiltinDomains.ts, 12, 76))
 
-const lexical: [3, ["hit", "😀", {source: "😀a"; offset: 2}], "😀",
->lexical : Symbol(lexical, Decl(typeFunctionBuiltinDomains.ts, 24, 5))
->source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 24, 34))
->offset : Symbol(offset, Decl(typeFunctionBuiltinDomains.ts, 24, 48))
+const lexical: [3, ["😀", 2], "😀",
+>lexical : Symbol(lexical, Decl(typeFunctionBuiltinDomains.ts, 23, 5))
 
-    ["hit", {source: "😀a"; start: 2; end: 3}], ["hit", "😀", {source: "😀a"; offset: 2}],
->source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 25, 13))
->start : Symbol(start, Decl(typeFunctionBuiltinDomains.ts, 25, 27))
->end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 25, 37))
->source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 25, 63))
->offset : Symbol(offset, Decl(typeFunctionBuiltinDomains.ts, 25, 77))
+    {source: "😀a"; start: 2; end: 3}, ["😀", 2],
+>source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 24, 5))
+>start : Symbol(start, Decl(typeFunctionBuiltinDomains.ts, 24, 19))
+>end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 24, 29))
 
-    ["a", "", "b", ""], 55296, "\ud800", ["miss"], ["miss"]] = text;
->text : Symbol(text, Decl(typeFunctionBuiltinDomains.ts, 23, 13))
+    ["a", "", "b", ""], 55296, "\ud800", undefined, undefined] = text;
+>text : Symbol(text, Decl(typeFunctionBuiltinDomains.ts, 22, 13))
+
+typefn AtEnd<S, Index> {
+>AtEnd : Symbol(AtEnd, Decl(typeFunctionBuiltinDomains.ts, 25, 70))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
+
+    return [string.read<S, Index>, string.match<S, Index, "a">, string.match<S, Index, "">,
+>string : Symbol(string)
+>read : Symbol(string.read)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
+>string : Symbol(string)
+>match : Symbol(string.match)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
+>string : Symbol(string)
+>match : Symbol(string.match)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
+
+        string.match<S, Index, { run: [["0", "9"]]; min: 0 }>, string.find<S, Index, "">];
+>string : Symbol(string)
+>match : Symbol(string.match)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
+>run : Symbol(run, Decl(typeFunctionBuiltinDomains.ts, 29, 32))
+>min : Symbol(min, Decl(typeFunctionBuiltinDomains.ts, 29, 51))
+>string : Symbol(string)
+>find : Symbol(string.find)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 27, 13))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 27, 15))
+}
+declare const atEnd: AtEnd<"😀", 2>;
+>atEnd : Symbol(atEnd, Decl(typeFunctionBuiltinDomains.ts, 31, 13))
+>AtEnd : Symbol(AtEnd, Decl(typeFunctionBuiltinDomains.ts, 25, 70))
+
+const end: [undefined, undefined, ["", 2], ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
+>end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 32, 5))
+>source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 32, 53))
+>start : Symbol(start, Decl(typeFunctionBuiltinDomains.ts, 32, 66))
+>end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 32, 76))
+>atEnd : Symbol(atEnd, Decl(typeFunctionBuiltinDomains.ts, 31, 13))
+
+typefn Search<S, Index> {
+>Search : Symbol(Search, Decl(typeFunctionBuiltinDomains.ts, 32, 94))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 34, 14))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 34, 16))
+
+    return [string.match<S, Index, "+">, string.find<S, Index, "+">];
+>string : Symbol(string)
+>match : Symbol(string.match)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 34, 14))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 34, 16))
+>string : Symbol(string)
+>find : Symbol(string.find)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 34, 14))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 34, 16))
+}
+declare const search: Search<"+😀+", 1>;
+>search : Symbol(search, Decl(typeFunctionBuiltinDomains.ts, 37, 13))
+>Search : Symbol(Search, Decl(typeFunctionBuiltinDomains.ts, 32, 94))
+
+const afterFirst: [undefined, {source: "+😀+"; start: 3; end: 4}] = search;
+>afterFirst : Symbol(afterFirst, Decl(typeFunctionBuiltinDomains.ts, 38, 5))
+>source : Symbol(source, Decl(typeFunctionBuiltinDomains.ts, 38, 31))
+>start : Symbol(start, Decl(typeFunctionBuiltinDomains.ts, 38, 46))
+>end : Symbol(end, Decl(typeFunctionBuiltinDomains.ts, 38, 56))
+>search : Symbol(search, Decl(typeFunctionBuiltinDomains.ts, 37, 13))
+
+typefn Read<S, Index> { return string.read<S, Index>; }
+>Read : Symbol(Read, Decl(typeFunctionBuiltinDomains.ts, 38, 75))
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 40, 12))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 40, 14))
+>string : Symbol(string)
+>read : Symbol(string.read)
+>S : Symbol(S, Decl(typeFunctionBuiltinDomains.ts, 40, 12))
+>Index : Symbol(Index, Decl(typeFunctionBuiltinDomains.ts, 40, 14))
+
+// @ts-expect-error the index splits a surrogate pair
+declare const insidePair: Read<"😀", 1>;
+>insidePair : Symbol(insidePair, Decl(typeFunctionBuiltinDomains.ts, 42, 13))
+>Read : Symbol(Read, Decl(typeFunctionBuiltinDomains.ts, 38, 75))
+
+// @ts-expect-error the index is past the end
+declare const pastEnd: Read<"", 1>;
+>pastEnd : Symbol(pastEnd, Decl(typeFunctionBuiltinDomains.ts, 44, 13))
+>Read : Symbol(Read, Decl(typeFunctionBuiltinDomains.ts, 38, 75))
+
+// @ts-expect-error the index must be a nonnegative integer literal
+declare const fractional: Read<"abc", 1.5>;
+>fractional : Symbol(fractional, Decl(typeFunctionBuiltinDomains.ts, 46, 13))
+>Read : Symbol(Read, Decl(typeFunctionBuiltinDomains.ts, 38, 75))
+
+const invalidReads: [undefined, undefined, undefined] = [insidePair, pastEnd, fractional];
+>invalidReads : Symbol(invalidReads, Decl(typeFunctionBuiltinDomains.ts, 47, 5))
+>insidePair : Symbol(insidePair, Decl(typeFunctionBuiltinDomains.ts, 42, 13))
+>pastEnd : Symbol(pastEnd, Decl(typeFunctionBuiltinDomains.ts, 44, 13))
+>fractional : Symbol(fractional, Decl(typeFunctionBuiltinDomains.ts, 46, 13))
 
 typefn Forms<T> {
->Forms : Symbol(Forms, Decl(typeFunctionBuiltinDomains.ts, 26, 68))
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 28, 13))
+>Forms : Symbol(Forms, Decl(typeFunctionBuiltinDomains.ts, 47, 90))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
 
     type Copy = intersection.fromTuple<intersection.parts<T>>;
->Copy : Symbol(Copy, Decl(typeFunctionBuiltinDomains.ts, 29, 8))
+>Copy : Symbol(Copy, Decl(typeFunctionBuiltinDomains.ts, 50, 8))
 >intersection : Symbol(intersection)
 >fromTuple : Symbol(intersection.fromTuple)
 >intersection : Symbol(intersection)
 >parts : Symbol(intersection.parts)
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 28, 13))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
 
     type Arr = array.compose<array.decompose<readonly T[]>>;
->Arr : Symbol(Arr, Decl(typeFunctionBuiltinDomains.ts, 30, 8))
+>Arr : Symbol(Arr, Decl(typeFunctionBuiltinDomains.ts, 51, 8))
 >array : Symbol(array)
 >compose : Symbol(array.compose)
 >array : Symbol(array)
 >decompose : Symbol(array.decompose)
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 28, 13))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
 
     type Template = template.compose<template.decompose<`id-${number}`>>;
->Template : Symbol(Template, Decl(typeFunctionBuiltinDomains.ts, 31, 8))
+>Template : Symbol(Template, Decl(typeFunctionBuiltinDomains.ts, 52, 8))
 >template : Symbol(template)
 >compose : Symbol(template.compose)
 >template : Symbol(template)
 >decompose : Symbol(template.decompose)
 
     return [Copy, Arr, Template, type.kind<T>, type.kind<any>, type.kind<unknown>, type.kind<never>,
->Copy : Symbol(Copy, Decl(typeFunctionBuiltinDomains.ts, 29, 8))
->Arr : Symbol(Arr, Decl(typeFunctionBuiltinDomains.ts, 30, 8))
->Template : Symbol(Template, Decl(typeFunctionBuiltinDomains.ts, 31, 8))
+>Copy : Symbol(Copy, Decl(typeFunctionBuiltinDomains.ts, 50, 8))
+>Arr : Symbol(Arr, Decl(typeFunctionBuiltinDomains.ts, 51, 8))
+>Template : Symbol(Template, Decl(typeFunctionBuiltinDomains.ts, 52, 8))
 >type : Symbol(type)
 >kind : Symbol(type.kind)
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 28, 13))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
 >type : Symbol(type)
 >kind : Symbol(type.kind)
 >type : Symbol(type)
@@ -180,10 +268,10 @@ typefn Forms<T> {
         type.kind<[T]>, type.kind<T[]>, type.baseOfLiteral<"ok">,
 >type : Symbol(type)
 >kind : Symbol(type.kind)
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 28, 13))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
 >type : Symbol(type)
 >kind : Symbol(type.kind)
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 28, 13))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
 >type : Symbol(type)
 >baseOfLiteral : Symbol(type.baseOfLiteral)
 
@@ -196,151 +284,151 @@ typefn Forms<T> {
 >count : Symbol(tuple.count)
 }
 declare const forms: Forms<{a: 1} & {b: 2}>;
->forms : Symbol(forms, Decl(typeFunctionBuiltinDomains.ts, 36, 13))
->Forms : Symbol(Forms, Decl(typeFunctionBuiltinDomains.ts, 26, 68))
->a : Symbol(a, Decl(typeFunctionBuiltinDomains.ts, 36, 28))
->b : Symbol(b, Decl(typeFunctionBuiltinDomains.ts, 36, 37))
+>forms : Symbol(forms, Decl(typeFunctionBuiltinDomains.ts, 57, 13))
+>Forms : Symbol(Forms, Decl(typeFunctionBuiltinDomains.ts, 47, 90))
+>a : Symbol(a, Decl(typeFunctionBuiltinDomains.ts, 57, 28))
+>b : Symbol(b, Decl(typeFunctionBuiltinDomains.ts, 57, 37))
 
 const ordinary: [{a: 1; b: 2}, readonly {a: 1; b: 2}[], `id-${number}`, "intersection",
->ordinary : Symbol(ordinary, Decl(typeFunctionBuiltinDomains.ts, 37, 5))
->a : Symbol(a, Decl(typeFunctionBuiltinDomains.ts, 37, 18))
->b : Symbol(b, Decl(typeFunctionBuiltinDomains.ts, 37, 23))
->a : Symbol(a, Decl(typeFunctionBuiltinDomains.ts, 37, 41))
->b : Symbol(b, Decl(typeFunctionBuiltinDomains.ts, 37, 46))
+>ordinary : Symbol(ordinary, Decl(typeFunctionBuiltinDomains.ts, 58, 5))
+>a : Symbol(a, Decl(typeFunctionBuiltinDomains.ts, 58, 18))
+>b : Symbol(b, Decl(typeFunctionBuiltinDomains.ts, 58, 23))
+>a : Symbol(a, Decl(typeFunctionBuiltinDomains.ts, 58, 41))
+>b : Symbol(b, Decl(typeFunctionBuiltinDomains.ts, 58, 46))
 
     "any", "unknown", "never", "tuple", "array", string, false, true, 1 | 2] = forms;
->forms : Symbol(forms, Decl(typeFunctionBuiltinDomains.ts, 36, 13))
+>forms : Symbol(forms, Decl(typeFunctionBuiltinDomains.ts, 57, 13))
 
 enum Choice { First = "x", Second = 5 }
->Choice : Symbol(Choice, Decl(typeFunctionBuiltinDomains.ts, 38, 85))
->First : Symbol(Choice.First, Decl(typeFunctionBuiltinDomains.ts, 40, 13))
->Second : Symbol(Choice.Second, Decl(typeFunctionBuiltinDomains.ts, 40, 26))
+>Choice : Symbol(Choice, Decl(typeFunctionBuiltinDomains.ts, 59, 85))
+>First : Symbol(Choice.First, Decl(typeFunctionBuiltinDomains.ts, 61, 13))
+>Second : Symbol(Choice.Second, Decl(typeFunctionBuiltinDomains.ts, 61, 26))
 
 typefn Meta<E> { return enumType.members<E>; }
->Meta : Symbol(Meta, Decl(typeFunctionBuiltinDomains.ts, 40, 39))
->E : Symbol(E, Decl(typeFunctionBuiltinDomains.ts, 41, 12))
+>Meta : Symbol(Meta, Decl(typeFunctionBuiltinDomains.ts, 61, 39))
+>E : Symbol(E, Decl(typeFunctionBuiltinDomains.ts, 62, 12))
 >enumType : Symbol(enumType)
 >members : Symbol(enumType.members)
->E : Symbol(E, Decl(typeFunctionBuiltinDomains.ts, 41, 12))
+>E : Symbol(E, Decl(typeFunctionBuiltinDomains.ts, 62, 12))
 
 declare const enumInfo: Meta<typeof Choice>;
->enumInfo : Symbol(enumInfo, Decl(typeFunctionBuiltinDomains.ts, 42, 13))
->Meta : Symbol(Meta, Decl(typeFunctionBuiltinDomains.ts, 40, 39))
->Choice : Symbol(Choice, Decl(typeFunctionBuiltinDomains.ts, 38, 85))
+>enumInfo : Symbol(enumInfo, Decl(typeFunctionBuiltinDomains.ts, 63, 13))
+>Meta : Symbol(Meta, Decl(typeFunctionBuiltinDomains.ts, 61, 39))
+>Choice : Symbol(Choice, Decl(typeFunctionBuiltinDomains.ts, 59, 85))
 
 const enumValue: ["constant", 5] = enumInfo.Second.value;
->enumValue : Symbol(enumValue, Decl(typeFunctionBuiltinDomains.ts, 43, 5))
+>enumValue : Symbol(enumValue, Decl(typeFunctionBuiltinDomains.ts, 64, 5))
 >enumInfo.Second.value : Symbol(value)
 >enumInfo.Second : Symbol(Second)
->enumInfo : Symbol(enumInfo, Decl(typeFunctionBuiltinDomains.ts, 42, 13))
+>enumInfo : Symbol(enumInfo, Decl(typeFunctionBuiltinDomains.ts, 63, 13))
 >Second : Symbol(Second)
 >value : Symbol(value)
 
 typefn Yield<T> { return iter.protocol<T, "sync">; }
->Yield : Symbol(Yield, Decl(typeFunctionBuiltinDomains.ts, 43, 57))
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 45, 13))
+>Yield : Symbol(Yield, Decl(typeFunctionBuiltinDomains.ts, 64, 57))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 66, 13))
 >iter : Symbol(iter)
 >protocol : Symbol(iter.protocol)
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 45, 13))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 66, 13))
 
 declare const protocol: Yield<Generator<1, 2, 3>>;
->protocol : Symbol(protocol, Decl(typeFunctionBuiltinDomains.ts, 46, 13))
->Yield : Symbol(Yield, Decl(typeFunctionBuiltinDomains.ts, 43, 57))
+>protocol : Symbol(protocol, Decl(typeFunctionBuiltinDomains.ts, 67, 13))
+>Yield : Symbol(Yield, Decl(typeFunctionBuiltinDomains.ts, 64, 57))
 >Generator : Symbol(Generator, Decl(lib.es2015.generator.d.ts, --, --))
 
 const iterator: [1, 2, 3] = protocol;
->iterator : Symbol(iterator, Decl(typeFunctionBuiltinDomains.ts, 47, 5))
->protocol : Symbol(protocol, Decl(typeFunctionBuiltinDomains.ts, 46, 13))
+>iterator : Symbol(iterator, Decl(typeFunctionBuiltinDomains.ts, 68, 5))
+>protocol : Symbol(protocol, Decl(typeFunctionBuiltinDomains.ts, 67, 13))
 
 type KindKey<T> = T extends { kind: infer K } ? K : never;
->KindKey : Symbol(KindKey, Decl(typeFunctionBuiltinDomains.ts, 47, 37))
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 49, 13))
->kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 49, 29))
->K : Symbol(K, Decl(typeFunctionBuiltinDomains.ts, 49, 41))
->K : Symbol(K, Decl(typeFunctionBuiltinDomains.ts, 49, 41))
+>KindKey : Symbol(KindKey, Decl(typeFunctionBuiltinDomains.ts, 68, 37))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 70, 13))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 70, 13))
+>kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 70, 29))
+>K : Symbol(K, Decl(typeFunctionBuiltinDomains.ts, 70, 41))
+>K : Symbol(K, Decl(typeFunctionBuiltinDomains.ts, 70, 41))
 
 typefn Ordered<T> { return union.toTuple<T, KindKey<_>>; }
->Ordered : Symbol(Ordered, Decl(typeFunctionBuiltinDomains.ts, 49, 58))
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 50, 15))
+>Ordered : Symbol(Ordered, Decl(typeFunctionBuiltinDomains.ts, 70, 58))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 71, 15))
 >union : Symbol(union)
 >toTuple : Symbol(union.toTuple)
->T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 50, 15))
->KindKey : Symbol(KindKey, Decl(typeFunctionBuiltinDomains.ts, 47, 37))
+>T : Symbol(T, Decl(typeFunctionBuiltinDomains.ts, 71, 15))
+>KindKey : Symbol(KindKey, Decl(typeFunctionBuiltinDomains.ts, 68, 37))
 >_ : Symbol(_)
 
 declare const ordered: Ordered<{kind:"z"} | {kind:"a"}>;
->ordered : Symbol(ordered, Decl(typeFunctionBuiltinDomains.ts, 51, 13))
->Ordered : Symbol(Ordered, Decl(typeFunctionBuiltinDomains.ts, 49, 58))
->kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 51, 32))
->kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 51, 45))
+>ordered : Symbol(ordered, Decl(typeFunctionBuiltinDomains.ts, 72, 13))
+>Ordered : Symbol(Ordered, Decl(typeFunctionBuiltinDomains.ts, 70, 58))
+>kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 72, 32))
+>kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 72, 45))
 
 const sort: [{kind:"a"}, {kind:"z"}] = ordered;
->sort : Symbol(sort, Decl(typeFunctionBuiltinDomains.ts, 52, 5))
->kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 52, 14))
->kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 52, 26))
->ordered : Symbol(ordered, Decl(typeFunctionBuiltinDomains.ts, 51, 13))
+>sort : Symbol(sort, Decl(typeFunctionBuiltinDomains.ts, 73, 5))
+>kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 73, 14))
+>kind : Symbol(kind, Decl(typeFunctionBuiltinDomains.ts, 73, 26))
+>ordered : Symbol(ordered, Decl(typeFunctionBuiltinDomains.ts, 72, 13))
 
 typefn Edit<Base, Name> {
->Edit : Symbol(Edit, Decl(typeFunctionBuiltinDomains.ts, 52, 47))
->Base : Symbol(Base, Decl(typeFunctionBuiltinDomains.ts, 54, 12))
->Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 54, 17))
+>Edit : Symbol(Edit, Decl(typeFunctionBuiltinDomains.ts, 73, 47))
+>Base : Symbol(Base, Decl(typeFunctionBuiltinDomains.ts, 75, 12))
+>Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 75, 17))
 
     type Old = object.getField<Base, Name>;
->Old : Symbol(Old, Decl(typeFunctionBuiltinDomains.ts, 55, 8))
+>Old : Symbol(Old, Decl(typeFunctionBuiltinDomains.ts, 76, 8))
 >object : Symbol(object)
 >getField : Symbol(object.getField)
->Base : Symbol(Base, Decl(typeFunctionBuiltinDomains.ts, 54, 12))
->Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 54, 17))
+>Base : Symbol(Base, Decl(typeFunctionBuiltinDomains.ts, 75, 12))
+>Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 75, 17))
 
     type Without = object.removeField<Base, Name>;
->Without : Symbol(Without, Decl(typeFunctionBuiltinDomains.ts, 56, 8))
+>Without : Symbol(Without, Decl(typeFunctionBuiltinDomains.ts, 77, 8))
 >object : Symbol(object)
 >removeField : Symbol(object.removeField)
->Base : Symbol(Base, Decl(typeFunctionBuiltinDomains.ts, 54, 12))
->Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 54, 17))
+>Base : Symbol(Base, Decl(typeFunctionBuiltinDomains.ts, 75, 12))
+>Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 75, 17))
 
     type Absent = object.hasField<Without, Name>;
->Absent : Symbol(Absent, Decl(typeFunctionBuiltinDomains.ts, 57, 8))
+>Absent : Symbol(Absent, Decl(typeFunctionBuiltinDomains.ts, 78, 8))
 >object : Symbol(object)
 >hasField : Symbol(object.hasField)
->Without : Symbol(Without, Decl(typeFunctionBuiltinDomains.ts, 56, 8))
->Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 54, 17))
+>Without : Symbol(Without, Decl(typeFunctionBuiltinDomains.ts, 77, 8))
+>Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 75, 17))
 
     type Restored = object.addField<Without, Name, Old>;
->Restored : Symbol(Restored, Decl(typeFunctionBuiltinDomains.ts, 58, 8))
+>Restored : Symbol(Restored, Decl(typeFunctionBuiltinDomains.ts, 79, 8))
 >object : Symbol(object)
 >addField : Symbol(object.addField)
->Without : Symbol(Without, Decl(typeFunctionBuiltinDomains.ts, 56, 8))
->Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 54, 17))
->Old : Symbol(Old, Decl(typeFunctionBuiltinDomains.ts, 55, 8))
+>Without : Symbol(Without, Decl(typeFunctionBuiltinDomains.ts, 77, 8))
+>Name : Symbol(Name, Decl(typeFunctionBuiltinDomains.ts, 75, 17))
+>Old : Symbol(Old, Decl(typeFunctionBuiltinDomains.ts, 76, 8))
 
     type WithIndex = object.withIndexes<Restored, {key: string; type: number; readonly: true}>;
->WithIndex : Symbol(WithIndex, Decl(typeFunctionBuiltinDomains.ts, 59, 8))
+>WithIndex : Symbol(WithIndex, Decl(typeFunctionBuiltinDomains.ts, 80, 8))
 >object : Symbol(object)
 >withIndexes : Symbol(object.withIndexes)
->Restored : Symbol(Restored, Decl(typeFunctionBuiltinDomains.ts, 58, 8))
->key : Symbol(key, Decl(typeFunctionBuiltinDomains.ts, 59, 51))
->type : Symbol(type, Decl(typeFunctionBuiltinDomains.ts, 59, 63))
->readonly : Symbol(readonly, Decl(typeFunctionBuiltinDomains.ts, 59, 77))
+>Restored : Symbol(Restored, Decl(typeFunctionBuiltinDomains.ts, 79, 8))
+>key : Symbol(key, Decl(typeFunctionBuiltinDomains.ts, 80, 51))
+>type : Symbol(type, Decl(typeFunctionBuiltinDomains.ts, 80, 63))
+>readonly : Symbol(readonly, Decl(typeFunctionBuiltinDomains.ts, 80, 77))
 
     return [Absent, Restored, object.indexes<WithIndex>];
->Absent : Symbol(Absent, Decl(typeFunctionBuiltinDomains.ts, 57, 8))
->Restored : Symbol(Restored, Decl(typeFunctionBuiltinDomains.ts, 58, 8))
+>Absent : Symbol(Absent, Decl(typeFunctionBuiltinDomains.ts, 78, 8))
+>Restored : Symbol(Restored, Decl(typeFunctionBuiltinDomains.ts, 79, 8))
 >object : Symbol(object)
 >indexes : Symbol(object.indexes)
->WithIndex : Symbol(WithIndex, Decl(typeFunctionBuiltinDomains.ts, 59, 8))
+>WithIndex : Symbol(WithIndex, Decl(typeFunctionBuiltinDomains.ts, 80, 8))
 }
 declare const edits: Edit<{n: 1}, "n">;
->edits : Symbol(edits, Decl(typeFunctionBuiltinDomains.ts, 62, 13))
->Edit : Symbol(Edit, Decl(typeFunctionBuiltinDomains.ts, 52, 47))
->n : Symbol(n, Decl(typeFunctionBuiltinDomains.ts, 62, 27))
+>edits : Symbol(edits, Decl(typeFunctionBuiltinDomains.ts, 83, 13))
+>Edit : Symbol(Edit, Decl(typeFunctionBuiltinDomains.ts, 73, 47))
+>n : Symbol(n, Decl(typeFunctionBuiltinDomains.ts, 83, 27))
 
 const edited: [false, {n: 1}, {key: string; type: number; readonly: true}] = edits;
->edited : Symbol(edited, Decl(typeFunctionBuiltinDomains.ts, 63, 5))
->n : Symbol(n, Decl(typeFunctionBuiltinDomains.ts, 63, 23))
->key : Symbol(key, Decl(typeFunctionBuiltinDomains.ts, 63, 31))
->type : Symbol(type, Decl(typeFunctionBuiltinDomains.ts, 63, 43))
->readonly : Symbol(readonly, Decl(typeFunctionBuiltinDomains.ts, 63, 57))
->edits : Symbol(edits, Decl(typeFunctionBuiltinDomains.ts, 62, 13))
+>edited : Symbol(edited, Decl(typeFunctionBuiltinDomains.ts, 84, 5))
+>n : Symbol(n, Decl(typeFunctionBuiltinDomains.ts, 84, 23))
+>key : Symbol(key, Decl(typeFunctionBuiltinDomains.ts, 84, 31))
+>type : Symbol(type, Decl(typeFunctionBuiltinDomains.ts, 84, 43))
+>readonly : Symbol(readonly, Decl(typeFunctionBuiltinDomains.ts, 84, 57))
+>edits : Symbol(edits, Decl(typeFunctionBuiltinDomains.ts, 83, 13))
 

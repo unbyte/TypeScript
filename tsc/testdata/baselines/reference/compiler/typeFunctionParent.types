@@ -1,121 +1,115 @@
 //// [tests/cases/compiler/typeFunctionParent.ts] ////
 
 === typeFunctionParent.ts ===
-typefn Skip<C> {
->Skip : Skip<C>
+typefn Skip<S, Index> {
+>Skip : Skip<S, Index>
 
-    match string.match<C, { run: [[" ", " "]] }> {
+    match string.match<S, Index, { run: [[" ", " "]] }> {
 >string : any
 >run : [[" ", " "]]
 
-        case ["hit", infer Spaces, infer Next] { return Next; }
-        else { return C; }
+        case undefined { return Index; }
+        case [infer Spaces, infer Next] { return Next; }
     }
 }
-typefn Expect<C, Text> {
->Expect : Expect<C, Text>
+typefn Expect<S, Index, Text> {
+>Expect : Expect<S, Index, Text>
 
-    match string.match<Skip<C>, Text> {
+    match string.match<S, Skip<S, Index>, Text> {
 >string : any
 
-        case ["hit", infer Spelling, infer Next] { return Next; }
-        else { fail<`expected ${Text & string}`>; }
+        case undefined { fail<`expected ${Text & string}`>; }
+        case [infer Spelling, infer Next] { return Next; }
     }
 }
-typefn Word<C> {
->Word : Word<C>
+typefn Word<S, Index> {
+>Word : Word<S, Index>
 
-    match string.match<Skip<C>, { run: [["a", "z"]] }> {
+    match string.match<S, Skip<S, Index>, { run: [["a", "z"]] }> {
 >string : any
 >run : [["a", "z"]]
 
-        case ["hit", infer Text, infer Next] { return [Text, Next]; }
-        else { fail<"expected a name">; }
+        case undefined { fail<"expected a name">; }
+        case [infer Text, infer Next] { return [Text, Next]; }
     }
 }
-typefn Scalar<C> {
->Scalar : Scalar<C>
+typefn Scalar<S, Index> {
+>Scalar : Scalar<S, Index>
 
-    type [Name, Next] = Word<C>;
+    type [Name, Next] = Word<S, Index>;
     match Name {
         case "number" { return [number, Next]; }
         case "string" { return [string, Next]; }
         else { fail<"unknown field type">; }
     }
 }
-typefn RecordFields<C> {
->RecordFields : RecordFields<C>
+typefn RecordFields<S, Index> {
+>RecordFields : RecordFields<S, Index>
 
-    type At = C;
+    type At = Index;
     type Out = {};
     while (true) {
 >true : true
 
-        match string.match<Skip<At>, "}"> {
+        match string.match<S, Skip<S, At>, "}"> {
 >string : any
 
-            case ["hit", infer Close, infer End] { return [Out, End]; }
-            else {} // Read the next field.
+            case undefined {} // Read the next field.
+            case [infer Close, infer End] { return [Out, End]; }
         }
-        type [Name, AfterName] = Word<At>;
-        type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;
+        type [Name, AfterName] = Word<S, At>;
+        type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
         Out = object.addField<Out, Name, { type: Value }>;
 >Out : error
 >object : any
 >type : Value
 
-        match string.match<Skip<AfterValue>, ";"> {
+        match string.match<S, Skip<S, AfterValue>, ";"> {
 >string : any
 
-            case ["hit", infer Sep, infer Next] { At = Next; }
+            case undefined { return [Out, Expect<S, AfterValue, "}">]; }
+            case [infer Sep, infer Next] { At = Next; }
 >At : error
-
-            else { return [Out, Expect<AfterValue, "}">]; }
         }
     }
 }
-typefn Primary<C> {
->Primary : Primary<C>
+typefn Primary<S, Index> {
+>Primary : Primary<S, Index>
 
-    match string.match<Skip<C>, "{"> {
+    match string.match<S, Skip<S, Index>, "{"> {
 >string : any
 
-        case ["hit", infer Open, infer At] { return RecordFields<At>; }
-        else { return Scalar<C>; }
+        case undefined { return Scalar<S, Index>; }
+        case [infer Open, infer At] { return RecordFields<S, At>; }
     }
 }
-typefn Annotation<C> {
->Annotation : Annotation<C>
+typefn Annotation<S, Index> {
+>Annotation : Annotation<S, Index>
 
-    type [Value, At] = Primary<C>;
+    type [Value, At] = Primary<S, Index>;
     while (true) {
 >true : true
 
-        match string.match<Skip<At>, "[]"> {
+        match string.match<S, Skip<S, At>, "[]"> {
 >string : any
 
-            case ["hit", infer Suffix, infer Next] { Value = Value[]; At = Next; }
+            case undefined { return [Value, At]; }
+            case [infer Suffix, infer Next] { Value = Value[]; At = Next; }
 >Value : error
 >At : error
-
-            else { return [Value, At]; }
         }
     }
 }
 typefn Parent<S> {
 >Parent : Parent<S>
 
-    type Start = { source: S; offset: 0 };
->source : S
->offset : 0
-
-    type [Name, AfterName] = Word<Expect<Start, "root(parent ">>;
-    type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;
-    type End = Expect<AfterValue, ")">;
-    match string.read<Skip<End>> {
+    type [Name, AfterName] = Word<S, Expect<S, 0, "root(parent ">>;
+    type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
+    type End = Expect<S, AfterValue, ")">;
+    match string.read<S, Skip<S, End>> {
 >string : any
 
-        case ["eof"] { return object.addField<{}, Name, { type: Value }>; }
+        case undefined { return object.addField<{}, Name, { type: Value }>; }
 >object : any
 >type : Value
 

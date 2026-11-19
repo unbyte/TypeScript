@@ -88,18 +88,14 @@ const numbers: [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 900719925474
 typefn LexicalFacts<S> {
 >LexicalFacts : LexicalFacts<S>
 
-    type Cursor = { source: S; offset: 0 };
->source : S
->offset : 0
-
     return [
-        string.length<S>, string.read<Cursor>, string.slice<S, 0, 2>, string.find<Cursor, "a">,
+        string.length<S>, string.read<S, 0>, string.slice<S, 0, 2>, string.find<S, 2, "a">,
 >string : any
 >string : any
 >string : any
 >string : any
 
-        string.match<Cursor, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
+        string.match<S, 0, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
 >string : any
 >run : [["😀", "😀"]]
 >max : 1
@@ -109,29 +105,89 @@ typefn LexicalFacts<S> {
 >string : any
 >string : any
 
-        string.match<Cursor, "b">, string.find<Cursor, "b">
+        string.match<S, 0, "b">, string.find<S, 2, "b">
 >string : any
 >string : any
 
     ];
 }
 declare const text: LexicalFacts<"😀a">;
->text : [3, ["hit", "😀", { offset: 2; source: "😀a"; }], "😀", ["hit", { end: 3; source: "😀a"; start: 2; }], ["hit", "😀", { offset: 2; source: "😀a"; }], ["a", "", "b", ""], 55296, "\uD800", ["miss"], ["miss"]]
+>text : [3, ["😀", 2], "😀", { end: 3; source: "😀a"; start: 2; }, ["😀", 2], ["a", "", "b", ""], 55296, "\uD800", undefined, undefined]
 
-const lexical: [3, ["hit", "😀", {source: "😀a"; offset: 2}], "😀",
->lexical : [3, ["hit", "😀", { source: "😀a"; offset: 2; }], "😀", ["hit", { source: "😀a"; start: 2; end: 3; }], ["hit", "😀", { source: "😀a"; offset: 2; }], ["a", "", "b", ""], 55296, "\uD800", ["miss"], ["miss"]]
->source : "😀a"
->offset : 2
+const lexical: [3, ["😀", 2], "😀",
+>lexical : [3, ["😀", 2], "😀", { source: "😀a"; start: 2; end: 3; }, ["😀", 2], ["a", "", "b", ""], 55296, "\uD800", undefined, undefined]
 
-    ["hit", {source: "😀a"; start: 2; end: 3}], ["hit", "😀", {source: "😀a"; offset: 2}],
+    {source: "😀a"; start: 2; end: 3}, ["😀", 2],
 >source : "😀a"
 >start : 2
 >end : 3
->source : "😀a"
->offset : 2
 
-    ["a", "", "b", ""], 55296, "\ud800", ["miss"], ["miss"]] = text;
->text : [3, ["hit", "😀", { offset: 2; source: "😀a"; }], "😀", ["hit", { end: 3; source: "😀a"; start: 2; }], ["hit", "😀", { offset: 2; source: "😀a"; }], ["a", "", "b", ""], 55296, "\uD800", ["miss"], ["miss"]]
+    ["a", "", "b", ""], 55296, "\ud800", undefined, undefined] = text;
+>text : [3, ["😀", 2], "😀", { end: 3; source: "😀a"; start: 2; }, ["😀", 2], ["a", "", "b", ""], 55296, "\uD800", undefined, undefined]
+
+typefn AtEnd<S, Index> {
+>AtEnd : AtEnd<S, Index>
+
+    return [string.read<S, Index>, string.match<S, Index, "a">, string.match<S, Index, "">,
+>string : any
+>string : any
+>string : any
+
+        string.match<S, Index, { run: [["0", "9"]]; min: 0 }>, string.find<S, Index, "">];
+>string : any
+>run : [["0", "9"]]
+>min : 0
+>string : any
+}
+declare const atEnd: AtEnd<"😀", 2>;
+>atEnd : [undefined, undefined, ["", 2], ["", 2], { end: 2; source: "😀"; start: 2; }]
+
+const end: [undefined, undefined, ["", 2], ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
+>end : [undefined, undefined, ["", 2], ["", 2], { source: "😀"; start: 2; end: 2; }]
+>source : "😀"
+>start : 2
+>end : 2
+>atEnd : [undefined, undefined, ["", 2], ["", 2], { end: 2; source: "😀"; start: 2; }]
+
+typefn Search<S, Index> {
+>Search : Search<S, Index>
+
+    return [string.match<S, Index, "+">, string.find<S, Index, "+">];
+>string : any
+>string : any
+}
+declare const search: Search<"+😀+", 1>;
+>search : [undefined, { end: 4; source: "+😀+"; start: 3; }]
+
+const afterFirst: [undefined, {source: "+😀+"; start: 3; end: 4}] = search;
+>afterFirst : [undefined, { source: "+😀+"; start: 3; end: 4; }]
+>source : "+😀+"
+>start : 3
+>end : 4
+>search : [undefined, { end: 4; source: "+😀+"; start: 3; }]
+
+typefn Read<S, Index> { return string.read<S, Index>; }
+>Read : Read<S, Index>
+>string : any
+
+// @ts-expect-error the index splits a surrogate pair
+declare const insidePair: Read<"😀", 1>;
+>insidePair : any
+
+// @ts-expect-error the index is past the end
+declare const pastEnd: Read<"", 1>;
+>pastEnd : any
+
+// @ts-expect-error the index must be a nonnegative integer literal
+declare const fractional: Read<"abc", 1.5>;
+>fractional : any
+
+const invalidReads: [undefined, undefined, undefined] = [insidePair, pastEnd, fractional];
+>invalidReads : [undefined, undefined, undefined]
+>[insidePair, pastEnd, fractional] : [any, any, any]
+>insidePair : any
+>pastEnd : any
+>fractional : any
 
 typefn Forms<T> {
 >Forms : Forms<T>

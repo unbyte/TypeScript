@@ -1,73 +1,72 @@
 // @strict: true
 // @target: esnext
 
-type Cursor<S extends string, I extends number = 0> = { source: S; offset: I };
-
-typefn Skip<C> {
-    match string.match<C, { run: [[" ", " "]] }> {
-        case ["hit", infer Text, infer Next] { return Next; }
-        else { return C; }
+typefn Skip<S, Index> {
+    match string.match<S, Index, { run: [[" ", " "]] }> {
+        case undefined { return Index; }
+        case [infer Text, infer Next] { return Next; }
     }
 }
 
-typefn Atom<C> {
-    type At = Skip<C>;
-    match string.match<At, { run: [["0", "9"]] }> {
-        case ["hit", infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
-        else {} // Try a unary operator or a parenthesized expression.
+typefn Atom<S, Index> {
+    type At = Skip<S, Index>;
+    match string.match<S, At, { run: [["0", "9"]] }> {
+        case undefined {} // Try a unary operator or a parenthesized expression.
+        case [infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
     }
-    match string.read<At> {
-        case ["hit", "-", infer Next] {
-            type [Value, After] = Atom<Next>;
+    match string.read<S, At> {
+        case undefined { fail<"expected an integer or parenthesis">; }
+        case ["-", infer Next] {
+            type [Value, After] = Atom<S, Next>;
             return [number.negate<Value>, After];
         }
-        case ["hit", "(", infer Next] {
-            type [Value, After] = Sum<Next>;
-            match string.match<Skip<After>, ")"> {
-                case ["hit", ")", infer End] { return [Value, End]; }
-                else { fail<"expected closing parenthesis">; }
+        case ["(", infer Next] {
+            type [Value, After] = Sum<S, Next>;
+            match string.match<S, Skip<S, After>, ")"> {
+                case undefined { fail<"expected closing parenthesis">; }
+                case [")", infer End] { return [Value, End]; }
             }
         }
         else { fail<"expected an integer or parenthesis">; }
     }
 }
 
-typefn Product<C> {
-    type [Value, At] = Atom<C>;
+typefn Product<S, Index> {
+    type [Value, At] = Atom<S, Index>;
     while (true) {
-        match string.match<Skip<At>, "*"> {
-            case ["hit", "*", infer Right] {
-                type [Term, Next] = Atom<Right>;
+        match string.match<S, Skip<S, At>, "*"> {
+            case undefined { break; }
+            case ["*", infer Right] {
+                type [Term, Next] = Atom<S, Right>;
                 Value = number.multiply<Value, Term>;
                 At = Next;
             }
-            else { break; }
         }
     }
     return [Value, At];
 }
 
-typefn Sum<C> {
-    type [Value, At] = Product<C>;
+typefn Sum<S, Index> {
+    type [Value, At] = Product<S, Index>;
     while (true) {
-        match string.read<Skip<At>> {
-            case ["hit", infer Op, infer Right] {
+        match string.read<S, Skip<S, At>> {
+            case undefined { break; }
+            case [infer Op, infer Right] {
                 if (Op !== "+" && Op !== "-") { break; }
-                type [Term, Next] = Product<Right>;
+                type [Term, Next] = Product<S, Right>;
                 if (Op === "+") { Value = number.add<Value, Term>; }
                 else { Value = number.subtract<Value, Term>; }
                 At = Next;
             }
-            else { break; }
         }
     }
     return [Value, At];
 }
 
 typefn Calc<S extends string> {
-    type [Value, At] = Sum<Cursor<S>>;
-    match string.read<Skip<At>> {
-        case ["eof"] { return Value; }
+    type [Value, At] = Sum<S, 0>;
+    match string.read<S, Skip<S, At>> {
+        case undefined { return Value; }
         else { fail<"trailing input">; }
     }
 }

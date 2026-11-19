@@ -56,44 +56,29 @@ func (p *typeFunctionTextPosition) seek(offset int) bool {
 }
 
 func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Type {
-	first := args[0]
+	source := args[0]
 	if op == "fromCodePoint" {
-		n, ok := typeFunctionOffset(first)
+		n, ok := typeFunctionOffset(source)
 		if !ok || n > 0x10ffff {
 			return nil
 		}
 		return c.getStringLiteralType(stringutil.EncodeJSStringRune(rune(n)))
 	}
-	cursor := op == "read" || op == "find" || op == "match"
-	source := first
-	start := 0
-	if cursor {
-		if first.flags&TypeFlagsObject == 0 {
-			return nil
-		}
-		source = c.getTypeOfPropertyOfType(first, "source")
-		var ok bool
-		start, ok = typeFunctionOffset(c.getTypeOfPropertyOfType(first, "offset"))
-		if !ok {
-			return nil
-		}
-	}
 	s, ok := typeFunctionString(source)
 	if !ok {
 		return nil
 	}
-	if cursor && !c.typeFunctionCharge(node, len(s)) {
-		return c.anyType
-	}
 	s = stringutil.CombineSurrogatePairs(s)
 	pos := typeFunctionTextPosition{text: s}
-	if !pos.seek(start) {
-		return nil
+	if op == "read" || op == "find" || op == "match" {
+		index, ok := typeFunctionOffset(args[1])
+		if !ok || !pos.seek(index) {
+			return nil
+		}
 	}
 	asString := c.getStringLiteralType
-	tuple := func(parts ...*Type) *Type { return c.createTupleType(parts) }
-	next := func() *Type {
-		return c.typeFunctionRecord(typeFunctionField{"source", source}, typeFunctionField{"offset", c.typeFunctionInt(pos.units)})
+	matchedText := func(begin int) *Type {
+		return c.createTupleType([]*Type{asString(s[begin:pos.bytes]), c.typeFunctionInt(pos.units)})
 	}
 	switch op {
 	case "length":
@@ -103,11 +88,11 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 		return c.typeFunctionInt(pos.units)
 	case "read":
 		if pos.bytes == len(s) {
-			return tuple(asString("eof"))
+			return c.undefinedType
 		}
 		before := pos.bytes
 		pos.advance()
-		return tuple(asString("hit"), asString(s[before:pos.bytes]), next())
+		return matchedText(before)
 	case "codePoint":
 		if len(s) == 0 {
 			return nil
@@ -142,14 +127,14 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 		}
 		return c.createTupleType(result)
 	case "find":
-		needle, ok := typeFunctionString(args[1])
+		needle, ok := typeFunctionString(args[2])
 		if !ok {
 			return nil
 		}
 		needle = stringutil.CombineSurrogatePairs(needle)
 		i := strings.Index(s[pos.bytes:], needle)
 		if i < 0 {
-			return tuple(asString("miss"))
+			return c.undefinedType
 		}
 		at := pos.bytes + i
 		for pos.bytes < at {
@@ -159,14 +144,14 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 		for pos.bytes < at+len(needle) {
 			pos.advance()
 		}
-		return tuple(asString("hit"), c.typeFunctionRecord(typeFunctionField{"source", source}, typeFunctionField{"start", c.typeFunctionInt(begin)}, typeFunctionField{"end", c.typeFunctionInt(pos.units)}))
+		return c.typeFunctionRecord(typeFunctionField{"source", source}, typeFunctionField{"start", c.typeFunctionInt(begin)}, typeFunctionField{"end", c.typeFunctionInt(pos.units)})
 	case "match":
-		pattern := args[1]
+		pattern := args[2]
 		begin := pos.bytes
 		if exact, ok := typeFunctionString(pattern); ok {
 			exact = stringutil.CombineSurrogatePairs(exact)
 			if !strings.HasPrefix(s[begin:], exact) {
-				return tuple(asString("miss"))
+				return c.undefinedType
 			}
 			for pos.bytes < begin+len(exact) {
 				pos.advance()
@@ -236,10 +221,10 @@ func (c *Checker) typeFunctionText(node *ast.Node, op string, args []*Type) *Typ
 				count++
 			}
 			if count < minRun {
-				return tuple(asString("miss"))
+				return c.undefinedType
 			}
 		}
-		return tuple(asString("hit"), asString(s[begin:pos.bytes]), next())
+		return matchedText(begin)
 	}
 	return nil
 }

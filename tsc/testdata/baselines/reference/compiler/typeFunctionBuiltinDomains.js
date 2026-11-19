@@ -16,18 +16,39 @@ const numbers: [9007199254740992, -3, -8, 1.5, -2, 1, -1, true, 75, 900719925474
     12345678901234567890n, -42n, 7n, -3n, -12n, -7n, -2n, -1n, true] = math;
 
 typefn LexicalFacts<S> {
-    type Cursor = { source: S; offset: 0 };
     return [
-        string.length<S>, string.read<Cursor>, string.slice<S, 0, 2>, string.find<Cursor, "a">,
-        string.match<Cursor, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
+        string.length<S>, string.read<S, 0>, string.slice<S, 0, 2>, string.find<S, 2, "a">,
+        string.match<S, 0, { run: [["😀", "😀"]]; max: 1 }>, string.split<"a,,b,", ",">,
         string.codePoint<"\ud800">, string.fromCodePoint<55296>,
-        string.match<Cursor, "b">, string.find<Cursor, "b">
+        string.match<S, 0, "b">, string.find<S, 2, "b">
     ];
 }
 declare const text: LexicalFacts<"😀a">;
-const lexical: [3, ["hit", "😀", {source: "😀a"; offset: 2}], "😀",
-    ["hit", {source: "😀a"; start: 2; end: 3}], ["hit", "😀", {source: "😀a"; offset: 2}],
-    ["a", "", "b", ""], 55296, "\ud800", ["miss"], ["miss"]] = text;
+const lexical: [3, ["😀", 2], "😀",
+    {source: "😀a"; start: 2; end: 3}, ["😀", 2],
+    ["a", "", "b", ""], 55296, "\ud800", undefined, undefined] = text;
+
+typefn AtEnd<S, Index> {
+    return [string.read<S, Index>, string.match<S, Index, "a">, string.match<S, Index, "">,
+        string.match<S, Index, { run: [["0", "9"]]; min: 0 }>, string.find<S, Index, "">];
+}
+declare const atEnd: AtEnd<"😀", 2>;
+const end: [undefined, undefined, ["", 2], ["", 2], {source: "😀"; start: 2; end: 2}] = atEnd;
+
+typefn Search<S, Index> {
+    return [string.match<S, Index, "+">, string.find<S, Index, "+">];
+}
+declare const search: Search<"+😀+", 1>;
+const afterFirst: [undefined, {source: "+😀+"; start: 3; end: 4}] = search;
+
+typefn Read<S, Index> { return string.read<S, Index>; }
+// @ts-expect-error the index splits a surrogate pair
+declare const insidePair: Read<"😀", 1>;
+// @ts-expect-error the index is past the end
+declare const pastEnd: Read<"", 1>;
+// @ts-expect-error the index must be a nonnegative integer literal
+declare const fractional: Read<"abc", 1.5>;
+const invalidReads: [undefined, undefined, undefined] = [insidePair, pastEnd, fractional];
 
 typefn Forms<T> {
     type Copy = intersection.fromTuple<intersection.parts<T>>;
@@ -71,6 +92,9 @@ const edited: [false, {n: 1}, {key: string; type: number; readonly: true}] = edi
 "use strict";
 const numbers = math;
 const lexical = text;
+const end = atEnd;
+const afterFirst = search;
+const invalidReads = [insidePair, pastEnd, fractional];
 const ordinary = forms;
 var Choice;
 (function (Choice) {

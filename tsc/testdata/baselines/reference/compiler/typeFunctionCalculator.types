@@ -1,69 +1,65 @@
 //// [tests/cases/compiler/typeFunctionCalculator.ts] ////
 
 === typeFunctionCalculator.ts ===
-type Cursor<S extends string, I extends number = 0> = { source: S; offset: I };
->Cursor : Cursor<S, I>
->source : S
->offset : I
+typefn Skip<S, Index> {
+>Skip : Skip<S, Index>
 
-typefn Skip<C> {
->Skip : Skip<C>
-
-    match string.match<C, { run: [[" ", " "]] }> {
+    match string.match<S, Index, { run: [[" ", " "]] }> {
 >string : any
 >run : [[" ", " "]]
 
-        case ["hit", infer Text, infer Next] { return Next; }
-        else { return C; }
+        case undefined { return Index; }
+        case [infer Text, infer Next] { return Next; }
     }
 }
 
-typefn Atom<C> {
->Atom : Atom<C>
+typefn Atom<S, Index> {
+>Atom : Atom<S, Index>
 
-    type At = Skip<C>;
-    match string.match<At, { run: [["0", "9"]] }> {
+    type At = Skip<S, Index>;
+    match string.match<S, At, { run: [["0", "9"]] }> {
 >string : any
 >run : [["0", "9"]]
 
-        case ["hit", infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
+        case undefined {} // Try a unary operator or a parenthesized expression.
+        case [infer Digits, infer Next] { return [number.fromDecimal<Digits>, Next]; }
 >number : any
-
-        else {} // Try a unary operator or a parenthesized expression.
     }
-    match string.read<At> {
+    match string.read<S, At> {
 >string : any
 
-        case ["hit", "-", infer Next] {
-            type [Value, After] = Atom<Next>;
+        case undefined { fail<"expected an integer or parenthesis">; }
+        case ["-", infer Next] {
+            type [Value, After] = Atom<S, Next>;
             return [number.negate<Value>, After];
 >number : any
         }
-        case ["hit", "(", infer Next] {
-            type [Value, After] = Sum<Next>;
-            match string.match<Skip<After>, ")"> {
+        case ["(", infer Next] {
+            type [Value, After] = Sum<S, Next>;
+            match string.match<S, Skip<S, After>, ")"> {
 >string : any
 
-                case ["hit", ")", infer End] { return [Value, End]; }
-                else { fail<"expected closing parenthesis">; }
+                case undefined { fail<"expected closing parenthesis">; }
+                case [")", infer End] { return [Value, End]; }
             }
         }
         else { fail<"expected an integer or parenthesis">; }
     }
 }
 
-typefn Product<C> {
->Product : Product<C>
+typefn Product<S, Index> {
+>Product : Product<S, Index>
 
-    type [Value, At] = Atom<C>;
+    type [Value, At] = Atom<S, Index>;
     while (true) {
 >true : true
 
-        match string.match<Skip<At>, "*"> {
+        match string.match<S, Skip<S, At>, "*"> {
 >string : any
 
-            case ["hit", "*", infer Right] {
-                type [Term, Next] = Atom<Right>;
+            case undefined { break; }
+            case ["*", infer Right] {
+                type [Term, Next] = Atom<S, Right>;
                 Value = number.multiply<Value, Term>;
 >Value : error
 >number : any
@@ -71,25 +67,25 @@ typefn Product<C> {
                 At = Next;
 >At : error
             }
-            else { break; }
         }
     }
     return [Value, At];
 }
 
-typefn Sum<C> {
->Sum : Sum<C>
+typefn Sum<S, Index> {
+>Sum : Sum<S, Index>
 
-    type [Value, At] = Product<C>;
+    type [Value, At] = Product<S, Index>;
     while (true) {
 >true : true
 
-        match string.read<Skip<At>> {
+        match string.read<S, Skip<S, At>> {
 >string : any
 
-            case ["hit", infer Op, infer Right] {
+            case undefined { break; }
+            case [infer Op, infer Right] {
                 if (Op !== "+" && Op !== "-") { break; }
-                type [Term, Next] = Product<Right>;
+                type [Term, Next] = Product<S, Right>;
                 if (Op === "+") { Value = number.add<Value, Term>; }
 >Value : error
 >number : any
@@ -101,7 +97,6 @@ typefn Sum<C> {
                 At = Next;
 >At : error
             }
-            else { break; }
         }
     }
     return [Value, At];
@@ -110,11 +105,11 @@ typefn Sum<C> {
 typefn Calc<S extends string> {
 >Calc : Calc<S>
 
-    type [Value, At] = Sum<Cursor<S>>;
-    match string.read<Skip<At>> {
+    type [Value, At] = Sum<S, 0>;
+    match string.read<S, Skip<S, At>> {
 >string : any
 
-        case ["eof"] { return Value; }
+        case undefined { return Value; }
         else { fail<"trailing input">; }
     }
 }

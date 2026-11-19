@@ -1,71 +1,70 @@
 //// [tests/cases/compiler/typeFunctionParent.ts] ////
 
 //// [typeFunctionParent.ts]
-typefn Skip<C> {
-    match string.match<C, { run: [[" ", " "]] }> {
-        case ["hit", infer Spaces, infer Next] { return Next; }
-        else { return C; }
+typefn Skip<S, Index> {
+    match string.match<S, Index, { run: [[" ", " "]] }> {
+        case undefined { return Index; }
+        case [infer Spaces, infer Next] { return Next; }
     }
 }
-typefn Expect<C, Text> {
-    match string.match<Skip<C>, Text> {
-        case ["hit", infer Spelling, infer Next] { return Next; }
-        else { fail<`expected ${Text & string}`>; }
+typefn Expect<S, Index, Text> {
+    match string.match<S, Skip<S, Index>, Text> {
+        case undefined { fail<`expected ${Text & string}`>; }
+        case [infer Spelling, infer Next] { return Next; }
     }
 }
-typefn Word<C> {
-    match string.match<Skip<C>, { run: [["a", "z"]] }> {
-        case ["hit", infer Text, infer Next] { return [Text, Next]; }
-        else { fail<"expected a name">; }
+typefn Word<S, Index> {
+    match string.match<S, Skip<S, Index>, { run: [["a", "z"]] }> {
+        case undefined { fail<"expected a name">; }
+        case [infer Text, infer Next] { return [Text, Next]; }
     }
 }
-typefn Scalar<C> {
-    type [Name, Next] = Word<C>;
+typefn Scalar<S, Index> {
+    type [Name, Next] = Word<S, Index>;
     match Name {
         case "number" { return [number, Next]; }
         case "string" { return [string, Next]; }
         else { fail<"unknown field type">; }
     }
 }
-typefn RecordFields<C> {
-    type At = C;
+typefn RecordFields<S, Index> {
+    type At = Index;
     type Out = {};
     while (true) {
-        match string.match<Skip<At>, "}"> {
-            case ["hit", infer Close, infer End] { return [Out, End]; }
-            else {} // Read the next field.
+        match string.match<S, Skip<S, At>, "}"> {
+            case undefined {} // Read the next field.
+            case [infer Close, infer End] { return [Out, End]; }
         }
-        type [Name, AfterName] = Word<At>;
-        type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;
+        type [Name, AfterName] = Word<S, At>;
+        type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
         Out = object.addField<Out, Name, { type: Value }>;
-        match string.match<Skip<AfterValue>, ";"> {
-            case ["hit", infer Sep, infer Next] { At = Next; }
-            else { return [Out, Expect<AfterValue, "}">]; }
+        match string.match<S, Skip<S, AfterValue>, ";"> {
+            case undefined { return [Out, Expect<S, AfterValue, "}">]; }
+            case [infer Sep, infer Next] { At = Next; }
         }
     }
 }
-typefn Primary<C> {
-    match string.match<Skip<C>, "{"> {
-        case ["hit", infer Open, infer At] { return RecordFields<At>; }
-        else { return Scalar<C>; }
+typefn Primary<S, Index> {
+    match string.match<S, Skip<S, Index>, "{"> {
+        case undefined { return Scalar<S, Index>; }
+        case [infer Open, infer At] { return RecordFields<S, At>; }
     }
 }
-typefn Annotation<C> {
-    type [Value, At] = Primary<C>;
+typefn Annotation<S, Index> {
+    type [Value, At] = Primary<S, Index>;
     while (true) {
-        match string.match<Skip<At>, "[]"> {
-            case ["hit", infer Suffix, infer Next] { Value = Value[]; At = Next; }
-            else { return [Value, At]; }
+        match string.match<S, Skip<S, At>, "[]"> {
+            case undefined { return [Value, At]; }
+            case [infer Suffix, infer Next] { Value = Value[]; At = Next; }
         }
     }
 }
 typefn Parent<S> {
-    type Start = { source: S; offset: 0 };
-    type [Name, AfterName] = Word<Expect<Start, "root(parent ">>;
-    type [Value, AfterValue] = Annotation<Expect<AfterName, ":">>;
-    type End = Expect<AfterValue, ")">;
-    match string.read<Skip<End>> {
-        case ["eof"] { return object.addField<{}, Name, { type: Value }>; }
+    type [Name, AfterName] = Word<S, Expect<S, 0, "root(parent ">>;
+    type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
+    type End = Expect<S, AfterValue, ")">;
+    match string.read<S, Skip<S, End>> {
+        case undefined { return object.addField<{}, Name, { type: Value }>; }
         else { fail<"trailing input">; }
     }
 }

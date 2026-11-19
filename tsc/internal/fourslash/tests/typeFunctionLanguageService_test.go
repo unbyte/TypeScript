@@ -44,9 +44,12 @@ const two: 2 = count;`
 
 func TestTypeFunctionBuiltinSignatureHelp(t *testing.T) {
 	t.Parallel()
-	const source = `typefn Words<T> { return string.split<T, /*separator*/" ">; }`
+	const source = `typefn Match<S> { return string.match<S, /*index*/0, /*pattern*/" ">; }`
 	f, done := fourslash.NewFourslash(t, nil, source)
 	defer done()
-	f.GoToMarker(t, "separator")
-	f.VerifySignatureHelp(t, fourslash.VerifySignatureHelpOptions{Text: "string.split<S, Separator>", ParameterCount: 2, ParameterName: "Separator"})
+	const signature = "string.match<S, Index, Pattern>"
+	f.GoToMarker(t, "index")
+	f.VerifySignatureHelp(t, fourslash.VerifySignatureHelpOptions{Text: signature, ParameterCount: 3, ParameterName: "Index"})
+	f.GoToMarker(t, "pattern")
+	f.VerifySignatureHelp(t, fourslash.VerifySignatureHelpOptions{Text: signature, ParameterCount: 3, ParameterName: "Pattern"})
 }
