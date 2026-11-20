@@ -1577,6 +1577,7 @@ type ConditionalRoot struct {
 	checkType           *Type
 	extendsType         *Type
 	isDistributive      bool
+	wholeOperand        bool
 	inferTypeParameters []*Type
 	outerTypeParameters []*Type
 	instantiations      map[CacheHashKey]*Type

@@ -472,9 +472,26 @@ func (f *typeFunctionFrame) forceNestedOperand(node *ast.Node, sources, values *
 	return node.ForEachChild(func(child *ast.Node) bool { return f.forceNestedOperand(child, sources, values) })
 }
 
-// The checker selects native conditional arms, including distributive and infer
-// cases. Inspect only selected shapes written in that operand. Existing named
-// objects retain their ordinary lazy member resolution.
+// A typefn owns the values supplied to its parameters and locals. A type parameter
+// introduced by a constructed signature belongs to the future TypeScript caller.
+func isTypeFunctionOperand(node *ast.Node, checked *Type) bool {
+	owner := ast.FindAncestorKind(node, ast.KindTypeFunctionDeclaration)
+	if owner == nil {
+		return false
+	}
+	if checked.flags&TypeFlagsTypeParameter != 0 && checked.symbol != nil {
+		for _, decl := range checked.symbol.Declarations() {
+			if ast.IsFunctionLike(decl.Parent) && ast.FindAncestorKind(decl.Parent, ast.KindTypeFunctionDeclaration) == owner {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+// The checker selects conditional arms and binds infer variables. Inspect only
+// selected shapes written in that operand. Existing named objects retain their
+// ordinary lazy member resolution.
 func (f *typeFunctionFrame) selectedOperand(node *ast.Node, sources, values []*Type) *Type {
 	c := f.c
 	t := c.getTypeFromTypeNode(node)

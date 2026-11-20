@@ -141,7 +141,7 @@ typefn ConditionalField<T> {
 >ConditionalField : ConditionalField<T>
 
     return { payload: T extends [infer I] ? { nested: Failed<> } : "ok"; stable: 1 };
->payload : T extends [infer I] ? { nested: Failed<>; } : "ok"
+>payload : [T] extends [[infer I]] ? { nested: Failed<>; } : "ok"
 >nested : any
 >stable : 1
 }

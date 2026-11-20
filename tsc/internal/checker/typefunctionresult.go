@@ -354,7 +354,7 @@ func (r *typeFunctionResult) conditional(t *Type) *Type {
 	}
 	root := &ConditionalRoot{
 		node: d.root.node, checkType: check, extendsType: c.instantiateType(constraint, m),
-		isDistributive: d.root.isDistributive, inferTypeParameters: binders,
+		isDistributive: d.root.isDistributive, wholeOperand: d.root.wholeOperand, inferTypeParameters: binders,
 		outerTypeParameters: outer, instantiations: make(map[CacheHashKey]*Type),
 	}
 	if c.typeFunctionResultBranches == nil {

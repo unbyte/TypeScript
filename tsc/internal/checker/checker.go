@@ -23439,7 +23439,12 @@ func (c *Checker) instantiateMappedType(t *Type, m *TypeMapper, alias *TypeAlias
 	if typeVariable != nil {
 		mappedTypeVariable := c.instantiateType(typeVariable, m)
 		if typeVariable != mappedTypeVariable {
-			return c.mapTypeWithAlias(c.getReducedType(mappedTypeVariable), instantiateConstituent, alias)
+			source := c.getReducedType(mappedTypeVariable)
+			if source.flags&TypeFlagsUnion != 0 && isTypeFunctionOperand(d.declaration.AsNode(), typeVariable) {
+				// Resolve keyof and the property template against the same whole source.
+				return c.instantiateAnonymousType(t, m, alias)
+			}
+			return c.mapTypeWithAlias(source, instantiateConstituent, alias)
 		}
 	}
 	// If the constraint type of the instantiation is the wildcard type, return the wildcard type.
@@ -23939,7 +23944,9 @@ func (c *Checker) getDistributedTypeParameter(node *ast.Node, t *Type) *Type {
 				if checkTypeNode := n.AsConditionalTypeNode().CheckType; isSimpleIdentifierTypeReference(checkTypeNode) && c.getSymbolFromTypeReference(checkTypeNode) == t.symbol {
 					// If node is contained in a distributive conditional type for the given type parameter,
 					// return the distributed form of the type parameter.
-					return c.getDistributedTypeFromTypeParameter(t)
+					if !isTypeFunctionOperand(n, t) {
+						return c.getDistributedTypeFromTypeParameter(t)
+					}
 				}
 			}
 		}
@@ -25261,10 +25268,21 @@ func (c *Checker) getTypeFromConditionalTypeNode(node *ast.Node) *Type {
 		} else {
 			outerTypeParameters = core.Filter(allOuterTypeParameters, func(tp *Type) bool { return c.isTypeParameterPossiblyReferenced(tp, node) })
 		}
+		extendsType := c.getTypeFromTypeNode(node.AsConditionalTypeNode().ExtendsType)
+		// Singleton tuples express a single assignability test in the native type
+		// system, including for any and never. Keep that representation for emit.
+		wholeOperand := isTypeFunctionOperand(node, checkType) &&
+			!(c.isSimpleTupleType(ast.SkipTypeParentheses(node.AsConditionalTypeNode().CheckType)) &&
+				c.isSimpleTupleType(ast.SkipTypeParentheses(node.AsConditionalTypeNode().ExtendsType)))
+		if wholeOperand {
+			checkType = c.createTupleType([]*Type{checkType})
+			extendsType = c.createTupleType([]*Type{extendsType})
+		}
 		root := &ConditionalRoot{
+			wholeOperand:        wholeOperand,
 			node:                node.AsConditionalTypeNode(),
 			checkType:           checkType,
-			extendsType:         c.getTypeFromTypeNode(node.AsConditionalTypeNode().ExtendsType),
+			extendsType:         extendsType,
 			isDistributive:      checkType.flags&TypeFlagsTypeParameter != 0,
 			inferTypeParameters: c.getInferTypeParameters(node),
 			outerTypeParameters: outerTypeParameters,
@@ -25307,7 +25325,7 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 		// When the check and extends types are simple tuple types of the same arity, we defer resolution of the
 		// conditional type when any tuple elements are generic. This is such that non-distributable conditional
 		// types can be written `[X] extends [Y] ? ...` and be deferred similarly to `X extends Y ? ...`.
-		checkTuples := c.isSimpleTupleType(checkTypeNode) && c.isSimpleTupleType(extendsTypeNode) && len(checkTypeNode.Elements()) == len(extendsTypeNode.Elements())
+		checkTuples := root.wholeOperand || c.isSimpleTupleType(checkTypeNode) && c.isSimpleTupleType(extendsTypeNode) && len(checkTypeNode.Elements()) == len(extendsTypeNode.Elements())
 		checkTypeDeferred := c.isDeferredType(checkType, checkTuples)
 		var combinedMapper *TypeMapper
 		if len(root.inferTypeParameters) != 0 {

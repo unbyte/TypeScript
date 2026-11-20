@@ -1,0 +1,302 @@
+//// [tests/cases/compiler/typeFunctionWholeUnion.ts] ////
+
+=== typeFunctionWholeUnion.ts ===
+type Expect<T extends true> = T;
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 0, 12))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 0, 12))
+
+type Equal<A, B> = (<T>() => T extends A ? 1 : 2) extends (<T>() => T extends B ? 1 : 2) ? true : false;
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>A : Symbol(A, Decl(typeFunctionWholeUnion.ts, 1, 11))
+>B : Symbol(B, Decl(typeFunctionWholeUnion.ts, 1, 13))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 1, 21))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 1, 21))
+>A : Symbol(A, Decl(typeFunctionWholeUnion.ts, 1, 11))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 1, 60))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 1, 60))
+>B : Symbol(B, Decl(typeFunctionWholeUnion.ts, 1, 13))
+
+type Native<T> = T extends string ? [T] : false;
+>Native : Symbol(Native, Decl(typeFunctionWholeUnion.ts, 1, 104))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 2, 12))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 2, 12))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 2, 12))
+
+type NativeMap<T> = { [K in keyof T]: [T[K]] };
+>NativeMap : Symbol(NativeMap, Decl(typeFunctionWholeUnion.ts, 2, 48))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 3, 15))
+>K : Symbol(K, Decl(typeFunctionWholeUnion.ts, 3, 23))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 3, 15))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 3, 15))
+>K : Symbol(K, Decl(typeFunctionWholeUnion.ts, 3, 23))
+
+typefn Classify<T> { return T extends string ? [T] : false; }
+>Classify : Symbol(Classify, Decl(typeFunctionWholeUnion.ts, 3, 47))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 5, 16))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 5, 16))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 5, 16))
+
+typefn Local<T> { type P = T; return { tag: P extends string ? "all" : "other" }; }
+>Local : Symbol(Local, Decl(typeFunctionWholeUnion.ts, 5, 61))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 6, 13))
+>P : Symbol(P, Decl(typeFunctionWholeUnion.ts, 6, 22))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 6, 13))
+>tag : Symbol(tag, Decl(typeFunctionWholeUnion.ts, 6, 38))
+>P : Symbol(P, Decl(typeFunctionWholeUnion.ts, 6, 22))
+
+typefn Default<T, R = T extends string ? 1 : 0> { return R; }
+>Default : Symbol(Default, Decl(typeFunctionWholeUnion.ts, 6, 83))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 7, 15))
+>R : Symbol(R, Decl(typeFunctionWholeUnion.ts, 7, 17))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 7, 15))
+>R : Symbol(R, Decl(typeFunctionWholeUnion.ts, 7, 17))
+
+typefn Capture<T> { return T extends { value: infer V } ? [V] : false; }
+>Capture : Symbol(Capture, Decl(typeFunctionWholeUnion.ts, 7, 61))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 8, 15))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 8, 15))
+>value : Symbol(value, Decl(typeFunctionWholeUnion.ts, 8, 38))
+>V : Symbol(V, Decl(typeFunctionWholeUnion.ts, 8, 51))
+>V : Symbol(V, Decl(typeFunctionWholeUnion.ts, 8, 51))
+
+typefn Wrap<T> { return T extends unknown ? [T] : never; }
+>Wrap : Symbol(Wrap, Decl(typeFunctionWholeUnion.ts, 8, 72))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 9, 12))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 9, 12))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 9, 12))
+
+typefn Relay<T> { return Classify<T>; }
+>Relay : Symbol(Relay, Decl(typeFunctionWholeUnion.ts, 9, 58))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 10, 13))
+>Classify : Symbol(Classify, Decl(typeFunctionWholeUnion.ts, 3, 47))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 10, 13))
+
+typefn CallNative<T> { return Native<T>; }
+>CallNative : Symbol(CallNative, Decl(typeFunctionWholeUnion.ts, 10, 39))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 11, 18))
+>Native : Symbol(Native, Decl(typeFunctionWholeUnion.ts, 1, 104))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 11, 18))
+
+typefn MapFields<T> { return { [K in keyof T]: [T[K]] }; }
+>MapFields : Symbol(MapFields, Decl(typeFunctionWholeUnion.ts, 11, 42))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 12, 17))
+>K : Symbol(K, Decl(typeFunctionWholeUnion.ts, 12, 32))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 12, 17))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 12, 17))
+>K : Symbol(K, Decl(typeFunctionWholeUnion.ts, 12, 32))
+
+typefn CallNativeMap<T> { return NativeMap<T>; }
+>CallNativeMap : Symbol(CallNativeMap, Decl(typeFunctionWholeUnion.ts, 12, 58))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 13, 21))
+>NativeMap : Symbol(NativeMap, Decl(typeFunctionWholeUnion.ts, 2, 48))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 13, 21))
+
+typefn Each<T> {
+>Each : Symbol(Each, Decl(typeFunctionWholeUnion.ts, 13, 48))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 14, 12))
+
+    type Result = never;
+>Result : Symbol(Result, Decl(typeFunctionWholeUnion.ts, 15, 8))
+
+    for (type Part of union.toTuple<T>) { Result = Result | Classify<Part>; }
+>Part : Symbol(Part, Decl(typeFunctionWholeUnion.ts, 16, 13))
+>union : Symbol(union)
+>toTuple : Symbol(union.toTuple)
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 14, 12))
+>Result : Symbol(Result, Decl(typeFunctionWholeUnion.ts, 15, 8))
+>Classify : Symbol(Classify, Decl(typeFunctionWholeUnion.ts, 3, 47))
+>Part : Symbol(Part, Decl(typeFunctionWholeUnion.ts, 16, 13))
+
+    return Result;
+>Result : Symbol(Result, Decl(typeFunctionWholeUnion.ts, 15, 8))
+}
+
+type Words = "a" | "b";
+>Words : Symbol(Words, Decl(typeFunctionWholeUnion.ts, 18, 1))
+
+type Mixed = "a" | 1;
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+type Objects = { id: 1; left: true } | { id: 2; right: true };
+>Objects : Symbol(Objects, Decl(typeFunctionWholeUnion.ts, 21, 21))
+>id : Symbol(id, Decl(typeFunctionWholeUnion.ts, 22, 16))
+>left : Symbol(left, Decl(typeFunctionWholeUnion.ts, 22, 23))
+>id : Symbol(id, Decl(typeFunctionWholeUnion.ts, 22, 40))
+>right : Symbol(right, Decl(typeFunctionWholeUnion.ts, 22, 47))
+
+type Whole = Expect<Equal<Classify<Words>, [Words]>>;
+>Whole : Symbol(Whole, Decl(typeFunctionWholeUnion.ts, 22, 62))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Classify : Symbol(Classify, Decl(typeFunctionWholeUnion.ts, 3, 47))
+>Words : Symbol(Words, Decl(typeFunctionWholeUnion.ts, 18, 1))
+>Words : Symbol(Words, Decl(typeFunctionWholeUnion.ts, 18, 1))
+
+type PartlyMatches = Expect<Equal<Classify<Mixed>, false>>;
+>PartlyMatches : Symbol(PartlyMatches, Decl(typeFunctionWholeUnion.ts, 23, 53))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Classify : Symbol(Classify, Decl(typeFunctionWholeUnion.ts, 3, 47))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+type Empty = Expect<Equal<Classify<never>, [never]>>;
+>Empty : Symbol(Empty, Decl(typeFunctionWholeUnion.ts, 24, 59))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Classify : Symbol(Classify, Decl(typeFunctionWholeUnion.ts, 3, 47))
+
+type Dynamic = Expect<Equal<Classify<any>, [any]>>;
+>Dynamic : Symbol(Dynamic, Decl(typeFunctionWholeUnion.ts, 25, 53))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Classify : Symbol(Classify, Decl(typeFunctionWholeUnion.ts, 3, 47))
+
+type Nested = Expect<Equal<Local<Mixed>, { tag: "other" }>>;
+>Nested : Symbol(Nested, Decl(typeFunctionWholeUnion.ts, 26, 51))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Local : Symbol(Local, Decl(typeFunctionWholeUnion.ts, 5, 61))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+>tag : Symbol(tag, Decl(typeFunctionWholeUnion.ts, 27, 42))
+
+type Defaulted = Expect<Equal<Default<Mixed>, 0>>;
+>Defaulted : Symbol(Defaulted, Decl(typeFunctionWholeUnion.ts, 27, 60))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Default : Symbol(Default, Decl(typeFunctionWholeUnion.ts, 6, 83))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+type Inferred = Expect<Equal<Capture<{ value: 1 } | { value: 2 }>, [1 | 2]>>;
+>Inferred : Symbol(Inferred, Decl(typeFunctionWholeUnion.ts, 28, 50))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Capture : Symbol(Capture, Decl(typeFunctionWholeUnion.ts, 7, 61))
+>value : Symbol(value, Decl(typeFunctionWholeUnion.ts, 29, 38))
+>value : Symbol(value, Decl(typeFunctionWholeUnion.ts, 29, 53))
+
+type Unconditional = Expect<Equal<Wrap<Mixed>, [Mixed]>>;
+>Unconditional : Symbol(Unconditional, Decl(typeFunctionWholeUnion.ts, 29, 77))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Wrap : Symbol(Wrap, Decl(typeFunctionWholeUnion.ts, 8, 72))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+type NestedCall = Expect<Equal<Relay<Mixed>, false>>;
+>NestedCall : Symbol(NestedCall, Decl(typeFunctionWholeUnion.ts, 30, 57))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Relay : Symbol(Relay, Decl(typeFunctionWholeUnion.ts, 9, 58))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+type Ordinary = Expect<Equal<CallNative<Mixed>, ["a"] | false>>;
+>Ordinary : Symbol(Ordinary, Decl(typeFunctionWholeUnion.ts, 31, 53))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>CallNative : Symbol(CallNative, Decl(typeFunctionWholeUnion.ts, 10, 39))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+type Explicit = Expect<Equal<Each<Words>, ["a"] | ["b"]>>;
+>Explicit : Symbol(Explicit, Decl(typeFunctionWholeUnion.ts, 32, 64))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Each : Symbol(Each, Decl(typeFunctionWholeUnion.ts, 13, 48))
+>Words : Symbol(Words, Decl(typeFunctionWholeUnion.ts, 18, 1))
+
+type KeysTogether = Expect<Equal<MapFields<Objects>, { id: [1 | 2] }>>;
+>KeysTogether : Symbol(KeysTogether, Decl(typeFunctionWholeUnion.ts, 33, 58))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>MapFields : Symbol(MapFields, Decl(typeFunctionWholeUnion.ts, 11, 42))
+>Objects : Symbol(Objects, Decl(typeFunctionWholeUnion.ts, 21, 21))
+>id : Symbol(id, Decl(typeFunctionWholeUnion.ts, 34, 54))
+
+type KeysApart = Expect<Equal<CallNativeMap<Objects>, NativeMap<Objects>>>;
+>KeysApart : Symbol(KeysApart, Decl(typeFunctionWholeUnion.ts, 34, 71))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>CallNativeMap : Symbol(CallNativeMap, Decl(typeFunctionWholeUnion.ts, 12, 58))
+>Objects : Symbol(Objects, Decl(typeFunctionWholeUnion.ts, 21, 21))
+>NativeMap : Symbol(NativeMap, Decl(typeFunctionWholeUnion.ts, 2, 48))
+>Objects : Symbol(Objects, Decl(typeFunctionWholeUnion.ts, 21, 21))
+
+type PreservesModifiers = Expect<Equal<MapFields<{ readonly id?: 1 } | { readonly id?: 2 }>, { readonly id?: [1 | 2 | undefined] }>>;
+>PreservesModifiers : Symbol(PreservesModifiers, Decl(typeFunctionWholeUnion.ts, 35, 75))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>MapFields : Symbol(MapFields, Decl(typeFunctionWholeUnion.ts, 11, 42))
+>id : Symbol(id, Decl(typeFunctionWholeUnion.ts, 36, 50))
+>id : Symbol(id, Decl(typeFunctionWholeUnion.ts, 36, 72))
+>id : Symbol(id, Decl(typeFunctionWholeUnion.ts, 36, 94))
+
+type SingleTuple = Expect<Equal<MapFields<readonly [1, 2]>, readonly [[1], [2]]>>;
+>SingleTuple : Symbol(SingleTuple, Decl(typeFunctionWholeUnion.ts, 36, 133))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>MapFields : Symbol(MapFields, Decl(typeFunctionWholeUnion.ts, 11, 42))
+
+// A concrete union arrives through a deferred call just as it does through a direct call.
+type Later<T> = Relay<T>;
+>Later : Symbol(Later, Decl(typeFunctionWholeUnion.ts, 37, 82))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 40, 11))
+>Relay : Symbol(Relay, Decl(typeFunctionWholeUnion.ts, 9, 58))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 40, 11))
+
+type Instantiated = Expect<Equal<Later<Mixed>, false>>;
+>Instantiated : Symbol(Instantiated, Decl(typeFunctionWholeUnion.ts, 40, 25))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Later : Symbol(Later, Decl(typeFunctionWholeUnion.ts, 37, 82))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+typefn Abort<> { fail<"unselected arm">; }
+>Abort : Symbol(Abort, Decl(typeFunctionWholeUnion.ts, 41, 55))
+
+typefn Select<T> { return T extends string ? Abort<> : 0; }
+>Select : Symbol(Select, Decl(typeFunctionWholeUnion.ts, 43, 42))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 44, 14))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 44, 14))
+>Abort : Symbol(Abort, Decl(typeFunctionWholeUnion.ts, 41, 55))
+
+type OneBranch = Expect<Equal<Select<Mixed>, 0>>;
+>OneBranch : Symbol(OneBranch, Decl(typeFunctionWholeUnion.ts, 44, 59))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>Select : Symbol(Select, Decl(typeFunctionWholeUnion.ts, 43, 42))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+// The returned signature binds U when its ordinary TypeScript caller applies it.
+typefn Signature<T> {
+>Signature : Symbol(Signature, Decl(typeFunctionWholeUnion.ts, 45, 49))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 48, 17))
+
+    return <U>(value: U) => [T extends string ? T : false, U extends string ? [U] : false];
+>U : Symbol(U, Decl(typeFunctionWholeUnion.ts, 49, 12))
+>value : Symbol(value, Decl(typeFunctionWholeUnion.ts, 49, 15))
+>U : Symbol(U, Decl(typeFunctionWholeUnion.ts, 49, 12))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 48, 17))
+>T : Symbol(T, Decl(typeFunctionWholeUnion.ts, 48, 17))
+>U : Symbol(U, Decl(typeFunctionWholeUnion.ts, 49, 12))
+>U : Symbol(U, Decl(typeFunctionWholeUnion.ts, 49, 12))
+}
+declare const signature: Signature<Mixed>;
+>signature : Symbol(signature, Decl(typeFunctionWholeUnion.ts, 51, 13))
+>Signature : Symbol(Signature, Decl(typeFunctionWholeUnion.ts, 45, 49))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+declare const input: Mixed;
+>input : Symbol(input, Decl(typeFunctionWholeUnion.ts, 52, 13))
+>Mixed : Symbol(Mixed, Decl(typeFunctionWholeUnion.ts, 20, 23))
+
+export const signatureResult = signature(input);
+>signatureResult : Symbol(signatureResult, Decl(typeFunctionWholeUnion.ts, 53, 12))
+>signature : Symbol(signature, Decl(typeFunctionWholeUnion.ts, 51, 13))
+>input : Symbol(input, Decl(typeFunctionWholeUnion.ts, 52, 13))
+
+type Applied = Expect<Equal<typeof signatureResult, [false, ["a"] | false]>>;
+>Applied : Symbol(Applied, Decl(typeFunctionWholeUnion.ts, 53, 48))
+>Expect : Symbol(Expect, Decl(typeFunctionWholeUnion.ts, 0, 0))
+>Equal : Symbol(Equal, Decl(typeFunctionWholeUnion.ts, 0, 32))
+>signatureResult : Symbol(signatureResult, Decl(typeFunctionWholeUnion.ts, 53, 12))
+
