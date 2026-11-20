@@ -4,7 +4,9 @@
 typefn Calc<S extends string> {
     type Tokens = Tokenize<S>;
     type [Value, End] = Sum<Tokens, 0>;
-    if (Tokens[End] !== undefined) { fail<"unexpected token after expression">; }
+    if (Tokens[End] !== undefined) {
+        fail<"unexpected token after expression">;
+    }
     return Value;
 }
 
@@ -19,9 +21,13 @@ typefn Tokenize<S> {
         type Start = At;
         type [Char, Next] = string.read<S, At>;
         At = Next;
-        if (Char is Whitespace) { continue; }
+        if (Char is Whitespace) {
+            continue;
+        }
         if (Char is Digit) {
-            while (string.read<S, At> is [Digit, number]) { At = At + 1; }
+            while (string.read<S, At> is [Digit, number]) {
+                At = At + 1;
+            }
             type Text = string.slice<S, Start, At>;
             Tokens = [...Tokens, number.parse<Text>];
         } else {
@@ -37,8 +43,11 @@ typefn Sum<Tokens, Index> {
     while (Tokens[At] is "+" | "-") {
         type Op = Tokens[At];
         type [Right, Next] = Product<Tokens, At + 1>;
-        if (Op === "+") { Value = Value + Right; }
-        else { Value = Value - Right; }
+        if (Op === "+") {
+            Value = Value + Right;
+        } else {
+            Value = Value - Right;
+        }
         At = Next;
     }
     return [Value, At];
@@ -54,19 +63,31 @@ typefn Product<Tokens, Index> {
     return [Value, At];
 }
 
-typefn Atom<Tokens, At> {
-    type Token = Tokens[At];
-    if (Token is number) { return [Token, At + 1]; }
-    if (Token === "-") {
-        type [Value, Next] = Atom<Tokens, At + 1>;
-        return [-Value, Next];
+typefn Atom<Tokens, Index> {
+    type At = Index;
+    type Negative = false;
+    while (Tokens[At] === "-") {
+        Negative = !Negative;
+        At = At + 1;
     }
-    if (Token === "(") {
-        type [Value, Close] = Sum<Tokens, At + 1>;
-        if (Tokens[Close] !== ")") { fail<"expected closing parenthesis">; }
-        return [Value, Close + 1];
+    type Value = Tokens[At];
+    At = At + 1;
+    match Value {
+        case number: {}
+        case "(": {
+            type [Inner, Close] = Sum<Tokens, At>;
+            if (Tokens[Close] !== ")") {
+                fail<"expected closing parenthesis">;
+            }
+            Value = Inner;
+            At = Close + 1;
+        }
+        else: { fail<"expected an integer or parenthesis">; }
     }
-    fail<"expected an integer or parenthesis">;
+    if (Negative) {
+        Value = -Value;
+    }
+    return [Value, At];
 }
 
 declare const precedence: Calc<"2 + 3 * (8 - 5)">;

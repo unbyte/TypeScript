@@ -217,17 +217,17 @@ typefn AddContext<F> {
 >key : "ctx"
 >type : object
 
-        type Edited = Omit<Call, "parameters"> & {parameters: Params};
->parameters : Params
+        type Edited = object.setField<Call, "parameters", { type: Params }>;
+>object : any
+>type : Params
 
         Calls = [...Calls, Edited];
 >Calls : error
     }
-    return fn.compose<{members: Parts["members"]; calls: Calls; constructs: Parts["constructs"]}>;
+    return fn.compose<object.setField<Parts, "calls", { type: Calls }>>;
 >fn : any
->members : Parts["members"]
->calls : Calls
->constructs : Parts["constructs"]
+>object : any
+>type : Calls
 }
 declare const contextual: AddContext<Factory>;
 >contextual : { <T>(context: object, x: T | undefined): x is T; (context: object, x: unknown, kind: "text"): x is string; new (name: string): { name: string; }; tag: "factory"; }

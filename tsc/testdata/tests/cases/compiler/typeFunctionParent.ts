@@ -8,74 +8,82 @@ typefn Scan<S, Index, Allowed> {
     type At = Index;
     while (true) {
         match string.read<S, At> {
-            case undefined: { return At; }
             case [Allowed, infer Next]: { At = Next; }
             else: { return At; }
         }
     }
 }
+
 typefn Skip<S, Index> { return Scan<S, Index, " ">; }
+
 typefn Expect<S, Index, Text> {
     match string.matchPrefix<S, Skip<S, Index>, Text> {
-        case undefined { fail<`expected ${Text & string}`>; }
-        case [infer Spelling, infer Next] { return Next; }
+        case [string, infer Next]: { return Next; }
+        else: { fail<`expected ${Text & string}`>; }
     }
 }
+
 typefn Word<S, Index> {
     type Start = Skip<S, Index>;
     type End = Scan<S, Start, Letter>;
-    if (Start === End) { fail<"expected a name">; }
+    if (Start === End) {
+        fail<"expected a name">;
+    }
     return [string.slice<S, Start, End>, End];
 }
-typefn Scalar<S, Index> {
-    type [Name, Next] = Word<S, Index>;
-    match Name {
-        case "number" { return [number, Next]; }
-        case "string" { return [string, Next]; }
-        else { fail<"unknown field type">; }
-    }
-}
+
 typefn RecordFields<S, Index> {
-    type At = Index;
-    type Out = {};
-    while (true) {
-        match string.matchPrefix<S, Skip<S, At>, "}"> {
-            case undefined {} // Read the next field.
-            case [infer Close, infer End] { return [Out, End]; }
+    type At = Skip<S, Index>;
+    type Fields = {};
+    while (string.matchPrefix<S, At, "}"> === undefined) {
+        type [Name, Colon] = Word<S, At>;
+        type [Value, End] = Annotation<S, Expect<S, Colon, ":">>;
+        Fields = object.addField<Fields, Name, { type: Value }>;
+        At = Skip<S, End>;
+        if (string.matchPrefix<S, At, ";"> === undefined) {
+            break;
         }
-        type [Name, AfterName] = Word<S, At>;
-        type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
-        Out = object.addField<Out, Name, { type: Value }>;
-        match string.matchPrefix<S, Skip<S, AfterValue>, ";"> {
-            case undefined { return [Out, Expect<S, AfterValue, "}">]; }
-            case [infer Sep, infer Next] { At = Next; }
-        }
+        At = Skip<S, At + 1>;
     }
+    return [Fields, Expect<S, At, "}">];
 }
+
 typefn Primary<S, Index> {
     match string.matchPrefix<S, Skip<S, Index>, "{"> {
-        case undefined { return Scalar<S, Index>; }
-        case [infer Open, infer At] { return RecordFields<S, At>; }
+        case [string, infer Start]: { return RecordFields<S, Start>; }
+        else: {}
+    }
+    type [Name, End] = Word<S, Index>;
+    match Name {
+        case "number": { return [number, End]; }
+        case "string": { return [string, End]; }
+        else: { fail<"unknown field type">; }
     }
 }
+
 typefn Annotation<S, Index> {
     type [Value, At] = Primary<S, Index>;
     while (true) {
         match string.matchPrefix<S, Skip<S, At>, "[]"> {
-            case undefined { return [Value, At]; }
-            case [infer Suffix, infer Next] { Value = Value[]; At = Next; }
+            case [string, infer Next]: {
+                Value = Value[];
+                At = Next;
+            }
+            else: { return [Value, At]; }
         }
     }
 }
+
 typefn Parent<S> {
-    type [Name, AfterName] = Word<S, Expect<S, 0, "root(parent ">>;
-    type [Value, AfterValue] = Annotation<S, Expect<S, AfterName, ":">>;
-    type End = Expect<S, AfterValue, ")">;
-    match string.read<S, Skip<S, End>> {
-        case undefined { return object.addField<{}, Name, { type: Value }>; }
-        else { fail<"trailing input">; }
+    type [Name, Colon] = Word<S, Expect<S, 0, "root(parent ">>;
+    type [Value, Close] = Annotation<S, Expect<S, Colon, ":">>;
+    type End = Expect<S, Close, ")">;
+    if (Skip<S, End> !== string.length<S>) {
+        fail<"trailing input">;
     }
+    return object.addField<{}, Name, { type: Value }>;
 }
+
 declare const a: Parent<"root(parent account: { id: number; roles: string[] })">;
 declare const b: Parent<"root(parent owner: string)">;
 const id: number = a.account.id;
@@ -83,3 +91,9 @@ const role: string = a.account.roles[0];
 const owner: string = b.owner;
 // @ts-expect-error independent calculations have different named fields
 b.account;
+
+declare const nested: Parent<"root(parent data: { empty: {}; entries: { id: number; }[][]; })">;
+const nestedId: number = nested.data.entries[0][0].id;
+// @ts-expect-error a missing field separator must not end the record early
+declare const missingSeparator: Parent<"root(parent data: { a: number b: string })">;
+const invalidParent = missingSeparator;

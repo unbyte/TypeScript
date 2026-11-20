@@ -66,10 +66,10 @@ typefn AddContext<F> {
     type Calls = [];
     for (type Call of Parts["calls"]) {
         type Params = [{name: "context"; key: "ctx"; type: object}, ...Call["parameters"]];
-        type Edited = Omit<Call, "parameters"> & {parameters: Params};
+        type Edited = object.setField<Call, "parameters", { type: Params }>;
         Calls = [...Calls, Edited];
     }
-    return fn.compose<{members: Parts["members"]; calls: Calls; constructs: Parts["constructs"]}>;
+    return fn.compose<object.setField<Parts, "calls", { type: Calls }>>;
 }
 declare const contextual: AddContext<Factory>;
 if (contextual({}, input, "text")) { const narrowed: string = input; }

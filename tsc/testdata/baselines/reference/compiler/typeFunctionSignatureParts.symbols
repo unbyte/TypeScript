@@ -266,26 +266,26 @@ typefn AddContext<F> {
 >type : Symbol(type, Decl(typeFunctionSignatureParts.ts, 63, 52))
 >Call : Symbol(Call, Decl(typeFunctionSignatureParts.ts, 62, 13))
 
-        type Edited = Omit<Call, "parameters"> & {parameters: Params};
+        type Edited = object.setField<Call, "parameters", { type: Params }>;
 >Edited : Symbol(Edited, Decl(typeFunctionSignatureParts.ts, 64, 12))
->Omit : Symbol(Omit, Decl(lib.es5.d.ts, --, --))
+>object : Symbol(object)
+>setField : Symbol(object.setField)
 >Call : Symbol(Call, Decl(typeFunctionSignatureParts.ts, 62, 13))
->parameters : Symbol(parameters, Decl(typeFunctionSignatureParts.ts, 64, 50))
+>type : Symbol(type, Decl(typeFunctionSignatureParts.ts, 64, 59))
 >Params : Symbol(Params, Decl(typeFunctionSignatureParts.ts, 63, 12))
 
         Calls = [...Calls, Edited];
 >Calls : Symbol(Calls, Decl(typeFunctionSignatureParts.ts, 61, 8))
 >Edited : Symbol(Edited, Decl(typeFunctionSignatureParts.ts, 64, 12))
     }
-    return fn.compose<{members: Parts["members"]; calls: Calls; constructs: Parts["constructs"]}>;
+    return fn.compose<object.setField<Parts, "calls", { type: Calls }>>;
 >fn : Symbol(fn)
 >compose : Symbol(fn.compose)
->members : Symbol(members, Decl(typeFunctionSignatureParts.ts, 67, 23))
+>object : Symbol(object)
+>setField : Symbol(object.setField)
 >Parts : Symbol(Parts, Decl(typeFunctionSignatureParts.ts, 60, 8))
->calls : Symbol(calls, Decl(typeFunctionSignatureParts.ts, 67, 49))
+>type : Symbol(type, Decl(typeFunctionSignatureParts.ts, 67, 55))
 >Calls : Symbol(Calls, Decl(typeFunctionSignatureParts.ts, 61, 8))
->constructs : Symbol(constructs, Decl(typeFunctionSignatureParts.ts, 67, 63))
->Parts : Symbol(Parts, Decl(typeFunctionSignatureParts.ts, 60, 8))
 }
 declare const contextual: AddContext<Factory>;
 >contextual : Symbol(contextual, Decl(typeFunctionSignatureParts.ts, 69, 13))

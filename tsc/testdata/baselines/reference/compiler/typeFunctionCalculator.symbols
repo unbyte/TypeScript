@@ -7,278 +7,304 @@ typefn Calc<S extends string> {
 
     type Tokens = Tokenize<S>;
 >Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 1, 8))
->Tokenize : Symbol(Tokenize, Decl(typeFunctionCalculator.ts, 8, 43))
+>Tokenize : Symbol(Tokenize, Decl(typeFunctionCalculator.ts, 10, 43))
 >S : Symbol(S, Decl(typeFunctionCalculator.ts, 0, 12))
 
     type [Value, End] = Sum<Tokens, 0>;
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 2, 10))
 >End : Symbol(End, Decl(typeFunctionCalculator.ts, 2, 16))
->Sum : Symbol(Sum, Decl(typeFunctionCalculator.ts, 28, 1))
+>Sum : Symbol(Sum, Decl(typeFunctionCalculator.ts, 34, 1))
 >Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 1, 8))
 
-    if (Tokens[End] !== undefined) { fail<"unexpected token after expression">; }
+    if (Tokens[End] !== undefined) {
 >Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 1, 8))
 >End : Symbol(End, Decl(typeFunctionCalculator.ts, 2, 16))
 
+        fail<"unexpected token after expression">;
+    }
     return Value;
 >Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 2, 10))
 }
 
 type Digit = "0" | "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8" | "9";
->Digit : Symbol(Digit, Decl(typeFunctionCalculator.ts, 5, 1))
+>Digit : Symbol(Digit, Decl(typeFunctionCalculator.ts, 7, 1))
 
 type Whitespace = " " | "\t" | "\n" | "\r";
->Whitespace : Symbol(Whitespace, Decl(typeFunctionCalculator.ts, 7, 71))
+>Whitespace : Symbol(Whitespace, Decl(typeFunctionCalculator.ts, 9, 71))
 
 typefn Tokenize<S> {
->Tokenize : Symbol(Tokenize, Decl(typeFunctionCalculator.ts, 8, 43))
->S : Symbol(S, Decl(typeFunctionCalculator.ts, 10, 16))
+>Tokenize : Symbol(Tokenize, Decl(typeFunctionCalculator.ts, 10, 43))
+>S : Symbol(S, Decl(typeFunctionCalculator.ts, 12, 16))
 
     type Tokens = [];
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 11, 8))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 13, 8))
 
     type At = 0;
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 12, 8))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 14, 8))
 
     type End = string.length<S>;
->End : Symbol(End, Decl(typeFunctionCalculator.ts, 13, 8))
+>End : Symbol(End, Decl(typeFunctionCalculator.ts, 15, 8))
 >string : Symbol(string)
 >length : Symbol(string.length)
->S : Symbol(S, Decl(typeFunctionCalculator.ts, 10, 16))
+>S : Symbol(S, Decl(typeFunctionCalculator.ts, 12, 16))
 
     while (At !== End) {
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 12, 8))
->End : Symbol(End, Decl(typeFunctionCalculator.ts, 13, 8))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 14, 8))
+>End : Symbol(End, Decl(typeFunctionCalculator.ts, 15, 8))
 
         type Start = At;
->Start : Symbol(Start, Decl(typeFunctionCalculator.ts, 15, 12))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 12, 8))
+>Start : Symbol(Start, Decl(typeFunctionCalculator.ts, 17, 12))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 14, 8))
 
         type [Char, Next] = string.read<S, At>;
->Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 16, 14))
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 16, 19))
+>Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 18, 14))
+>Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 18, 19))
 >string : Symbol(string)
 >read : Symbol(string.read)
->S : Symbol(S, Decl(typeFunctionCalculator.ts, 10, 16))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 12, 8))
+>S : Symbol(S, Decl(typeFunctionCalculator.ts, 12, 16))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 14, 8))
 
         At = Next;
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 16, 19))
+>Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 18, 19))
 
-        if (Char is Whitespace) { continue; }
->Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 16, 14))
->Whitespace : Symbol(Whitespace, Decl(typeFunctionCalculator.ts, 7, 71))
+        if (Char is Whitespace) {
+>Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 18, 14))
+>Whitespace : Symbol(Whitespace, Decl(typeFunctionCalculator.ts, 9, 71))
 
+            continue;
+        }
         if (Char is Digit) {
->Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 16, 14))
->Digit : Symbol(Digit, Decl(typeFunctionCalculator.ts, 5, 1))
+>Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 18, 14))
+>Digit : Symbol(Digit, Decl(typeFunctionCalculator.ts, 7, 1))
 
-            while (string.read<S, At> is [Digit, number]) { At = At + 1; }
+            while (string.read<S, At> is [Digit, number]) {
 >string : Symbol(string)
 >read : Symbol(string.read)
->S : Symbol(S, Decl(typeFunctionCalculator.ts, 10, 16))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 12, 8))
->Digit : Symbol(Digit, Decl(typeFunctionCalculator.ts, 5, 1))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 12, 8))
+>S : Symbol(S, Decl(typeFunctionCalculator.ts, 12, 16))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 14, 8))
+>Digit : Symbol(Digit, Decl(typeFunctionCalculator.ts, 7, 1))
 
+                At = At + 1;
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 14, 8))
+            }
             type Text = string.slice<S, Start, At>;
->Text : Symbol(Text, Decl(typeFunctionCalculator.ts, 21, 16))
+>Text : Symbol(Text, Decl(typeFunctionCalculator.ts, 27, 16))
 >string : Symbol(string)
 >slice : Symbol(string.slice)
->S : Symbol(S, Decl(typeFunctionCalculator.ts, 10, 16))
->Start : Symbol(Start, Decl(typeFunctionCalculator.ts, 15, 12))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 12, 8))
+>S : Symbol(S, Decl(typeFunctionCalculator.ts, 12, 16))
+>Start : Symbol(Start, Decl(typeFunctionCalculator.ts, 17, 12))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 14, 8))
 
             Tokens = [...Tokens, number.parse<Text>];
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 11, 8))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 13, 8))
 >number : Symbol(number)
 >parse : Symbol(number.parse)
->Text : Symbol(Text, Decl(typeFunctionCalculator.ts, 21, 16))
+>Text : Symbol(Text, Decl(typeFunctionCalculator.ts, 27, 16))
 
         } else {
             Tokens = [...Tokens, Char];
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 11, 8))
->Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 16, 14))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 13, 8))
+>Char : Symbol(Char, Decl(typeFunctionCalculator.ts, 18, 14))
         }
     }
     return [...Tokens, undefined];
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 11, 8))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 13, 8))
 }
 
 // Each parser returns the value and the index of the next token.
 typefn Sum<Tokens, Index> {
->Sum : Symbol(Sum, Decl(typeFunctionCalculator.ts, 28, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 31, 11))
->Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 31, 18))
+>Sum : Symbol(Sum, Decl(typeFunctionCalculator.ts, 34, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 37, 11))
+>Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 37, 18))
 
     type [Value, At] = Product<Tokens, Index>;
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 32, 10))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 32, 16))
->Product : Symbol(Product, Decl(typeFunctionCalculator.ts, 41, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 31, 11))
->Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 31, 18))
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 38, 10))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 38, 16))
+>Product : Symbol(Product, Decl(typeFunctionCalculator.ts, 50, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 37, 11))
+>Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 37, 18))
 
     while (Tokens[At] is "+" | "-") {
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 31, 11))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 32, 16))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 37, 11))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 38, 16))
 
         type Op = Tokens[At];
->Op : Symbol(Op, Decl(typeFunctionCalculator.ts, 34, 12))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 31, 11))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 32, 16))
+>Op : Symbol(Op, Decl(typeFunctionCalculator.ts, 40, 12))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 37, 11))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 38, 16))
 
         type [Right, Next] = Product<Tokens, At + 1>;
->Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 35, 14))
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 35, 20))
->Product : Symbol(Product, Decl(typeFunctionCalculator.ts, 41, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 31, 11))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 32, 16))
+>Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 41, 14))
+>Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 41, 20))
+>Product : Symbol(Product, Decl(typeFunctionCalculator.ts, 50, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 37, 11))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 38, 16))
 
-        if (Op === "+") { Value = Value + Right; }
->Op : Symbol(Op, Decl(typeFunctionCalculator.ts, 34, 12))
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 32, 10))
->Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 35, 14))
+        if (Op === "+") {
+>Op : Symbol(Op, Decl(typeFunctionCalculator.ts, 40, 12))
 
-        else { Value = Value - Right; }
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 32, 10))
->Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 35, 14))
+            Value = Value + Right;
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 38, 10))
+>Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 41, 14))
 
+        } else {
+            Value = Value - Right;
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 38, 10))
+>Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 41, 14))
+        }
         At = Next;
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 35, 20))
+>Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 41, 20))
     }
     return [Value, At];
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 32, 10))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 32, 16))
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 38, 10))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 38, 16))
 }
 
 typefn Product<Tokens, Index> {
->Product : Symbol(Product, Decl(typeFunctionCalculator.ts, 41, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 43, 15))
->Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 43, 22))
+>Product : Symbol(Product, Decl(typeFunctionCalculator.ts, 50, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 52, 15))
+>Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 52, 22))
 
     type [Value, At] = Atom<Tokens, Index>;
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 44, 10))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 44, 16))
->Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 51, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 43, 15))
->Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 43, 22))
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 53, 10))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 16))
+>Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 60, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 52, 15))
+>Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 52, 22))
 
     while (Tokens[At] === "*") {
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 43, 15))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 44, 16))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 52, 15))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 16))
 
         type [Right, Next] = Atom<Tokens, At + 1>;
->Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 46, 14))
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 46, 20))
->Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 51, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 43, 15))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 44, 16))
+>Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 55, 14))
+>Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 55, 20))
+>Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 60, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 52, 15))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 16))
 
         Value = Value * Right;
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 44, 10))
->Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 46, 14))
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 53, 10))
+>Right : Symbol(Right, Decl(typeFunctionCalculator.ts, 55, 14))
 
         At = Next;
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 46, 20))
+>Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 55, 20))
     }
     return [Value, At];
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 44, 10))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 44, 16))
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 53, 10))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 16))
 }
 
-typefn Atom<Tokens, At> {
->Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 51, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 53, 12))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 19))
+typefn Atom<Tokens, Index> {
+>Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 60, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 62, 12))
+>Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 62, 19))
 
-    type Token = Tokens[At];
->Token : Symbol(Token, Decl(typeFunctionCalculator.ts, 54, 8))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 53, 12))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 19))
+    type At = Index;
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 63, 8))
+>Index : Symbol(Index, Decl(typeFunctionCalculator.ts, 62, 19))
 
-    if (Token is number) { return [Token, At + 1]; }
->Token : Symbol(Token, Decl(typeFunctionCalculator.ts, 54, 8))
->Token : Symbol(Token, Decl(typeFunctionCalculator.ts, 54, 8))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 19))
+    type Negative = false;
+>Negative : Symbol(Negative, Decl(typeFunctionCalculator.ts, 64, 8))
 
-    if (Token === "-") {
->Token : Symbol(Token, Decl(typeFunctionCalculator.ts, 54, 8))
+    while (Tokens[At] === "-") {
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 62, 12))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 63, 8))
 
-        type [Value, Next] = Atom<Tokens, At + 1>;
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 57, 14))
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 57, 20))
->Atom : Symbol(Atom, Decl(typeFunctionCalculator.ts, 51, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 53, 12))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 19))
+        Negative = !Negative;
+>Negative : Symbol(Negative, Decl(typeFunctionCalculator.ts, 64, 8))
 
-        return [-Value, Next];
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 57, 14))
->Next : Symbol(Next, Decl(typeFunctionCalculator.ts, 57, 20))
+        At = At + 1;
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 63, 8))
     }
-    if (Token === "(") {
->Token : Symbol(Token, Decl(typeFunctionCalculator.ts, 54, 8))
+    type Value = Tokens[At];
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 69, 8))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 62, 12))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 63, 8))
 
-        type [Value, Close] = Sum<Tokens, At + 1>;
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 61, 14))
->Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 61, 20))
->Sum : Symbol(Sum, Decl(typeFunctionCalculator.ts, 28, 1))
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 53, 12))
->At : Symbol(At, Decl(typeFunctionCalculator.ts, 53, 19))
+    At = At + 1;
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 63, 8))
 
-        if (Tokens[Close] !== ")") { fail<"expected closing parenthesis">; }
->Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 53, 12))
->Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 61, 20))
+    match Value {
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 69, 8))
 
-        return [Value, Close + 1];
->Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 61, 14))
->Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 61, 20))
+        case number: {}
+        case "(": {
+            type [Inner, Close] = Sum<Tokens, At>;
+>Inner : Symbol(Inner, Decl(typeFunctionCalculator.ts, 74, 18))
+>Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 74, 24))
+>Sum : Symbol(Sum, Decl(typeFunctionCalculator.ts, 34, 1))
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 62, 12))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 63, 8))
+
+            if (Tokens[Close] !== ")") {
+>Tokens : Symbol(Tokens, Decl(typeFunctionCalculator.ts, 62, 12))
+>Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 74, 24))
+
+                fail<"expected closing parenthesis">;
+            }
+            Value = Inner;
+>Inner : Symbol(Inner, Decl(typeFunctionCalculator.ts, 74, 18))
+
+            At = Close + 1;
+>Close : Symbol(Close, Decl(typeFunctionCalculator.ts, 74, 24))
+        }
+        else: { fail<"expected an integer or parenthesis">; }
     }
-    fail<"expected an integer or parenthesis">;
+    if (Negative) {
+>Negative : Symbol(Negative, Decl(typeFunctionCalculator.ts, 64, 8))
+
+        Value = -Value;
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 69, 8))
+    }
+    return [Value, At];
+>Value : Symbol(Value, Decl(typeFunctionCalculator.ts, 69, 8))
+>At : Symbol(At, Decl(typeFunctionCalculator.ts, 63, 8))
 }
 
 declare const precedence: Calc<"2 + 3 * (8 - 5)">;
->precedence : Symbol(precedence, Decl(typeFunctionCalculator.ts, 68, 13))
+>precedence : Symbol(precedence, Decl(typeFunctionCalculator.ts, 89, 13))
 >Calc : Symbol(Calc, Decl(typeFunctionCalculator.ts, 0, 0))
 
 declare const associativity: Calc<"10 - 3 - 2">;
->associativity : Symbol(associativity, Decl(typeFunctionCalculator.ts, 69, 13))
+>associativity : Symbol(associativity, Decl(typeFunctionCalculator.ts, 90, 13))
 >Calc : Symbol(Calc, Decl(typeFunctionCalculator.ts, 0, 0))
 
 declare const unary: Calc<"-(2 + 3) * 4">;
->unary : Symbol(unary, Decl(typeFunctionCalculator.ts, 70, 13))
+>unary : Symbol(unary, Decl(typeFunctionCalculator.ts, 91, 13))
 >Calc : Symbol(Calc, Decl(typeFunctionCalculator.ts, 0, 0))
 
 const eleven: 11 = precedence;
->eleven : Symbol(eleven, Decl(typeFunctionCalculator.ts, 71, 5))
->precedence : Symbol(precedence, Decl(typeFunctionCalculator.ts, 68, 13))
+>eleven : Symbol(eleven, Decl(typeFunctionCalculator.ts, 92, 5))
+>precedence : Symbol(precedence, Decl(typeFunctionCalculator.ts, 89, 13))
 
 const five: 5 = associativity;
->five : Symbol(five, Decl(typeFunctionCalculator.ts, 72, 5))
->associativity : Symbol(associativity, Decl(typeFunctionCalculator.ts, 69, 13))
+>five : Symbol(five, Decl(typeFunctionCalculator.ts, 93, 5))
+>associativity : Symbol(associativity, Decl(typeFunctionCalculator.ts, 90, 13))
 
 const negative: -20 = unary;
->negative : Symbol(negative, Decl(typeFunctionCalculator.ts, 73, 5))
->unary : Symbol(unary, Decl(typeFunctionCalculator.ts, 70, 13))
+>negative : Symbol(negative, Decl(typeFunctionCalculator.ts, 94, 5))
+>unary : Symbol(unary, Decl(typeFunctionCalculator.ts, 91, 13))
 
 // @ts-expect-error precedence yields the literal 11
 const wrong: 42 = precedence;
->wrong : Symbol(wrong, Decl(typeFunctionCalculator.ts, 75, 5))
->precedence : Symbol(precedence, Decl(typeFunctionCalculator.ts, 68, 13))
+>wrong : Symbol(wrong, Decl(typeFunctionCalculator.ts, 96, 5))
+>precedence : Symbol(precedence, Decl(typeFunctionCalculator.ts, 89, 13))
 
 declare const multiDigit: Calc<" \t12 + 34\r\n">;
->multiDigit : Symbol(multiDigit, Decl(typeFunctionCalculator.ts, 76, 13))
+>multiDigit : Symbol(multiDigit, Decl(typeFunctionCalculator.ts, 97, 13))
 >Calc : Symbol(Calc, Decl(typeFunctionCalculator.ts, 0, 0))
 
 const fortySix: 46 = multiDigit;
->fortySix : Symbol(fortySix, Decl(typeFunctionCalculator.ts, 77, 5))
->multiDigit : Symbol(multiDigit, Decl(typeFunctionCalculator.ts, 76, 13))
+>fortySix : Symbol(fortySix, Decl(typeFunctionCalculator.ts, 98, 5))
+>multiDigit : Symbol(multiDigit, Decl(typeFunctionCalculator.ts, 97, 13))
 
 // @ts-expect-error whitespace separates integer tokens
 declare const separatedDigits: Calc<"1 2">;
->separatedDigits : Symbol(separatedDigits, Decl(typeFunctionCalculator.ts, 80, 13))
+>separatedDigits : Symbol(separatedDigits, Decl(typeFunctionCalculator.ts, 101, 13))
 >Calc : Symbol(Calc, Decl(typeFunctionCalculator.ts, 0, 0))
 
 const invalid = separatedDigits;
->invalid : Symbol(invalid, Decl(typeFunctionCalculator.ts, 81, 5))
->separatedDigits : Symbol(separatedDigits, Decl(typeFunctionCalculator.ts, 80, 13))
+>invalid : Symbol(invalid, Decl(typeFunctionCalculator.ts, 102, 5))
+>separatedDigits : Symbol(separatedDigits, Decl(typeFunctionCalculator.ts, 101, 13))
 
